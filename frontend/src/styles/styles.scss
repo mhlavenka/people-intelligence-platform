@@ -1,0 +1,154 @@
+@use '@angular/material' as mat;
+@import 'variables';
+
+// ============================================================
+// Global Styles — People Intelligence Platform
+// ============================================================
+
+@include mat.core();
+
+$primary-palette: (
+  50:   #e3edf8,
+  100:  #b9d1ed,
+  200:  #8bb3e1,
+  300:  #5c94d4,
+  400:  #3a7fcb,
+  500:  $blue,
+  600:  #2f89c3,
+  700:  #2678b7,
+  800:  #1e67a9,
+  900:  $navy,
+  contrast: (
+    50: rgba(black, 0.87),
+    100: rgba(black, 0.87),
+    200: rgba(black, 0.87),
+    300: white,
+    400: white,
+    500: white,
+    600: white,
+    700: white,
+    800: white,
+    900: white,
+  )
+);
+
+$accent-palette: (
+  50:   #e5f9f6,
+  100:  #bff0e8,
+  200:  #95e6d9,
+  300:  #6bdbca,
+  400:  #4dd4be,
+  500:  $green,
+  600:  #21b094,
+  700:  #1a9a80,
+  800:  #14856d,
+  900:  #096249,
+  contrast: (
+    50: rgba(black, 0.87),
+    100: rgba(black, 0.87),
+    200: rgba(black, 0.87),
+    300: rgba(black, 0.87),
+    400: rgba(black, 0.87),
+    500: white,
+    600: white,
+    700: white,
+    800: white,
+    900: white,
+  )
+);
+
+$pip-primary: mat.define-palette($primary-palette, 500, 300, 900);
+$pip-accent:  mat.define-palette($accent-palette, 500, 300, 900);
+$pip-warn:    mat.define-palette(mat.$red-palette);
+
+$pip-theme: mat.define-light-theme((
+  color: (
+    primary: $pip-primary,
+    accent:  $pip-accent,
+    warn:    $pip-warn,
+  ),
+  typography: mat.define-typography-config(
+    $font-family: $font-family-base,
+  ),
+  density: 0,
+));
+
+@include mat.all-component-themes($pip-theme);
+
+// ============================================================
+// Base Reset & Typography
+// ============================================================
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: $font-family-base;
+  font-size: $font-size-base;
+  color: $text-primary;
+  background-color: $light-bg;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: $navy;
+  font-weight: 600;
+  margin: 0 0 $spacing-md;
+}
+
+a {
+  color: $blue;
+  text-decoration: none;
+  &:hover { text-decoration: underline; }
+}
+
+// ============================================================
+// Utility Classes
+// ============================================================
+
+.text-navy    { color: $navy; }
+.text-blue    { color: $blue; }
+.text-green   { color: $green; }
+.text-muted   { color: $text-muted; }
+.text-danger  { color: $danger; }
+
+.bg-navy      { background-color: $navy; color: white; }
+.bg-blue      { background-color: $blue; color: white; }
+.bg-green     { background-color: $green; color: white; }
+.bg-light     { background-color: $light-bg; }
+
+.card {
+  background: $white;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-md;
+  padding: $spacing-lg;
+}
+
+.page-header {
+  margin-bottom: $spacing-xl;
+  h1 { font-size: $font-size-2xl; margin-bottom: $spacing-xs; }
+  p  { color: $text-secondary; margin: 0; }
+}
+
+.risk-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: $radius-full;
+  font-size: $font-size-sm;
+  font-weight: 600;
+  text-transform: uppercase;
+
+  &.low      { background: rgba($risk-low, 0.15);      color: darken($risk-low, 15%); }
+  &.medium   { background: rgba($risk-medium, 0.15);   color: darken($risk-medium, 10%); }
+  &.high     { background: rgba($risk-high, 0.15);     color: darken($risk-high, 5%); }
+  &.critical { background: rgba($risk-critical, 0.15); color: $risk-critical; }
+}
+
+// Material overrides
+.mat-mdc-card { border-radius: $radius-lg !important; }
+.mat-mdc-raised-button.mat-primary { background-color: $navy !important; }

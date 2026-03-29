@@ -1,0 +1,218 @@
+### 1. Register Organization + First Admin User
+POST http://localhost:3000/api/auth/register
+Content-Type: application/json
+
+{
+  "orgName": "Helena Coaching",
+  "orgSlug": "helena-coaching",
+  "billingEmail": "billing@helenacoaching.com",
+  "firstName": "Admin",
+  "lastName": "User",
+  "email": "admin@helenacoaching.com",
+  "password": "ChangeMe123!"
+}
+
+### 2. Login
+POST http://localhost:3000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@helenacoaching.com",
+  "password": "ChangeMe123!"
+}
+
+### 3. Create HR Manager
+POST http://localhost:3000/api/users
+Content-Type: application/json
+Authorization: Bearer PASTE_ACCESS_TOKEN_HERE
+
+{
+  "firstName": "Helena",
+  "lastName": "Smith",
+  "email": "hr@helenacoaching.com",
+  "password": "ChangeMe123!",
+  "role": "hr_manager"
+}
+
+### 4. Create Manager
+POST http://localhost:3000/api/users
+Content-Type: application/json
+Authorization: Bearer PASTE_ACCESS_TOKEN_HERE
+
+{
+  "firstName": "James",
+  "lastName": "Brown",
+  "email": "manager@helenacoaching.com",
+  "password": "ChangeMe123!",
+  "role": "manager"
+}
+
+### 5. Create Coach
+POST http://localhost:3000/api/users
+Content-Type: application/json
+Authorization: Bearer PASTE_ACCESS_TOKEN_HERE
+
+{
+  "firstName": "Sarah",
+  "lastName": "Jones",
+  "email": "coach@helenacoaching.com",
+  "password": "ChangeMe123!",
+  "role": "coach"
+}
+
+### 6. Create Coachee
+POST http://localhost:3000/api/users
+Content-Type: application/json
+Authorization: Bearer PASTE_ACCESS_TOKEN_HERE
+
+{
+  "firstName": "Michael",
+  "lastName": "Taylor",
+  "email": "coachee@helenacoaching.com",
+  "password": "ChangeMe123!",
+  "role": "coachee"
+}
+
+### 7. List all users
+GET http://localhost:3000/api/users
+Authorization: Bearer PASTE_ACCESS_TOKEN_HERE
+
+### 8. Health check
+GET http://localhost:3000/health
+
+### ============================================================
+### SURVEYS
+### ============================================================
+
+### 9. Create Conflict Survey Template
+POST http://localhost:3000/api/surveys/templates
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OWM5MzUyZmYxMmJjMjc3NzBiYTNlZTciLCJvcmdhbml6YXRpb25JZCI6IjY5YzkzNTJmZjEyYmMyNzc3MGJhM2VlNSIsInJvbGUiOiJhZG1pbiIsImVtYWlsIjoiYWRtaW5AaGVsZW5hY29hY2hpbmcuY29tIiwiaWF0IjoxNzc0Nzk2MjUyLCJleHAiOjE3NzQ3OTcxNTJ9.F9-q8VC-_1BLWQSV_liIpAFyaDKpP4DOz50EhI77U1U
+
+{
+  "moduleType": "conflict",
+  "title": "Workplace Conflict Assessment Q1 2026",
+  "questions": [
+    { "id": "q1", "text": "How would you rate the overall team communication?", "type": "scale", "category": "communication" },
+    { "id": "q2", "text": "How often do disagreements escalate into conflicts?", "type": "scale", "category": "conflict_frequency" },
+    { "id": "q3", "text": "How safe do you feel raising concerns with your manager?", "type": "scale", "category": "psychological_safety" },
+    { "id": "q4", "text": "How fairly are workloads distributed in your team?", "type": "scale", "category": "fairness" },
+    { "id": "q5", "text": "How well does your team resolve disagreements constructively?", "type": "scale", "category": "resolution" },
+    { "id": "q6", "text": "How respected do you feel by your colleagues?", "type": "scale", "category": "respect" },
+    { "id": "q7", "text": "How clear are roles and responsibilities in your team?", "type": "scale", "category": "role_clarity" },
+    { "id": "q8", "text": "How would you rate leadership transparency?", "type": "scale", "category": "leadership" }
+  ]
+}
+
+### 10. List Survey Templates (copy the _id from response)
+GET http://localhost:3000/api/surveys/templates
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OWM5MzUyZmYxMmJjMjc3NzBiYTNlZTciLCJvcmdhbml6YXRpb25JZCI6IjY5YzkzNTJmZjEyYmMyNzc3MGJhM2VlNSIsInJvbGUiOiJhZG1pbiIsImVtYWlsIjoiYWRtaW5AaGVsZW5hY29hY2hpbmcuY29tIiwiaWF0IjoxNzc0Nzk2MjUyLCJleHAiOjE3NzQ3OTcxNTJ9.F9-q8VC-_1BLWQSV_liIpAFyaDKpP4DOz50EhI77U1U
+
+### 11. Submit Survey Response #1  (replace TEMPLATE_ID below)
+POST http://localhost:3000/api/surveys/respond
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OWM5MzUyZmYxMmJjMjc3NzBiYTNlZTciLCJvcmdhbml6YXRpb25JZCI6IjY5YzkzNTJmZjEyYmMyNzc3MGJhM2VlNSIsInJvbGUiOiJhZG1pbiIsImVtYWlsIjoiYWRtaW5AaGVsZW5hY29hY2hpbmcuY29tIiwiaWF0IjoxNzc0Nzk2MjUyLCJleHAiOjE3NzQ3OTcxNTJ9.F9-q8VC-_1BLWQSV_liIpAFyaDKpP4DOz50EhI77U1U
+
+{
+  "templateId": "69c93dfd653713663e8345d2",
+  "departmentId": "Engineering",
+  "isAnonymous": true,
+  "responses": [
+    { "questionId": "q1", "value": 6 },
+    { "questionId": "q2", "value": 7 },
+    { "questionId": "q3", "value": 5 },
+    { "questionId": "q4", "value": 4 },
+    { "questionId": "q5", "value": 5 },
+    { "questionId": "q6", "value": 7 },
+    { "questionId": "q7", "value": 4 },
+    { "questionId": "q8", "value": 5 }
+  ]
+}
+
+### 12. Submit Survey Response #2
+POST http://localhost:3000/api/surveys/respond
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OWM5MzUyZmYxMmJjMjc3NzBiYTNlZTciLCJvcmdhbml6YXRpb25JZCI6IjY5YzkzNTJmZjEyYmMyNzc3MGJhM2VlNSIsInJvbGUiOiJhZG1pbiIsImVtYWlsIjoiYWRtaW5AaGVsZW5hY29hY2hpbmcuY29tIiwiaWF0IjoxNzc0Nzk2MjUyLCJleHAiOjE3NzQ3OTcxNTJ9.F9-q8VC-_1BLWQSV_liIpAFyaDKpP4DOz50EhI77U1U
+
+{
+  "templateId": "69c93dfd653713663e8345d2",
+  "departmentId": "Engineering",
+  "isAnonymous": true,
+  "responses": [
+    { "questionId": "q1", "value": 4 },
+    { "questionId": "q2", "value": 8 },
+    { "questionId": "q3", "value": 3 },
+    { "questionId": "q4", "value": 5 },
+    { "questionId": "q5", "value": 4 },
+    { "questionId": "q6", "value": 6 },
+    { "questionId": "q7", "value": 3 },
+    { "questionId": "q8", "value": 4 }
+  ]
+}
+
+### 13. Submit Survey Response #3
+POST http://localhost:3000/api/surveys/respond
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OWM5MzUyZmYxMmJjMjc3NzBiYTNlZTciLCJvcmdhbml6YXRpb25JZCI6IjY5YzkzNTJmZjEyYmMyNzc3MGJhM2VlNSIsInJvbGUiOiJhZG1pbiIsImVtYWlsIjoiYWRtaW5AaGVsZW5hY29hY2hpbmcuY29tIiwiaWF0IjoxNzc0Nzk2MjUyLCJleHAiOjE3NzQ3OTcxNTJ9.F9-q8VC-_1BLWQSV_liIpAFyaDKpP4DOz50EhI77U1U
+
+{
+  "templateId": "69c93dfd653713663e8345d2",
+  "departmentId": "Engineering",
+  "isAnonymous": true,
+  "responses": [
+    { "questionId": "q1", "value": 5 },
+    { "questionId": "q2", "value": 9 },
+    { "questionId": "q3", "value": 4 },
+    { "questionId": "q4", "value": 3 },
+    { "questionId": "q5", "value": 3 },
+    { "questionId": "q6", "value": 5 },
+    { "questionId": "q7", "value": 5 },
+    { "questionId": "q8", "value": 3 }
+  ]
+}
+
+### 14. Submit Survey Response #4
+POST http://localhost:3000/api/surveys/respond
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OWM5MzUyZmYxMmJjMjc3NzBiYTNlZTciLCJvcmdhbml6YXRpb25JZCI6IjY5YzkzNTJmZjEyYmMyNzc3MGJhM2VlNSIsInJvbGUiOiJhZG1pbiIsImVtYWlsIjoiYWRtaW5AaGVsZW5hY29hY2hpbmcuY29tIiwiaWF0IjoxNzc0Nzk2MjUyLCJleHAiOjE3NzQ3OTcxNTJ9.F9-q8VC-_1BLWQSV_liIpAFyaDKpP4DOz50EhI77U1U
+
+{
+  "templateId": "69c93dfd653713663e8345d2",
+  "departmentId": "Engineering",
+  "isAnonymous": true,
+  "responses": [
+    { "questionId": "q1", "value": 7 },
+    { "questionId": "q2", "value": 6 },
+    { "questionId": "q3", "value": 6 },
+    { "questionId": "q4", "value": 6 },
+    { "questionId": "q5", "value": 6 },
+    { "questionId": "q6", "value": 8 },
+    { "questionId": "q7", "value": 6 },
+    { "questionId": "q8", "value": 7 }
+  ]
+}
+
+### 15. Submit Survey Response #5
+POST http://localhost:3000/api/surveys/respond
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OWM5MzUyZmYxMmJjMjc3NzBiYTNlZTciLCJvcmdhbml6YXRpb25JZCI6IjY5YzkzNTJmZjEyYmMyNzc3MGJhM2VlNSIsInJvbGUiOiJhZG1pbiIsImVtYWlsIjoiYWRtaW5AaGVsZW5hY29hY2hpbmcuY29tIiwiaWF0IjoxNzc0Nzk2MjUyLCJleHAiOjE3NzQ3OTcxNTJ9.F9-q8VC-_1BLWQSV_liIpAFyaDKpP4DOz50EhI77U1U
+
+{
+  "templateId": "69c93dfd653713663e8345d2",
+  "departmentId": "Engineering",
+  "isAnonymous": true,
+  "responses": [
+    { "questionId": "q1", "value": 3 },
+    { "questionId": "q2", "value": 9 },
+    { "questionId": "q3", "value": 2 },
+    { "questionId": "q4", "value": 3 },
+    { "questionId": "q5", "value": 2 },
+    { "questionId": "q6", "value": 4 },
+    { "questionId": "q7", "value": 3 },
+    { "questionId": "q8", "value": 3 }
+  ]
+}
+
+### 16. Verify response count (should show count >= 5)
+GET http://localhost:3000/api/surveys/responses/69c93dfd653713663e8345d2
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OWM5MzUyZmYxMmJjMjc3NzBiYTNlZTciLCJvcmdhbml6YXRpb25JZCI6IjY5YzkzNTJmZjEyYmMyNzc3MGJhM2VlNSIsInJvbGUiOiJhZG1pbiIsImVtYWlsIjoiYWRtaW5AaGVsZW5hY29hY2hpbmcuY29tIiwiaWF0IjoxNzc0Nzk2MjUyLCJleHAiOjE3NzQ3OTcxNTJ9.F9-q8VC-_1BLWQSV_liIpAFyaDKpP4DOz50EhI77U1U

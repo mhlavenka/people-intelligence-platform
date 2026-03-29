@@ -1,0 +1,67 @@
+// ============================================================
+// Brand Color Variables — People Intelligence Platform
+// HeadSoft Tech × Helena Coaching
+// ============================================================
+
+$navy:     #1B2A47;
+$blue:     #3A9FD6;
+$green:    #27C4A0;
+$light-bg: #EBF5FB;
+
+// Extended palette
+$navy-light:   #2a3f6b;
+$navy-dark:    #111b2e;
+$blue-light:   #6ab8e3;
+$blue-dark:    #2080b0;
+$green-light:  #4dd6b8;
+$green-dark:   #1a9678;
+
+// Neutrals
+$text-primary:   #1a1a2e;
+$text-secondary: #5a6a7e;
+$text-muted:     #9aa5b4;
+$border-color:   #dce6f0;
+$white:          #ffffff;
+
+// Status colors
+$success:  $green;
+$warning:  #f0a500;
+$danger:   #e53e3e;
+$info:     $blue;
+
+// Risk level colors
+$risk-low:      #27C4A0;
+$risk-medium:   #f0a500;
+$risk-high:     #e86c3a;
+$risk-critical: #e53e3e;
+
+// Typography
+$font-family-base: 'Inter', 'Segoe UI', Roboto, sans-serif;
+$font-size-base:   14px;
+$font-size-sm:     12px;
+$font-size-lg:     16px;
+$font-size-xl:     20px;
+$font-size-2xl:    24px;
+
+// Spacing
+$spacing-xs:  4px;
+$spacing-sm:  8px;
+$spacing-md:  16px;
+$spacing-lg:  24px;
+$spacing-xl:  32px;
+$spacing-2xl: 48px;
+
+// Border radius
+$radius-sm:   4px;
+$radius-md:   8px;
+$radius-lg:   12px;
+$radius-full: 9999px;
+
+// Shadows
+$shadow-sm:  0 1px 3px rgba(0, 0, 0, 0.08);
+$shadow-md:  0 4px 12px rgba(0, 0, 0, 0.10);
+$shadow-lg:  0 8px 24px rgba(0, 0, 0, 0.12);
+
+// Sidebar
+$sidebar-width:          260px;
+$sidebar-collapsed-width: 72px;

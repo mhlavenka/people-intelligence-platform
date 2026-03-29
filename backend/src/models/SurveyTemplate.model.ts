@@ -1,0 +1,56 @@
+import mongoose, { Document, Schema } from 'mongoose';
+import { tenantFilterPlugin } from './plugins/tenantFilter.plugin';
+
+export interface IQuestion {
+  id: string;
+  text: string;
+  type: 'scale' | 'text' | 'boolean';
+  category: string;
+}
+
+export interface ISurveyTemplate extends Document {
+  organizationId: mongoose.Types.ObjectId;
+  moduleType: 'conflict' | 'neuroinclusion' | 'succession';
+  title: string;
+  questions: IQuestion[];
+  isActive: boolean;
+  createdBy: mongoose.Types.ObjectId;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const QuestionSchema = new Schema<IQuestion>(
+  {
+    id: { type: String, required: true },
+    text: { type: String, required: true },
+    type: { type: String, enum: ['scale', 'text', 'boolean'], required: true },
+    category: { type: String, required: true },
+  },
+  { _id: false }
+);
+
+const SurveyTemplateSchema = new Schema<ISurveyTemplate>(
+  {
+    organizationId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Organization',
+      required: true,
+      index: true,
+    },
+    moduleType: {
+      type: String,
+      enum: ['conflict', 'neuroinclusion', 'succession'],
+      required: true,
+    },
+    title: { type: String, required: true, trim: true },
+    questions: [QuestionSchema],
+    isActive: { type: Boolean, default: true },
+    createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  },
+  { timestamps: true }
+);
+
+SurveyTemplateSchema.plugin(tenantFilterPlugin);
+SurveyTemplateSchema.index({ organizationId: 1, moduleType: 1 });
+
+export const SurveyTemplate = mongoose.model<ISurveyTemplate>('SurveyTemplate', SurveyTemplateSchema);
