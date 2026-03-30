@@ -49,6 +49,27 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'admin/organization',
+        loadComponent: () =>
+          import('./modules/admin/organization-settings/organization-settings.component').then(
+            (m) => m.OrganizationSettingsComponent
+          ),
+      },
+      {
+        path: 'admin/roles',
+        loadComponent: () =>
+          import('./modules/admin/role-management/role-management.component').then(
+            (m) => m.RoleManagementComponent
+          ),
+      },
+      {
+        path: 'admin/users',
+        loadComponent: () =>
+          import('./modules/admin/user-management/user-management.component').then(
+            (m) => m.UserManagementComponent
+          ),
+      },
+      {
         path: 'surveys',
         loadComponent: () =>
           import('./modules/survey/survey-management/survey-management.component').then(
@@ -65,18 +86,16 @@ export const routes: Routes = [
       {
         path: 'profile',
         loadComponent: () =>
-          import('./modules/dashboard/placeholder/placeholder.component').then(
-            (m) => m.PlaceholderComponent
+          import('./modules/profile/profile.component').then(
+            (m) => m.ProfileComponent
           ),
-        data: { title: 'My Profile', icon: 'person' },
       },
       {
         path: 'settings',
         loadComponent: () =>
-          import('./modules/dashboard/placeholder/placeholder.component').then(
-            (m) => m.PlaceholderComponent
+          import('./modules/settings/settings.component').then(
+            (m) => m.SettingsComponent
           ),
-        data: { title: 'Settings', icon: 'settings' },
       },
     ],
   },

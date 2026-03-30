@@ -149,6 +149,56 @@ a {
   &.critical { background: rgba($risk-critical, 0.15); color: $risk-critical; }
 }
 
-// Material overrides
-.mat-mdc-card { border-radius: $radius-lg !important; }
+// ============================================================
+// Material button overrides
+// ============================================================
+
+// Vertically centre all button content (icon + label)
+.mat-mdc-button-base {
+  .mdc-button__label,
+  .mat-mdc-button-touch-target {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    vertical-align: middle;
+  }
+
+  mat-icon, .mat-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    vertical-align: middle;
+    line-height: 1;
+  }
+}
+
+// Disabled raised / flat buttons — visible but clearly inactive
+.mat-mdc-raised-button:disabled,
+.mat-mdc-flat-button:disabled {
+  background-color: #d1d9e3 !important;
+  color: #8a97a8 !important;
+  opacity: 1 !important;          // override Material's 0.38 opacity so the bg colour shows
+  cursor: not-allowed;
+}
+
+// Disabled stroked buttons
+.mat-mdc-outlined-button:disabled {
+  border-color: #d1d9e3 !important;
+  color: #a0aab6 !important;
+  opacity: 1 !important;
+  cursor: not-allowed;
+}
+
+// Disabled icon buttons (slide toggles, icon-only)
+.mat-mdc-icon-button:disabled {
+  color: #b0bac4 !important;
+  opacity: 1 !important;
+  cursor: not-allowed;
+}
+
+// Primary raised button brand colour
 .mat-mdc-raised-button.mat-primary { background-color: $navy !important; }
+
+// Other Material overrides
+.mat-mdc-card { border-radius: $radius-lg !important; }

@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { authenticator } = require('otplib') as typeof import('otplib');
 import { Organization } from '../models/Organization.model';
 import { User } from '../models/User.model';
 import { config } from '../config/env';
@@ -89,6 +91,17 @@ export async function login(req: Request, res: Response, next: NextFunction): Pr
       return;
     }
 
+    // If 2FA is enabled, issue a short-lived temp token instead of full tokens
+    if (user.twoFactorEnabled) {
+      const tempToken = jwt.sign(
+        { pending2fa: true, userId: user._id.toString(), organizationId: user.organizationId.toString() },
+        config.jwt.secret,
+        { expiresIn: '5m' } as jwt.SignOptions
+      );
+      res.json({ requiresTwoFactor: true, tempToken });
+      return;
+    }
+
     user.lastLoginAt = new Date();
     await user.save();
 
@@ -129,6 +142,69 @@ export async function refresh(req: Request, res: Response, next: NextFunction): 
   } catch {
     res.status(401).json({ error: 'Invalid refresh token' });
     next;
+  }
+}
+
+export async function verify2fa(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { tempToken, otp } = req.body;
+    if (!tempToken || !otp) {
+      res.status(400).json({ error: 'tempToken and otp are required.' });
+      return;
+    }
+
+    let payload: { pending2fa: boolean; userId: string; organizationId: string };
+    try {
+      payload = jwt.verify(tempToken, config.jwt.secret) as typeof payload;
+    } catch {
+      res.status(401).json({ error: 'Invalid or expired token. Please log in again.' });
+      return;
+    }
+
+    if (!payload.pending2fa) {
+      res.status(400).json({ error: 'Invalid token type.' });
+      return;
+    }
+
+    // Load user with secret (field is select:false by default)
+    const user = await User.findById(payload.userId)
+      .select('+twoFactorSecret')
+      .setOptions({ bypassTenantCheck: true });
+
+    if (!user || !user.twoFactorEnabled || !user.twoFactorSecret) {
+      res.status(401).json({ error: 'Invalid credentials.' });
+      return;
+    }
+
+    const valid = authenticator.verify({ token: otp.replace(/\s/g, ''), secret: user.twoFactorSecret });
+    if (!valid) {
+      res.status(401).json({ error: 'Invalid authenticator code. Please try again.' });
+      return;
+    }
+
+    user.lastLoginAt = new Date();
+    await user.save();
+
+    const tokens = generateTokens({
+      userId: user._id.toString(),
+      organizationId: user.organizationId.toString(),
+      role: user.role,
+      email: user.email,
+    });
+
+    res.json({
+      ...tokens,
+      user: {
+        id: user._id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role,
+        organizationId: user.organizationId,
+      },
+    });
+  } catch (error) {
+    next(error);
   }
 }
 

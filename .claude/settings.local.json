@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd \"D:\\\\CUSTOMERS\\\\HeadSoft\\\\people-intelligence-platform\\\\backend\" && node -e \"const o = require\\('otplib'\\); const { TOTP } = o; console.log\\(typeof TOTP, typeof TOTP?.generate\\)\")"
+    ]
+  }
+}

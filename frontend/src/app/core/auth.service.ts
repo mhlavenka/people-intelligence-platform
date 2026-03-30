@@ -19,6 +19,16 @@ export interface AuthResponse {
   user: User;
 }
 
+export interface LoginResponse {
+  // Full auth (no 2FA)
+  accessToken?: string;
+  refreshToken?: string;
+  user?: User;
+  // 2FA required
+  requiresTwoFactor?: boolean;
+  tempToken?: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly TOKEN_KEY = 'pip_access_token';
@@ -43,9 +53,15 @@ export class AuthService {
     );
   }
 
-  login(email: string, password: string): Observable<AuthResponse> {
+  login(email: string, password: string): Observable<LoginResponse> {
     return this.http
-      .post<AuthResponse>(`${environment.apiUrl}/auth/login`, { email, password })
+      .post<LoginResponse>(`${environment.apiUrl}/auth/login`, { email, password })
+      .pipe(tap((res) => { if (res.accessToken) this.storeAuth(res as AuthResponse); }));
+  }
+
+  verify2fa(tempToken: string, otp: string): Observable<AuthResponse> {
+    return this.http
+      .post<AuthResponse>(`${environment.apiUrl}/auth/verify-2fa`, { tempToken, otp })
       .pipe(tap((res) => this.storeAuth(res)));
   }
 

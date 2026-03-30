@@ -12,6 +12,8 @@ export interface IUser extends Document {
   lastName: string;
   isActive: boolean;
   lastLoginAt?: Date;
+  twoFactorSecret?: string;
+  twoFactorEnabled: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -35,6 +37,8 @@ const UserSchema = new Schema<IUser>(
     lastName: { type: String, required: true, trim: true },
     isActive: { type: Boolean, default: true },
     lastLoginAt: { type: Date },
+    twoFactorSecret:  { type: String, select: false }, // never returned in normal queries
+    twoFactorEnabled: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

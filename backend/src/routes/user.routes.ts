@@ -1,11 +1,127 @@
 import { Router, Response, NextFunction } from 'express';
 import bcrypt from 'bcryptjs';
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { authenticator } = require('otplib') as typeof import('otplib');
+import QRCode from 'qrcode';
 import { authenticateToken, requireRole, AuthRequest } from '../middleware/auth.middleware';
 import { tenantResolver } from '../middleware/tenant.middleware';
 import { User } from '../models/User.model';
 
 const router = Router();
 router.use(authenticateToken, tenantResolver);
+
+// ── Own profile endpoints (any authenticated user) ──────────────────────────
+
+router.get('/me', async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const user = await User.findOne({
+      _id: req.user!.userId,
+      organizationId: req.user!.organizationId,
+    }).select('-passwordHash');
+    if (!user) { res.status(404).json({ error: 'User not found' }); return; }
+    res.json(user);
+  } catch (e) { next(e); }
+});
+
+router.put('/me', async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const { firstName, lastName } = req.body;
+    const user = await User.findOneAndUpdate(
+      { _id: req.user!.userId, organizationId: req.user!.organizationId },
+      { firstName, lastName },
+      { new: true, runValidators: true }
+    ).select('-passwordHash');
+    if (!user) { res.status(404).json({ error: 'User not found' }); return; }
+    res.json(user);
+  } catch (e) { next(e); }
+});
+
+router.put('/me/password', async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword) {
+      res.status(400).json({ error: 'currentPassword and newPassword are required.' });
+      return;
+    }
+    if (newPassword.length < 8) {
+      res.status(400).json({ error: 'New password must be at least 8 characters.' });
+      return;
+    }
+    const user = await User.findOne({
+      _id: req.user!.userId,
+      organizationId: req.user!.organizationId,
+    });
+    if (!user) { res.status(404).json({ error: 'User not found' }); return; }
+    const match = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!match) { res.status(400).json({ error: 'Current password is incorrect.' }); return; }
+    user.passwordHash = await bcrypt.hash(newPassword, 12);
+    await user.save();
+    res.json({ message: 'Password updated successfully.' });
+  } catch (e) { next(e); }
+});
+
+// ── Two-factor authentication ────────────────────────────────────────────────
+
+// Generate a new TOTP secret + QR code (does NOT enable 2FA yet)
+router.post('/me/2fa/setup', async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const secret = authenticator.generateSecret();
+    const user = await User.findOne({
+      _id: req.user!.userId, organizationId: req.user!.organizationId,
+    });
+    if (!user) { res.status(404).json({ error: 'User not found' }); return; }
+
+    const otpAuthUrl = authenticator.keyuri(user.email, 'People Intelligence Platform', secret);
+    const qrCodeDataUrl = await QRCode.toDataURL(otpAuthUrl);
+
+    // Store secret temporarily — will be confirmed on /enable
+    user.twoFactorSecret = secret;
+    await user.save();
+
+    res.json({ qrCodeDataUrl, secret, otpAuthUrl });
+  } catch (e) { next(e); }
+});
+
+// Confirm OTP code and activate 2FA
+router.post('/me/2fa/enable', async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const { otp } = req.body;
+    const user = await User.findOne({
+      _id: req.user!.userId, organizationId: req.user!.organizationId,
+    }).select('+twoFactorSecret');
+    if (!user || !user.twoFactorSecret) {
+      res.status(400).json({ error: 'Run /me/2fa/setup first.' }); return;
+    }
+    const valid = authenticator.verify({ token: otp?.replace(/\s/g, ''), secret: user.twoFactorSecret });
+    if (!valid) { res.status(400).json({ error: 'Invalid code. Please try again.' }); return; }
+
+    user.twoFactorEnabled = true;
+    await user.save();
+    res.json({ message: 'Two-factor authentication enabled.' });
+  } catch (e) { next(e); }
+});
+
+// Disable 2FA — requires current OTP to confirm
+router.delete('/me/2fa', async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const { otp } = req.body;
+    const user = await User.findOne({
+      _id: req.user!.userId, organizationId: req.user!.organizationId,
+    }).select('+twoFactorSecret');
+    if (!user) { res.status(404).json({ error: 'User not found' }); return; }
+    if (!user.twoFactorEnabled) { res.status(400).json({ error: '2FA is not enabled.' }); return; }
+
+    const valid = authenticator.verify({ token: otp?.replace(/\s/g, ''), secret: user.twoFactorSecret! });
+    if (!valid) { res.status(400).json({ error: 'Invalid code.' }); return; }
+
+    user.twoFactorEnabled = false;
+    user.twoFactorSecret = undefined;
+    await user.save();
+    res.json({ message: 'Two-factor authentication disabled.' });
+  } catch (e) { next(e); }
+});
+
+// ── Admin / HR endpoints ─────────────────────────────────────────────────────
 
 router.get(
   '/',
@@ -68,6 +184,30 @@ router.put(
         return;
       }
       res.json(user);
+    } catch (e) {
+      next(e);
+    }
+  }
+);
+
+router.delete(
+  '/:id',
+  requireRole('admin'),
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      if (req.params['id'] === req.user!.userId.toString()) {
+        res.status(400).json({ error: 'You cannot delete your own account.' });
+        return;
+      }
+      const user = await User.findOneAndDelete({
+        _id: req.params['id'],
+        organizationId: req.user!.organizationId,
+      });
+      if (!user) {
+        res.status(404).json({ error: 'User not found' });
+        return;
+      }
+      res.json({ message: 'User deleted' });
     } catch (e) {
       next(e);
     }
