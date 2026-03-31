@@ -1,7 +1,7 @@
 import mongoose, { Document, Schema } from 'mongoose';
 import { tenantFilterPlugin } from './plugins/tenantFilter.plugin';
 
-export type UserRole = 'admin' | 'hr_manager' | 'manager' | 'coachee' | 'coach';
+export type UserRole = 'admin' | 'hr_manager' | 'manager' | 'coachee' | 'coach' | 'system_admin';
 
 export interface IUser extends Document {
   organizationId: mongoose.Types.ObjectId;
@@ -30,7 +30,7 @@ const UserSchema = new Schema<IUser>(
     passwordHash: { type: String, required: true },
     role: {
       type: String,
-      enum: ['admin', 'hr_manager', 'manager', 'coachee', 'coach'],
+      enum: ['admin', 'hr_manager', 'manager', 'coachee', 'coach', 'system_admin'],
       required: true,
     },
     firstName: { type: String, required: true, trim: true },

@@ -177,7 +177,7 @@ const COMMON_GAPS = [
                   <input
                     type="number"
                     min="1" max="130"
-                    [value]="eqiScores()[dim] ?? 100"
+                    [value]="eqiScores()[dim]"
                     (change)="setEqi(dim, $event)"
                     class="eqi-input"
                   />

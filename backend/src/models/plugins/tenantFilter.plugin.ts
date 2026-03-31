@@ -31,9 +31,10 @@ export function tenantFilterPlugin(schema: Schema): void {
 
   schema.pre('aggregate', function (next) {
     const pipeline = this.pipeline();
-    const hasOrgFilter = pipeline.some(
-      (stage) => stage['$match'] && stage['$match']['organizationId']
-    );
+    const hasOrgFilter = pipeline.some((stage) => {
+      const s = stage as unknown as Record<string, Record<string, unknown>>;
+      return s['$match'] && s['$match']['organizationId'];
+    });
     if (!hasOrgFilter) {
       console.warn('[TenantFilter] Aggregation without organizationId detected');
     }

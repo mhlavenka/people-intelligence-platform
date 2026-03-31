@@ -72,8 +72,10 @@ export async function analyzeConflict(
     };
 
     try {
-      // Strip markdown code fences if present
-      const clean = aiResponse.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+      let clean = aiResponse.replace(/```(?:json)?\r?\n?/g, '').replace(/```/g, '').trim();
+      const jsonStart = clean.indexOf('{');
+      const jsonEnd   = clean.lastIndexOf('}');
+      if (jsonStart !== -1 && jsonEnd > jsonStart) clean = clean.slice(jsonStart, jsonEnd + 1);
       parsed = JSON.parse(clean);
     } catch {
       parsed = {

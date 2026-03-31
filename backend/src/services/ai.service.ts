@@ -19,7 +19,8 @@ async function sleep(ms: number): Promise<void> {
 
 export async function callClaude(
   prompt: string,
-  systemPrompt: string = SYSTEM_PROMPT
+  systemPrompt: string = SYSTEM_PROMPT,
+  maxTokens = 2048,
 ): Promise<string> {
   let lastError: Error | null = null;
 
@@ -31,7 +32,7 @@ export async function callClaude(
 
       const message = await client.messages.create({
         model: 'claude-sonnet-4-6',
-        max_tokens: 2000,
+        max_tokens: maxTokens,
         system: systemPrompt,
         messages: [{ role: 'user', content: prompt }],
       });
@@ -48,6 +49,16 @@ export async function callClaude(
   }
 
   throw lastError || new Error('AI service failed after 3 attempts');
+}
+
+/** Extract the first complete JSON object from a Claude response that may contain prose. */
+export function extractJson(text: string): string {
+  const start = text.indexOf('{');
+  const end   = text.lastIndexOf('}');
+  if (start === -1 || end === -1 || end < start) {
+    throw new Error('No JSON object found in AI response');
+  }
+  return text.slice(start, end + 1);
 }
 
 export function buildConflictAnalysisPrompt(
@@ -102,7 +113,22 @@ Please provide:
 3. **Quick Wins**: 2-3 immediate actions that can be implemented within 30 days
 4. **Long-term Initiatives**: 2-3 strategic initiatives for the next 6-12 months
 
-Format your response as JSON with keys: aiGapAnalysis, actionRoadmap (array), quickWins (array), longTermInitiatives (array)`;
+Respond with ONLY valid JSON — no markdown, no code fences, no extra keys.
+Use exactly this structure (every value must be a plain string, never a nested object):
+
+{
+  "aiGapAnalysis": ["paragraph one text", "paragraph two text", "paragraph three text"],
+  "actionRoadmap": ["Full action description including timeline", "..."],
+  "quickWins": ["Full quick win description", "..."],
+  "longTermInitiatives": ["Full initiative description", "..."]
+}
+
+Rules:
+- aiGapAnalysis: exactly 2–3 plain-text paragraph strings
+- actionRoadmap: exactly 5–7 plain-text strings, each self-contained (include the timeline in the sentence)
+- quickWins: exactly 2–3 plain-text strings
+- longTermInitiatives: exactly 2–3 plain-text strings
+- NO objects, NO nested arrays, NO extra fields`;
 }
 
 export function buildIDPPrompt(
@@ -138,5 +164,6 @@ Please create a comprehensive IDP with:
 
 3. **Resources**: Recommended tools, training, or support
 
-Format as JSON with keys: goal, currentReality, options (array), willDoActions (array), milestones (array of {title, weeksFromNow, successCriteria}), resources (array)`;
+Respond with ONLY valid JSON — no explanation, no markdown, no code fences. Start your response with { and end with }.
+Required JSON shape: { "goal": string, "currentReality": string, "options": string[], "willDoActions": string[], "milestones": [{"title":string,"weeksFromNow":number,"successCriteria":string}], "resources": string[] }`;
 }

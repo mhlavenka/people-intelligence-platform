@@ -9,11 +9,14 @@ export interface IDimension {
 
 export interface INeuroinclustionAssessment extends Document {
   organizationId: mongoose.Types.ObjectId;
+  userId?: mongoose.Types.ObjectId;
   respondentRole: string;
   dimensions: IDimension[];
   overallMaturityScore: number;
-  aiGapAnalysis: string;
+  aiGapAnalysis: string | string[];
   actionRoadmap: string[];
+  quickWins: string[];
+  longTermInitiatives: string[];
   completedAt: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -36,11 +39,14 @@ const NeuroinclustionAssessmentSchema = new Schema<INeuroinclustionAssessment>(
       required: true,
       index: true,
     },
+    userId: { type: Schema.Types.ObjectId, ref: 'User', index: true },
     respondentRole: { type: String, required: true },
     dimensions: [DimensionSchema],
     overallMaturityScore: { type: Number, required: true },
-    aiGapAnalysis: { type: String, required: true },
-    actionRoadmap: [{ type: String }],
+    aiGapAnalysis: { type: Schema.Types.Mixed, required: true },
+    actionRoadmap:       [{ type: String }],
+    quickWins:           [{ type: String }],
+    longTermInitiatives: [{ type: String }],
     completedAt: { type: Date, required: true },
   },
   { timestamps: true }

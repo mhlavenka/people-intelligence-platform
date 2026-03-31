@@ -19,14 +19,25 @@ interface Dimension {
 }
 
 const DIMENSIONS: Omit<Dimension, 'score'>[] = [
-  { name: 'Awareness & Culture', description: 'Understanding and appreciation of neurodiversity in the workplace' },
-  { name: 'Recruitment & Onboarding', description: 'Inclusive hiring practices and accessible onboarding' },
-  { name: 'Workspace & Environment', description: 'Physical and digital environment accommodations' },
-  { name: 'Communication & Collaboration', description: 'Flexible communication styles and teamwork approaches' },
-  { name: 'Leadership & Management', description: 'Manager capability to support neurodivergent employees' },
-  { name: 'Policy & Process', description: 'Formal policies supporting neuroinclusion' },
-  { name: 'Learning & Development', description: 'Accessible training and growth opportunities' },
+  { name: 'Awareness & Culture', description: 'Organization-wide understanding and genuine appreciation of neurodiversity — from leadership commitment to team-level norms' },
+  { name: 'Recruitment & Onboarding', description: 'Inclusive hiring practices, accessible job postings, alternative interview formats, and structured onboarding for neurodivergent hires' },
+  { name: 'Workspace & Physical Environment', description: 'Physical accommodations: sensory-friendly spaces, quiet zones, flexible seating, and lighting adjustments' },
+  { name: 'Communication & Collaboration', description: 'Flexible communication styles, written vs. verbal options, meeting structure, and asynchronous work support' },
+  { name: 'Leadership & Management', description: 'Manager capability to recognize, support, and advocate for neurodivergent employees — coaching skills and individualized approaches' },
+  { name: 'Policy & Accommodation Process', description: 'Formal policies supporting neuroinclusion, clear accommodation request pathways, and legally compliant response processes' },
+  { name: 'Learning & Development', description: 'Accessible training content, multiple learning modalities, and growth opportunities that do not disadvantage neurodivergent employees' },
+  { name: 'Workflow Design & Task Structure', description: 'How work is structured, sequenced, and communicated — supporting executive function, reducing ambiguity, and enabling deep focus' },
 ];
+
+interface AssessmentResult {
+  overallMaturityScore: number;
+  dimensions: Dimension[];
+  aiGapAnalysis?: string | string[];
+  actionRoadmap?: string[];
+  quickWins?: string[];
+  longTermInitiatives?: string[];
+  completedAt?: string;
+}
 
 @Component({
   selector: 'app-neuroinclusion-assessment',
@@ -45,13 +56,33 @@ const DIMENSIONS: Omit<Dimension, 'score'>[] = [
     MatProgressSpinnerModule,
   ],
   template: `
-    <div class="assessment-page">
+    <div class="assessment-page" [class.results-mode]="completed()">
       <div class="page-header">
         <h1>Neuro-Inclusion Compass™</h1>
-        <p>Assess your organization's neuroinclusion maturity across 7 dimensions</p>
+        <p>Assess, build, and sustain neuroinclusive cultures — organizational diagnostic across 8 evidence-based dimensions</p>
       </div>
 
-      @if (completed()) {
+      <!-- Module description banner -->
+      @if (!completed() && !loading()) {
+        <div class="module-banner">
+          <div class="banner-insight">
+            <mat-icon class="banner-icon">psychology</mat-icon>
+            <p><strong>Market Timing:</strong> Neurodiversity-affirming workplace practices are transitioning from a values statement to a legal requirement across Canada and the US. The Neuro-Inclusion Compass provides the most differentiated tool for mid-market organizations — evidence-based, action-oriented, and grounded in Helena's signature methodology.</p>
+          </div>
+          <div class="banner-features">
+            <span class="feature-pill"><mat-icon>assessment</mat-icon> 8-Dimension Maturity Assessment</span>
+            <span class="feature-pill"><mat-icon>auto_fix_high</mat-icon> AI Gap Analysis & Roadmap</span>
+            <span class="feature-pill"><mat-icon>school</mat-icon> Manager Training Modules</span>
+            <span class="feature-pill"><mat-icon>assignment_turned_in</mat-icon> Accommodation Workflow</span>
+            <span class="feature-pill"><mat-icon>trending_up</mat-icon> Progress Tracking</span>
+            <span class="feature-pill"><mat-icon>groups</mat-icon> Peer Learning Community</span>
+          </div>
+        </div>
+      }
+
+      @if (loading()) {
+        <div class="center-spinner"><mat-spinner diameter="40" /></div>
+      } @else if (completed()) {
         <!-- Results view -->
         <div class="results-card">
           <div class="results-header">
@@ -74,7 +105,9 @@ const DIMENSIONS: Omit<Dimension, 'score'>[] = [
             <div class="results-summary">
               <h2>Assessment Complete</h2>
               <p class="maturity-level">Maturity Level: <strong>{{ maturityLabel() }}</strong></p>
-              <p>Your AI gap analysis and action roadmap have been generated.</p>
+              @if (completedAt()) {
+                <p class="completed-date">Completed {{ completedAt() | date:'MMM d, y' }}</p>
+              }
             </div>
           </div>
 
@@ -90,8 +123,162 @@ const DIMENSIONS: Omit<Dimension, 'score'>[] = [
             }
           </div>
 
-          <button mat-raised-button color="primary" (click)="startNew()">Start New Assessment</button>
+          @if (aiGapAnalysis().length > 0 || actionRoadmap().length > 0) {
+            <div class="ai-report">
+
+              @if (aiGapAnalysis().length > 0) {
+                <div class="report-section gap-analysis">
+                  <div class="section-heading">
+                    <div class="section-icon blue"><mat-icon>psychology</mat-icon></div>
+                    <h3>Gap Analysis</h3>
+                  </div>
+                  <div class="gap-paragraphs">
+                    @for (para of aiGapAnalysis(); track $index) {
+                      <p>{{ para }}</p>
+                    }
+                  </div>
+                </div>
+              }
+
+              <div class="report-grid">
+
+                @if (actionRoadmap().length > 0) {
+                  <div class="report-section">
+                    <div class="section-heading">
+                      <div class="section-icon navy"><mat-icon>route</mat-icon></div>
+                      <h3>Action Roadmap</h3>
+                    </div>
+                    <ol class="action-list">
+                      @for (action of actionRoadmap(); track $index) {
+                        <li>
+                          <span class="action-num">{{ $index + 1 }}</span>
+                          <span>{{ action }}</span>
+                        </li>
+                      }
+                    </ol>
+                  </div>
+                }
+
+                <div class="report-col-right">
+                  @if (quickWins().length > 0) {
+                    <div class="report-section quick-wins">
+                      <div class="section-heading">
+                        <div class="section-icon green"><mat-icon>bolt</mat-icon></div>
+                        <h3>Quick Wins <span class="timeframe">within 30 days</span></h3>
+                      </div>
+                      <ul class="bullet-list">
+                        @for (win of quickWins(); track $index) {
+                          <li>{{ win }}</li>
+                        }
+                      </ul>
+                    </div>
+                  }
+
+                  @if (longTermInitiatives().length > 0) {
+                    <div class="report-section long-term">
+                      <div class="section-heading">
+                        <div class="section-icon orange"><mat-icon>flag</mat-icon></div>
+                        <h3>Long-term Initiatives <span class="timeframe">6–12 months</span></h3>
+                      </div>
+                      <ul class="bullet-list">
+                        @for (item of longTermInitiatives(); track $index) {
+                          <li>{{ item }}</li>
+                        }
+                      </ul>
+                    </div>
+                  }
+                </div>
+
+              </div>
+            </div>
+          }
+
+          <div class="results-actions">
+            <button mat-raised-button color="primary" (click)="startNew()">
+              <mat-icon>refresh</mat-icon> Start New Assessment
+            </button>
+          </div>
         </div>
+
+        <!-- Accommodation Request Workflow -->
+        @if (completed()) {
+          <div class="section-card accommodation-section">
+            <div class="section-header">
+              <div class="section-icon purple">
+                <mat-icon>assignment_turned_in</mat-icon>
+              </div>
+              <div>
+                <h3>Accommodation Request Workflow</h3>
+                <p>Structured intake and response process for employee accommodation needs. Ensures legally compliant, consistent, and person-centred responses across your organization.</p>
+              </div>
+            </div>
+            <div class="accommodation-steps">
+              <div class="accom-step">
+                <div class="accom-step-num">1</div>
+                <div class="accom-step-body">
+                  <strong>Employee Submits Request</strong>
+                  <span>Confidential intake form capturing the employee's needs, preferred accommodations, and any supporting documentation.</span>
+                </div>
+              </div>
+              <div class="accom-step">
+                <div class="accom-step-num">2</div>
+                <div class="accom-step-body">
+                  <strong>HR Review & Assessment</strong>
+                  <span>HR reviews the request within 5 business days. AI generates a draft accommodation plan for HR to review and adapt.</span>
+                </div>
+              </div>
+              <div class="accom-step">
+                <div class="accom-step-num">3</div>
+                <div class="accom-step-body">
+                  <strong>Implementation & Agreement</strong>
+                  <span>Accommodation plan is confirmed with the employee, manager, and HR — all parties receive a copy.</span>
+                </div>
+              </div>
+              <div class="accom-step">
+                <div class="accom-step-num">4</div>
+                <div class="accom-step-body">
+                  <strong>90-Day Check-in</strong>
+                  <span>Automated follow-up survey to evaluate accommodation effectiveness and adjust as needed.</span>
+                </div>
+              </div>
+            </div>
+            <button mat-raised-button color="primary" class="accom-btn" disabled>
+              <mat-icon>add</mat-icon> Submit Accommodation Request
+              <span class="coming-soon">Coming soon</span>
+            </button>
+          </div>
+
+          <!-- Manager Training Modules -->
+          <div class="section-card training-section">
+            <div class="section-header">
+              <div class="section-icon teal">
+                <mat-icon>school</mat-icon>
+              </div>
+              <div>
+                <h3>Manager Training Modules</h3>
+                <p>Microlearning content on supporting neurodivergent employees — practical, evidence-based, and designed for people managers without clinical backgrounds.</p>
+              </div>
+            </div>
+            <div class="training-grid">
+              @for (module of trainingModules; track module.title) {
+                <div class="training-card">
+                  <div class="training-icon" [style.background]="module.color + '18'" [style.color]="module.color">
+                    <mat-icon>{{ module.icon }}</mat-icon>
+                  </div>
+                  <div class="training-info">
+                    <strong>{{ module.title }}</strong>
+                    <span>{{ module.description }}</span>
+                    <div class="training-meta">
+                      <span class="training-duration"><mat-icon>schedule</mat-icon> {{ module.duration }}</span>
+                      <span class="training-badge" [style.color]="module.color" [style.border-color]="module.color">{{ module.badge }}</span>
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        }
+
       } @else {
         <!-- Assessment form -->
         <div class="assessment-card">
@@ -174,6 +361,7 @@ const DIMENSIONS: Omit<Dimension, 'score'>[] = [
   `,
   styles: [`
     .assessment-page { padding: 32px; max-width: 800px; }
+    .assessment-page.results-mode { max-width: 100%; }
     .page-header { margin-bottom: 28px; h1 { font-size: 28px; color: #1B2A47; margin: 0 0 4px; } p { color: #5a6a7e; margin: 0; } }
 
     .assessment-card, .results-card {
@@ -228,24 +416,310 @@ const DIMENSIONS: Omit<Dimension, 'score'>[] = [
       .maturity-level { font-size: 14px; color: #5a6a7e; margin: 0 0 8px; strong { color: #27C4A0; } }
     }
 
+    .center-spinner { display: flex; justify-content: center; padding: 80px; }
+
+    .completed-date { font-size: 12px; color: #9aa5b4; margin: 0; }
+
+    /* ── AI Report ───────────────────────────────────────────── */
+    .ai-report {
+      margin: 24px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .report-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .report-col-right {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .report-section {
+      background: #f8fafc;
+      border-radius: 12px;
+      padding: 18px 20px;
+      border-left: 3px solid transparent;
+
+      &.gap-analysis  { border-left-color: #3A9FD6; }
+      &.quick-wins    { border-left-color: #27C4A0; }
+      &.long-term     { border-left-color: #f0a500; }
+    }
+
+    .section-heading {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+
+      h3 {
+        font-size: 14px;
+        font-weight: 700;
+        color: #1B2A47;
+        margin: 0;
+        display: flex;
+        align-items: baseline;
+        gap: 6px;
+      }
+    }
+
+    .section-icon {
+      width: 30px; height: 30px; border-radius: 8px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      mat-icon { font-size: 16px; width: 16px; height: 16px; }
+      &.blue   { background: rgba(58,159,214,0.12);  color: #2080b0; }
+      &.navy   { background: rgba(27,42,71,0.08);    color: #1B2A47; }
+      &.green  { background: rgba(39,196,160,0.12);  color: #1a9678; }
+      &.orange { background: rgba(240,165,0,0.12);   color: #b07800; }
+    }
+
+    .timeframe {
+      font-size: 11px;
+      font-weight: 500;
+      color: #9aa5b4;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .gap-paragraphs {
+      p {
+        font-size: 14px;
+        color: #374151;
+        line-height: 1.7;
+        margin: 0 0 10px;
+        &:last-child { margin-bottom: 0; }
+      }
+    }
+
+    .action-list {
+      list-style: none;
+      margin: 0; padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+
+      li {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        font-size: 13px;
+        color: #374151;
+        line-height: 1.5;
+      }
+    }
+
+    .action-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 22px; height: 22px;
+      border-radius: 50%;
+      background: #1B2A47;
+      color: white;
+      font-size: 11px;
+      font-weight: 700;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .bullet-list {
+      margin: 0; padding: 0;
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+
+      li {
+        font-size: 13px;
+        color: #374151;
+        line-height: 1.5;
+        padding-left: 16px;
+        position: relative;
+        &::before {
+          content: '';
+          position: absolute;
+          left: 0; top: 8px;
+          width: 6px; height: 6px;
+          border-radius: 50%;
+          background: #27C4A0;
+        }
+      }
+    }
+
+    .long-term .bullet-list li::before { background: #f0a500; }
+
     .dimension-results { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
     .dim-result {
       display: flex; align-items: center; gap: 12px;
-      .dim-name  { width: 200px; font-size: 13px; color: #5a6a7e; flex-shrink: 0; }
+      .dim-name  { width: 220px; font-size: 13px; color: #5a6a7e; flex-shrink: 0; }
       .dim-bar   { flex: 1; height: 8px; background: #e8edf4; border-radius: 4px; overflow: hidden; }
       .dim-fill  { height: 100%; border-radius: 4px; transition: width 0.5s; &.excellent { background: #27C4A0; } &.good { background: #3A9FD6; } &.fair { background: #f0a500; } &.poor { background: #e53e3e; } }
       .dim-score { width: 32px; font-size: 13px; font-weight: 600; color: #1B2A47; }
+    }
+
+    .results-actions { margin-top: 8px; }
+
+    /* ── Module banner ── */
+    .module-banner {
+      background: linear-gradient(135deg, #1a4731 0%, #1e5438 100%);
+      border-radius: 16px; padding: 24px 28px; margin-bottom: 24px; color: white;
+    }
+    .banner-insight {
+      display: flex; gap: 12px; align-items: flex-start; margin-bottom: 16px;
+      .banner-icon { color: #4ade80; font-size: 22px; flex-shrink: 0; margin-top: 2px; }
+      p { font-size: 13.5px; color: rgba(255,255,255,0.88); line-height: 1.7; margin: 0; }
+      strong { color: white; }
+    }
+    .banner-features { display: flex; flex-wrap: wrap; gap: 8px; }
+    .feature-pill {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 12px; background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.18); border-radius: 20px;
+      font-size: 12px; color: rgba(255,255,255,0.9);
+      mat-icon { font-size: 14px; width: 14px; height: 14px; }
+    }
+
+    /* ── Section cards ── */
+    .section-card {
+      background: white; border-radius: 16px; padding: 28px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06); margin-top: 20px;
+    }
+    .section-header {
+      display: flex; gap: 16px; align-items: flex-start; margin-bottom: 24px;
+      h3 { font-size: 17px; color: #1B2A47; margin: 0 0 4px; font-weight: 700; }
+      p  { font-size: 13px; color: #5a6a7e; margin: 0; line-height: 1.6; }
+    }
+    .section-icon {
+      width: 44px; height: 44px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      mat-icon { font-size: 22px; }
+      &.purple { background: rgba(124,58,237,0.12); color: #7c3aed; }
+      &.teal   { background: rgba(39,196,160,0.12); color: #1a9678; }
+    }
+
+    /* ── Accommodation workflow ── */
+    .accommodation-steps { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
+    .accom-step {
+      display: flex; gap: 12px; align-items: flex-start;
+      background: #f5f3ff; border: 1px solid #ddd6fe; border-radius: 10px; padding: 14px 16px;
+    }
+    .accom-step-num {
+      width: 26px; height: 26px; background: #7c3aed; color: white;
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700; flex-shrink: 0;
+    }
+    .accom-step-body {
+      display: flex; flex-direction: column; gap: 3px;
+      strong { font-size: 13px; color: #1B2A47; }
+      span   { font-size: 12px; color: #5a6a7e; line-height: 1.5; }
+    }
+    .accom-btn { position: relative; }
+    .coming-soon {
+      font-size: 10px; font-weight: 600; text-transform: uppercase;
+      background: #f0c040; color: #7a5800;
+      padding: 2px 6px; border-radius: 4px; margin-left: 8px; letter-spacing: 0.5px;
+    }
+
+    /* ── Manager training ── */
+    .training-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .training-card {
+      display: flex; gap: 14px; align-items: flex-start;
+      padding: 16px; border: 1px solid #e8edf4; border-radius: 12px;
+      background: #fafbfc; transition: background 0.15s;
+      &:hover { background: #f0f4f8; }
+    }
+    .training-icon {
+      width: 42px; height: 42px; border-radius: 10px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      mat-icon { font-size: 20px; }
+    }
+    .training-info {
+      display: flex; flex-direction: column; gap: 4px;
+      strong { font-size: 13px; color: #1B2A47; }
+      span   { font-size: 12px; color: #5a6a7e; line-height: 1.5; }
+    }
+    .training-meta { display: flex; align-items: center; gap: 10px; margin-top: 4px; }
+    .training-duration {
+      display: flex; align-items: center; gap: 3px;
+      font-size: 11px; color: #9aa5b4;
+      mat-icon { font-size: 13px; width: 13px; height: 13px; }
+    }
+    .training-badge {
+      font-size: 10px; font-weight: 700; padding: 2px 7px;
+      border: 1px solid; border-radius: 10px; text-transform: uppercase; letter-spacing: 0.4px;
     }
   `],
 })
 export class NeuroinclustionAssessmentComponent implements OnInit {
   dimensions: Dimension[] = DIMENSIONS.map((d) => ({ ...d, score: 50 }));
   totalSteps = DIMENSIONS.length + 2; // role + dimensions + review
+
+  trainingModules = [
+    {
+      title: 'Understanding ADHD at Work',
+      description: 'Practical strategies for supporting employees with ADHD — task structure, deadline flexibility, and reducing distraction.',
+      icon: 'bolt',
+      color: '#f0a500',
+      duration: '15 min',
+      badge: 'ADHD',
+    },
+    {
+      title: 'Autism Spectrum in the Workplace',
+      description: 'Sensory considerations, communication preferences, social expectations, and creating predictable environments.',
+      icon: 'hub',
+      color: '#3A9FD6',
+      duration: '20 min',
+      badge: 'Autism',
+    },
+    {
+      title: 'Dyslexia & Dyscalculia Support',
+      description: 'Reading and numeracy accommodations, alternative formats, assistive technology, and assessment adjustments.',
+      icon: 'text_fields',
+      color: '#27C4A0',
+      duration: '12 min',
+      badge: 'Dyslexia',
+    },
+    {
+      title: 'Sensory Sensitivities & Environment',
+      description: 'How to identify sensory triggers, adapt physical workspaces, and support employees with sensory processing differences.',
+      icon: 'sensors',
+      color: '#7c3aed',
+      duration: '10 min',
+      badge: 'Sensory',
+    },
+    {
+      title: 'Inclusive Communication Practices',
+      description: 'Clear, direct communication; written vs. verbal preferences; meeting structure; and reducing ambiguity.',
+      icon: 'forum',
+      color: '#e86c3a',
+      duration: '18 min',
+      badge: 'Communication',
+    },
+    {
+      title: 'Executive Function & Task Design',
+      description: 'Structuring work to support planning, prioritization, and task initiation — for managers and team leads.',
+      icon: 'checklist',
+      color: '#1B2A47',
+      duration: '14 min',
+      badge: 'Workflow',
+    },
+  ];
   currentStep = signal(0);
-  submitting = signal(false);
-  completed = signal(false);
-  overallScore = signal(0);
-  scoredDimensions = signal<Dimension[]>([]);
+  submitting  = signal(false);
+  loading     = signal(true);
+  completed   = signal(false);
+  overallScore       = signal(0);
+  scoredDimensions   = signal<Dimension[]>([]);
+  aiGapAnalysis        = signal<string[]>([]);
+  actionRoadmap        = signal<string[]>([]);
+  quickWins            = signal<string[]>([]);
+  longTermInitiatives  = signal<string[]>([]);
+  completedAt        = signal<string | null>(null);
 
   roleGroup: FormGroup;
 
@@ -255,7 +729,77 @@ export class NeuroinclustionAssessmentComponent implements OnInit {
     });
   }
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    this.api.get<AssessmentResult | null>('/neuroinclusion/assessments/latest').subscribe({
+      next: (result) => {
+        this.loading.set(false);
+        if (result) {
+          this.restoreResult(result);
+        }
+      },
+      error: () => this.loading.set(false),
+    });
+  }
+
+  private restoreResult(result: AssessmentResult): void {
+    this.overallScore.set(result.overallMaturityScore);
+    this.scoredDimensions.set(result.dimensions ?? [...this.dimensions]);
+
+    let gapRaw: unknown  = result.aiGapAnalysis;
+    let roadmapRaw: unknown  = result.actionRoadmap       ?? [];
+    let quickRaw: unknown    = result.quickWins           ?? [];
+    let longRaw: unknown     = result.longTermInitiatives ?? [];
+
+    // Legacy records stored the full raw AI response in aiGapAnalysis —
+    // strip markdown fences then try to parse as a JSON envelope
+    if (typeof gapRaw === 'string') {
+      const stripped = gapRaw
+        .replace(/```(?:json)?\s*/gi, '')
+        .replace(/```/g, '')
+        .trim();
+      if (stripped.startsWith('{')) {
+        try {
+          const p = JSON.parse(stripped);
+          gapRaw     = p['aiGapAnalysis']       ?? gapRaw;
+          roadmapRaw = p['actionRoadmap']       ?? roadmapRaw;
+          quickRaw   = p['quickWins']           ?? quickRaw;
+          longRaw    = p['longTermInitiatives'] ?? longRaw;
+        } catch { /* not valid JSON */ }
+      }
+    }
+
+    this.aiGapAnalysis.set(this.toParas(gapRaw));
+    this.actionRoadmap.set(this.toStrings(roadmapRaw));
+    this.quickWins.set(this.toStrings(quickRaw));
+    this.longTermInitiatives.set(this.toStrings(longRaw));
+    this.completedAt.set(result.completedAt ?? null);
+    this.completed.set(true);
+  }
+
+  /** Normalise an unknown value to an array of paragraph strings. */
+  private toParas(val: unknown): string[] {
+    if (Array.isArray(val)) return this.toStrings(val);
+    if (typeof val === 'string') {
+      const clean = val.replace(/```(?:json)?\s*/gi, '').replace(/```/g, '').trim();
+      return clean.split(/\n\n+/).map(s => s.trim()).filter(Boolean);
+    }
+    return [];
+  }
+
+  /** Normalise an array that may contain plain strings or Claude-style objects. */
+  private toStrings(val: unknown): string[] {
+    if (!Array.isArray(val)) return [];
+    return val.map((item) => {
+      if (typeof item === 'string') return item.trim();
+      if (item && typeof item === 'object') {
+        const o = item as Record<string, unknown>;
+        const text = o['action'] ?? o['initiative'] ?? o['description'] ?? o['detail'] ?? Object.values(o)[0] ?? '';
+        const tl   = typeof o['timeline'] === 'string' ? ` (${o['timeline']})` : '';
+        return `${String(text)}${tl}`.trim();
+      }
+      return String(item).trim();
+    }).filter(Boolean);
+  }
 
   progress = () => Math.round((this.currentStep() / (this.totalSteps - 1)) * 100);
 
@@ -306,12 +850,12 @@ export class NeuroinclustionAssessmentComponent implements OnInit {
       })),
     };
 
-    this.api.post<{ overallMaturityScore: number }>('/neuroinclusion/assess', payload).subscribe({
+    this.api.post<AssessmentResult>('/neuroinclusion/assess', payload).subscribe({
       next: (result) => {
-        const avg = Math.round(this.dimensions.reduce((s, d) => s + d.score, 0) / this.dimensions.length);
-        this.overallScore.set(result.overallMaturityScore || avg);
-        this.scoredDimensions.set([...this.dimensions]);
-        this.completed.set(true);
+        this.restoreResult({
+          ...result,
+          dimensions: result.dimensions?.length ? result.dimensions : [...this.dimensions],
+        });
         this.submitting.set(false);
       },
       error: () => this.submitting.set(false),

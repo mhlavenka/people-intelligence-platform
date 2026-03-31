@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/auth.guard';
+import { systemAdminGuard } from './core/system-admin.guard';
 
 export const routes: Routes = [
   {
@@ -95,6 +96,42 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./modules/settings/settings.component').then(
             (m) => m.SettingsComponent
+          ),
+      },
+      {
+        path: 'billing',
+        loadComponent: () =>
+          import('./modules/billing/billing.component').then(
+            (m) => m.BillingComponent
+          ),
+      },
+    ],
+  },
+  {
+    path: 'system-admin',
+    canActivate: [systemAdminGuard],
+    loadComponent: () =>
+      import('./modules/system-admin/system-admin-shell/system-admin-shell.component').then(
+        (m) => m.SystemAdminShellComponent
+      ),
+    children: [
+      {
+        path: '',
+        redirectTo: 'organizations',
+        pathMatch: 'full',
+      },
+      {
+        path: 'organizations',
+        loadComponent: () =>
+          import('./modules/system-admin/organizations/organizations.component').then(
+            (m) => m.OrganizationsComponent
+          ),
+      },
+      {
+        path: 'invoices',
+        loadComponent: () =>
+          import('./modules/system-admin/invoices/invoices.component').then(
+            (m) => m.InvoicesComponent
           ),
       },
     ],

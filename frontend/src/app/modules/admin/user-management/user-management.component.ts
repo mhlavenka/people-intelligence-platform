@@ -16,6 +16,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatDividerModule } from '@angular/material/divider';
 import { ApiService } from '../../../core/api.service';
 import { UserDialogComponent, OrgUser } from '../user-dialog/user-dialog.component';
+import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog.component';
 
 const ROLE_META: Record<string, { label: string; color: string }> = {
   admin:      { label: 'Admin',      color: '#1B2A47' },
@@ -358,15 +359,26 @@ export class UserManagementComponent implements OnInit {
   }
 
   deleteUser(user: OrgUser): void {
-    if (!confirm(`Permanently delete ${user.firstName} ${user.lastName}? This cannot be undone.`)) return;
-    this.api.delete(`/users/${user._id}`).subscribe({
-      next: () => {
-        this.users.update((list) => list.filter((u) => u._id !== user._id));
-        this.snackBar.open('User deleted', 'Close', { duration: 2500 });
+    const ref = this.dialog.open(ConfirmDialogComponent, {
+      width: '420px',
+      data: {
+        title: 'Delete User',
+        message: `Permanently delete ${user.firstName} ${user.lastName}? This cannot be undone.`,
+        confirmLabel: 'Delete',
+        icon: 'person_remove',
       },
-      error: (err) => this.snackBar.open(
-        err.error?.error || 'Delete failed', 'Close', { duration: 3000 }
-      ),
+    });
+    ref.afterClosed().subscribe((confirmed) => {
+      if (!confirmed) return;
+      this.api.delete(`/users/${user._id}`).subscribe({
+        next: () => {
+          this.users.update((list) => list.filter((u) => u._id !== user._id));
+          this.snackBar.open('User deleted', 'Close', { duration: 2500 });
+        },
+        error: (err) => this.snackBar.open(
+          err.error?.error || 'Delete failed', 'Close', { duration: 3000 }
+        ),
+      });
     });
   }
 }

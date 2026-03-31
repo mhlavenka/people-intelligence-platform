@@ -30,7 +30,6 @@
             "polyfills": ["zone.js"],
             "tsConfig": "tsconfig.json",
             "assets": [
-              "src/favicon.ico",
               "src/favicon.png",
               "src/assets"
             ],
@@ -104,7 +103,6 @@
             "polyfills": ["zone.js", "zone.js/testing"],
             "tsConfig": "tsconfig.spec.json",
             "assets": [
-              "src/favicon.ico",
               "src/favicon.png",
               "src/assets"
             ],

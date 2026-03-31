@@ -1,4 +1,4 @@
-import { Component, signal, computed } from '@angular/core';
+import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
@@ -6,7 +6,17 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatBadgeModule } from '@angular/material/badge';
+import { MatDialog } from '@angular/material/dialog';
 import { AuthService } from '../../../core/auth.service';
+import { ApiService } from '../../../core/api.service';
+import { ThemeService, OrgTheme } from '../../../core/theme.service';
+import { MessageHubDialogComponent } from '../../hub/message-hub-dialog.component';
+
+interface OrgInfo {
+  name: string;
+  theme?: OrgTheme;
+}
 
 interface NavItem {
   label: string;
@@ -39,6 +49,7 @@ function isGroup(entry: NavEntry): entry is NavGroup {
     MatMenuModule,
     MatTooltipModule,
     MatDividerModule,
+    MatBadgeModule,
   ],
   template: `
     <div class="app-layout" [class.collapsed]="sidebarCollapsed()">
@@ -143,15 +154,29 @@ function isGroup(entry: NavEntry): entry is NavGroup {
 
         <!-- User menu -->
         <div class="sidebar-footer">
-          <button mat-button [matMenuTriggerFor]="userMenu" class="user-btn">
-            <div class="user-avatar">{{ userInitials() }}</div>
-            @if (!sidebarCollapsed()) {
-              <div class="user-info">
-                <span class="user-name">{{ userName() }}</span>
-                <span class="user-role">{{ userRole() }}</span>
-              </div>
-            }
-          </button>
+          <div class="footer-row">
+            <button mat-button [matMenuTriggerFor]="userMenu" class="user-btn">
+              <div class="user-avatar">{{ userInitials() }}</div>
+              @if (!sidebarCollapsed()) {
+                <div class="user-info">
+                  <span class="user-name">{{ userName() }}</span>
+                  <span class="user-role">{{ userRole() }}</span>
+                </div>
+              }
+            </button>
+            <button class="hub-btn"
+                    (click)="openHub()"
+                    [matTooltip]="sidebarCollapsed() ? 'Messages & Alerts' : ''"
+                    matTooltipPosition="right">
+              <mat-icon
+                [class.bell-ringing]="unreadCount() > 0"
+                [matBadge]="unreadCount() > 0 ? unreadCount() : null"
+                matBadgeColor="warn"
+                matBadgeSize="small">
+                notifications
+              </mat-icon>
+            </button>
+          </div>
           <mat-menu #userMenu="matMenu">
             <button mat-menu-item routerLink="/profile">
               <mat-icon>person</mat-icon> Profile
@@ -182,7 +207,7 @@ function isGroup(entry: NavEntry): entry is NavGroup {
 
     .sidebar {
       width: 260px;
-      background: #1B2A47;
+      background: var(--pip-primary);
       color: white;
       display: flex;
       flex-direction: column;
@@ -201,7 +226,7 @@ function isGroup(entry: NavEntry): entry is NavGroup {
       border-bottom: 1px solid rgba(255,255,255,0.08);
       flex-shrink: 0;
 
-      // Collapsed: stack logo + toggle vertically, fully centred
+      /* Collapsed: stack logo + toggle vertically, fully centred */
       &.collapsed {
         flex-direction: column;
         align-items: center;
@@ -287,7 +312,7 @@ function isGroup(entry: NavEntry): entry is NavGroup {
       .nav-label { white-space: nowrap; flex: 1; }
 
       &:hover { background: rgba(255,255,255,0.08); color: white; }
-      &.active { background: rgba(58,159,214,0.2); color: #3A9FD6; }
+      &.active { background: color-mix(in srgb, var(--pip-accent) 20%, transparent); color: var(--pip-accent); }
     }
 
     .group-header {
@@ -309,7 +334,7 @@ function isGroup(entry: NavEntry): entry is NavGroup {
       gap: 1px;
       margin-left: 12px;
       padding-left: 8px;
-      border-left: 2px solid rgba(58,159,214,0.3);
+      border-left: 2px solid color-mix(in srgb, var(--pip-accent) 30%, transparent);
       margin-bottom: 4px;
     }
 
@@ -323,17 +348,61 @@ function isGroup(entry: NavEntry): entry is NavGroup {
       padding: 12px 8px;
       border-top: 1px solid rgba(255,255,255,0.08);
 
+      .footer-row {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+
       .user-btn {
         display: flex;
         align-items: center;
         gap: 10px;
-        width: 100%;
+        flex: 1;
+        min-width: 0;
         padding: 8px;
         border-radius: 8px;
         color: white;
         text-align: left;
         &:hover { background: rgba(255,255,255,0.08); }
       }
+
+      .hub-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        flex-shrink: 0;
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: rgba(255,255,255,0.65);
+        border-radius: 8px;
+        padding: 0;
+        &:hover { background: rgba(255,255,255,0.08); color: white; }
+        mat-icon { font-size: 22px; width: 22px; height: 22px; line-height: 22px; }
+      }
+
+    @keyframes bell-ring {
+      0%   { transform: rotate(0deg);    }
+      5%   { transform: rotate(18deg);   }
+      15%  { transform: rotate(-16deg);  }
+      25%  { transform: rotate(14deg);   }
+      35%  { transform: rotate(-10deg);  }
+      45%  { transform: rotate(6deg);    }
+      55%  { transform: rotate(-4deg);   }
+      65%  { transform: rotate(2deg);    }
+      75%  { transform: rotate(0deg);    }
+      100% { transform: rotate(0deg);    }
+    }
+
+    .bell-ringing {
+      display: inline-block;
+      transform-origin: top center;
+      animation: bell-ring 2.4s ease-in-out infinite;
+      color: #f0c040 !important;
+    }
 
       .user-avatar {
         width: 32px;
@@ -364,7 +433,7 @@ function isGroup(entry: NavEntry): entry is NavGroup {
     }
   `],
 })
-export class AppShellComponent {
+export class AppShellComponent implements OnInit {
   sidebarCollapsed = signal(false);
   openGroups = signal<Set<string>>(new Set(['Maintenance']));
 
@@ -383,6 +452,7 @@ export class AppShellComponent {
         { label: 'Users',             icon: 'group',              route: '/admin/users' },
         { label: 'Organization',      icon: 'business',           route: '/admin/organization' },
         { label: 'Role Permissions',  icon: 'admin_panel_settings',route: '/admin/roles' },
+        { label: 'Billing',           icon: 'receipt_long',       route: '/billing' },
       ],
     },
   ];
@@ -391,9 +461,45 @@ export class AppShellComponent {
   userName    = computed(() => { const u = this.user(); return u ? `${u.firstName} ${u.lastName}` : ''; });
   userInitials= computed(() => { const u = this.user(); return u ? `${u.firstName[0]}${u.lastName[0]}`.toUpperCase() : '??'; });
   userRole    = computed(() => this.user()?.role?.replace('_', ' ') || '');
-  orgName     = computed(() => 'My Organization');
+  orgName     = signal('My Organization');
+  unreadCount = signal(0);
 
-  constructor(private authService: AuthService, private router: Router) {}
+  constructor(
+    private authService: AuthService,
+    private router: Router,
+    private api: ApiService,
+    private themeService: ThemeService,
+    private dialog: MatDialog,
+  ) {}
+
+  ngOnInit(): void {
+    this.api.get<OrgInfo>('/organizations/me').subscribe({
+      next: (org) => {
+        this.orgName.set(org.name);
+        this.themeService.apply(org.theme);
+      },
+      error: () => {},
+    });
+    this.loadUnreadCount();
+  }
+
+  loadUnreadCount(): void {
+    this.api.get<{ total: number }>('/hub/unread-count').subscribe({
+      next: (r) => this.unreadCount.set(r.total),
+      error: () => {},
+    });
+  }
+
+  openHub(): void {
+    const ref = this.dialog.open(MessageHubDialogComponent, {
+      width: '640px',
+      height: '80vh',
+      panelClass: 'hub-dialog',
+    });
+    ref.afterClosed().subscribe((hadUnread: boolean) => {
+      if (hadUnread) this.loadUnreadCount();
+    });
+  }
 
   toggleGroup(label: string): void {
     this.openGroups.update((set) => {

@@ -3,13 +3,16 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
+import { ThemeService } from './theme.service';
+
+export type AppRole = 'admin' | 'hr_manager' | 'manager' | 'coachee' | 'coach' | 'system_admin';
 
 export interface User {
   id: string;
   email: string;
   firstName: string;
   lastName: string;
-  role: string;
+  role: AppRole;
   organizationId: string;
 }
 
@@ -37,7 +40,7 @@ export class AuthService {
 
   currentUser = signal<User | null>(this.loadUser());
 
-  constructor(private http: HttpClient, private router: Router) {}
+  constructor(private http: HttpClient, private router: Router, private themeService: ThemeService) {}
 
   register(data: {
     orgName: string;
@@ -85,6 +88,7 @@ export class AuthService {
     localStorage.removeItem(this.REFRESH_KEY);
     localStorage.removeItem(this.USER_KEY);
     this.currentUser.set(null);
+    this.themeService.reset();
     this.router.navigate(['/auth/login']);
   }
 

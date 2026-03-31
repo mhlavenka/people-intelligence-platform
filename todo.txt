@@ -1,0 +1,7 @@
+7. Billing framework
+       - will need to work more on taxation
+9. Organization Logo
+10. User avatar / picture
+11. mobile optimization + do I want an app?
+12. MHS EQi import
+

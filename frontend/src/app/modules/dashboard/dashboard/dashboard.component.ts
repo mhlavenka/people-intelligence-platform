@@ -93,7 +93,7 @@ interface ModuleCard {
     </div>
   `,
   styles: [`
-    .dashboard-page { padding: 32px; max-width: 1200px; }
+    .dashboard-page { padding: 32px; }
 
     .page-header {
       display: flex;

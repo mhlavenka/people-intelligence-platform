@@ -60,7 +60,7 @@ interface ConflictAnalysis {
         </div>
       </div>
 
-      @if (data.conflictTypes?.length) {
+      @if (data.conflictTypes.length) {
         <div class="section">
           <h3><mat-icon>label</mat-icon> Identified Conflict Types</h3>
           <div class="chips-row">

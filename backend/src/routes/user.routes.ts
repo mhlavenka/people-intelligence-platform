@@ -6,6 +6,7 @@ import QRCode from 'qrcode';
 import { authenticateToken, requireRole, AuthRequest } from '../middleware/auth.middleware';
 import { tenantResolver } from '../middleware/tenant.middleware';
 import { User } from '../models/User.model';
+import { sendEmail } from '../services/email.service';
 
 const router = Router();
 router.use(authenticateToken, tenantResolver);
@@ -118,6 +119,37 @@ router.delete('/me/2fa', async (req: AuthRequest, res: Response, next: NextFunct
     user.twoFactorSecret = undefined;
     await user.save();
     res.json({ message: 'Two-factor authentication disabled.' });
+  } catch (e) { next(e); }
+});
+
+router.post('/me/test-email', async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const { to } = req.body as { to?: string };
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!to || !emailRegex.test(to)) {
+      res.status(400).json({ error: 'A valid recipient email address is required' });
+      return;
+    }
+
+    const user = await User.findOne({
+      _id: req.user!.userId,
+      organizationId: req.user!.organizationId,
+    }).select('firstName');
+
+    if (!user) { res.status(404).json({ error: 'User not found' }); return; }
+
+    await sendEmail({
+      to,
+      subject: 'People Intelligence Platform — Test Email',
+      html: `
+        <p>Hi there,</p>
+        <p>This is a test email from <strong>People Intelligence Platform</strong>, sent by ${user.firstName}.</p>
+        <p>If you received this message, AWS SES email notifications are configured correctly.</p>
+        <p style="color:#9aa5b4;font-size:12px;">Sent from the Email Notifications settings page.</p>
+      `,
+    });
+
+    res.json({ ok: true, sentTo: to });
   } catch (e) { next(e); }
 });
 

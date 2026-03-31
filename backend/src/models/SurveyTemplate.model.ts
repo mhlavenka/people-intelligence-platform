@@ -9,12 +9,13 @@ export interface IQuestion {
 }
 
 export interface ISurveyTemplate extends Document {
-  organizationId: mongoose.Types.ObjectId;
+  organizationId?: mongoose.Types.ObjectId;
   moduleType: 'conflict' | 'neuroinclusion' | 'succession';
   title: string;
   questions: IQuestion[];
   isActive: boolean;
-  createdBy: mongoose.Types.ObjectId;
+  isGlobal: boolean;
+  createdBy?: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -34,7 +35,7 @@ const SurveyTemplateSchema = new Schema<ISurveyTemplate>(
     organizationId: {
       type: Schema.Types.ObjectId,
       ref: 'Organization',
-      required: true,
+      required: false,
       index: true,
     },
     moduleType: {
@@ -45,7 +46,8 @@ const SurveyTemplateSchema = new Schema<ISurveyTemplate>(
     title: { type: String, required: true, trim: true },
     questions: [QuestionSchema],
     isActive: { type: Boolean, default: true },
-    createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    isGlobal: { type: Boolean, default: false, index: true },
+    createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: false },
   },
   { timestamps: true }
 );

@@ -15,6 +15,10 @@ import conflictRoutes from './routes/conflict.routes';
 import neuroinclustionRoutes from './routes/neuroinclusion.routes';
 import successionRoutes from './routes/succession.routes';
 import aiRoutes from './routes/ai.routes';
+import systemAdminRoutes from './routes/system-admin.routes';
+import hubRoutes from './routes/hub.routes';
+import billingRoutes from './routes/billing.routes';
+import systemAdminBillingRoutes from './routes/system-admin-billing.routes';
 
 const app = express();
 
@@ -26,6 +30,9 @@ app.use(
     credentials: true,
   })
 );
+
+// Raw body for Stripe webhook (must come BEFORE the json() middleware)
+app.use('/api/billing/webhook', express.raw({ type: 'application/json' }));
 
 // Body parsing
 app.use(express.json({ limit: '10mb' }));
@@ -46,6 +53,10 @@ app.use('/api/conflict', conflictRoutes);
 app.use('/api/neuroinclusion', neuroinclustionRoutes);
 app.use('/api/succession', successionRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/system-admin', systemAdminRoutes);
+app.use('/api/hub', hubRoutes);
+app.use('/api/billing', billingRoutes);
+app.use('/api/system-admin/billing', systemAdminBillingRoutes);
 
 // 404 and error handlers (must be last)
 app.use(notFound);

@@ -1,0 +1,344 @@
+================================================================================
+CLAUDE CODE PROMPT — PEOPLE INTELLIGENCE PLATFORM
+HeadSoft Tech × Helena Coaching
+================================================================================
+Copy everything below this line and paste directly into Claude Code
+--------------------------------------------------------------------------------
+
+You are helping build the "People Intelligence Platform" — an AI-powered SaaS
+application co-developed by HeadSoft Tech (headsoft.net) and Helena Coaching
+(helenacoaching.com).
+
+Read this entire prompt before writing any code.
+
+
+================================================================================
+PROJECT OVERVIEW
+================================================================================
+
+A multi-tenant B2B SaaS platform with three modules:
+
+  1. Conflict Intelligence™
+     — workplace conflict detection and mediation escalation
+
+  2. Neuro-Inclusion Compass™
+     — organizational neuroinclusion maturity assessment
+
+  3. Leadership & Succession Hub™
+     — AI-generated IDPs and succession planning
+
+
+================================================================================
+TECH STACK
+================================================================================
+
+  Frontend  : Angular 17+ (standalone components, Angular Material UI)
+  Backend   : Node.js 20+ with Express.js, TypeScript throughout
+  Database  : MongoDB Atlas (mongoose ODM)
+              multi-tenant via organizationId field on all collections
+  AI        : Anthropic Claude API (claude-sonnet-4-6)
+  Auth      : JWT with refresh tokens; structure for future Auth0/SSO integration
+  Cloud     : AWS (target: EC2 + S3 + SES; structure for easy ECS migration)
+  Repo      : GitHub (initialize git repo, .gitignore for node_modules/.env/dist)
+  Payments  : Stripe (scaffold only — no live keys yet)
+
+
+================================================================================
+BRAND COLORS
+================================================================================
+
+  Navy           #1B2A47
+  Blue           #3A9FD6
+  Green          #27C4A0
+  Light BG       #EBF5FB
+
+
+================================================================================
+PROJECT STRUCTURE TO SCAFFOLD
+================================================================================
+
+people-intelligence-platform/
+├── backend/
+│   ├── src/
+│   │   ├── config/          # env, db connection, AWS config
+│   │   ├── middleware/      # auth, error handler, rate limiter, tenant resolver
+│   │   ├── models/          # mongoose schemas
+│   │   ├── routes/          # Express routers
+│   │   ├── controllers/     # business logic
+│   │   ├── services/        # AI service, email service, survey service
+│   │   └── app.ts           # Express app entry
+│   ├── .env.example
+│   ├── package.json
+│   └── tsconfig.json
+├── frontend/
+│   ├── src/
+│   │   ├── app/
+│   │   │   ├── core/        # auth service, API service, interceptors, guards
+│   │   │   ├── shared/      # shared components, pipes, directives
+│   │   │   ├── modules/
+│   │   │   │   ├── auth/            # login, register, forgot-password
+│   │   │   │   ├── dashboard/       # main org dashboard
+│   │   │   │   ├── conflict/        # Conflict Intelligence module
+│   │   │   │   ├── neuroinclusion/  # Neuro-Inclusion Compass module
+│   │   │   │   └── succession/      # Leadership & Succession Hub module
+│   │   │   └── app.routes.ts
+│   │   ├── environments/
+│   │   └── styles/          # global SCSS with brand variables
+│   ├── angular.json
+│   └── package.json
+├── shared/
+│   └── types/               # shared TypeScript interfaces (backend + frontend)
+├── .github/
+│   └── workflows/           # GitHub Actions CI pipeline
+├── docker-compose.yml       # local dev (MongoDB + backend + frontend)
+└── README.md
+
+
+================================================================================
+MONGODB SCHEMAS TO CREATE
+================================================================================
+
+Create Mongoose schemas with TypeScript interfaces for all of the following:
+
+---- Organization (tenant root) ----
+  name, slug, plan ('starter'|'professional'|'enterprise'),
+  modules: string[], billingEmail, stripeCustomerId,
+  employeeCount, industry, createdAt
+
+---- User ----
+  organizationId (ref), email, passwordHash,
+  role ('admin'|'hr_manager'|'manager'|'coachee'|'coach'),
+  firstName, lastName, isActive, lastLoginAt
+
+---- SurveyTemplate ----
+  organizationId, moduleType ('conflict'|'neuroinclusion'|'succession'),
+  title, questions: [{id, text, type ('scale'|'text'|'boolean'), category}],
+  isActive, createdBy
+
+---- SurveyResponse ----
+  organizationId, templateId, respondentId, departmentId,
+  responses: [{questionId, value}], submittedAt, isAnonymous
+
+---- ConflictAnalysis ----
+  organizationId, surveyPeriod, departmentId,
+  riskScore (0-100), riskLevel ('low'|'medium'|'high'|'critical'),
+  conflictTypes: string[], aiNarrative, managerScript,
+  escalationRequested: boolean, escalationStatus, createdAt
+
+---- DevelopmentPlan (IDP) ----
+  organizationId, coacheeId, coachId,
+  goal, currentReality, options: string[], willDoActions: string[],
+  milestones: [{title, dueDate, status, notes}],
+  eqiScores: object, competencyGaps: string[],
+  aiGeneratedContent, status ('draft'|'active'|'completed'), createdAt
+
+---- NeuroinclusiontAssessment ----
+  organizationId, respondentRole,
+  dimensions: [{name, score, responses: object}],
+  overallMaturityScore, aiGapAnalysis, actionRoadmap: string[],
+  completedAt
+
+
+================================================================================
+API ROUTES TO SCAFFOLD (with placeholder controllers)
+================================================================================
+
+  POST   /api/auth/register
+  POST   /api/auth/login
+  POST   /api/auth/refresh
+  POST   /api/auth/forgot-password
+
+  GET    /api/organizations/:orgId
+  PUT    /api/organizations/:orgId
+
+  GET    /api/users
+  POST   /api/users
+  PUT    /api/users/:id
+
+  POST   /api/surveys/templates
+  GET    /api/surveys/templates
+  POST   /api/surveys/respond
+  GET    /api/surveys/responses/:templateId
+
+  POST   /api/conflict/analyze          <- triggers Claude AI analysis
+  GET    /api/conflict/analyses
+  GET    /api/conflict/analyses/:id
+  POST   /api/conflict/escalate/:id
+
+  POST   /api/neuroinclusion/assess     <- triggers Claude AI gap analysis
+  GET    /api/neuroinclusion/assessments
+
+  POST   /api/succession/idp/generate   <- triggers Claude AI IDP generation
+  GET    /api/succession/idps
+  PUT    /api/succession/idps/:id/milestone
+
+  POST   /api/ai/analyze                <- shared internal AI service endpoint
+
+
+================================================================================
+AI SERVICE (CRITICAL)
+================================================================================
+
+Create backend/src/services/ai.service.ts with the following structure:
+
+  // One prompt builder per module:
+  buildConflictAnalysisPrompt(surveyData, orgContext): string
+  buildNeuroinclustionGapPrompt(assessmentData, orgContext): string
+  buildIDPPrompt(coacheeProfile, eqiScores, goals): string
+
+  // Shared Claude API caller:
+  async callClaude(prompt: string, systemPrompt: string): Promise<string>
+  // Use model: 'claude-sonnet-4-6', max_tokens: 2000
+  // Add retry logic with exponential backoff (3 attempts)
+
+
+---- SYSTEM PROMPT (use for ALL Claude API calls) ----
+
+"You are an expert organizational psychologist and executive coach assistant
+working within the Helena Coaching methodology. You apply the GROW model
+(Goal, Reality, Options, Will) for development planning, interest-based
+negotiation principles for conflict analysis, and neurodiversity-affirming
+practices for inclusion assessments. Always provide structured, actionable,
+empathetic outputs suitable for HR professionals and organizational leaders.
+Never identify individuals from aggregated data. Keep outputs professional
+and grounded in evidence-based organizational psychology."
+
+
+================================================================================
+ANGULAR FRONTEND — KEY COMPONENTS TO SCAFFOLD
+================================================================================
+
+Create these Angular standalone components using Angular Material:
+
+  1. AppShell
+     Sidebar nav with module icons, org switcher, user menu
+
+  2. LoginComponent
+     Branded login form with Helena/HeadSoft color scheme
+
+  3. DashboardComponent
+     Org health overview — 3 module summary cards with key metrics
+
+  4. ConflictDashboardComponent
+     Risk score gauge, department heatmap table, recent analyses list,
+     escalation button
+
+  5. SurveyLaunchComponent
+     Survey template selector, employee group selector, schedule/send
+
+  6. IDPViewComponent
+     GROW model display with milestone tracker and progress timeline
+
+  7. NeuroinclusiontAssessmentComponent
+     Multi-step assessment form with progress bar
+
+  8. ReportViewComponent
+     AI narrative display with export-to-PDF button placeholder
+
+Apply brand colors via src/styles/_variables.scss:
+
+  $navy:     #1B2A47;
+  $blue:     #3A9FD6;
+  $green:    #27C4A0;
+  $light-bg: #EBF5FB;
+
+
+================================================================================
+GITHUB ACTIONS CI PIPELINE
+================================================================================
+
+Create .github/workflows/ci.yml that:
+  - Triggers on push to main and develop branches
+  - Runs npm install and npm run build for both backend and frontend
+  - Runs npm test (placeholder test scripts for now)
+  - Lints TypeScript
+
+
+================================================================================
+ENVIRONMENT VARIABLES (.env.example)
+================================================================================
+
+# App
+NODE_ENV=development
+PORT=3000
+FRONTEND_URL=http://localhost:4200
+
+# MongoDB
+MONGODB_URI=mongodb+srv://<user>:<password>@cluster.mongodb.net/people-intelligence
+
+# JWT
+JWT_SECRET=your-secret-here
+JWT_EXPIRES_IN=15m
+JWT_REFRESH_SECRET=your-refresh-secret
+JWT_REFRESH_EXPIRES_IN=7d
+
+# Anthropic
+ANTHROPIC_API_KEY=your-key-here
+
+# AWS
+AWS_REGION=ca-central-1
+AWS_ACCESS_KEY_ID=
+AWS_SECRET_ACCESS_KEY=
+AWS_S3_BUCKET=people-intelligence-assets
+AWS_SES_FROM_EMAIL=noreply@yourdomain.com
+
+# Stripe
+STRIPE_SECRET_KEY=
+STRIPE_WEBHOOK_SECRET=
+
+# Frontend
+ANGULAR_API_URL=http://localhost:3000/api
+
+
+================================================================================
+BUILD PRIORITY ORDER
+================================================================================
+
+Build in this sequence:
+
+  1. Scaffold full monorepo structure with all folders and placeholder files
+  2. Backend: working Express app with MongoDB connection, JWT auth
+     (register / login / refresh) and tenant middleware
+  3. Backend: AI service with all three prompt builders and Claude API caller
+  4. Backend: Complete Conflict Intelligence routes and controllers (Module 1 MVP)
+  5. Frontend: Auth module (login / register screens)
+  6. Frontend: AppShell with routing and brand styling
+  7. Frontend: ConflictDashboardComponent connected to real API
+
+
+================================================================================
+KEY CONSTRAINTS — READ CAREFULLY
+================================================================================
+
+MULTI-TENANCY IS CRITICAL
+  Every database query MUST include an organizationId filter.
+  Add a Mongoose middleware/plugin that enforces this automatically.
+
+NO INDIVIDUAL-LEVEL REPORTING
+  Survey response aggregation must enforce a minimum group size of 5
+  before returning results to managers.
+
+TYPESCRIPT STRICT MODE
+  Enable "strict": true in both backend and frontend tsconfig files.
+
+ERROR HANDLING
+  - Global error handler middleware in Express
+  - HTTP interceptor in Angular that handles 401 and the refresh token flow
+
+README.md
+  Write a complete developer setup guide including:
+  - MongoDB Atlas cluster setup steps
+  - Environment variable configuration
+  - Local dev startup commands (docker-compose and manual)
+
+AWS DEPLOYMENT
+  Target EC2 for initial deployment.
+  Structure the code so migration to ECS/Fargate requires minimal changes.
+
+ARCHITECTURAL DECISIONS
+  Ask before making any architectural decisions not covered in this prompt.
+
+
+================================================================================
+END OF PROMPT
+================================================================================

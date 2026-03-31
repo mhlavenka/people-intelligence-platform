@@ -6,10 +6,13 @@
     "build": "tsc",
     "start": "node dist/app.js",
     "test": "jest",
-    "lint": "eslint src --ext .ts"
+    "lint": "eslint src --ext .ts",
+    "seed:admin": "ts-node --project tsconfig.json src/scripts/seed-admin.ts",
+    "seed:surveys": "ts-node --project tsconfig.json src/scripts/seed-surveys.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.24.0",
+    "@aws-sdk/client-ses": "^3.1020.0",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
@@ -21,6 +24,7 @@
     "nodemailer": "^6.9.14",
     "otplib": "^10.2.3",
     "qrcode": "^1.5.4",
+    "stripe": "^21.0.1",
     "uuid": "^10.0.0",
     "winston": "^3.13.0"
   },

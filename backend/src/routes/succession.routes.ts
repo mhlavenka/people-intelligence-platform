@@ -3,7 +3,7 @@ import { authenticateToken, requireRole, AuthRequest } from '../middleware/auth.
 import { tenantResolver } from '../middleware/tenant.middleware';
 import { DevelopmentPlan } from '../models/DevelopmentPlan.model';
 import { User } from '../models/User.model';
-import { buildIDPPrompt, callClaude } from '../services/ai.service';
+import { buildIDPPrompt, callClaude, extractJson } from '../services/ai.service';
 
 const router = Router();
 router.use(authenticateToken, tenantResolver);
@@ -28,19 +28,20 @@ router.post(
         goals
       );
 
-      const aiResponse = await callClaude(prompt);
+      const aiResponse = await callClaude(prompt, undefined, 4096);
       let parsed: {
         goal: string;
         currentReality: string;
         options: string[];
         willDoActions: string[];
         milestones: Array<{ title: string; weeksFromNow: number; successCriteria: string }>;
+        resources?: string[];
       };
 
       try {
-        const clean = aiResponse.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-        parsed = JSON.parse(clean);
-      } catch {
+        parsed = JSON.parse(extractJson(aiResponse));
+      } catch (parseErr) {
+        console.error('[IDP] JSON parse failed. Raw AI response:', aiResponse);
         parsed = {
           goal: goals,
           currentReality: '',
@@ -101,6 +102,80 @@ router.get('/idps', async (req: AuthRequest, res: Response, next: NextFunction) 
     next(e);
   }
 });
+
+router.post(
+  '/idps/:id/regenerate',
+  requireRole('admin', 'hr_manager', 'coach'),
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const organizationId = req.user!.organizationId;
+
+      const existing = await DevelopmentPlan.findOne({ _id: req.params['id'], organizationId });
+      if (!existing) {
+        res.status(404).json({ error: 'IDP not found' });
+        return;
+      }
+
+      const coachee = await User.findOne({ _id: existing.coacheeId, organizationId });
+      if (!coachee) {
+        res.status(404).json({ error: 'Coachee not found' });
+        return;
+      }
+
+      // Serialize Mongoose Mixed field to a plain object before passing to prompt builder
+      const eqiScores: Record<string, number> =
+        JSON.parse(JSON.stringify(existing.eqiScores ?? {}));
+
+      const prompt = buildIDPPrompt(
+        { firstName: coachee.firstName, role: coachee.role, competencyGaps: existing.competencyGaps },
+        eqiScores,
+        existing.goal
+      );
+
+      const aiResponse = await callClaude(prompt, undefined, 4096);
+      let parsed: {
+        goal: string;
+        currentReality: string;
+        options: string[];
+        willDoActions: string[];
+        milestones: Array<{ title: string; weeksFromNow: number; successCriteria: string }>;
+      };
+
+      try {
+        parsed = JSON.parse(extractJson(aiResponse));
+      } catch {
+        console.error('[IDP Regenerate] JSON parse failed. Raw AI response:', aiResponse);
+        res.status(500).json({ error: 'AI returned invalid response. Please try again.' });
+        return;
+      }
+
+      parsed.currentReality = parsed.currentReality || '';
+      parsed.options        = Array.isArray(parsed.options)       ? parsed.options       : [];
+      parsed.willDoActions  = Array.isArray(parsed.willDoActions)  ? parsed.willDoActions  : [];
+      parsed.milestones     = Array.isArray(parsed.milestones)    ? parsed.milestones    : [];
+
+      const milestones = parsed.milestones.map((m) => ({
+        title: m.title || 'Milestone',
+        dueDate: new Date(Date.now() + (m.weeksFromNow || 4) * 7 * 24 * 3600 * 1000),
+        status: 'pending' as const,
+        notes: m.successCriteria || '',
+      }));
+
+      existing.goal             = parsed.goal || existing.goal;
+      existing.currentReality   = parsed.currentReality;
+      existing.options          = parsed.options;
+      existing.willDoActions    = parsed.willDoActions;
+      existing.milestones       = milestones;
+      existing.aiGeneratedContent = aiResponse;
+      existing.status           = 'draft';
+      await existing.save();
+
+      res.json(existing);
+    } catch (e) {
+      next(e);
+    }
+  }
+);
 
 router.put('/idps/:id/milestone', async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {

@@ -34,9 +34,12 @@ router.post(
 router.get('/', async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const templates = await SurveyTemplate.find({
-      organizationId: req.user!.organizationId,
+      $or: [
+        { organizationId: req.user!.organizationId },
+        { isGlobal: true },
+      ],
       isActive: true,
-    });
+    }).setOptions({ bypassTenantCheck: true });
     res.json(templates);
   } catch (e) {
     next(e);
@@ -48,9 +51,12 @@ router.get(
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const templates = await SurveyTemplate.find({
-        organizationId: req.user!.organizationId,
+        $or: [
+          { organizationId: req.user!.organizationId },
+          { isGlobal: true },
+        ],
         isActive: true,
-      });
+      }).setOptions({ bypassTenantCheck: true });
       res.json(templates);
     } catch (e) {
       next(e);

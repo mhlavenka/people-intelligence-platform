@@ -1,0 +1,690 @@
+================================================================================
+CLAUDE CODE PROMPT — EQ COMPANION SUITE™
+HeadSoft Tech × Helena Coaching
+Add-on Module to the People Intelligence Platform
+================================================================================
+Copy everything below this line and paste directly into Claude Code.
+Run this from inside the existing people-intelligence-platform/ monorepo,
+or as a standalone repo if building independently.
+--------------------------------------------------------------------------------
+
+You are helping build the "EQ Companion Suite™" — a coaching-integrated
+emotional intelligence platform that works alongside (and eventually replaces)
+the MHS EQi 2.0 assessment tool used by Helena Coaching (helenacoaching.com).
+
+This is built as a module within the People Intelligence Platform developed by
+HeadSoft Tech (headsoft.net), using the same stack: AWS / MongoDB / Node.js /
+Angular. Read this entire prompt before writing any code.
+
+
+================================================================================
+CONTEXT & PURPOSE
+================================================================================
+
+Helena Hlavenkova is a PCC-certified executive coach and certified EQi 2.0
+administrator. She currently pays MHS (Multi-Health Systems) $275–$700 CAD per
+person per assessment. This module eliminates that cost in two phases:
+
+  Phase 1 — EQi Companion App (build now)
+    Works ALONGSIDE MHS assessments. Helena imports scores from MHS PDF reports
+    into this app. Claude AI generates coaching narratives, GROW plans, and
+    branded PDF reports. Zero dependency on MHS portal for coaching workflow.
+
+  Phase 2 — HEQ™ Native Assessment (scaffold now, build later)
+    Helena's own proprietary 72-item EI assessment. Replaces MHS entirely.
+    Scaffold the data models and scoring service now, even if the question
+    bank is not yet written.
+
+LEGAL NOTE: Nothing in this codebase may reproduce MHS question content,
+trademarks (EQi, EQ-i 2.0, EQ 360), or their scoring algorithms. We use the
+publicly published Bar-On theoretical framework (5 composites / 15 subscales)
+which is documented in peer-reviewed academic literature and is not proprietary.
+
+
+================================================================================
+TECH STACK
+================================================================================
+
+  Frontend  : Angular 17+ standalone components, Angular Material
+  Backend   : Node.js 20+ / Express / TypeScript (strict mode)
+  Database  : MongoDB Atlas via Mongoose
+  AI        : Anthropic Claude API — model: claude-sonnet-4-6
+  PDF       : Puppeteer (headless Chrome) — server-side PDF generation
+  Storage   : AWS S3 — generated PDF reports
+  Auth      : Reuse JWT middleware from main platform
+  Hosting   : AWS EC2 (same as main platform)
+
+Brand colors:
+  Navy    #1B2A47
+  Blue    #3A9FD6
+  Green   #27C4A0
+  Light   #EBF5FB
+
+
+================================================================================
+PROJECT STRUCTURE TO ADD / SCAFFOLD
+================================================================================
+
+If inside the monorepo, add under backend/src/ and frontend/src/app/modules/:
+
+backend/src/
+  models/
+    eq-profile.model.ts          # client EI profile
+    eq-scores.model.ts           # imported or native assessment scores
+    eq-session.model.ts          # coaching session notes & milestones
+    eq-report.model.ts           # generated report metadata + S3 key
+    heq-response.model.ts        # Phase 2: native HEQ™ item responses
+    heq-item.model.ts            # Phase 2: HEQ™ question bank
+    heq-norms.model.ts           # Phase 2: normative database
+
+  routes/
+    eq.routes.ts                 # all /api/eq/* routes
+
+  controllers/
+    eq-profile.controller.ts
+    eq-scores.controller.ts
+    eq-session.controller.ts
+    eq-report.controller.ts
+    heq-assessment.controller.ts # Phase 2
+
+  services/
+    eq-ai.service.ts             # Claude prompts for EQ module
+    eq-scoring.service.ts        # T-score conversion, composite computation
+    eq-pdf.service.ts            # Puppeteer PDF generation
+    eq-norms.service.ts          # Phase 2: norm lookup and percentile calc
+
+frontend/src/app/modules/
+  eq-companion/
+    components/
+      eq-dashboard/              # coach's overview of all EQ clients
+      eq-score-entry/            # 15-subscale score import form
+      eq-profile-view/           # individual client full profile
+      eq-debrief-viewer/         # AI narrative display + edit
+      eq-grow-plan/              # GROW plan view + milestone tracker
+      eq-session-notes/          # session log component
+      eq-team-view/              # aggregated team EI profile
+      eq-report-preview/         # PDF report preview before download
+      heq-assessment/            # Phase 2: 72-item assessment form
+    services/
+      eq-api.service.ts          # HTTP client for all /api/eq endpoints
+    models/
+      eq.types.ts                # TypeScript interfaces
+
+
+================================================================================
+MONGODB SCHEMAS — BUILD ALL OF THESE
+================================================================================
+
+---- EqProfile ----
+interface EqProfile {
+  _id: ObjectId
+  organizationId: ObjectId        // required — tenant isolation
+  coachId: ObjectId               // Helena or delegated coach
+  clientName: string
+  clientEmail: string
+  clientRole: string              // e.g. "VP Operations"
+  industry: string
+  coachingGoals: string[]
+  assessmentHistory: ObjectId[]   // refs to EqScores
+  sessionHistory: ObjectId[]      // refs to EqSessions
+  createdAt: Date
+  updatedAt: Date
+}
+
+---- EqScores ----
+interface EqScores {
+  _id: ObjectId
+  profileId: ObjectId
+  organizationId: ObjectId
+  assessmentType: 'mhs_imported' | 'heq_native'
+  assessmentDate: Date
+  source: string                  // e.g. "MHS Workplace Report"
+  // 5 composite scores (standard scores, mean=100 SD=15)
+  composites: {
+    selfPerception: number
+    selfExpression: number
+    interpersonal: number
+    decisionMaking: number
+    stressManagement: number
+  }
+  // 15 subscale scores
+  subscales: {
+    // Self-Perception
+    selfRegard: number
+    selfActualization: number
+    emotionalSelfAwareness: number
+    // Self-Expression
+    emotionalExpression: number
+    assertiveness: number
+    independence: number
+    // Interpersonal
+    interpersonalRelationships: number
+    empathy: number
+    socialResponsibility: number
+    // Decision Making
+    problemSolving: number
+    realityTesting: number
+    impulseControl: number
+    // Stress Management
+    flexibility: number
+    stressTolerance: number
+    optimism: number
+  }
+  totalEI: number
+  wellBeingIndicator: number      // optional — MHS provides this
+  validityFlags: {
+    positiveImpression?: number
+    negativeImpression?: number
+    inconsistencyIndex?: number
+  }
+  normGroup: string               // e.g. "General Population", "Professional Global"
+  reportNotes: string             // Helena's private notes on this assessment
+}
+
+---- EqSession ----
+interface EqSession {
+  _id: ObjectId
+  profileId: ObjectId
+  organizationId: ObjectId
+  sessionDate: Date
+  sessionNumber: number
+  sessionTheme: string
+  subscalesFocus: string[]        // which subscales were discussed
+  coachNotes: string              // Helena's private notes
+  clientInsights: string          // key insights from client
+  milestoneUpdates: [{
+    description: string
+    status: 'not_started' | 'in_progress' | 'completed'
+    dueDate: Date
+  }]
+  nextSessionFocus: string
+  aiPromptsUsed: string[]         // which AI prompts were generated this session
+}
+
+---- EqReport ----
+interface EqReport {
+  _id: ObjectId
+  profileId: ObjectId
+  scoreId: ObjectId
+  organizationId: ObjectId
+  reportType: 'individual_debrief' | 'grow_plan' | 'team_profile' | 'progress_review'
+  generatedAt: Date
+  pdfS3Key: string                // S3 object key for the PDF
+  pdfUrl: string                  // pre-signed URL (refreshed on access)
+  aiNarrative: {
+    overallSummary: string
+    topStrengths: string[]        // 3 strengths with narrative
+    developmentAreas: string[]    // 3 development areas with narrative
+    interconnectionAnalysis: string
+    leadershipImplications: string
+    wellBeingNarrative: string
+    coachingFocusSuggestion: string
+  }
+  growPlan: {
+    goals: [{
+      subscale: string
+      goalStatement: string
+      currentReality: string
+      options: string[]
+      willDoAction: string
+      targetDate: Date
+      status: 'active' | 'completed'
+    }]
+  }
+  coachEdits: string              // Helena's manual edits to AI output
+}
+
+---- HeqResponse (Phase 2) ----
+interface HeqResponse {
+  _id: ObjectId
+  profileId: ObjectId
+  organizationId: ObjectId
+  completedAt: Date
+  responses: [{
+    itemId: string
+    value: number                 // 1–6 Likert
+  }]
+  rawScores: Record<string, number>    // keyed by subscale name
+  tScores: Record<string, number>      // normalized T-scores
+  normGroup: string
+  completionTimeSeconds: number
+}
+
+---- HeqItem (Phase 2) ----
+interface HeqItem {
+  _id: ObjectId
+  itemId: string                  // e.g. "SP-SR-01"
+  composite: string               // e.g. "selfPerception"
+  subscale: string                // e.g. "selfRegard"
+  text: string                    // the question text (Helena writes these)
+  reverseScored: boolean
+  version: string                 // "1.0", "1.1" etc.
+  validatedAt: Date
+  active: boolean
+}
+
+---- HeqNorms (Phase 2) ----
+interface HeqNorms {
+  normGroup: string
+  n: number                       // sample size
+  means: Record<string, number>   // mean per subscale
+  sds: Record<string, number>     // SD per subscale
+  updatedAt: Date
+}
+
+
+================================================================================
+API ROUTES — BUILD ALL WITH CONTROLLERS
+================================================================================
+
+  // EQ Profile management
+  POST   /api/eq/profiles                    create new client EQ profile
+  GET    /api/eq/profiles                    list all profiles (coach's clients)
+  GET    /api/eq/profiles/:profileId         get single profile with full history
+  PUT    /api/eq/profiles/:profileId         update profile details
+
+  // Score import (Phase 1 — manual MHS entry)
+  POST   /api/eq/scores                      import new score set for a profile
+  GET    /api/eq/scores/:profileId           get all score sets for a profile
+  GET    /api/eq/scores/entry/:scoreId       get single score entry
+
+  // AI generation
+  POST   /api/eq/ai/debrief                  generate debrief narrative from scores
+  POST   /api/eq/ai/grow-plan                generate GROW plan from scores + goals
+  POST   /api/eq/ai/coaching-questions       generate coaching questions for subscales
+  POST   /api/eq/ai/team-profile             generate team narrative from multiple profiles
+  POST   /api/eq/ai/progress-review         generate progress reflection narrative
+
+  // Report generation & retrieval
+  POST   /api/eq/reports/generate            build PDF + store in S3; save report record
+  GET    /api/eq/reports/:profileId          list all reports for a profile
+  GET    /api/eq/reports/download/:reportId  return pre-signed S3 URL for PDF download
+
+  // Session management
+  POST   /api/eq/sessions                    create session note
+  GET    /api/eq/sessions/:profileId         get all sessions for a profile
+  PUT    /api/eq/sessions/:sessionId         update session notes / milestones
+
+  // Team aggregation
+  GET    /api/eq/team/:organizationId        aggregate EI profiles by organization
+  POST   /api/eq/team/custom                 aggregate a custom selection of profiles
+
+  // Phase 2 — HEQ™ native assessment
+  GET    /api/heq/items                      fetch active assessment items
+  POST   /api/heq/respond                    submit completed assessment responses
+  GET    /api/heq/results/:responseId        get scored results for a response
+  POST   /api/heq/norms/update               admin: recalculate norms (cron trigger)
+
+
+================================================================================
+AI SERVICE — eq-ai.service.ts (CRITICAL — BUILD THIS FIRST)
+================================================================================
+
+Create backend/src/services/eq-ai.service.ts
+
+The service must have these exact functions:
+
+  async generateDebriefNarrative(scores: EqScores, profile: EqProfile): Promise<DebriefNarrative>
+  async generateGrowPlan(scores: EqScores, goals: string[], profile: EqProfile): Promise<GrowPlan>
+  async generateCoachingQuestions(subscales: string[], context: string, profile: EqProfile): Promise<string[]>
+  async generateTeamNarrative(teamScores: EqScores[], teamContext: string): Promise<string>
+  async generateProgressReview(sessions: EqSession[], baseline: EqScores): Promise<string>
+
+All functions call a shared private method:
+  private async callClaude(userPrompt: string): Promise<string>
+    - model: 'claude-sonnet-4-6'
+    - max_tokens: 2000
+    - Retry with exponential backoff: 3 attempts, 1s / 2s / 4s delays
+    - Log token usage for cost monitoring
+
+
+---- MASTER SYSTEM PROMPT (use for ALL EQ Claude API calls) ----
+
+Use this exact text as the system prompt for every EQ module API call:
+
+"You are an expert emotional intelligence coach and organizational psychologist
+working within the Helena Coaching methodology. You specialize in interpreting
+and coaching around the Bar-On model of emotional intelligence (5 composites,
+15 subscales). Your role is to generate coaching-oriented interpretations —
+not clinical diagnoses — that are warm, empathetic, strengths-based, and
+immediately actionable.
+
+Key methodology principles to always apply:
+- Frame all development areas as growth opportunities, never deficits
+- Highlight how subscales interact and amplify each other
+- Ground suggestions in real workplace and leadership scenarios
+- Use the GROW model (Goal, Reality, Options, Will) for development planning
+- Avoid jargon; write as if speaking directly to a thoughtful professional
+- Never make clinical or psychological diagnoses
+- Reference neurodiversity-affirming perspectives when discussing Impulse
+  Control, Flexibility, or Emotional Expression subscales
+- Keep outputs warm, human, and coaching-focused — not test-administrator dry
+
+Score interpretation guide (standard scores, mean=100 SD=15):
+  115+   : Significant strength — leverage and mentor others
+  105–114: Strength — well-developed, actively used
+  95–104 : Effective range — situationally applied
+  85–94  : Development opportunity — with awareness, coachable
+  Below 85: Priority development area — may significantly impact effectiveness
+
+Always output in clean, structured prose. Use headers where specified."
+
+
+---- PROMPT TEMPLATES — implement as template literal functions ----
+
+buildDebriefPrompt(scores, profile):
+  Include all 15 subscale scores and 5 composite scores in the prompt.
+  Request: overall summary, top 3 strengths with narrative, top 3 development
+  areas with narrative, interconnection analysis (how scores relate to each
+  other), leadership/workplace implications based on client role, and a
+  suggested coaching focus for the engagement.
+  Format the scores as a readable list, not raw JSON.
+
+buildGrowPlanPrompt(scores, goals, profile):
+  Include the client's stated coaching goals alongside their 3 lowest subscale
+  scores. Request a GROW plan with 3 development goals, each containing:
+  a goal statement, current reality grounded in their actual score, 5 concrete
+  development options, and a suggested will-do commitment statement.
+
+buildCoachingQuestionsPrompt(subscales, context):
+  Specify the subscale(s) by name and definition. Include any context about
+  the client's role, challenges, or session theme. Request 8 powerful coaching
+  questions that would surface insight specifically for someone with this
+  particular EI profile pattern.
+
+buildTeamNarrativePrompt(teamScoresArray, teamContext):
+  Provide aggregated mean scores per subscale for the team. Request a team
+  narrative covering: collective EI strengths, shared development areas,
+  team dynamics implications, and 3 facilitation/intervention recommendations.
+  CRITICAL: Never identify individual team members in the output.
+
+buildProgressReviewPrompt(sessions, baseline):
+  Provide session themes, notes summary, and baseline scores. Request a
+  progress narrative covering: what has shifted, what patterns are emerging,
+  and 2–3 suggested focus areas for upcoming sessions.
+
+
+================================================================================
+SCORING SERVICE — eq-scoring.service.ts
+================================================================================
+
+Create backend/src/services/eq-scoring.service.ts
+
+Functions needed:
+
+  // Convert raw Likert totals to standard T-scores (mean=100, SD=15)
+  // For Phase 2 HEQ™ native assessments
+  rawToTScore(rawScore: number, subscale: string, normGroup: string): number
+
+  // Compute composite scores from constituent subscales (weighted average)
+  computeComposites(subscales: Record<string, number>): Record<string, number>
+
+  // Compute total EI from composites
+  computeTotalEI(composites: Record<string, number>): number
+
+  // Identify top N strengths and development areas
+  rankSubscales(subscales: Record<string, number>): {
+    strengths: string[],    // highest 3
+    development: string[]   // lowest 3
+  }
+
+  // For team aggregation: compute mean and SD across multiple score sets
+  aggregateTeamScores(scoresArray: EqScores[]): {
+    means: Record<string, number>,
+    sds: Record<string, number>,
+    n: number
+  }
+
+  // Validate minimum team size before aggregation (never report < 5 members)
+  validateAggregationThreshold(n: number): boolean   // returns false if n < 5
+
+
+================================================================================
+PDF GENERATION SERVICE — eq-pdf.service.ts
+================================================================================
+
+Create backend/src/services/eq-pdf.service.ts using Puppeteer.
+
+The PDF report template must include these sections in order:
+
+  Page 1 — Cover
+    Helena Coaching logo placeholder, client name, report type, date,
+    "Prepared by Helena Hlavenkova, PCC" — branded with #1B2A47 / #3A9FD6
+
+  Page 2 — EI Overview
+    Total EI score prominently displayed
+    5 composite scores as horizontal bar chart (SVG, render inline in HTML)
+    Score interpretation legend (115+ strength / 85- development area)
+
+  Page 3 — Subscale Profile
+    Table of all 15 subscales with scores, color-coded by range
+    Spider/radar chart showing all 15 subscales (SVG)
+
+  Pages 4–5 — AI Coaching Narrative
+    Overall summary
+    Top 3 strengths section
+    Top 3 development areas section
+    Interconnection analysis
+    Workplace/leadership implications
+
+  Page 6 — GROW Development Plan
+    3 development goals in GROW format
+    Action commitment table
+
+  Back page — Contact & Next Steps
+    Helena's contact details
+    Next session date (if set)
+    "This report is confidential and prepared for coaching purposes only"
+
+Generate charts as inline SVG within the HTML template — do NOT use
+external chart libraries that require internet access in headless Chrome.
+Write a pure SVG bar chart and radar chart generator in vanilla JavaScript
+within the HTML template.
+
+Store the PDF in AWS S3:
+  Bucket: process.env.AWS_S3_BUCKET
+  Key pattern: eq-reports/{organizationId}/{profileId}/{reportId}.pdf
+  ACL: private (access via pre-signed URLs only, expiry: 24 hours)
+
+
+================================================================================
+ANGULAR FRONTEND — COMPONENTS TO BUILD
+================================================================================
+
+Build all as Angular 17+ standalone components with Angular Material.
+
+---- eq-dashboard (Coach Overview) ----
+  Route: /eq-companion
+  Shows all EQ client profiles for the logged-in coach.
+  Card grid: client name, role, last assessment date, total EI score,
+  top development area, quick-access buttons (View Profile / New Session).
+  Filter by organization, sort by last assessment date.
+
+---- eq-score-entry (Score Import Form) ----
+  Route: /eq-companion/scores/new/:profileId
+  A clean form with 20 numeric inputs:
+    - 5 composite score fields (labeled with composite names)
+    - 15 subscale score fields (grouped under their composites visually)
+    - Total EI field
+    - Well-Being Indicator field (optional)
+    - Assessment date picker
+    - Source field (e.g. "MHS Workplace Report — March 2026")
+    - Norm group selector
+  Validate: all scores must be between 55 and 145 (realistic EQi range).
+  Show a live preview of the radar chart as scores are entered.
+
+---- eq-profile-view (Client Full Profile) ----
+  Route: /eq-companion/profile/:profileId
+  Tabbed layout:
+    Tab 1: Assessment History — list of all score imports, sortable by date
+    Tab 2: Coaching Progress — session timeline with milestone status
+    Tab 3: Reports — list of generated PDFs with download links
+    Tab 4: AI Tools — buttons to generate debrief, GROW plan, coaching questions
+  Sidebar: client info summary (role, org, goals, last assessment date)
+
+---- eq-debrief-viewer (AI Narrative Display) ----
+  Route: /eq-companion/debrief/:scoreId
+  Displays the AI-generated narrative in sections with clear headers.
+  Each section is editable inline (contenteditable div or Angular FormControl).
+  Helena can edit any part of the AI output before generating the PDF.
+  "Generate PDF Report" button at the bottom triggers PDF generation and
+  shows a loading spinner (PDF generation takes 3–8 seconds).
+
+---- eq-grow-plan (GROW Plan View) ----
+  Route: /eq-companion/grow/:profileId
+  Three GROW goal cards, each showing: G / R / O / W sections.
+  Each milestone has a status toggle: not started / in progress / completed.
+  Milestone completion animates with a green checkmark.
+  "Add Session Note" button anchors to the relevant goal.
+
+---- eq-session-notes (Session Log) ----
+  Route: /eq-companion/sessions/:profileId
+  Timeline view of all sessions (most recent first).
+  Each entry: session date, theme, subscales discussed (chips), coach notes.
+  Add new session button opens a slide-over panel with the session form.
+  AI Coaching Questions button: opens a dialog; coach selects subscales;
+  app calls /api/eq/ai/coaching-questions and displays results in the dialog.
+
+---- eq-team-view (Team Aggregation) ----
+  Route: /eq-companion/team/:organizationId
+  Shows aggregated team EI scores (only if 5+ profiles exist for the org).
+  Same radar chart component reused, showing team means.
+  Individual client scores shown as semi-transparent lines on the same chart.
+  "Generate Team Report" button — same PDF flow as individual.
+  Warning banner if team size is under 5: "Minimum 5 profiles required
+  for team aggregation to protect individual confidentiality."
+
+---- heq-assessment (Phase 2 — Native Assessment) ----
+  Route: /heq/take/:profileId
+  Multi-step form: show 6 items per page (12 pages total for 72 items).
+  Progress bar at top showing percentage complete.
+  6-point Likert scale displayed as labeled radio buttons:
+    Never | Rarely | Sometimes | Often | Usually | Always
+  No back button (prevents retrospective editing — standard psychometric practice).
+  Auto-save responses every 30 seconds to prevent data loss.
+  On completion: show "Thank you" screen; notify coach by email.
+
+---- Shared Component: eq-radar-chart ----
+  A reusable Angular component that renders a 15-subscale radar chart as SVG.
+  Input: subscaleScores: Record<string, number>
+  Input: comparisonScores?: Record<string, number>  (for before/after overlay)
+  Input: colorPrimary: string (default #3A9FD6)
+  Input: showLabels: boolean
+  The chart must be readable at 400px width and 800px width.
+  Do NOT use any external chart library — implement as pure Angular + SVG.
+
+
+================================================================================
+SCORE ENTRY — SUBSCALE ORDER & GROUPING
+================================================================================
+
+Use this exact grouping and order in all UI forms and displays:
+
+SELF-PERCEPTION COMPOSITE
+  1. Self-Regard
+  2. Self-Actualization
+  3. Emotional Self-Awareness
+
+SELF-EXPRESSION COMPOSITE
+  4. Emotional Expression
+  5. Assertiveness
+  6. Independence
+
+INTERPERSONAL COMPOSITE
+  7. Interpersonal Relationships
+  8. Empathy
+  9. Social Responsibility
+
+DECISION MAKING COMPOSITE
+  10. Problem Solving
+  11. Reality Testing
+  12. Impulse Control
+
+STRESS MANAGEMENT COMPOSITE
+  13. Flexibility
+  14. Stress Tolerance
+  15. Optimism
+
++ Total EI (overall)
++ Well-Being Indicator (separate, not part of Total EI)
+
+
+================================================================================
+ENVIRONMENT VARIABLES TO ADD TO .env.example
+================================================================================
+
+# EQ Companion Suite
+EQ_PDF_BUCKET_PREFIX=eq-reports
+EQ_PDF_PRESIGNED_URL_EXPIRY=86400     # 24 hours in seconds
+PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser   # AWS Linux path
+EQ_MIN_TEAM_SIZE=5                    # minimum profiles for team aggregation
+HEQ_VERSION=1.0                       # HEQ™ instrument version
+EQ_AI_MAX_TOKENS=2000
+EQ_AI_RETRY_ATTEMPTS=3
+
+
+================================================================================
+BUILD PRIORITY ORDER
+================================================================================
+
+Build in this exact sequence:
+
+  1.  MongoDB schemas — all 7 models defined and exported
+  2.  eq-scoring.service.ts — rankSubscales and aggregateTeamScores first
+  3.  eq-ai.service.ts — system prompt, callClaude, buildDebriefPrompt first
+  4.  POST /api/eq/profiles and GET /api/eq/profiles (profile CRUD)
+  5.  POST /api/eq/scores (score import endpoint)
+  6.  POST /api/eq/ai/debrief (debrief generation — test with Postman/curl)
+  7.  POST /api/eq/ai/grow-plan (GROW plan generation)
+  8.  POST /api/eq/ai/coaching-questions
+  9.  eq-pdf.service.ts — HTML template + SVG charts + Puppeteer + S3 upload
+  10. POST /api/eq/reports/generate + GET /api/eq/reports/download/:reportId
+  11. Angular: eq-score-entry component (the core data entry UI)
+  12. Angular: eq-radar-chart shared component (needed by all views)
+  13. Angular: eq-debrief-viewer (AI output + edit + generate PDF)
+  14. Angular: eq-grow-plan
+  15. Angular: eq-dashboard and eq-profile-view
+  16. Angular: eq-session-notes
+  17. Angular: eq-team-view (with threshold enforcement)
+  18. Phase 2 scaffold: heq-item model + heq-response model + /api/heq/items
+  19. Angular: heq-assessment component (multi-step form, auto-save)
+  20. eq-norms.service.ts + /api/heq/norms/update (cron-ready endpoint)
+
+
+================================================================================
+KEY CONSTRAINTS
+================================================================================
+
+NEVER reference MHS, EQi, EQ-i 2.0, or EQ 360 as trademarks in any
+  user-facing text, labels, or report output.
+  Use: "Imported Assessment Scores", "EI Assessment", "Coaching Report"
+
+TEAM AGGREGATION THRESHOLD: Never return aggregated data for fewer than
+  5 profiles. The validateAggregationThreshold() function must be called
+  in the controller before any team data is returned — not just in the service.
+
+PDF GENERATION is slow (3–8 sec): Always respond to the generate endpoint
+  with 202 Accepted + a job ID, then poll for completion. Do not block
+  the HTTP response.
+
+SCORE VALIDATION: All imported EQi standard scores must be between 55 and 145.
+  Reject anything outside this range with a clear validation error.
+
+AI OUTPUT IS EDITABLE: Never auto-save AI output directly to the database.
+  Always return it to the frontend for Helena to review. Only save after
+  she explicitly clicks "Save Narrative" or "Generate PDF".
+
+SESSION NOTES are coach-private by default. Add a field:
+  sharedWithClient: boolean (default false)
+  Only notes marked shared can be included in client-facing reports.
+
+DATA OWNERSHIP: All data belongs to the organization (organizationId).
+  All queries must include organizationId filter. Follow same multi-tenancy
+  pattern as the main platform.
+
+ASK before making architectural decisions not covered in this prompt.
+
+
+================================================================================
+END OF PROMPT
+================================================================================

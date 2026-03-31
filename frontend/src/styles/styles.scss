@@ -76,6 +76,21 @@ $pip-theme: mat.define-light-theme((
 @include mat.all-component-themes($pip-theme);
 
 // ============================================================
+// CSS Custom Properties — runtime theme (overridden by ThemeService)
+// ============================================================
+
+:root {
+  --pip-primary:      #1B2A47;
+  --pip-accent:       #3A9FD6;
+  --pip-bg:           #EBF5FB;
+  --pip-surface:      #ffffff;
+  --pip-radius:       12px;
+  --pip-btn-radius:   6px;
+  --pip-heading-font: 'Inter', sans-serif;
+  --pip-body-font:    'Inter', sans-serif;
+}
+
+// ============================================================
 // Base Reset & Typography
 // ============================================================
 
@@ -87,10 +102,10 @@ html, body {
   height: 100%;
   margin: 0;
   padding: 0;
-  font-family: $font-family-base;
+  font-family: var(--pip-body-font);
   font-size: $font-size-base;
   color: $text-primary;
-  background-color: $light-bg;
+  background-color: var(--pip-bg);
   -webkit-font-smoothing: antialiased;
 }
 
@@ -98,6 +113,7 @@ h1, h2, h3, h4, h5, h6 {
   color: $navy;
   font-weight: 600;
   margin: 0 0 $spacing-md;
+  font-family: var(--pip-heading-font);
 }
 
 a {
@@ -197,8 +213,9 @@ a {
   cursor: not-allowed;
 }
 
-// Primary raised button brand colour
-.mat-mdc-raised-button.mat-primary { background-color: $navy !important; }
+// Primary raised button brand colour — uses runtime theme variable
+.mat-mdc-raised-button.mat-primary { background-color: var(--pip-primary) !important; }
 
-// Other Material overrides
-.mat-mdc-card { border-radius: $radius-lg !important; }
+// Card border radius follows theme
+.mat-mdc-card { border-radius: var(--pip-radius) !important; }
+

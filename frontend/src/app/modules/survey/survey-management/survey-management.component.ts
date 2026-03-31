@@ -13,6 +13,8 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatDividerModule } from '@angular/material/divider';
 import { ApiService } from '../../../core/api.service';
 import { SurveyTemplateDialogComponent } from '../survey-template-dialog/survey-template-dialog.component';
+import { SurveyResponsesDialogComponent } from '../survey-responses-dialog/survey-responses-dialog.component';
+import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog.component';
 
 interface SurveyTemplate {
   _id: string;
@@ -154,6 +156,11 @@ interface SurveyTemplate {
                 </button>
                 <button mat-stroked-button (click)="openEditDialog(t)">
                   <mat-icon>edit</mat-icon> Edit
+                </button>
+                <button mat-raised-button color="primary" (click)="viewResponses(t)"
+                        [matTooltip]="(t.responseCount ?? 0) === 0 ? 'No responses yet' : ''">
+                  <mat-icon>bar_chart</mat-icon>
+                  {{ t.responseCount ?? 0 }}
                 </button>
               </div>
             </div>
@@ -372,17 +379,31 @@ export class SurveyManagementComponent implements OnInit {
   }
 
   viewResponses(template: SurveyTemplate): void {
-    this.snackBar.open('Response detail view coming soon', 'Close', { duration: 2500 });
+    this.dialog.open(SurveyResponsesDialogComponent, {
+      width: '760px',
+      maxHeight: '90vh',
+      data: template,
+    });
   }
 
   deleteTemplate(template: SurveyTemplate): void {
-    if (!confirm(`Delete "${template.title}"? This cannot be undone.`)) return;
-    this.api.delete(`/surveys/templates/${template._id}`).subscribe({
-      next: () => {
-        this.templates.update((list) => list.filter((t) => t._id !== template._id));
-        this.snackBar.open('Template deleted', 'Close', { duration: 2500 });
+    const ref = this.dialog.open(ConfirmDialogComponent, {
+      width: '420px',
+      data: {
+        title: 'Delete Template',
+        message: `Delete "${template.title}"? This cannot be undone.`,
+        confirmLabel: 'Delete',
       },
-      error: () => this.snackBar.open('Delete failed', 'Close', { duration: 2500 }),
+    });
+    ref.afterClosed().subscribe((confirmed) => {
+      if (!confirmed) return;
+      this.api.delete(`/surveys/templates/${template._id}`).subscribe({
+        next: () => {
+          this.templates.update((list) => list.filter((t) => t._id !== template._id));
+          this.snackBar.open('Template deleted', 'Close', { duration: 2500 });
+        },
+        error: () => this.snackBar.open('Delete failed', 'Close', { duration: 2500 }),
+      });
     });
   }
 }

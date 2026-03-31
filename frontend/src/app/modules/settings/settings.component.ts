@@ -99,8 +99,31 @@ const DEFAULT_SETTINGS: Settings = {
                   (change)="setNotification(n.key, $event.checked)"
                 />
               </div>
-              @if (!$last) { <mat-divider /> }
+              <mat-divider />
             }
+            <div class="test-email-row">
+              <div class="toggle-icon blue"><mat-icon>send</mat-icon></div>
+              <div class="toggle-info">
+                <div class="toggle-label">Send a test email</div>
+                <div class="toggle-desc">Verify that AWS SES is configured correctly</div>
+              </div>
+              <div class="test-email-controls">
+                <mat-form-field appearance="outline" class="test-email-field">
+                  <mat-label>Recipient</mat-label>
+                  <input matInput type="email" [formControl]="testEmailControl" placeholder="you@example.com" />
+                  <mat-icon matPrefix>alternate_email</mat-icon>
+                </mat-form-field>
+                <button mat-stroked-button
+                        (click)="sendTestEmail()"
+                        [disabled]="testEmailLoading() || testEmailControl.invalid">
+                  @if (testEmailLoading()) {
+                    <mat-spinner diameter="16" />
+                  } @else {
+                    <mat-icon>send</mat-icon> Send
+                  }
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -374,9 +397,18 @@ const DEFAULT_SETTINGS: Settings = {
 
     .card-body { padding: 8px 0; }
 
-    .toggle-row {
+    .toggle-row, .test-email-row {
       display: flex; align-items: center; gap: 14px;
       padding: 14px 24px;
+    }
+
+    .test-email-controls {
+      display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+    }
+    .test-email-field {
+      width: 220px;
+      /* pull up the extra bottom margin mat-form-field adds */
+      margin-bottom: -1.25em;
     }
 
     .toggle-icon {
@@ -471,6 +503,9 @@ const DEFAULT_SETTINGS: Settings = {
 export class SettingsComponent implements OnInit {
   settings = signal<Settings>({ ...DEFAULT_SETTINGS, notifications: { ...DEFAULT_SETTINGS.notifications } });
 
+  testEmailLoading = signal(false);
+  testEmailControl = new FormControl('', [Validators.required, Validators.email]);
+
   // 2FA state
   twoFactorEnabled    = signal(false);
   twoFactorSetupStep  = signal<'' | 'scan' | 'verify' | 'disable'>('');
@@ -515,9 +550,12 @@ export class SettingsComponent implements OnInit {
       } catch { /* use defaults */ }
     }
 
-    // Load current 2FA status
-    this.api.get<{ twoFactorEnabled: boolean }>('/users/me').subscribe({
-      next: (user) => this.twoFactorEnabled.set(user.twoFactorEnabled ?? false),
+    // Load current 2FA status + pre-fill test email address
+    this.api.get<{ twoFactorEnabled: boolean; email: string }>('/users/me').subscribe({
+      next: (user) => {
+        this.twoFactorEnabled.set(user.twoFactorEnabled ?? false);
+        if (user.email) this.testEmailControl.setValue(user.email);
+      },
       error: () => {},
     });
   }
@@ -583,6 +621,24 @@ export class SettingsComponent implements OnInit {
     this.twoFactorSetupStep.set('');
     this.otpControl.reset();
     this.twoFactorError.set('');
+  }
+
+  sendTestEmail(): void {
+    if (this.testEmailControl.invalid) return;
+    this.testEmailLoading.set(true);
+    this.api.post<{ ok: boolean; sentTo: string }>('/users/me/test-email', {
+      to: this.testEmailControl.value,
+    }).subscribe({
+      next: (res) => {
+        this.testEmailLoading.set(false);
+        this.snackBar.open(`Test email sent to ${res.sentTo}`, undefined, { duration: 4000 });
+      },
+      error: (err) => {
+        this.testEmailLoading.set(false);
+        const msg = err.error?.error || 'Failed to send test email';
+        this.snackBar.open(msg, 'Dismiss', { duration: 5000 });
+      },
+    });
   }
 
   setNotification(key: string, value: boolean): void {
