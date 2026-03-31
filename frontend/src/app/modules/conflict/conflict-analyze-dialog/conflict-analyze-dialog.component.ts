@@ -17,18 +17,9 @@ interface SurveyTemplate {
   questions: unknown[];
 }
 
-const DEPARTMENTS = [
-  'Engineering',
-  'Product',
-  'Design',
-  'Marketing',
-  'Sales',
-  'Customer Success',
-  'Finance',
-  'HR',
-  'Operations',
-  'Leadership',
-];
+interface OrgResponse {
+  departments: string[];
+}
 
 @Component({
   selector: 'app-conflict-analyze-dialog',
@@ -81,7 +72,7 @@ const DEPARTMENTS = [
             <mat-label>Department (optional)</mat-label>
             <mat-select formControlName="departmentId">
               <mat-option value="">All Departments</mat-option>
-              @for (dept of departments; track dept) {
+              @for (dept of departments(); track dept) {
                 <mat-option [value]="dept">{{ dept }}</mat-option>
               }
             </mat-select>
@@ -158,7 +149,7 @@ export class ConflictAnalyzeDialogComponent implements OnInit {
   analyzing = signal(false);
   error = signal('');
   noTemplates = signal(false);
-  departments = DEPARTMENTS;
+  departments = signal<string[]>([]);
 
   constructor(
     private fb: FormBuilder,
@@ -184,6 +175,10 @@ export class ConflictAnalyzeDialogComponent implements OnInit {
         this.loadingTemplates.set(false);
       },
       error: () => this.loadingTemplates.set(false),
+    });
+
+    this.api.get<OrgResponse>('/organizations/me').subscribe({
+      next: (org) => this.departments.set(org.departments ?? []),
     });
 
     // Default survey period to current month/year

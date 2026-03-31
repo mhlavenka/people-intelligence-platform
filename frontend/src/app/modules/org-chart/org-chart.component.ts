@@ -24,6 +24,7 @@ interface OrgUser {
   lastName: string;
   email: string;
   role: string;
+  department?: string;
   managerId: string | null;
 }
 
@@ -157,6 +158,12 @@ const ROLE_LABEL: Record<string, string> = {
   coachee:    'Employee',
 };
 
+const DEPT_PALETTE = [
+  '#6366f1', '#f59e0b', '#ef4444', '#10b981',
+  '#8b5cf6', '#ec4899', '#14b8a6', '#f97316',
+  '#06b6d4', '#84cc16',
+];
+
 @Component({
   selector: 'app-org-chart',
   standalone: true,
@@ -175,9 +182,25 @@ const ROLE_LABEL: Record<string, string> = {
 
       <!-- ── Header ───────────────────────────────────────────────────────── -->
       <div class="oc-header">
-        <div>
-          <h1>Organizational Chart</h1>
-          <p>Drag a person card onto another to set their reporting line. Drop on an empty area to make them a top-level node.</p>
+        <div class="header-left">
+          <div>
+            <h1>Organizational Chart</h1>
+            <p>Drag a person card onto another to set their reporting line. Drop on an empty area to make them a top-level node.</p>
+          </div>
+          @if (departments().length) {
+            <div class="dept-filters">
+              <button class="dept-chip" [class.active]="deptFilter() === null"
+                      (click)="deptFilter.set(null)">All</button>
+              @for (dept of departments(); track dept) {
+                <button class="dept-chip"
+                        [class.active]="deptFilter() === dept"
+                        [style.--chip-color]="deptColor(dept)"
+                        (click)="deptFilter.set(deptFilter() === dept ? null : dept)">
+                  {{ dept }}
+                </button>
+              }
+            </div>
+          }
         </div>
         <div class="header-actions">
           <div class="zoom-controls">
@@ -258,11 +281,20 @@ const ROLE_LABEL: Record<string, string> = {
                 <!-- info -->
                 <div class="node-info">
                   <span class="node-name">{{ node.firstName }} {{ node.lastName }}</span>
-                  <span class="node-role-badge"
-                        [style.background]="roleColor(node.role) + '18'"
-                        [style.color]="roleColor(node.role)">
-                    {{ roleLabel(node.role) }}
-                  </span>
+                  <div class="node-badges">
+                    <span class="node-role-badge"
+                          [style.background]="roleColor(node.role) + '18'"
+                          [style.color]="roleColor(node.role)">
+                      {{ roleLabel(node.role) }}
+                    </span>
+                    @if (node.department) {
+                      <span class="node-dept-badge"
+                            [style.background]="deptColor(node.department) + '18'"
+                            [style.color]="deptColor(node.department)">
+                        {{ node.department }}
+                      </span>
+                    }
+                  </div>
                   <span class="node-email">{{ node.email }}</span>
                 </div>
 
@@ -291,6 +323,13 @@ const ROLE_LABEL: Record<string, string> = {
             <span class="legend-dot" [style.background]="entry.color"></span>
             <span class="legend-label">{{ entry.label }}</span>
           }
+          @if (departments().length) {
+            <span class="legend-sep">|</span>
+            @for (dept of departments(); track dept) {
+              <span class="legend-dot" [style.background]="deptColor(dept)"></span>
+              <span class="legend-label">{{ dept }}</span>
+            }
+          }
           <span class="legend-sep">|</span>
           <mat-icon class="legend-icon">drag_indicator</mat-icon>
           <span class="legend-label">Drag to reassign</span>
@@ -313,16 +352,49 @@ const ROLE_LABEL: Record<string, string> = {
 
     .oc-header {
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: space-between;
       gap: 16px;
-      padding: 20px 24px 16px;
+      padding: 16px 24px 12px;
       background: white;
       border-bottom: 1px solid #e8edf4;
       flex-shrink: 0;
 
       h1 { font-size: 22px; font-weight: 700; color: #1B2A47; margin: 0 0 2px; }
-      p  { font-size: 13px; color: #5a6a7e; margin: 0; }
+      p  { font-size: 13px; color: #5a6a7e; margin: 0 0 10px; }
+    }
+
+    .header-left {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .dept-filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .dept-chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 10px;
+      border-radius: 20px;
+      border: 1px solid #e8edf4;
+      background: #f5f7fa;
+      color: #5a6a7e;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.12s, color 0.12s, border-color 0.12s;
+      &:hover { background: #e8f4fb; border-color: #3A9FD6; color: #2080b0; }
+      &.active {
+        background: #e8f4fb;
+        border-color: var(--chip-color, #3A9FD6);
+        color: var(--chip-color, #3A9FD6);
+        font-weight: 700;
+      }
     }
 
     .header-actions {
@@ -330,6 +402,7 @@ const ROLE_LABEL: Record<string, string> = {
       align-items: center;
       gap: 10px;
       flex-shrink: 0;
+      margin-top: 2px;
     }
 
     .zoom-controls {
@@ -466,7 +539,13 @@ const ROLE_LABEL: Record<string, string> = {
       text-overflow: ellipsis;
     }
 
-    .node-role-badge {
+    .node-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    .node-role-badge, .node-dept-badge {
       display: inline-block;
       font-size: 10px;
       font-weight: 700;
@@ -557,6 +636,7 @@ export class OrgChartComponent implements OnInit {
   loading  = signal(true);
   saving   = signal(false);
   zoom     = signal(1);
+  deptFilter = signal<string | null>(null);
 
   /** Source of truth — mutated on drag, reset on discard, sent on save */
   users         = signal<OrgUser[]>([]);
@@ -572,7 +652,22 @@ export class OrgChartComponent implements OnInit {
            JSON.stringify(b.map((u) => ({ _id: u._id, managerId: u.managerId })));
   });
 
-  layoutNodes = computed(() => computeLayout(this.users()));
+  departments = computed(() =>
+    [...new Set(this.users().map((u) => u.department).filter((d): d is string => !!d))].sort()
+  );
+
+  deptColorMap = computed(() => {
+    const map = new Map<string, string>();
+    this.departments().forEach((d, i) => map.set(d, DEPT_PALETTE[i % DEPT_PALETTE.length]));
+    return map;
+  });
+
+  filteredUsers = computed(() => {
+    const f = this.deptFilter();
+    return f ? this.users().filter((u) => u.department === f) : this.users();
+  });
+
+  layoutNodes = computed(() => computeLayout(this.filteredUsers()));
   lines       = computed(() => computeLines(this.layoutNodes()));
 
   canvasSize = computed(() => {
@@ -695,4 +790,5 @@ export class OrgChartComponent implements OnInit {
   initials  = (n: OrgUser) => `${n.firstName[0]}${n.lastName[0]}`.toUpperCase();
   roleColor = (role: string) => ROLE_COLOR[role] ?? '#5a6a7e';
   roleLabel = (role: string) => ROLE_LABEL[role] ?? role;
+  deptColor = (dept?: string) => (dept ? (this.deptColorMap().get(dept) ?? '#9aa5b4') : '#9aa5b4');
 }

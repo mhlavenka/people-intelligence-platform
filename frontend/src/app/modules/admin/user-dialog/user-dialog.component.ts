@@ -16,6 +16,7 @@ export interface OrgUser {
   firstName: string;
   lastName: string;
   role: string;
+  department?: string;
   isActive: boolean;
   lastLoginAt?: string;
   createdAt: string;
@@ -80,6 +81,16 @@ const ROLES = [
           </mat-select>
         </mat-form-field>
 
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Department (optional)</mat-label>
+          <mat-select formControlName="department">
+            <mat-option value="">— None —</mat-option>
+            @for (dept of departments(); track dept) {
+              <mat-option [value]="dept">{{ dept }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
         @if (!isEdit()) {
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>Password</mat-label>
@@ -135,6 +146,7 @@ export class UserDialogComponent implements OnInit {
   form!: FormGroup;
   saving = signal(false);
   error = signal('');
+  departments = signal<string[]>([]);
   showPwd = false;
   roles = ROLES;
 
@@ -142,13 +154,18 @@ export class UserDialogComponent implements OnInit {
 
   ngOnInit(): void {
     this.form = this.fb.group({
-      firstName: [this.existingUser?.firstName ?? '', Validators.required],
-      lastName:  [this.existingUser?.lastName  ?? '', Validators.required],
-      email:     [this.existingUser?.email     ?? '', [Validators.required, Validators.email]],
-      role:      [this.existingUser?.role      ?? 'coachee', Validators.required],
+      firstName:  [this.existingUser?.firstName  ?? '', Validators.required],
+      lastName:   [this.existingUser?.lastName   ?? '', Validators.required],
+      email:      [this.existingUser?.email      ?? '', [Validators.required, Validators.email]],
+      role:       [this.existingUser?.role       ?? 'coachee', Validators.required],
+      department: [this.existingUser?.department ?? ''],
       ...(this.isEdit() ? {} : {
         password: ['', [Validators.required, Validators.minLength(8)]],
       }),
+    });
+
+    this.api.get<{ departments: string[] }>('/organizations/me').subscribe({
+      next: (org) => this.departments.set(org.departments ?? []),
     });
   }
 

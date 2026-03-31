@@ -130,6 +130,14 @@ const ROLE_META: Record<string, { label: string; color: string }> = {
               </td>
             </ng-container>
 
+            <!-- Department -->
+            <ng-container matColumnDef="department">
+              <th mat-header-cell *matHeaderCellDef>Department</th>
+              <td mat-cell *matCellDef="let u" class="meta-cell">
+                {{ u.department || '—' }}
+              </td>
+            </ng-container>
+
             <!-- Status -->
             <ng-container matColumnDef="status">
               <th mat-header-cell *matHeaderCellDef>Status</th>
@@ -280,7 +288,7 @@ export class UserManagementComponent implements OnInit {
   roleFilter = signal('all');
   searchQuery = signal('');
 
-  columns = ['name', 'role', 'status', 'lastLogin', 'created', 'actions'];
+  columns = ['name', 'role', 'department', 'status', 'lastLogin', 'created', 'actions'];
 
   roleOptions = [
     { value: 'admin',      label: 'Admin' },

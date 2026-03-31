@@ -175,7 +175,7 @@ router.post(
   requireRole('admin', 'hr_manager'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
-      const { email, password, firstName, lastName, role } = req.body;
+      const { email, password, firstName, lastName, role, department } = req.body;
       const passwordHash = await bcrypt.hash(password, 12);
       const user = await User.create({
         organizationId: req.user!.organizationId,
@@ -184,6 +184,7 @@ router.post(
         firstName,
         lastName,
         role,
+        department: department || null,
       });
       res.status(201).json({
         id: user._id,
