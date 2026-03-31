@@ -15,11 +15,13 @@ interface Permission {
 }
 
 const PERMISSIONS: Permission[] = [
-  // User & org management
-  { category: 'Administration', feature: 'Manage Users',               admin: true,  hr_manager: false, manager: false, coach: false, coachee: false },
+  // Administration
+  { category: 'Administration', feature: 'Manage Users',               admin: true,  hr_manager: true,  manager: false, coach: false, coachee: false },
   { category: 'Administration', feature: 'Manage Organization',        admin: true,  hr_manager: false, manager: false, coach: false, coachee: false },
   { category: 'Administration', feature: 'Manage Survey Templates',    admin: true,  hr_manager: true,  manager: false, coach: false, coachee: false },
   { category: 'Administration', feature: 'View All Users',             admin: true,  hr_manager: true,  manager: false, coach: false, coachee: false },
+  { category: 'Administration', feature: 'Billing & Subscription',     admin: true,  hr_manager: false, manager: false, coach: false, coachee: false },
+  { category: 'Administration', feature: 'Role Permissions View',      admin: true,  hr_manager: true,  manager: false, coach: false, coachee: false },
   // Conflict Intelligence
   { category: 'Conflict Intelligence', feature: 'View Dashboard',      admin: true,  hr_manager: true,  manager: true,  coach: false, coachee: false },
   { category: 'Conflict Intelligence', feature: 'Run AI Analysis',     admin: true,  hr_manager: true,  manager: false, coach: false, coachee: false },
@@ -30,10 +32,10 @@ const PERMISSIONS: Permission[] = [
   { category: 'Neuro-Inclusion', feature: 'Run Assessment',            admin: true,  hr_manager: true,  manager: true,  coach: false, coachee: false },
   { category: 'Neuro-Inclusion', feature: 'View Results',              admin: true,  hr_manager: true,  manager: true,  coach: false, coachee: false },
   // Succession & IDP
-  { category: 'Leadership & Succession', feature: 'View All IDPs',     admin: true,  hr_manager: true,  manager: false, coach: false, coachee: false },
+  { category: 'Leadership & Succession', feature: 'View All IDPs',     admin: true,  hr_manager: true,  manager: false, coach: true,  coachee: false },
   { category: 'Leadership & Succession', feature: 'Generate IDP (AI)', admin: true,  hr_manager: true,  manager: false, coach: true,  coachee: false },
   { category: 'Leadership & Succession', feature: 'View Own IDP',      admin: false, hr_manager: false, manager: false, coach: false, coachee: true  },
-  { category: 'Leadership & Succession', feature: 'Update Milestones', admin: true,  hr_manager: true,  manager: false, coach: true,  coachee: true  },
+  { category: 'Leadership & Succession', feature: 'Update Milestones', admin: true,  hr_manager: true,  manager: false, coach: true,  coachee: false },
 ];
 
 const ROLES = [

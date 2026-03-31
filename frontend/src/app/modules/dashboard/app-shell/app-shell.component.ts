@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
@@ -18,16 +18,20 @@ interface OrgInfo {
   theme?: OrgTheme;
 }
 
+import { AppRole } from '../../../core/auth.service';
+
 interface NavItem {
   label: string;
   icon: string;
   route: string;
+  roles?: AppRole[];   // undefined = visible to all authenticated users
 }
 
 interface NavGroup {
   label: string;
   icon: string;
   children: NavItem[];
+  // Group is shown only when ≥1 child is visible to the current role
 }
 
 type NavEntry = NavItem | NavGroup;
@@ -88,7 +92,7 @@ function isGroup(entry: NavEntry): entry is NavGroup {
 
         <!-- Navigation -->
         <nav class="nav-list">
-          @for (entry of navEntries; track isGroup(entry) ? entry.label : entry.route) {
+          @for (entry of navEntries(); track isGroup(entry) ? entry.label : entry.route) {
 
             @if (!isGroup(entry)) {
               <!-- Plain nav item -->
@@ -435,27 +439,48 @@ function isGroup(entry: NavEntry): entry is NavGroup {
 })
 export class AppShellComponent implements OnInit {
   sidebarCollapsed = signal(false);
-  openGroups = signal<Set<string>>(new Set(['Maintenance']));
+  openGroups = signal<Set<string>>(new Set(['Administration']));
 
   isGroup = isGroup;
 
-  navEntries: NavEntry[] = [
-    { label: 'Dashboard',              icon: 'dashboard',    route: '/dashboard' },
-    { label: 'Conflict Intelligence',  icon: 'warning_amber',route: '/conflict' },
-    { label: 'Neuro-Inclusion',        icon: 'psychology',   route: '/neuroinclusion' },
-    { label: 'Leadership & Succession',icon: 'trending_up',  route: '/succession' },
+  private readonly ALL_NAV: NavEntry[] = [
+    { label: 'Dashboard',               icon: 'dashboard',    route: '/dashboard' },
+    { label: 'Conflict Intelligence',   icon: 'warning_amber',route: '/conflict',    roles: ['admin', 'hr_manager', 'manager'] },
+    { label: 'Neuro-Inclusion',         icon: 'psychology',   route: '/neuroinclusion', roles: ['admin', 'hr_manager', 'manager'] },
+    { label: 'Leadership & Succession', icon: 'trending_up',  route: '/succession',  roles: ['admin', 'hr_manager', 'coach', 'coachee'] },
     {
-      label: 'Maintenance',
-      icon: 'build',
+      label: 'Administration',
+      icon: 'admin_panel_settings',
       children: [
-        { label: 'Survey Management', icon: 'assignment',         route: '/surveys' },
-        { label: 'Users',             icon: 'group',              route: '/admin/users' },
-        { label: 'Organization',      icon: 'business',           route: '/admin/organization' },
-        { label: 'Role Permissions',  icon: 'admin_panel_settings',route: '/admin/roles' },
-        { label: 'Billing',           icon: 'receipt_long',       route: '/billing' },
+        { label: 'Survey Management', icon: 'assignment',          route: '/surveys',              roles: ['admin', 'hr_manager'] },
+        { label: 'Users',             icon: 'group',               route: '/admin/users',          roles: ['admin', 'hr_manager'] },
+        { label: 'Organization',      icon: 'business',            route: '/admin/organization',   roles: ['admin'] },
+        { label: 'Role Permissions',  icon: 'policy',              route: '/admin/roles',          roles: ['admin', 'hr_manager'] },
+        { label: 'Billing',           icon: 'receipt_long',        route: '/billing',              roles: ['admin'] },
       ],
     },
   ];
+
+  navEntries = computed<NavEntry[]>(() => {
+    const role = this.authService.currentUser()?.role as AppRole | undefined;
+    if (!role) return [];
+
+    return this.ALL_NAV.reduce<NavEntry[]>((acc, entry) => {
+      if (isGroup(entry)) {
+        const visibleChildren = entry.children.filter(
+          (c) => !c.roles || c.roles.includes(role)
+        );
+        if (visibleChildren.length) {
+          acc.push({ ...entry, children: visibleChildren });
+        }
+      } else {
+        if (!entry.roles || entry.roles.includes(role)) {
+          acc.push(entry);
+        }
+      }
+      return acc;
+    }, []);
+  });
 
   user        = computed(() => this.authService.currentUser());
   userName    = computed(() => { const u = this.user(); return u ? `${u.firstName} ${u.lastName}` : ''; });
