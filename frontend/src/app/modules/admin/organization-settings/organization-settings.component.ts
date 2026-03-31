@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -37,6 +37,7 @@ interface Organization {
   slug: string;
   plan: string;
   modules: string[];
+  departments: string[];
   billingEmail: string;
   billingAddress?: BillingAddress;
   taxId?: string;
@@ -525,6 +526,55 @@ const RADIUS_OPTIONS = [
             </div>
           </div>
 
+          <!-- ── Departments ──────────────────────────────────────────────── -->
+          <div class="settings-card">
+            <div class="card-header">
+              <div class="card-icon" style="background:rgba(39,196,160,0.12);color:#1a9678">
+                <mat-icon>corporate_fare</mat-icon>
+              </div>
+              <div>
+                <h2>Departments</h2>
+                <p>Define the departments in your organization. Used in Conflict Intelligence analysis and the Org Chart.</p>
+              </div>
+            </div>
+            <mat-divider />
+
+            <div class="dept-section">
+              <!-- existing department chips -->
+              <div class="dept-chips">
+                @for (dept of departments(); track dept) {
+                  <div class="dept-chip">
+                    <span>{{ dept }}</span>
+                    <button class="dept-remove" (click)="removeDepartment(dept)"
+                            [disabled]="savingDepts()">
+                      <mat-icon>close</mat-icon>
+                    </button>
+                  </div>
+                }
+                @if (departments().length === 0) {
+                  <span class="dept-empty">No departments defined yet.</span>
+                }
+              </div>
+
+              <!-- add new department -->
+              <div class="dept-add-row">
+                <mat-form-field appearance="outline" class="dept-input">
+                  <mat-label>New department name</mat-label>
+                  <input matInput #deptInput
+                         [disabled]="savingDepts()"
+                         (keydown.enter)="addDepartmentFromInput(deptInput); $event.preventDefault()"
+                         placeholder="e.g. Engineering" />
+                </mat-form-field>
+                <button mat-stroked-button
+                        [disabled]="savingDepts()"
+                        (click)="addDepartmentFromInput(deptInput)">
+                  @if (savingDepts()) { <mat-spinner diameter="16" /> }
+                  @else { <mat-icon>add</mat-icon> Add }
+                </button>
+              </div>
+            </div>
+          </div>
+
         </div>
       }
     </div>
@@ -808,10 +858,41 @@ const RADIUS_OPTIONS = [
       display: inline-block; padding: 5px 14px;
       font-size: 11px; font-weight: 600; border: 1.5px solid; cursor: default;
     }
+
+    /* ── Departments ── */
+    .dept-section { padding: 16px 0 4px; }
+
+    .dept-chips {
+      display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; min-height: 32px;
+    }
+
+    .dept-chip {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: rgba(39,196,160,0.1); border: 1px solid rgba(39,196,160,0.3);
+      border-radius: 20px; padding: 4px 8px 4px 12px;
+      font-size: 13px; color: #1a9678; font-weight: 500;
+
+      .dept-remove {
+        display: flex; align-items: center; justify-content: center;
+        width: 20px; height: 20px; border-radius: 50%;
+        background: none; border: none; cursor: pointer; color: #9aa5b4; padding: 0;
+        &:hover { background: rgba(229,62,62,0.12); color: #e53e3e; }
+        mat-icon { font-size: 14px; width: 14px; height: 14px; }
+      }
+    }
+
+    .dept-empty { font-size: 13px; color: #9aa5b4; font-style: italic; }
+
+    .dept-add-row {
+      display: flex; align-items: flex-start; gap: 10px;
+      .dept-input { flex: 1; max-width: 320px; }
+    }
   `],
 })
 export class OrganizationSettingsComponent implements OnInit {
   org           = signal<Organization | null>(null);
+  departments   = signal<string[]>([]);
+  savingDepts   = signal(false);
   loading       = signal(true);
   savingProfile = signal(false);
   savingModules = signal(false);
@@ -876,6 +957,7 @@ export class OrganizationSettingsComponent implements OnInit {
     this.api.get<Organization>('/organizations/me').subscribe({
       next: (org) => {
         this.org.set(org);
+        this.departments.set(org.departments ?? []);
         this.logoPreview.set(org.logoUrl ?? null);
         this.form = this.fb.group({
           name:          [org.name,          Validators.required],
@@ -1018,6 +1100,40 @@ export class OrganizationSettingsComponent implements OnInit {
       error: () => {
         this.savingModules.set(false);
         this.snackBar.open('Update failed', 'Close', { duration: 2500 });
+      },
+    });
+  }
+
+  addDepartmentFromInput(input: HTMLInputElement): void {
+    const value = input.value.trim();
+    if (!value) return;
+    const current = this.departments();
+    if (current.some((d) => d.toLowerCase() === value.toLowerCase())) {
+      this.snackBar.open('Department already exists', 'Close', { duration: 2000 });
+      return;
+    }
+    const updated = [...current, value];
+    input.value = '';
+    this.saveDepartments(updated);
+  }
+
+  removeDepartment(dept: string): void {
+    const updated = this.departments().filter((d) => d !== dept);
+    this.saveDepartments(updated);
+  }
+
+  private saveDepartments(updated: string[]): void {
+    this.savingDepts.set(true);
+    this.api.put<Organization>('/organizations/me', { departments: updated }).subscribe({
+      next: (org) => {
+        this.org.set(org);
+        this.departments.set(org.departments ?? []);
+        this.savingDepts.set(false);
+        this.snackBar.open('Departments saved', 'Close', { duration: 2000 });
+      },
+      error: () => {
+        this.savingDepts.set(false);
+        this.snackBar.open('Save failed', 'Close', { duration: 2500 });
       },
     });
   }
