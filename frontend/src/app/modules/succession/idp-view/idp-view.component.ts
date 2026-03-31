@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -12,6 +12,7 @@ import { MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog.component';
 import { ApiService } from '../../../core/api.service';
+import { AuthService } from '../../../core/auth.service';
 import { IdpGenerateDialogComponent } from '../idp-generate-dialog/idp-generate-dialog.component';
 
 interface Milestone {
@@ -24,6 +25,7 @@ interface Milestone {
 
 interface IDP {
   _id: string;
+  coacheeId: { _id: string; firstName: string; lastName: string; email: string } | string;
   goal: string;
   currentReality: string;
   options: string[];
@@ -56,9 +58,11 @@ interface IDP {
           <h1>Leadership & Succession Hub™</h1>
           <p>Scalable succession planning and leadership coaching — from founders and family businesses to growing organizations</p>
         </div>
-        <button mat-raised-button color="primary" (click)="generateNew()">
-          <mat-icon>auto_awesome</mat-icon> Generate IDP
-        </button>
+        @if (canManage()) {
+          <button mat-raised-button color="primary" (click)="generateNew()">
+            <mat-icon>auto_awesome</mat-icon> Generate IDP
+          </button>
+        }
       </div>
 
       <!-- Module description banner -->
@@ -107,10 +111,14 @@ interface IDP {
         <div class="empty-state">
           <mat-icon>psychology_alt</mat-icon>
           <h3>No Development Plans Yet</h3>
-          <p>Generate your first AI-powered IDP using the GROW model.</p>
-          <button mat-raised-button color="primary" (click)="generateNew()">
-            <mat-icon>auto_awesome</mat-icon> Generate First IDP
-          </button>
+          @if (canManage()) {
+            <p>Generate your first AI-powered IDP using the GROW model.</p>
+            <button mat-raised-button color="primary" (click)="generateNew()">
+              <mat-icon>auto_awesome</mat-icon> Generate First IDP
+            </button>
+          } @else {
+            <p>No development plan has been created for you yet. Contact your coach or HR manager.</p>
+          }
         </div>
       } @else {
         <div class="idp-grid">
@@ -118,18 +126,26 @@ interface IDP {
             <div class="idp-card" [class]="'status-' + idp.status">
               <div class="idp-card-header">
                 <div class="idp-status-badge" [class]="idp.status">{{ idp.status }}</div>
+                @if (showCoacheeName() && isPopulatedCoachee(idp.coacheeId)) {
+                  <span class="idp-coachee-name">
+                    <mat-icon class="coachee-icon">person</mat-icon>
+                    {{ idp.coacheeId.firstName }} {{ idp.coacheeId.lastName }}
+                  </span>
+                }
                 <span class="idp-date">{{ idp.createdAt | date:'MMM d, y' }}</span>
-                <button class="regenerate-btn"
-                        [matTooltip]="'Regenerate IDP'"
-                        matTooltipPosition="left"
-                        [disabled]="regeneratingId() === idp._id"
-                        (click)="regenerate(idp)">
-                  @if (regeneratingId() === idp._id) {
-                    <mat-spinner diameter="16" />
-                  } @else {
-                    <mat-icon>refresh</mat-icon>
-                  }
-                </button>
+                @if (canManage()) {
+                  <button class="regenerate-btn"
+                          [matTooltip]="'Regenerate IDP'"
+                          matTooltipPosition="left"
+                          [disabled]="regeneratingId() === idp._id"
+                          (click)="regenerate(idp)">
+                    @if (regeneratingId() === idp._id) {
+                      <mat-spinner diameter="16" />
+                    } @else {
+                      <mat-icon>refresh</mat-icon>
+                    }
+                  </button>
+                }
               </div>
 
               <!-- GROW sections -->
@@ -191,7 +207,7 @@ interface IDP {
                         <span class="ms-date">{{ ms.dueDate | date:'MMM d' }}</span>
                       </div>
                       <div class="ms-actions">
-                        @if (ms.status !== 'completed') {
+                        @if (ms.status !== 'completed' && canManage()) {
                           <button mat-icon-button [matTooltip]="'Mark complete'" (click)="updateMilestone(idp._id, ms._id, 'completed')">
                             <mat-icon>check_circle_outline</mat-icon>
                           </button>
@@ -305,6 +321,13 @@ interface IDP {
     }
 
     .idp-card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; .idp-date { margin-left: auto; } }
+    .idp-coachee-name {
+      display: inline-flex; align-items: center; gap: 3px;
+      font-size: 12px; font-weight: 600; color: #1B2A47;
+      background: rgba(27,42,71,0.07); border-radius: 20px;
+      padding: 2px 8px 2px 4px;
+      .coachee-icon { font-size: 14px; width: 14px; height: 14px; color: #3A9FD6; }
+    }
     .regenerate-btn {
       display: flex; align-items: center; justify-content: center;
       width: 30px; height: 30px; flex-shrink: 0;
@@ -446,9 +469,24 @@ interface IDP {
   `],
 })
 export class IDPViewComponent implements OnInit {
+  private auth = inject(AuthService);
+
   idps = signal<IDP[]>([]);
   loading = signal(true);
   regeneratingId = signal<string | null>(null);
+
+  /** Roles that can generate, regenerate IDPs and mark milestones */
+  canManage = computed(() => {
+    const role = this.auth.currentUser()?.role;
+    return role === 'admin' || role === 'hr_manager' || role === 'coach' || role === 'manager' || role === 'system_admin';
+  });
+
+  /** Show coachee name on cards for everyone except the coachee themselves */
+  showCoacheeName = computed(() => this.auth.currentUser()?.role !== 'coachee');
+
+  isPopulatedCoachee(val: IDP['coacheeId']): val is { _id: string; firstName: string; lastName: string; email: string } {
+    return typeof val === 'object' && val !== null && 'firstName' in val;
+  }
 
   journalPrompts = [
     'What progress have you made toward your goal since your last session?',
@@ -521,6 +559,7 @@ export class IDPViewComponent implements OnInit {
     private dialog: MatDialog,
     private snackBar: MatSnackBar,
   ) {}
+
 
   ngOnInit(): void {
     this.loadIDPs();

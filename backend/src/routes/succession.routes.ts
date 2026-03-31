@@ -92,11 +92,14 @@ router.get('/idps', async (req: AuthRequest, res: Response, next: NextFunction) 
     const organizationId = req.user!.organizationId;
     const filter: Record<string, unknown> = { organizationId };
 
-    // Scope results by role
-    if (req.user!.role === 'coachee') filter['coacheeId'] = req.user!.userId;
-    if (req.user!.role === 'coach') filter['coachId'] = req.user!.userId;
+    // Coachees only see their own IDP; all other roles see the full org list
+    if (req.user!.role === 'coachee') {
+      filter['coacheeId'] = req.user!.userId;
+    }
 
-    const idps = await DevelopmentPlan.find(filter).sort({ createdAt: -1 });
+    const idps = await DevelopmentPlan.find(filter)
+      .populate('coacheeId', 'firstName lastName email')
+      .sort({ createdAt: -1 });
     res.json(idps);
   } catch (e) {
     next(e);
