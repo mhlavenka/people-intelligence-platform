@@ -93,408 +93,336 @@ interface OrgPlan {
         }
 
         @if (!loading()) {
+          <div class="billing-grid">
 
-          <!-- ───────────────────────────────────────────
-               Section 1: Current Plan
-          ─────────────────────────────────────────── -->
-          @if (org(); as orgData) {
-            <section class="card plan-card">
-              <div class="card-header">
-                <h2 class="card-title">Current Plan</h2>
-              </div>
+            <!-- LEFT: current plan + estimate + outstanding + history -->
+            <div class="billing-main">
 
-              <div class="plan-body">
-                <div class="plan-left">
-                  <div class="plan-name-row">
-                    <span
-                      class="plan-badge"
-                      [style.background-color]="planColorBg(orgData.plan)"
-                      [style.color]="planColor(orgData.plan)"
-                    >
-                      {{ orgData.plan | titlecase }}
-                    </span>
-                    @if (isTrialActive(orgData.trialEndsAt)) {
-                      <span class="trial-badge">
-                        <mat-icon class="trial-icon">schedule</mat-icon>
-                        Trial ends {{ orgData.trialEndsAt | date:'MMM d, y' }}
-                      </span>
-                    }
+              <!-- Current Plan -->
+              @if (org(); as orgData) {
+                <section class="card plan-card">
+                  <div class="card-header">
+                    <h2 class="card-title">Current Plan</h2>
                   </div>
-
-                  <div class="plan-price">{{ planPrice(orgData.plan) }}</div>
-
-                  @if (orgData.billingEmail) {
-                    <div class="billing-email">
-                      <mat-icon class="meta-icon">email</mat-icon>
-                      <span>{{ orgData.billingEmail }}</span>
-                    </div>
-                  }
-
-                  @if (orgData.modules && orgData.modules.length > 0) {
-                    <div class="modules-row">
-                      @for (mod of orgData.modules; track mod) {
-                        <span class="module-chip">{{ mod }}</span>
-                      }
-                    </div>
-                  }
-                </div>
-
-                <div class="plan-right">
-                  <div class="usage-section">
-                    <div class="usage-header">
-                      <span class="usage-label">Team members</span>
-                      <span class="usage-numbers">
-                        {{ orgData.currentUsers ?? 0 }}<span class="usage-sep"> / </span>{{ orgData.maxUsers }}
-                      </span>
-                    </div>
-                    <mat-progress-bar
-                      mode="determinate"
-                      [value]="usagePercent(orgData)"
-                      [color]="usagePercent(orgData) >= 90 ? 'warn' : 'primary'"
-                      class="usage-bar"
-                    ></mat-progress-bar>
-                    <div class="usage-caption">
-                      {{ orgData.maxUsers - (orgData.currentUsers ?? 0) }} seat(s) remaining
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <mat-divider class="card-divider"></mat-divider>
-
-              <div class="card-footer">
-                <a
-                  href="mailto:sales@headsoft.io?subject=Upgrade%20Plan"
-                  mat-stroked-button
-                  color="primary"
-                  class="upgrade-btn"
-                >
-                  <mat-icon>arrow_upward</mat-icon>
-                  Contact us to upgrade
-                </a>
-              </div>
-            </section>
-          }
-
-          <!-- ───────────────────────────────────────────
-               Section 1b: Plan Tiers
-          ─────────────────────────────────────────── -->
-          <section class="card tiers-card">
-            <div class="card-header">
-              <h2 class="card-title">Available Plans</h2>
-              <span class="bundle-tag">Bundle saves 25%</span>
-            </div>
-            <div class="tiers-body">
-
-              <!-- Conflict Intelligence -->
-              <div class="tier-module">
-                <div class="tier-module-label">
-                  <mat-icon class="tier-mod-icon" style="color:#e86c3a">bolt</mat-icon>
-                  Conflict Intelligence™
-                </div>
-                <div class="tier-row-list">
-                  @for (t of conflictTiers; track t.name) {
-                    <div class="tier-row" [class.tier-current]="(org()?.plan ?? '') === t.planKey">
-                      <div class="tier-name-col">
-                        <span class="tier-name">{{ t.name }}</span>
-                        @if ((org()?.plan ?? '') === t.planKey) {
-                          <span class="current-chip">Current</span>
+                  <div class="plan-body">
+                    <div class="plan-left">
+                      <div class="plan-name-row">
+                        <span class="plan-badge"
+                          [style.background-color]="planColorBg(orgData.plan)"
+                          [style.color]="planColor(orgData.plan)">
+                          {{ orgData.plan | titlecase }}
+                        </span>
+                        @if (isTrialActive(orgData.trialEndsAt)) {
+                          <span class="trial-badge">
+                            <mat-icon class="trial-icon">schedule</mat-icon>
+                            Trial ends {{ orgData.trialEndsAt | date:'MMM d, y' }}
+                          </span>
                         }
                       </div>
-                      <div class="tier-limit">{{ t.limit }}</div>
-                      <div class="tier-price">{{ t.price }}</div>
-                    </div>
-                  }
-                </div>
-              </div>
-
-              <!-- Neuro-Inclusion Compass -->
-              <div class="tier-module">
-                <div class="tier-module-label">
-                  <mat-icon class="tier-mod-icon" style="color:#27C4A0">psychology</mat-icon>
-                  Neuro-Inclusion Compass™
-                </div>
-                <div class="tier-row-list">
-                  @for (t of neuroinclTiers; track t.name) {
-                    <div class="tier-row">
-                      <div class="tier-name-col"><span class="tier-name">{{ t.name }}</span></div>
-                      <div class="tier-limit">{{ t.limit }}</div>
-                      <div class="tier-price">{{ t.price }}</div>
-                    </div>
-                  }
-                </div>
-              </div>
-
-              <!-- Leadership & Succession -->
-              <div class="tier-module">
-                <div class="tier-module-label">
-                  <mat-icon class="tier-mod-icon" style="color:#3A9FD6">emoji_events</mat-icon>
-                  Leadership & Succession Hub™
-                </div>
-                <div class="tier-row-list">
-                  @for (t of successionTiers; track t.name) {
-                    <div class="tier-row">
-                      <div class="tier-name-col"><span class="tier-name">{{ t.name }}</span></div>
-                      <div class="tier-limit">{{ t.limit }}</div>
-                      <div class="tier-price">{{ t.price }}</div>
-                    </div>
-                  }
-                </div>
-              </div>
-
-              <!-- All-Platform Bundle -->
-              <div class="bundle-row">
-                <mat-icon class="bundle-icon">auto_awesome</mat-icon>
-                <div class="bundle-info">
-                  <strong>All-Platform Bundle</strong>
-                  <span>All three modules at Professional tier · 2 Helena coaching days/year included</span>
-                </div>
-                <div class="bundle-price">CAD $24,000<span class="bundle-per">/yr</span></div>
-              </div>
-
-            </div>
-          </section>
-
-          <!-- ───────────────────────────────────────────
-               Section 2: Current Month Estimate
-          ─────────────────────────────────────────── -->
-          @if (currentInvoice(); as inv) {
-            <section class="card estimate-card">
-              <div class="card-header">
-                <h2 class="card-title">Current Month Estimate</h2>
-                <div class="card-header-actions">
-                  <span
-                    class="status-badge"
-                    [class]="'status-' + inv.status"
-                  >{{ inv.status | titlecase }}</span>
-                  <button
-                    mat-icon-button
-                    class="pdf-btn"
-                    (click)="downloadPdf(inv)"
-                    matTooltip="Download PDF invoice"
-                    aria-label="Download invoice as PDF"
-                  >
-                    <mat-icon>picture_as_pdf</mat-icon>
-                  </button>
-                </div>
-              </div>
-
-              <div class="estimate-body">
-                <div class="estimate-meta">
-                  <div class="estimate-meta-item">
-                    <span class="meta-label">Invoice</span>
-                    <span class="invoice-number">{{ inv.invoiceNumber }}</span>
-                  </div>
-                  <div class="estimate-meta-item">
-                    <span class="meta-label">Period</span>
-                    <span class="meta-value">
-                      {{ inv.period.from | date:'MMM d' }} – {{ inv.period.to | date:'MMM d, y' }}
-                    </span>
-                  </div>
-                  <div class="estimate-meta-item">
-                    <span class="meta-label">Due</span>
-                    <span class="meta-value" [class.overdue-text]="inv.status === 'overdue'">
-                      {{ inv.dueDate | date:'MMM d, y' }}
-                    </span>
-                  </div>
-                </div>
-
-                <div class="estimate-amount">
-                  <span class="amount-label">Estimated total</span>
-                  <span class="amount-value">{{ formatMoney(inv.total) }}</span>
-                </div>
-              </div>
-
-              <!-- Line Items Toggle -->
-              <div class="line-items-toggle">
-                <button
-                  mat-button
-                  class="toggle-btn"
-                  (click)="showLineItems.set(!showLineItems())"
-                >
-                  <mat-icon>{{ showLineItems() ? 'expand_less' : 'expand_more' }}</mat-icon>
-                  {{ showLineItems() ? 'Hide' : 'Show' }} line items
-                </button>
-              </div>
-
-              @if (showLineItems()) {
-                <div class="line-items">
-                  <table class="line-items-table">
-                    <thead>
-                      <tr>
-                        <th class="col-desc">Description</th>
-                        <th class="col-qty">Qty</th>
-                        <th class="col-price">Unit Price</th>
-                        <th class="col-amount">Amount</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      @for (item of inv.lineItems; track item.description) {
-                        <tr>
-                          <td class="col-desc">{{ item.description }}</td>
-                          <td class="col-qty">{{ item.quantity }}</td>
-                          <td class="col-price">{{ formatMoney(item.unitPrice) }}</td>
-                          <td class="col-amount">{{ formatMoney(item.amount) }}</td>
-                        </tr>
+                      <div class="plan-price">{{ planPrice(orgData.plan) }}</div>
+                      @if (orgData.billingEmail) {
+                        <div class="billing-email">
+                          <mat-icon class="meta-icon">email</mat-icon>
+                          <span>{{ orgData.billingEmail }}</span>
+                        </div>
                       }
-                    </tbody>
-                    <tfoot>
-                      <tr class="subtotal-row">
-                        <td colspan="3" class="total-label">Subtotal</td>
-                        <td class="col-amount">{{ formatMoney(inv.subtotal) }}</td>
-                      </tr>
-                      <tr class="tax-row">
-                        <td colspan="3" class="total-label">Tax</td>
-                        <td class="col-amount">{{ formatMoney(inv.tax) }}</td>
-                      </tr>
-                      <tr class="grand-total-row">
-                        <td colspan="3" class="total-label grand-label">Total</td>
-                        <td class="col-amount grand-amount">{{ formatMoney(inv.total) }}</td>
-                      </tr>
-                    </tfoot>
-                  </table>
-                  @if (inv.notes) {
-                    <div class="invoice-notes">
-                      <mat-icon class="notes-icon">info_outline</mat-icon>
-                      <span>{{ inv.notes }}</span>
+                      @if (orgData.modules && orgData.modules.length > 0) {
+                        <div class="modules-row">
+                          @for (mod of orgData.modules; track mod) {
+                            <span class="module-chip">{{ mod }}</span>
+                          }
+                        </div>
+                      }
                     </div>
-                  }
-                </div>
+                    <div class="plan-right">
+                      <div class="usage-section">
+                        <div class="usage-header">
+                          <span class="usage-label">Team members</span>
+                          <span class="usage-numbers">
+                            {{ orgData.currentUsers ?? 0 }}<span class="usage-sep"> / </span>{{ orgData.maxUsers }}
+                          </span>
+                        </div>
+                        <mat-progress-bar mode="determinate"
+                          [value]="usagePercent(orgData)"
+                          [color]="usagePercent(orgData) >= 90 ? 'warn' : 'primary'"
+                          class="usage-bar"></mat-progress-bar>
+                        <div class="usage-caption">
+                          {{ orgData.maxUsers - (orgData.currentUsers ?? 0) }} seat(s) remaining
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <mat-divider class="card-divider"></mat-divider>
+                  <div class="card-footer">
+                    <a href="mailto:sales@headsoft.io?subject=Upgrade%20Plan"
+                       mat-stroked-button color="primary" class="upgrade-btn">
+                      <mat-icon>arrow_upward</mat-icon>
+                      Contact us to upgrade
+                    </a>
+                  </div>
+                </section>
               }
 
-              @if (inv.status === 'sent' || inv.status === 'overdue') {
-                <mat-divider class="card-divider"></mat-divider>
-                <div class="card-footer">
-                  <button
-                    mat-flat-button
-                    color="primary"
-                    class="pay-btn"
-                    [disabled]="paying() === inv._id"
-                    (click)="payInvoice(inv)"
-                  >
-                    @if (paying() === inv._id) {
-                      <mat-spinner diameter="18" class="btn-spinner"></mat-spinner>
-                      Processing…
-                    } @else {
-                      <mat-icon>payment</mat-icon>
-                      Pay Now — {{ formatMoney(inv.total) }}
-                    }
-                  </button>
-                </div>
-              }
-            </section>
-          }
-
-          <!-- ───────────────────────────────────────────
-               Section 3: Outstanding Invoices Banner
-          ─────────────────────────────────────────── -->
-          @if (outstandingInvoices().length > 0) {
-            <div class="outstanding-banner">
-              <mat-icon class="banner-icon">warning_amber</mat-icon>
-              <span class="banner-text">
-                You have <strong>{{ outstandingInvoices().length }}</strong>
-                outstanding invoice{{ outstandingInvoices().length > 1 ? 's' : '' }}.
-              </span>
-            </div>
-
-            <section class="card outstanding-card">
-              <div class="card-header">
-                <h2 class="card-title">Outstanding Invoices</h2>
-              </div>
-
-              <div class="outstanding-list">
-                @for (inv of outstandingInvoices(); track inv._id) {
-                  <div class="outstanding-item">
-                    <div class="outstanding-info">
-                      <span class="invoice-number">{{ inv.invoiceNumber }}</span>
-                      <span class="outstanding-period">
-                        {{ inv.period.from | date:'MMM d' }} – {{ inv.period.to | date:'MMM d, y' }}
-                      </span>
-                      <span
-                        class="status-badge"
-                        [class]="'status-' + inv.status"
-                      >{{ inv.status | titlecase }}</span>
-                    </div>
-                    <div class="outstanding-right">
-                      <span class="outstanding-amount">{{ formatMoney(inv.total) }}</span>
-                      <button
-                        mat-flat-button
-                        color="primary"
-                        class="pay-btn pay-btn-sm"
-                        [disabled]="paying() === inv._id"
-                        (click)="payInvoice(inv)"
-                      >
-                        @if (paying() === inv._id) {
-                          <mat-spinner diameter="14" class="btn-spinner"></mat-spinner>
-                        } @else {
-                          <mat-icon>payment</mat-icon>
-                        }
-                        Pay
+              <!-- Current Month Estimate -->
+              @if (currentInvoice(); as inv) {
+                <section class="card estimate-card">
+                  <div class="card-header">
+                    <h2 class="card-title">Current Month Estimate</h2>
+                    <div class="card-header-actions">
+                      <span class="status-badge" [class]="'status-' + inv.status">{{ inv.status | titlecase }}</span>
+                      <button mat-icon-button class="pdf-btn" (click)="downloadPdf(inv)"
+                              matTooltip="Download PDF invoice" aria-label="Download invoice as PDF">
+                        <mat-icon>picture_as_pdf</mat-icon>
                       </button>
                     </div>
                   </div>
-                  @if (!$last) {
-                    <mat-divider></mat-divider>
+                  <div class="estimate-body">
+                    <div class="estimate-meta">
+                      <div class="estimate-meta-item">
+                        <span class="meta-label">Invoice</span>
+                        <span class="invoice-number">{{ inv.invoiceNumber }}</span>
+                      </div>
+                      <div class="estimate-meta-item">
+                        <span class="meta-label">Period</span>
+                        <span class="meta-value">{{ inv.period.from | date:'MMM d' }} – {{ inv.period.to | date:'MMM d, y' }}</span>
+                      </div>
+                      <div class="estimate-meta-item">
+                        <span class="meta-label">Due</span>
+                        <span class="meta-value" [class.overdue-text]="inv.status === 'overdue'">{{ inv.dueDate | date:'MMM d, y' }}</span>
+                      </div>
+                    </div>
+                    <div class="estimate-amount">
+                      <span class="amount-label">Estimated total</span>
+                      <span class="amount-value">{{ formatMoney(inv.total) }}</span>
+                    </div>
+                  </div>
+                  <div class="line-items-toggle">
+                    <button mat-button class="toggle-btn" (click)="showLineItems.set(!showLineItems())">
+                      <mat-icon>{{ showLineItems() ? 'expand_less' : 'expand_more' }}</mat-icon>
+                      {{ showLineItems() ? 'Hide' : 'Show' }} line items
+                    </button>
+                  </div>
+                  @if (showLineItems()) {
+                    <div class="line-items">
+                      <table class="line-items-table">
+                        <thead>
+                          <tr>
+                            <th class="col-desc">Description</th>
+                            <th class="col-qty">Qty</th>
+                            <th class="col-price">Unit Price</th>
+                            <th class="col-amount">Amount</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          @for (item of inv.lineItems; track item.description) {
+                            <tr>
+                              <td class="col-desc">{{ item.description }}</td>
+                              <td class="col-qty">{{ item.quantity }}</td>
+                              <td class="col-price">{{ formatMoney(item.unitPrice) }}</td>
+                              <td class="col-amount">{{ formatMoney(item.amount) }}</td>
+                            </tr>
+                          }
+                        </tbody>
+                        <tfoot>
+                          <tr class="subtotal-row">
+                            <td colspan="3" class="total-label">Subtotal</td>
+                            <td class="col-amount">{{ formatMoney(inv.subtotal) }}</td>
+                          </tr>
+                          <tr class="tax-row">
+                            <td colspan="3" class="total-label">Tax</td>
+                            <td class="col-amount">{{ formatMoney(inv.tax) }}</td>
+                          </tr>
+                          <tr class="grand-total-row">
+                            <td colspan="3" class="total-label grand-label">Total</td>
+                            <td class="col-amount grand-amount">{{ formatMoney(inv.total) }}</td>
+                          </tr>
+                        </tfoot>
+                      </table>
+                      @if (inv.notes) {
+                        <div class="invoice-notes">
+                          <mat-icon class="notes-icon">info_outline</mat-icon>
+                          <span>{{ inv.notes }}</span>
+                        </div>
+                      }
+                    </div>
                   }
-                }
-              </div>
-            </section>
-          }
+                  @if (inv.status === 'sent' || inv.status === 'overdue') {
+                    <mat-divider class="card-divider"></mat-divider>
+                    <div class="card-footer">
+                      <button mat-flat-button color="primary" class="pay-btn"
+                              [disabled]="paying() === inv._id" (click)="payInvoice(inv)">
+                        @if (paying() === inv._id) {
+                          <mat-spinner diameter="18" class="btn-spinner"></mat-spinner>
+                          Processing…
+                        } @else {
+                          <mat-icon>payment</mat-icon>
+                          Pay Now — {{ formatMoney(inv.total) }}
+                        }
+                      </button>
+                    </div>
+                  }
+                </section>
+              }
 
-          <!-- ───────────────────────────────────────────
-               Section 4: Payment History
-          ─────────────────────────────────────────── -->
-          <section class="card history-card">
-            <div class="card-header">
-              <h2 class="card-title">Payment History</h2>
-            </div>
-
-            @if (paidInvoices().length === 0) {
-              <div class="empty-state">
-                <mat-icon class="empty-icon">receipt_long</mat-icon>
-                <p class="empty-text">No payment history yet.</p>
-              </div>
-            } @else {
-              <div class="history-table-wrapper">
-                <table class="history-table">
-                  <thead>
-                    <tr>
-                      <th class="col-inv">Invoice #</th>
-                      <th class="col-period">Period</th>
-                      <th class="col-amt">Amount</th>
-                      <th class="col-paid">Paid Date</th>
-                      <th class="col-actions">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    @for (inv of paidInvoices(); track inv._id; let odd = $odd) {
-                      <tr [class.row-odd]="odd">
-                        <td class="col-inv">
+              <!-- Outstanding Invoices -->
+              @if (outstandingInvoices().length > 0) {
+                <div class="outstanding-banner">
+                  <mat-icon class="banner-icon">warning_amber</mat-icon>
+                  <span class="banner-text">
+                    You have <strong>{{ outstandingInvoices().length }}</strong>
+                    outstanding invoice{{ outstandingInvoices().length > 1 ? 's' : '' }}.
+                  </span>
+                </div>
+                <section class="card outstanding-card">
+                  <div class="card-header">
+                    <h2 class="card-title">Outstanding Invoices</h2>
+                  </div>
+                  <div class="outstanding-list">
+                    @for (inv of outstandingInvoices(); track inv._id) {
+                      <div class="outstanding-item">
+                        <div class="outstanding-info">
                           <span class="invoice-number">{{ inv.invoiceNumber }}</span>
-                        </td>
-                        <td class="col-period">
-                          {{ inv.period.from | date:'MMM d' }} – {{ inv.period.to | date:'MMM d, y' }}
-                        </td>
-                        <td class="col-amt">{{ formatMoney(inv.total) }}</td>
-                        <td class="col-paid">{{ inv.paidAt | date:'MMM d, y' }}</td>
-                        <td class="col-actions">
-                          <button
-                            mat-icon-button
-                            (click)="downloadPdf(inv)"
-                            matTooltip="Download PDF invoice"
-                            aria-label="Download invoice as PDF"
-                            class="receipt-btn"
-                          >
-                            <mat-icon>picture_as_pdf</mat-icon>
+                          <span class="outstanding-period">{{ inv.period.from | date:'MMM d' }} – {{ inv.period.to | date:'MMM d, y' }}</span>
+                          <span class="status-badge" [class]="'status-' + inv.status">{{ inv.status | titlecase }}</span>
+                        </div>
+                        <div class="outstanding-right">
+                          <span class="outstanding-amount">{{ formatMoney(inv.total) }}</span>
+                          <button mat-flat-button color="primary" class="pay-btn pay-btn-sm"
+                                  [disabled]="paying() === inv._id" (click)="payInvoice(inv)">
+                            @if (paying() === inv._id) {
+                              <mat-spinner diameter="14" class="btn-spinner"></mat-spinner>
+                            } @else {
+                              <mat-icon>payment</mat-icon>
+                            }
+                            Pay
                           </button>
-                        </td>
-                      </tr>
+                        </div>
+                      </div>
+                      @if (!$last) { <mat-divider></mat-divider> }
                     }
-                  </tbody>
-                </table>
-              </div>
-            }
-          </section>
+                  </div>
+                </section>
+              }
+
+              <!-- Payment History -->
+              <section class="card history-card">
+                <div class="card-header">
+                  <h2 class="card-title">Payment History</h2>
+                </div>
+                @if (paidInvoices().length === 0) {
+                  <div class="empty-state">
+                    <mat-icon class="empty-icon">receipt_long</mat-icon>
+                    <p class="empty-text">No payment history yet.</p>
+                  </div>
+                } @else {
+                  <div class="history-table-wrapper">
+                    <table class="history-table">
+                      <thead>
+                        <tr>
+                          <th class="col-inv">Invoice #</th>
+                          <th class="col-period">Period</th>
+                          <th class="col-amt">Amount</th>
+                          <th class="col-paid">Paid Date</th>
+                          <th class="col-actions">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        @for (inv of paidInvoices(); track inv._id; let odd = $odd) {
+                          <tr [class.row-odd]="odd">
+                            <td class="col-inv"><span class="invoice-number">{{ inv.invoiceNumber }}</span></td>
+                            <td class="col-period">{{ inv.period.from | date:'MMM d' }} – {{ inv.period.to | date:'MMM d, y' }}</td>
+                            <td class="col-amt">{{ formatMoney(inv.total) }}</td>
+                            <td class="col-paid">{{ inv.paidAt | date:'MMM d, y' }}</td>
+                            <td class="col-actions">
+                              <button mat-icon-button (click)="downloadPdf(inv)"
+                                      matTooltip="Download PDF invoice" aria-label="Download invoice as PDF"
+                                      class="receipt-btn">
+                                <mat-icon>picture_as_pdf</mat-icon>
+                              </button>
+                            </td>
+                          </tr>
+                        }
+                      </tbody>
+                    </table>
+                  </div>
+                }
+              </section>
+
+            </div><!-- /billing-main -->
+
+            <!-- RIGHT: available plans -->
+            <div class="billing-sidebar">
+              <section class="card tiers-card">
+                <div class="card-header">
+                  <h2 class="card-title">Available Plans</h2>
+                  <span class="bundle-tag">Bundle saves 25%</span>
+                </div>
+                <div class="tiers-body">
+
+                  <div class="tier-module">
+                    <div class="tier-module-label">
+                      <mat-icon class="tier-mod-icon" style="color:#e86c3a">bolt</mat-icon>
+                      Conflict Intelligence™
+                    </div>
+                    <div class="tier-row-list">
+                      @for (t of conflictTiers; track t.name) {
+                        <div class="tier-row" [class.tier-current]="(org()?.plan ?? '') === t.planKey">
+                          <div class="tier-name-col">
+                            <span class="tier-name">{{ t.name }}</span>
+                            @if ((org()?.plan ?? '') === t.planKey) {
+                              <span class="current-chip">Current</span>
+                            }
+                          </div>
+                          <div class="tier-price">{{ t.price }}</div>
+                        </div>
+                      }
+                    </div>
+                  </div>
+
+                  <div class="tier-module">
+                    <div class="tier-module-label">
+                      <mat-icon class="tier-mod-icon" style="color:#27C4A0">psychology</mat-icon>
+                      Neuro-Inclusion Compass™
+                    </div>
+                    <div class="tier-row-list">
+                      @for (t of neuroinclTiers; track t.name) {
+                        <div class="tier-row">
+                          <div class="tier-name-col"><span class="tier-name">{{ t.name }}</span></div>
+                          <div class="tier-price">{{ t.price }}</div>
+                        </div>
+                      }
+                    </div>
+                  </div>
+
+                  <div class="tier-module">
+                    <div class="tier-module-label">
+                      <mat-icon class="tier-mod-icon" style="color:#3A9FD6">emoji_events</mat-icon>
+                      Leadership & Succession Hub™
+                    </div>
+                    <div class="tier-row-list">
+                      @for (t of successionTiers; track t.name) {
+                        <div class="tier-row">
+                          <div class="tier-name-col"><span class="tier-name">{{ t.name }}</span></div>
+                          <div class="tier-price">{{ t.price }}</div>
+                        </div>
+                      }
+                    </div>
+                  </div>
+
+                  <div class="bundle-row">
+                    <mat-icon class="bundle-icon">auto_awesome</mat-icon>
+                    <div class="bundle-info">
+                      <strong>All-Platform Bundle</strong>
+                      <span>All three modules · 2 Helena coaching days/year</span>
+                    </div>
+                    <div class="bundle-price">CAD $24,000<span class="bundle-per">/yr</span></div>
+                  </div>
+
+                </div>
+              </section>
+            </div><!-- /billing-sidebar -->
+
+          </div><!-- /billing-grid -->
 
         } <!-- end !loading() -->
 
@@ -506,13 +434,31 @@ interface OrgPlan {
     .billing-page {
       min-height: 100vh;
       background: #f5f7fa;
-      padding: 32px 24px;
+      padding: 24px 16px;
       box-sizing: border-box;
     }
 
     .billing-content {
-      max-width: 860px;
-      margin: 0 auto;
+      width: 100%;
+    }
+
+    .billing-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 20px;
+      align-items: start;
+      margin-bottom: 20px;
+    }
+
+    .billing-main {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .billing-sidebar {
+      position: sticky;
+      top: 24px;
     }
 
     /* ── Page header ─────────────────────────────── */
@@ -1158,6 +1104,15 @@ interface OrgPlan {
     }
 
     /* ── Responsive ──────────────────────────────── */
+    @media (max-width: 1024px) {
+      .billing-grid {
+        grid-template-columns: 1fr;
+      }
+      .billing-sidebar {
+        position: static;
+      }
+    }
+
     @media (max-width: 600px) {
       .billing-page {
         padding: 16px 12px;
