@@ -12,7 +12,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ApiService } from '../../core/api.service';
 
 // ── Layout constants ──────────────────────────────────────────────────────────
-const NW   = 220;   // node width
+const NW   = 300;   // node width
 const NH   = 92;    // node height
 const HGAP = 44;    // horizontal gap between sibling subtrees
 const VGAP = 88;    // vertical gap between levels
