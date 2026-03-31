@@ -454,6 +454,7 @@ export class AppShellComponent implements OnInit {
       children: [
         { label: 'Survey Management', icon: 'assignment',          route: '/surveys',              roles: ['admin', 'hr_manager'] },
         { label: 'Users',             icon: 'group',               route: '/admin/users',          roles: ['admin', 'hr_manager'] },
+        { label: 'Org Chart',         icon: 'account_tree',        route: '/org-chart',            roles: ['admin', 'hr_manager'] },
         { label: 'Organization',      icon: 'business',            route: '/admin/organization',   roles: ['admin'] },
         { label: 'Role Permissions',  icon: 'policy',              route: '/admin/roles',          roles: ['admin', 'hr_manager'] },
         { label: 'Billing',           icon: 'receipt_long',        route: '/billing',              roles: ['admin'] },

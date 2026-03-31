@@ -20,6 +20,7 @@ const PERMISSIONS: Permission[] = [
   { category: 'Administration', feature: 'Manage Organization',        admin: true,  hr_manager: false, manager: false, coach: false, coachee: false },
   { category: 'Administration', feature: 'Manage Survey Templates',    admin: true,  hr_manager: true,  manager: false, coach: false, coachee: false },
   { category: 'Administration', feature: 'View All Users',             admin: true,  hr_manager: true,  manager: false, coach: false, coachee: false },
+  { category: 'Administration', feature: 'Org Chart (Reporting Lines)', admin: true,  hr_manager: true,  manager: false, coach: false, coachee: false },
   { category: 'Administration', feature: 'Billing & Subscription',     admin: true,  hr_manager: false, manager: false, coach: false, coachee: false },
   { category: 'Administration', feature: 'Role Permissions View',      admin: true,  hr_manager: true,  manager: false, coach: false, coachee: false },
   // Conflict Intelligence

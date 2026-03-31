@@ -86,6 +86,14 @@ export const routes: Routes = [
 
       // ── Administration: admin & hr_manager ───────────────────────────────
       {
+        path: 'org-chart',
+        canActivate: [roleGuard([...ADMIN_HR])],
+        loadComponent: () =>
+          import('./modules/org-chart/org-chart.component').then(
+            (m) => m.OrgChartComponent
+          ),
+      },
+      {
         path: 'surveys',
         canActivate: [roleGuard([...ADMIN_HR])],
         loadComponent: () =>
