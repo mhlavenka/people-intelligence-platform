@@ -1,6 +1,31 @@
-7. Billing framework - will need to work more on taxation
-11. mobile optimization + do I want an app?
-12. MHS EQi import
+I. HIGH
+-------
+- Recent activity on dashboard is not being updated
+- Dashboard tabs have random numbers, get the real stats
+- conflict analysis view has manager conversation guide in raw json
+- manager conflict guides conversation guide has the topic titles words concatenated - split words
+- IDP card - allow to delete by admin, hr and coach
+           - how is the status changed from draft to active to completed?
+           - should be able to regenerate only draft IDP. Do not allow active or completed
+
+
+II MEDIUM
+---------
+- Billing framework - will need to work more on taxation - prioritize canada and quebec/ontario
+- Leadership HUb - Add coaching journal
+                 - IDP nodes - add some background so it stands out. Why is it called "draft"?
+- message hub - messages and alerts are joined together - what's the idea here?
+
+III. LOW
+--------
+- mobile optimization + do I want an app?
+- MHS EQi import
+
+
+IV. NICE TO HAVE
+----------------
+- in all modules include some graphics. Curently it is all text, although very relevant, it feels crowded and hard to read
+
 
 
 

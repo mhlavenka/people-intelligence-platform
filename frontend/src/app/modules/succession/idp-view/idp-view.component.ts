@@ -315,9 +315,9 @@ interface IDP {
     .idp-card {
       background: white; border-radius: 16px; padding: 24px;
       box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-      &.status-active   { border-top: 3px solid #3A9FD6; }
-      &.status-draft    { border-top: 3px solid #9aa5b4; }
-      &.status-completed{ border-top: 3px solid #27C4A0; }
+      &.status-active   { border-top: 3px solid #3A9FD6; background: azure;}
+      &.status-draft    { border-top: 3px solid #9aa5b4; background: lavenderblush;}
+      &.status-completed{ border-top: 3px solid #27C4A0; background: lightgrey;}
     }
 
     .idp-card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; .idp-date { margin-left: auto; } }
@@ -356,7 +356,7 @@ interface IDP {
     ::ng-deep .mat-expansion-panel-header-title { display: flex; align-items: center; gap: 8px; font-weight: 600; }
     ul { margin: 0; padding-left: 20px; li { margin-bottom: 6px; font-size: 14px; color: #5a6a7e; } }
 
-    .milestone-section { margin-bottom: 16px; h4 { font-size: 14px; color: #1B2A47; margin-bottom: 12px; } }
+    .milestone-section { margin-bottom: 16px; margin-top: 16px; h4 { font-size: 14px; color: #1B2A47; margin-bottom: 12px; } }
     .milestone-timeline { display: flex; flex-direction: column; gap: 8px; }
     .milestone-item {
       display: flex; align-items: center; gap: 10px;
