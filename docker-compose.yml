@@ -24,10 +24,10 @@ services:
       dockerfile: Dockerfile
     container_name: pip-backend
     ports:
-      - '3000:3000'
+      - '3030:3030'
     environment:
       NODE_ENV: development
-      PORT: 3000
+      PORT: 3030
       MONGODB_URI: mongodb://admin:password@mongodb:27017/people-intelligence?authSource=admin
       FRONTEND_URL: http://localhost:4200
       JWT_SECRET: ${JWT_SECRET:-dev-secret-change-in-production}
@@ -50,7 +50,7 @@ services:
     ports:
       - '4200:4200'
     environment:
-      ANGULAR_API_URL: http://localhost:3000/api
+      ANGULAR_API_URL: http://localhost:3030/api
     depends_on:
       - backend
     restart: unless-stopped

@@ -1,7 +1,21 @@
 {
   "permissions": {
     "allow": [
-      "Bash(cd \"D:\\\\CUSTOMERS\\\\HeadSoft\\\\people-intelligence-platform\\\\backend\" && node -e \"const o = require\\('otplib'\\); const { TOTP } = o; console.log\\(typeof TOTP, typeof TOTP?.generate\\)\")"
+      "Bash(cd \"D:\\\\CUSTOMERS\\\\HeadSoft\\\\people-intelligence-platform\\\\backend\" && node -e \"const o = require\\('otplib'\\); const { TOTP } = o; console.log\\(typeof TOTP, typeof TOTP?.generate\\)\")",
+      "Bash(cd \"D:\\\\CUSTOMERS\\\\HeadSoft\\\\people-intelligence-platform\\\\backend\" && node -e \"const { TOTP, generateSecret } = require\\('otplib'\\); const t = new TOTP\\(\\); console.log\\(typeof t.generate, typeof generateSecret\\)\")",
+      "Bash(cd \"D:\\\\CUSTOMERS\\\\HeadSoft\\\\people-intelligence-platform\\\\backend\" && node -e \"const { TOTP, generateSecret } = require\\('otplib'\\); const t = new TOTP\\(\\); const s = generateSecret\\(\\); console.log\\('secret:', s\\); const token = t.generate\\(s\\); console.log\\('token:', token\\); console.log\\('verify:', t.verify\\({ token, secret: s }\\)\\); console.log\\('keyuri?', typeof t.keyuri\\);\")",
+      "Bash(cd \"D:\\\\CUSTOMERS\\\\HeadSoft\\\\people-intelligence-platform\\\\backend\" && node -e \"const { TOTP, generateSecret } = require\\('otplib'\\); const t = new TOTP\\(\\); const s = generateSecret\\(\\); t.generate\\({ secret: s }\\).then\\(token => { console.log\\('token:', token\\); return t.verify\\({ token, secret: s }\\); }\\).then\\(v => console.log\\('valid:', v\\)\\).catch\\(e => console.error\\(e.message\\)\\);\")",
+      "Bash(cd \"D:\\\\CUSTOMERS\\\\HeadSoft\\\\people-intelligence-platform\\\\backend\" && cat node_modules/otplib/package.json | node -e \"const d = JSON.parse\\(require\\('fs'\\).readFileSync\\('/dev/stdin','utf8'\\)\\); console.log\\('version:', d.version\\); console.log\\('exports keys:', Object.keys\\(d.exports || {}\\).slice\\(0,20\\)\\);\")",
+      "Bash(node -e \"const p = require\\('D:/CUSTOMERS/HeadSoft/people-intelligence-platform/backend/node_modules/otplib/package.json'\\); console.log\\('version:', p.version\\);\")",
+      "Bash(cd \"D:\\\\CUSTOMERS\\\\HeadSoft\\\\people-intelligence-platform\\\\backend\" && npm install otplib@10.2.3 --save 2>&1 | tail -5)",
+      "Bash(node -e \"const p = require\\('D:/CUSTOMERS/HeadSoft/people-intelligence-platform/backend/node_modules/otplib/package.json'\\); console.log\\('version:', p.version\\);\" && cd \"D:\\\\CUSTOMERS\\\\HeadSoft\\\\people-intelligence-platform\\\\backend\" && node -e \"const { authenticator } = require\\('otplib'\\); const s = authenticator.generateSecret\\(\\); const t = authenticator.generate\\(s\\); console.log\\('secret:', s, 'token:', t, 'verify:', authenticator.verify\\({ token: t, secret: s }\\)\\);\")",
+      "Bash(bash deploy.sh all)",
+      "Bash(where pandoc:*)",
+      "Bash(npm list:*)",
+      "Bash(npm install:*)",
+      "Bash(node generate.js)",
+      "Bash(npm init:*)",
+      "Bash(bash deploy.sh frontend)"
     ]
   }
 }

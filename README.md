@@ -44,7 +44,7 @@ docker-compose up -d
 
 This starts:
 - MongoDB on `localhost:27017`
-- Backend API on `localhost:3000`
+- Backend API on `localhost:3030`
 - Frontend on `localhost:4200`
 
 ### 3. Manual development

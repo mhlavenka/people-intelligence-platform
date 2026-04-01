@@ -1,5 +1,5 @@
 ### 1. Register Organization + First Admin User
-POST http://localhost:3000/api/auth/register
+POST http://localhost:3030/api/auth/register
 Content-Type: application/json
 
 {
@@ -13,7 +13,7 @@ Content-Type: application/json
 }
 
 ### 2. Login
-POST http://localhost:3000/api/auth/login
+POST http://localhost:3030/api/auth/login
 Content-Type: application/json
 
 {
@@ -22,7 +22,7 @@ Content-Type: application/json
 }
 
 ### 3. Create HR Manager
-POST http://localhost:3000/api/users
+POST http://localhost:3030/api/users
 Content-Type: application/json
 Authorization: Bearer PASTE_ACCESS_TOKEN_HERE
 
@@ -35,7 +35,7 @@ Authorization: Bearer PASTE_ACCESS_TOKEN_HERE
 }
 
 ### 4. Create Manager
-POST http://localhost:3000/api/users
+POST http://localhost:3030/api/users
 Content-Type: application/json
 Authorization: Bearer PASTE_ACCESS_TOKEN_HERE
 
@@ -48,7 +48,7 @@ Authorization: Bearer PASTE_ACCESS_TOKEN_HERE
 }
 
 ### 5. Create Coach
-POST http://localhost:3000/api/users
+POST http://localhost:3030/api/users
 Content-Type: application/json
 Authorization: Bearer PASTE_ACCESS_TOKEN_HERE
 
@@ -61,7 +61,7 @@ Authorization: Bearer PASTE_ACCESS_TOKEN_HERE
 }
 
 ### 6. Create Coachee
-POST http://localhost:3000/api/users
+POST http://localhost:3030/api/users
 Content-Type: application/json
 Authorization: Bearer PASTE_ACCESS_TOKEN_HERE
 
@@ -74,18 +74,18 @@ Authorization: Bearer PASTE_ACCESS_TOKEN_HERE
 }
 
 ### 7. List all users
-GET http://localhost:3000/api/users
+GET http://localhost:3030/api/users
 Authorization: Bearer PASTE_ACCESS_TOKEN_HERE
 
 ### 8. Health check
-GET http://localhost:3000/health
+GET http://localhost:3030/health
 
 ### ============================================================
 ### SURVEYS
 ### ============================================================
 
 ### 9. Create Conflict Survey Template
-POST http://localhost:3000/api/surveys/templates
+POST http://localhost:3030/api/surveys/templates
 Content-Type: application/json
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OWM5MzUyZmYxMmJjMjc3NzBiYTNlZTciLCJvcmdhbml6YXRpb25JZCI6IjY5YzkzNTJmZjEyYmMyNzc3MGJhM2VlNSIsInJvbGUiOiJhZG1pbiIsImVtYWlsIjoiYWRtaW5AaGVsZW5hY29hY2hpbmcuY29tIiwiaWF0IjoxNzc0Nzk2MjUyLCJleHAiOjE3NzQ3OTcxNTJ9.F9-q8VC-_1BLWQSV_liIpAFyaDKpP4DOz50EhI77U1U
 
@@ -105,11 +105,11 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OWM5M
 }
 
 ### 10. List Survey Templates (copy the _id from response)
-GET http://localhost:3000/api/surveys/templates
+GET http://localhost:3030/api/surveys/templates
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OWM5MzUyZmYxMmJjMjc3NzBiYTNlZTciLCJvcmdhbml6YXRpb25JZCI6IjY5YzkzNTJmZjEyYmMyNzc3MGJhM2VlNSIsInJvbGUiOiJhZG1pbiIsImVtYWlsIjoiYWRtaW5AaGVsZW5hY29hY2hpbmcuY29tIiwiaWF0IjoxNzc0Nzk2MjUyLCJleHAiOjE3NzQ3OTcxNTJ9.F9-q8VC-_1BLWQSV_liIpAFyaDKpP4DOz50EhI77U1U
 
 ### 11. Submit Survey Response #1  (replace TEMPLATE_ID below)
-POST http://localhost:3000/api/surveys/respond
+POST http://localhost:3030/api/surveys/respond
 Content-Type: application/json
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OWM5MzUyZmYxMmJjMjc3NzBiYTNlZTciLCJvcmdhbml6YXRpb25JZCI6IjY5YzkzNTJmZjEyYmMyNzc3MGJhM2VlNSIsInJvbGUiOiJhZG1pbiIsImVtYWlsIjoiYWRtaW5AaGVsZW5hY29hY2hpbmcuY29tIiwiaWF0IjoxNzc0Nzk2MjUyLCJleHAiOjE3NzQ3OTcxNTJ9.F9-q8VC-_1BLWQSV_liIpAFyaDKpP4DOz50EhI77U1U
 
@@ -130,7 +130,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OWM5M
 }
 
 ### 12. Submit Survey Response #2
-POST http://localhost:3000/api/surveys/respond
+POST http://localhost:3030/api/surveys/respond
 Content-Type: application/json
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OWM5MzUyZmYxMmJjMjc3NzBiYTNlZTciLCJvcmdhbml6YXRpb25JZCI6IjY5YzkzNTJmZjEyYmMyNzc3MGJhM2VlNSIsInJvbGUiOiJhZG1pbiIsImVtYWlsIjoiYWRtaW5AaGVsZW5hY29hY2hpbmcuY29tIiwiaWF0IjoxNzc0Nzk2MjUyLCJleHAiOjE3NzQ3OTcxNTJ9.F9-q8VC-_1BLWQSV_liIpAFyaDKpP4DOz50EhI77U1U
 
@@ -151,7 +151,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OWM5M
 }
 
 ### 13. Submit Survey Response #3
-POST http://localhost:3000/api/surveys/respond
+POST http://localhost:3030/api/surveys/respond
 Content-Type: application/json
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OWM5MzUyZmYxMmJjMjc3NzBiYTNlZTciLCJvcmdhbml6YXRpb25JZCI6IjY5YzkzNTJmZjEyYmMyNzc3MGJhM2VlNSIsInJvbGUiOiJhZG1pbiIsImVtYWlsIjoiYWRtaW5AaGVsZW5hY29hY2hpbmcuY29tIiwiaWF0IjoxNzc0Nzk2MjUyLCJleHAiOjE3NzQ3OTcxNTJ9.F9-q8VC-_1BLWQSV_liIpAFyaDKpP4DOz50EhI77U1U
 
@@ -172,7 +172,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OWM5M
 }
 
 ### 14. Submit Survey Response #4
-POST http://localhost:3000/api/surveys/respond
+POST http://localhost:3030/api/surveys/respond
 Content-Type: application/json
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OWM5MzUyZmYxMmJjMjc3NzBiYTNlZTciLCJvcmdhbml6YXRpb25JZCI6IjY5YzkzNTJmZjEyYmMyNzc3MGJhM2VlNSIsInJvbGUiOiJhZG1pbiIsImVtYWlsIjoiYWRtaW5AaGVsZW5hY29hY2hpbmcuY29tIiwiaWF0IjoxNzc0Nzk2MjUyLCJleHAiOjE3NzQ3OTcxNTJ9.F9-q8VC-_1BLWQSV_liIpAFyaDKpP4DOz50EhI77U1U
 
@@ -193,7 +193,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OWM5M
 }
 
 ### 15. Submit Survey Response #5
-POST http://localhost:3000/api/surveys/respond
+POST http://localhost:3030/api/surveys/respond
 Content-Type: application/json
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OWM5MzUyZmYxMmJjMjc3NzBiYTNlZTciLCJvcmdhbml6YXRpb25JZCI6IjY5YzkzNTJmZjEyYmMyNzc3MGJhM2VlNSIsInJvbGUiOiJhZG1pbiIsImVtYWlsIjoiYWRtaW5AaGVsZW5hY29hY2hpbmcuY29tIiwiaWF0IjoxNzc0Nzk2MjUyLCJleHAiOjE3NzQ3OTcxNTJ9.F9-q8VC-_1BLWQSV_liIpAFyaDKpP4DOz50EhI77U1U
 
@@ -214,5 +214,5 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OWM5M
 }
 
 ### 16. Verify response count (should show count >= 5)
-GET http://localhost:3000/api/surveys/responses/69c93dfd653713663e8345d2
+GET http://localhost:3030/api/surveys/responses/69c93dfd653713663e8345d2
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OWM5MzUyZmYxMmJjMjc3NzBiYTNlZTciLCJvcmdhbml6YXRpb25JZCI6IjY5YzkzNTJmZjEyYmMyNzc3MGJhM2VlNSIsInJvbGUiOiJhZG1pbiIsImVtYWlsIjoiYWRtaW5AaGVsZW5hY29hY2hpbmcuY29tIiwiaWF0IjoxNzc0Nzk2MjUyLCJleHAiOjE3NzQ3OTcxNTJ9.F9-q8VC-_1BLWQSV_liIpAFyaDKpP4DOz50EhI77U1U

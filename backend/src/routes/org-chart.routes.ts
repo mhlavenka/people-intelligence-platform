@@ -14,7 +14,7 @@ router.get(
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const users = await User.find({ organizationId: req.user!.organizationId, isActive: true })
-        .select('firstName lastName email role managerId')
+        .select('firstName lastName email role department managerId')
         .sort({ role: 1, firstName: 1 })
         .setOptions({ bypassTenantCheck: true });
       res.json(users);

@@ -32,6 +32,7 @@ export interface IOrganization extends Document {
   industry?: string;
   theme?: IOrgTheme;
   logoUrl?: string;        // base64 Data URL or external URL
+  departments: string[];   // org-defined department list
   isActive: boolean;
   trialEndsAt?: Date;
   maxUsers: number;
@@ -69,7 +70,8 @@ const OrganizationSchema = new Schema<IOrganization>(
     trialEndsAt: { type: Date },
     maxUsers:    { type: Number, default: 100 },
     notes:       { type: String, trim: true },
-    logoUrl:     { type: String },   // base64 Data URL or external URL
+    logoUrl:     { type: String },
+    departments: [{ type: String, trim: true }],
     theme: {
       type: new Schema({
         primaryColor:    { type: String, default: '#1B2A47' },

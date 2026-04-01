@@ -11,6 +11,7 @@ export interface IUser extends Document {
   firstName: string;
   lastName: string;
   isActive: boolean;
+  department?: string;
   managerId?: mongoose.Types.ObjectId;
   lastLoginAt?: Date;
   twoFactorSecret?: string;
@@ -37,6 +38,7 @@ const UserSchema = new Schema<IUser>(
     firstName: { type: String, required: true, trim: true },
     lastName: { type: String, required: true, trim: true },
     isActive: { type: Boolean, default: true },
+    department: { type: String, trim: true, default: null },
     managerId: { type: Schema.Types.ObjectId, ref: 'User', default: null },
     lastLoginAt: { type: Date },
     twoFactorSecret:  { type: String, select: false }, // never returned in normal queries
