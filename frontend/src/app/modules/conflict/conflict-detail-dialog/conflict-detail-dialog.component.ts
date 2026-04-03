@@ -108,7 +108,14 @@ interface ConflictAnalysis {
                     <div class="sub-score-bar-wrap">
                       <div class="sub-score-bar" [style.width.%]="sub.riskScore" [style.background]="riskColor(sub.riskLevel)"></div>
                     </div>
-                    <div class="sub-narrative">{{ sub.aiNarrative | slice:0:1000 }}{{ sub.aiNarrative.length > 1000 ? '…' : '' }}</div>
+                    <div class="sub-narrative">
+                      @if (isNarrativeExpanded(ct)) {
+                        {{ sub.aiNarrative }}
+                        <a class="narrative-toggle" (click)="toggleNarrative(ct)">Show less</a>
+                      } @else {
+                        {{ sub.aiNarrative | slice:0:200 }}@if (sub.aiNarrative.length > 200) {<a class="narrative-toggle" (click)="toggleNarrative(ct)">…&nbsp;more</a>}
+                      }
+                    </div>
                   } @else {
                     <div class="sub-score-bar-wrap empty">
                       <div class="sub-score-bar-placeholder">No sub-analysis yet</div>
@@ -331,6 +338,11 @@ interface ConflictAnalysis {
 
     .sub-narrative {
       font-size: 12px; color: #5a6a7e; line-height: 1.5;
+      .narrative-toggle {
+        color: #3A9FD6; cursor: pointer; text-decoration: none; font-weight: 500;
+        margin-left: 2px;
+        &:hover { text-decoration: underline; }
+      }
     }
 
     .sub-right {
@@ -411,6 +423,7 @@ export class ConflictDetailDialogComponent implements OnInit {
 
   subAnalyses = signal<ConflictAnalysis[]>([]);
   runningFor = signal<string | null>(null);
+  expandedNarratives = signal<Set<string>>(new Set());
 
   ngOnInit(): void {
     this.loadSubAnalyses();
@@ -440,6 +453,18 @@ export class ConflictDetailDialogComponent implements OnInit {
         this.runningFor.set(null);
       },
       error: () => this.runningFor.set(null),
+    });
+  }
+
+  isNarrativeExpanded(conflictType: string): boolean {
+    return this.expandedNarratives().has(conflictType);
+  }
+
+  toggleNarrative(conflictType: string): void {
+    this.expandedNarratives.update((set) => {
+      const next = new Set(set);
+      next.has(conflictType) ? next.delete(conflictType) : next.add(conflictType);
+      return next;
     });
   }
 
