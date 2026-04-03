@@ -70,22 +70,74 @@ interface ConflictAnalysis {
         </div>
       </div>
 
-      @if (data.conflictTypes.length) {
-        <div class="section">
-          <h3><mat-icon>label</mat-icon> Identified Conflict Types</h3>
-          <div class="chips-row">
-            @for (ct of data.conflictTypes; track ct) {
-              <span class="chip">{{ ct }}</span>
-            }
-          </div>
-        </div>
-        <mat-divider />
-      }
-
       <div class="section">
         <h3><mat-icon>auto_awesome</mat-icon> AI Analysis</h3>
         <p class="narrative">{{ data.aiNarrative }}</p>
       </div>
+
+      <!-- Sub-analysis drill-down section -->
+      @if (data.conflictTypes.length) {
+        <mat-divider />
+        <div class="section">
+          <h3><mat-icon>manage_search</mat-icon> Drill-down by Conflict Type</h3>
+          <p class="drill-hint">Run a focused sub-analysis for each detected conflict type to get deeper insights and targeted manager scripts.</p>
+
+          <div class="sub-analyses-list">
+            @for (ct of data.conflictTypes; track ct) {
+              <div class="sub-row" [class]="subAnalysisFor(ct)?.riskLevel || ''">
+                <div class="sub-left">
+                  @if (subAnalysisFor(ct); as sub) {
+                    <!-- Mini gauge SVG -->
+                    <svg class="mini-gauge" viewBox="0 0 80 50" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M10,45 A30,30 0 0,1 70,45" fill="none" stroke="#e8edf4" stroke-width="8" stroke-linecap="round"/>
+                      <path [attr.d]="miniGaugeArc(sub.riskScore)" fill="none" [attr.stroke]="riskColor(sub.riskLevel)" stroke-width="8" stroke-linecap="round"/>
+                      <text x="40" y="44" text-anchor="middle" font-size="13" font-weight="700" [attr.fill]="riskColor(sub.riskLevel)">{{ sub.riskScore }}</text>
+                    </svg>
+                  } @else {
+                    <!-- Placeholder gauge -->
+                    <svg class="mini-gauge" viewBox="0 0 80 50" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M10,45 A30,30 0 0,1 70,45" fill="none" stroke="#e8edf4" stroke-width="8" stroke-linecap="round"/>
+                      <text x="40" y="44" text-anchor="middle" font-size="10" fill="#b0bec5">--</text>
+                    </svg>
+                  }
+                </div>
+
+                <div class="sub-center">
+                  <div class="sub-type-label">{{ ct }}</div>
+                  @if (subAnalysisFor(ct); as sub) {
+                    <div class="sub-score-bar-wrap">
+                      <div class="sub-score-bar" [style.width.%]="sub.riskScore" [style.background]="riskColor(sub.riskLevel)"></div>
+                    </div>
+                    <div class="sub-narrative">{{ sub.aiNarrative | slice:0:200 }}{{ sub.aiNarrative.length > 200 ? '…' : '' }}</div>
+                  } @else {
+                    <div class="sub-score-bar-wrap empty">
+                      <div class="sub-score-bar-placeholder">No sub-analysis yet</div>
+                    </div>
+                  }
+                </div>
+
+                <div class="sub-right">
+                  @if (subAnalysisFor(ct); as sub) {
+                    <span class="risk-badge" [class]="sub.riskLevel">{{ sub.riskLevel | titlecase }}</span>
+                  }
+                  @if (!subAnalysisFor(ct)) {
+                    <button mat-stroked-button color="primary"
+                            [disabled]="runningFor() === ct"
+                            (click)="runSubAnalysis(ct)">
+                      @if (runningFor() === ct) {
+                        <mat-spinner diameter="16" />
+                      } @else {
+                        <mat-icon>play_arrow</mat-icon>
+                      }
+                      {{ runningFor() === ct ? 'Analyzing…' : 'Run Sub-Analysis' }}
+                    </button>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      }
 
       @if (data.managerScript) {
         <mat-divider />
@@ -145,69 +197,7 @@ interface ConflictAnalysis {
         </div>
       }
 
-      <!-- Sub-analysis drill-down section -->
-      @if (data.conflictTypes.length) {
-        <mat-divider />
-        <div class="section">
-          <h3><mat-icon>manage_search</mat-icon> Drill-down by Conflict Type</h3>
-          <p class="drill-hint">Run a focused sub-analysis for each detected conflict type to get deeper insights and targeted manager scripts.</p>
-
-          <div class="sub-analyses-list">
-            @for (ct of data.conflictTypes; track ct) {
-              <div class="sub-row" [class]="subAnalysisFor(ct)?.riskLevel || ''">
-                <div class="sub-left">
-                  @if (subAnalysisFor(ct); as sub) {
-                    <!-- Mini gauge SVG -->
-                    <svg class="mini-gauge" viewBox="0 0 80 50" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M10,45 A30,30 0 0,1 70,45" fill="none" stroke="#e8edf4" stroke-width="8" stroke-linecap="round"/>
-                      <path [attr.d]="miniGaugeArc(sub.riskScore)" fill="none" [attr.stroke]="riskColor(sub.riskLevel)" stroke-width="8" stroke-linecap="round"/>
-                      <text x="40" y="44" text-anchor="middle" font-size="13" font-weight="700" [attr.fill]="riskColor(sub.riskLevel)">{{ sub.riskScore }}</text>
-                    </svg>
-                  } @else {
-                    <!-- Placeholder gauge -->
-                    <svg class="mini-gauge" viewBox="0 0 80 50" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M10,45 A30,30 0 0,1 70,45" fill="none" stroke="#e8edf4" stroke-width="8" stroke-linecap="round"/>
-                      <text x="40" y="44" text-anchor="middle" font-size="10" fill="#b0bec5">--</text>
-                    </svg>
-                  }
-                </div>
-
-                <div class="sub-center">
-                  <div class="sub-type-label">{{ ct }}</div>
-                  @if (subAnalysisFor(ct); as sub) {
-                    <div class="sub-score-bar-wrap">
-                      <div class="sub-score-bar" [style.width.%]="sub.riskScore" [style.background]="riskColor(sub.riskLevel)"></div>
-                    </div>
-                    <div class="sub-narrative">{{ sub.aiNarrative | slice:0:200 }}{{ sub.aiNarrative.length > 200 ? '…' : '' }}</div>
-                  } @else {
-                    <div class="sub-score-bar-wrap empty">
-                      <div class="sub-score-bar-placeholder">No sub-analysis yet</div>
-                    </div>
-                  }
-                </div>
-
-                <div class="sub-right">
-                  @if (subAnalysisFor(ct); as sub) {
-                    <span class="risk-badge" [class]="sub.riskLevel">{{ sub.riskLevel | titlecase }}</span>
-                  }
-                  @if (!subAnalysisFor(ct)) {
-                    <button mat-stroked-button color="primary"
-                      [disabled]="runningFor() === ct"
-                      (click)="runSubAnalysis(ct)">
-                      @if (runningFor() === ct) {
-                        <mat-spinner diameter="16" />
-                      } @else {
-                        <mat-icon>play_arrow</mat-icon>
-                      }
-                      {{ runningFor() === ct ? 'Analyzing…' : 'Run Sub-Analysis' }}
-                    </button>
-                  }
-                </div>
-              </div>
-            }
-          </div>
-        </div>
-      }
+      
 
       @if (data.escalationRequested) {
         <div class="escalation-banner">
