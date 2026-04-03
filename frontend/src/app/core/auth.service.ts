@@ -47,6 +47,7 @@ export class AuthService {
 
   private inactivityTimer: ReturnType<typeof setTimeout> | null = null;
   private warnTimer: ReturnType<typeof setTimeout> | null = null;
+  private refreshTimer: ReturnType<typeof setTimeout> | null = null;
   private boundReset!: () => void;
 
   constructor(
@@ -88,6 +89,36 @@ export class AuthService {
     if (this.warnTimer)       { clearTimeout(this.warnTimer);       this.warnTimer = null; }
   }
 
+  /** Schedule a silent token refresh ~60 s before the access token expires. */
+  scheduleTokenRefresh(): void {
+    if (this.refreshTimer) { clearTimeout(this.refreshTimer); this.refreshTimer = null; }
+
+    const token = this.getToken();
+    if (!token) return;
+
+    // Decode JWT payload (base64url) to read the `exp` claim
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+      if (!payload.exp) return;
+
+      const expiresInMs = payload.exp * 1000 - Date.now();
+      const refreshInMs = Math.max(expiresInMs - 60_000, 0); // 60 s before expiry
+
+      this.ngZone.runOutsideAngular(() => {
+        this.refreshTimer = setTimeout(() => {
+          this.ngZone.run(() => {
+            this.refreshToken().subscribe({
+              next: () => this.scheduleTokenRefresh(),   // chain next refresh
+              error: () => {},                           // silent — interceptor handles 401 fallback
+            });
+          });
+        }, refreshInMs);
+      });
+    } catch {
+      // Malformed token — leave refresh to the interceptor
+    }
+  }
+
   register(data: {
     orgName: string;
     orgSlug: string;
@@ -125,12 +156,14 @@ export class AuthService {
         tap((res) => {
           localStorage.setItem(this.TOKEN_KEY, res.accessToken);
           localStorage.setItem(this.REFRESH_KEY, res.refreshToken);
+          this.scheduleTokenRefresh();
         })
       );
   }
 
   logout(): void {
     this.stopActivityTracking();
+    if (this.refreshTimer) { clearTimeout(this.refreshTimer); this.refreshTimer = null; }
     this.inactivityWarning.set(false);
     localStorage.removeItem(this.TOKEN_KEY);
     localStorage.removeItem(this.REFRESH_KEY);
@@ -157,6 +190,7 @@ export class AuthService {
     localStorage.setItem(this.REFRESH_KEY, res.refreshToken);
     localStorage.setItem(this.USER_KEY, JSON.stringify(res.user));
     this.currentUser.set(res.user);
+    this.scheduleTokenRefresh();
   }
 
   private loadUser(): User | null {

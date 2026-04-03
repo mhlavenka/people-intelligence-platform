@@ -542,6 +542,7 @@ export class AppShellComponent implements OnInit, OnDestroy {
     });
     this.loadUnreadCount();
     this.authService.startActivityTracking();
+    this.authService.scheduleTokenRefresh();
   }
 
   ngOnDestroy(): void {
