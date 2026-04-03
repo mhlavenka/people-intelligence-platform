@@ -57,6 +57,17 @@ const DEPARTMENTS = [
             <mat-spinner diameter="40" />
             <p>Loading survey...</p>
           </div>
+        } @else if (surveyInactive()) {
+          <div class="thank-you">
+            <div class="thank-you-icon already">
+              <mat-icon>block</mat-icon>
+            </div>
+            <h2>Survey no longer available</h2>
+            <p>This survey has been closed by your administrator and is no longer accepting responses.</p>
+            <button mat-raised-button color="primary" (click)="goToDashboard()">
+              Back to Dashboard
+            </button>
+          </div>
         } @else if (alreadySubmitted()) {
           <div class="thank-you">
             <div class="thank-you-icon already">
@@ -340,6 +351,7 @@ export class SurveyTakeComponent implements OnInit {
   submitted = signal(false);
   submitting = signal(false);
   alreadySubmitted = signal(false);
+  surveyInactive = signal(false);
   currentIndex = signal(-1); // -1 = department step
   answers = signal<Record<string, string | number | boolean>>({});
   selectedDept = '';
@@ -388,17 +400,21 @@ export class SurveyTakeComponent implements OnInit {
           this.loading.set(false);
           return;
         }
-        this.api.get<SurveyTemplate>(`/surveys/templates/${id}`).subscribe({
-          next: (t) => { this.template.set(t); this.loading.set(false); },
-          error: () => this.loading.set(false),
-        });
+        this.loadTemplate(id);
       },
       error: () => {
         // If check fails, still load the survey — duplicate check at submit will catch it
-        this.api.get<SurveyTemplate>(`/surveys/templates/${id}`).subscribe({
-          next: (t) => { this.template.set(t); this.loading.set(false); },
-          error: () => this.loading.set(false),
-        });
+        this.loadTemplate(id);
+      },
+    });
+  }
+
+  private loadTemplate(id: string): void {
+    this.api.get<SurveyTemplate>(`/surveys/templates/${id}`).subscribe({
+      next: (t) => { this.template.set(t); this.loading.set(false); },
+      error: (err) => {
+        if (err.status === 410) { this.surveyInactive.set(true); }
+        this.loading.set(false);
       },
     });
   }

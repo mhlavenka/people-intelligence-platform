@@ -8,6 +8,8 @@ export interface IConflictAnalysis extends Document {
   organizationId: mongoose.Types.ObjectId;
   surveyPeriod: string;
   departmentId?: string;
+  parentId?: mongoose.Types.ObjectId;
+  focusConflictType?: string;
   riskScore: number;
   riskLevel: RiskLevel;
   conflictTypes: string[];
@@ -29,6 +31,8 @@ const ConflictAnalysisSchema = new Schema<IConflictAnalysis>(
     },
     surveyPeriod: { type: String, required: true },
     departmentId: { type: String },
+    parentId: { type: Schema.Types.ObjectId, ref: 'ConflictAnalysis', index: true },
+    focusConflictType: { type: String },
     riskScore: { type: Number, min: 0, max: 100, required: true },
     riskLevel: { type: String, enum: ['low', 'medium', 'high', 'critical'], required: true },
     conflictTypes: [{ type: String }],

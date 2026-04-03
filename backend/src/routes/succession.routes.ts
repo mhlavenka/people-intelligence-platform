@@ -207,4 +207,24 @@ router.put('/idps/:id/milestone', async (req: AuthRequest, res: Response, next: 
   }
 });
 
+router.delete(
+  '/idps/:id',
+  requireRole('admin', 'hr_manager', 'coach'),
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const idp = await DevelopmentPlan.findOneAndDelete({
+        _id: req.params['id'],
+        organizationId: req.user!.organizationId,
+      });
+      if (!idp) {
+        res.status(404).json({ error: 'IDP not found' });
+        return;
+      }
+      res.json({ message: 'IDP deleted' });
+    } catch (e) {
+      next(e);
+    }
+  }
+);
+
 export default router;

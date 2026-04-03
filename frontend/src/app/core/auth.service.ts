@@ -1,4 +1,4 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, NgZone, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, tap } from 'rxjs';
@@ -32,6 +32,10 @@ export interface LoginResponse {
   tempToken?: string;
 }
 
+const INACTIVITY_MS = 30 * 60 * 1000;       // 30 minutes
+const WARN_BEFORE_MS = 2 * 60 * 1000;        // warn 2 minutes before logout
+const ACTIVITY_EVENTS = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll'];
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly TOKEN_KEY = 'pip_access_token';
@@ -39,8 +43,50 @@ export class AuthService {
   private readonly USER_KEY = 'pip_user';
 
   currentUser = signal<User | null>(this.loadUser());
+  inactivityWarning = signal(false);   // true → show "logging out soon" notice
 
-  constructor(private http: HttpClient, private router: Router, private themeService: ThemeService) {}
+  private inactivityTimer: ReturnType<typeof setTimeout> | null = null;
+  private warnTimer: ReturnType<typeof setTimeout> | null = null;
+  private boundReset!: () => void;
+
+  constructor(
+    private http: HttpClient,
+    private router: Router,
+    private themeService: ThemeService,
+    private ngZone: NgZone,
+  ) {}
+
+  startActivityTracking(): void {
+    this.boundReset = () => this.resetInactivityTimer();
+    ACTIVITY_EVENTS.forEach((e) => document.addEventListener(e, this.boundReset, { passive: true }));
+    this.resetInactivityTimer();
+  }
+
+  stopActivityTracking(): void {
+    if (this.boundReset) {
+      ACTIVITY_EVENTS.forEach((e) => document.removeEventListener(e, this.boundReset));
+    }
+    this.clearTimers();
+  }
+
+  private resetInactivityTimer(): void {
+    this.clearTimers();
+    this.inactivityWarning.set(false);
+    this.ngZone.runOutsideAngular(() => {
+      this.warnTimer = setTimeout(() => {
+        this.ngZone.run(() => this.inactivityWarning.set(true));
+      }, INACTIVITY_MS - WARN_BEFORE_MS);
+
+      this.inactivityTimer = setTimeout(() => {
+        this.ngZone.run(() => this.logout());
+      }, INACTIVITY_MS);
+    });
+  }
+
+  private clearTimers(): void {
+    if (this.inactivityTimer) { clearTimeout(this.inactivityTimer); this.inactivityTimer = null; }
+    if (this.warnTimer)       { clearTimeout(this.warnTimer);       this.warnTimer = null; }
+  }
 
   register(data: {
     orgName: string;
@@ -84,6 +130,8 @@ export class AuthService {
   }
 
   logout(): void {
+    this.stopActivityTracking();
+    this.inactivityWarning.set(false);
     localStorage.removeItem(this.TOKEN_KEY);
     localStorage.removeItem(this.REFRESH_KEY);
     localStorage.removeItem(this.USER_KEY);

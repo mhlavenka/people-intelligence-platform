@@ -31,7 +31,7 @@ import { ApiService } from '../../../core/api.service';
   template: `
     <h2 mat-dialog-title>
       <mat-icon>{{ isEdit() ? 'edit' : 'add_circle' }}</mat-icon>
-      {{ isEdit() ? 'Edit Template' : 'New Survey Template' }}
+      {{ isEdit() ? 'Edit Intake Template' : 'New Intake Template' }}
     </h2>
 
     <mat-dialog-content>
@@ -47,20 +47,38 @@ import { ApiService } from '../../../core/api.service';
             <input matInput formControlName="title" placeholder="e.g. Workplace Conflict Assessment Q2 2026" />
           </mat-form-field>
 
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Module Type</mat-label>
-            <mat-select formControlName="moduleType">
-              <mat-option value="conflict">
-                <mat-icon>warning_amber</mat-icon> Conflict Intelligence
-              </mat-option>
-              <mat-option value="neuroinclusion">
-                <mat-icon>psychology</mat-icon> Neuro-Inclusion Compass
-              </mat-option>
-              <mat-option value="succession">
-                <mat-icon>trending_up</mat-icon> Leadership & Succession
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="half-width">
+              <mat-label>Module</mat-label>
+              <mat-select formControlName="moduleType">
+                <mat-option value="conflict">
+                  <mat-icon>warning_amber</mat-icon> Conflict Intelligence
+                </mat-option>
+                <mat-option value="neuroinclusion">
+                  <mat-icon>psychology</mat-icon> Neuro-Inclusion Compass
+                </mat-option>
+                <mat-option value="succession">
+                  <mat-icon>trending_up</mat-icon> Leadership & Succession
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="half-width">
+              <mat-label>Intake Type</mat-label>
+              <mat-select formControlName="intakeType">
+                <mat-option value="survey">
+                  <mat-icon>poll</mat-icon> Survey — self-completed by respondent
+                </mat-option>
+                <mat-option value="interview">
+                  <mat-icon>record_voice_over</mat-icon> Interview — coach-led with coachee
+                </mat-option>
+                <mat-option value="assessment">
+                  <mat-icon>fact_check</mat-icon> Assessment — coach-administered evaluation
+                </mat-option>
+              </mat-select>
+              <mat-hint>Interview &amp; Assessment are completed by a coach for a coachee</mat-hint>
+            </mat-form-field>
+          </div>
         </div>
 
         <mat-divider></mat-divider>
@@ -154,6 +172,8 @@ import { ApiService } from '../../../core/api.service';
 
     .section { padding: 16px 0; display: flex; flex-direction: column; gap: 4px; }
     .full-width { width: 100%; }
+    .form-row { display: flex; gap: 12px; }
+    .half-width { flex: 1; min-width: 0; }
 
     .questions-section { gap: 12px; }
 
@@ -213,6 +233,7 @@ export class SurveyTemplateDialogComponent implements OnInit {
     this.form = this.fb.group({
       title:      [this.existingData?.title ?? '', Validators.required],
       moduleType: [this.existingData?.moduleType ?? 'conflict', Validators.required],
+      intakeType: [this.existingData?.intakeType ?? 'survey', Validators.required],
       questions:  this.fb.array([]),
     });
 
@@ -266,6 +287,7 @@ interface SurveyTemplate {
   _id: string;
   title: string;
   moduleType: 'conflict' | 'neuroinclusion' | 'succession';
+  intakeType: 'survey' | 'interview' | 'assessment';
   questions: { id: string; text: string; type: string; category: string }[];
   isActive: boolean;
 }

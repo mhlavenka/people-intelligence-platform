@@ -59,6 +59,19 @@ interface OrgPlan {
   modules?: string[];
 }
 
+interface AvailablePlan {
+  _id: string;
+  key: string;
+  name: string;
+  description: string;
+  priceMonthly: number;
+  overagePriceCents: number;
+  maxUsers: number;
+  features: string[];
+  isActive: boolean;
+  sortOrder: number;
+}
+
 @Component({
   selector: 'app-billing',
   standalone: true,
@@ -1077,10 +1090,6 @@ interface OrgPlan {
       background: #3A9FD6; color: white; padding: 2px 7px; border-radius: 10px;
     }
 
-    .tier-limit {
-      font-size: 12px; color: #6b7280; min-width: 140px; text-align: right;
-    }
-
     .tier-price {
       font-size: 13px; font-weight: 700; color: #1B2A47;
       min-width: 130px; text-align: right;
@@ -1169,6 +1178,7 @@ export class BillingComponent implements OnInit {
 
   org = signal<OrgPlan | null>(null);
   invoices = signal<Invoice[]>([]);
+  availablePlans = signal<AvailablePlan[]>([]);
   loading = signal(true);
   paying = signal<string | null>(null);
   showLineItems = signal(false);
@@ -1233,35 +1243,27 @@ export class BillingComponent implements OnInit {
 
     let orgDone = false;
     let invoicesDone = false;
+    let plansDone = false;
 
     const checkDone = () => {
-      if (orgDone && invoicesDone) {
+      if (orgDone && invoicesDone && plansDone) {
         this.loading.set(false);
       }
     };
 
     this.api.get<OrgPlan>('/organizations/me').subscribe({
-      next: (data) => {
-        this.org.set(data);
-        orgDone = true;
-        checkDone();
-      },
-      error: () => {
-        orgDone = true;
-        checkDone();
-      },
+      next: (data) => { this.org.set(data); orgDone = true; checkDone(); },
+      error: () => { orgDone = true; checkDone(); },
     });
 
     this.api.get<Invoice[]>('/billing/invoices').subscribe({
-      next: (data) => {
-        this.invoices.set(data);
-        invoicesDone = true;
-        checkDone();
-      },
-      error: () => {
-        invoicesDone = true;
-        checkDone();
-      },
+      next: (data) => { this.invoices.set(data); invoicesDone = true; checkDone(); },
+      error: () => { invoicesDone = true; checkDone(); },
+    });
+
+    this.api.get<AvailablePlan[]>('/plans').subscribe({
+      next: (data) => { this.availablePlans.set(data); plansDone = true; checkDone(); },
+      error: () => { plansDone = true; checkDone(); },
     });
   }
 
@@ -1295,13 +1297,17 @@ export class BillingComponent implements OnInit {
       });
   }
 
-  planPrice(plan: string): string {
-    const prices: Record<string, string> = {
-      starter: 'CAD $599/mo',
-      professional: 'CAD $1,199/mo',
+  planPrice(planKey: string): string {
+    const match = this.availablePlans().find((p) => p.key === planKey?.toLowerCase());
+    if (match) return this.formatMoney(match.priceMonthly) + '/mo';
+    // Fallback for orgs whose plan key has no DB record yet
+    const fallback: Record<string, string> = {
+      starter: 'CAD $299/mo',
+      growth: 'CAD $599/mo',
+      professional: 'CAD $999/mo',
       enterprise: 'Custom pricing',
     };
-    return prices[plan?.toLowerCase()] ?? '—';
+    return fallback[planKey?.toLowerCase()] ?? '—';
   }
 
   planColor(plan: string): string {

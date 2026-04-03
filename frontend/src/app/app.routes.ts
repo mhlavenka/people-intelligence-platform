@@ -77,12 +77,14 @@ export const routes: Routes = [
 
       // ── Survey take: coachees (and managers who assign them) ──────────────
       {
-        path: 'survey/:id',
+        path: 'intake/:id',
         loadComponent: () =>
           import('./modules/survey/survey-take/survey-take.component').then(
             (m) => m.SurveyTakeComponent
           ),
       },
+      // Legacy redirect: keep old /survey/:id links working
+      { path: 'survey/:id', redirectTo: 'intake/:id', pathMatch: 'full' },
 
       // ── Administration: admin & hr_manager ───────────────────────────────
       {
@@ -94,13 +96,15 @@ export const routes: Routes = [
           ),
       },
       {
-        path: 'surveys',
+        path: 'intakes',
         canActivate: [roleGuard([...ADMIN_HR])],
         loadComponent: () =>
           import('./modules/survey/survey-management/survey-management.component').then(
             (m) => m.SurveyManagementComponent
           ),
       },
+      // Legacy redirect
+      { path: 'surveys', redirectTo: 'intakes', pathMatch: 'full' },
       {
         path: 'admin/users',
         canActivate: [roleGuard([...ADMIN_HR])],
@@ -158,6 +162,13 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./modules/system-admin/invoices/invoices.component').then(
             (m) => m.InvoicesComponent
+          ),
+      },
+      {
+        path: 'plans',
+        loadComponent: () =>
+          import('./modules/system-admin/plans/plans.component').then(
+            (m) => m.PlansComponent
           ),
       },
     ],

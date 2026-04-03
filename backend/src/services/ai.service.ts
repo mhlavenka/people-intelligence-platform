@@ -90,6 +90,39 @@ Please provide:
 Format your response as JSON with keys: riskScore, riskLevel, conflictTypes, aiNarrative, managerScript`;
 }
 
+export function buildConflictSubAnalysisPrompt(
+  conflictType: string,
+  parent: {
+    departmentId: string;
+    surveyPeriod: string;
+    riskScore: number;
+    riskLevel: string;
+    aiNarrative: string;
+  }
+): string {
+  return `You are an expert workplace conflict analyst using Helena's coaching-integrated, interest-based mediation methodology.
+
+A conflict analysis for ${parent.departmentId || 'the organization'} (${parent.surveyPeriod}) identified "${conflictType}" as a detected conflict type with an overall risk score of ${parent.riskScore}/100 (${parent.riskLevel}).
+
+Overall analysis context:
+${parent.aiNarrative.slice(0, 600)}
+
+Provide a focused deep-dive sub-analysis specifically on the "${conflictType}" conflict type within this department. Assess its specific contribution to the overall risk, its likely root causes, and concrete intervention steps.
+
+Return ONLY valid JSON with these keys:
+{
+  "riskScore": <number 0-100 specific to this conflict type>,
+  "riskLevel": <"low"|"medium"|"high"|"critical">,
+  "conflictTypes": ["${conflictType}"],
+  "aiNarrative": "<2-3 paragraph focused analysis of this specific conflict type: what it looks like in this context, its root causes, and impact>",
+  "managerScript": {
+    "opening": "<how to open a conversation specifically about this conflict type>",
+    "keyQuestions": ["<interest-based question 1>", "<question 2>", "<question 3>"],
+    "resolution": "<specific resolution approach and next steps for this conflict type>"
+  }
+}`;
+}
+
 export function buildNeuroinclustionGapPrompt(
   assessmentData: {
     respondentRole: string;

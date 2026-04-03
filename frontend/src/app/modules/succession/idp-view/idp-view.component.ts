@@ -133,10 +133,10 @@ interface IDP {
                   </span>
                 }
                 <span class="idp-date">{{ idp.createdAt | date:'MMM d, y' }}</span>
-                @if (canManage()) {
-                  <button class="regenerate-btn"
+                @if (canManage() && idp.status === 'draft') {
+                  <button class="card-action-btn"
                           [matTooltip]="'Regenerate IDP'"
-                          matTooltipPosition="left"
+                          matTooltipPosition="above"
                           [disabled]="regeneratingId() === idp._id"
                           (click)="regenerate(idp)">
                     @if (regeneratingId() === idp._id) {
@@ -144,6 +144,15 @@ interface IDP {
                     } @else {
                       <mat-icon>refresh</mat-icon>
                     }
+                  </button>
+                }
+                @if (canDelete()) {
+                  <button class="card-action-btn delete-btn"
+                          matTooltip="Delete IDP"
+                          matTooltipPosition="above"
+                          [disabled]="regeneratingId() === idp._id"
+                          (click)="deleteIdp(idp)">
+                    <mat-icon>delete_outline</mat-icon>
                   </button>
                 }
               </div>
@@ -328,7 +337,7 @@ interface IDP {
       padding: 2px 8px 2px 4px;
       .coachee-icon { font-size: 14px; width: 14px; height: 14px; color: #3A9FD6; }
     }
-    .regenerate-btn {
+    .card-action-btn {
       display: flex; align-items: center; justify-content: center;
       width: 30px; height: 30px; flex-shrink: 0;
       background: none; border: none; border-radius: 50%; cursor: pointer;
@@ -337,6 +346,7 @@ interface IDP {
       mat-icon { font-size: 18px; width: 18px; height: 18px; line-height: 18px; }
       &:hover:not([disabled]) { background: rgba(58,159,214,0.1); color: #3A9FD6; }
       &[disabled] { cursor: default; opacity: 0.5; }
+      &.delete-btn:hover:not([disabled]) { background: rgba(229,62,62,0.1); color: #e53e3e; }
     }
     .idp-status-badge {
       padding: 2px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; text-transform: uppercase;
@@ -481,6 +491,12 @@ export class IDPViewComponent implements OnInit {
     return role === 'admin' || role === 'hr_manager' || role === 'coach' || role === 'manager' || role === 'system_admin';
   });
 
+  /** Roles that can delete IDPs */
+  canDelete = computed(() => {
+    const role = this.auth.currentUser()?.role;
+    return role === 'admin' || role === 'hr_manager' || role === 'coach';
+  });
+
   /** Show coachee name on cards for everyone except the coachee themselves */
   showCoacheeName = computed(() => this.auth.currentUser()?.role !== 'coachee');
 
@@ -602,6 +618,32 @@ export class IDPViewComponent implements OnInit {
           this.regeneratingId.set(null);
           this.snackBar.open(err?.error?.error ?? 'Regeneration failed', 'Close', { duration: 4000 });
         },
+      });
+    });
+  }
+
+  deleteIdp(idp: IDP): void {
+    const coacheeName = this.isPopulatedCoachee(idp.coacheeId)
+      ? `${idp.coacheeId.firstName} ${idp.coacheeId.lastName}`
+      : 'this coachee';
+    const ref = this.dialog.open(ConfirmDialogComponent, {
+      width: '420px',
+      data: {
+        title: 'Delete IDP',
+        message: `Delete the development plan for ${coacheeName}? This cannot be undone.`,
+        confirmLabel: 'Delete',
+        confirmColor: 'warn',
+        icon: 'delete_outline',
+      },
+    });
+    ref.afterClosed().subscribe((confirmed) => {
+      if (!confirmed) return;
+      this.api.delete(`/succession/idps/${idp._id}`).subscribe({
+        next: () => {
+          this.idps.update((list) => list.filter((i) => i._id !== idp._id));
+          this.snackBar.open('IDP deleted', 'Close', { duration: 2500 });
+        },
+        error: () => this.snackBar.open('Delete failed', 'Close', { duration: 3000 }),
       });
     });
   }

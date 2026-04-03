@@ -11,6 +11,7 @@ export interface IQuestion {
 export interface ISurveyTemplate extends Document {
   organizationId?: mongoose.Types.ObjectId;
   moduleType: 'conflict' | 'neuroinclusion' | 'succession';
+  intakeType: 'survey' | 'interview' | 'assessment';
   title: string;
   questions: IQuestion[];
   isActive: boolean;
@@ -42,6 +43,11 @@ const SurveyTemplateSchema = new Schema<ISurveyTemplate>(
       type: String,
       enum: ['conflict', 'neuroinclusion', 'succession'],
       required: true,
+    },
+    intakeType: {
+      type: String,
+      enum: ['survey', 'interview', 'assessment'],
+      default: 'survey',
     },
     title: { type: String, required: true, trim: true },
     questions: [QuestionSchema],

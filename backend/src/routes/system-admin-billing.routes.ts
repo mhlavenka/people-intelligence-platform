@@ -4,24 +4,27 @@ import { authenticateToken, requireRole, AuthRequest } from '../middleware/auth.
 import { Invoice, ILineItem } from '../models/Invoice.model';
 import { Organization } from '../models/Organization.model';
 import { User } from '../models/User.model';
+import { Message } from '../models/Message.model';
+import { Notification } from '../models/Notification.model';
 import { sendEmail } from '../services/email.service';
 import { config } from '../config/env';
+import { Plan } from '../models/Plan.model';
 
 const router = Router();
 
 // All system-admin billing routes require authentication and system_admin role
 router.use(authenticateToken, requireRole('system_admin'));
 
-// ─── Plan pricing map (cents / month) ─────────────────────────────────────────
+// ─── Fallback pricing (used when no Plan record exists in DB) ─────────────────
 
-const PLAN_PRICING: Record<string, number> = {
+const FALLBACK_PLAN_PRICING: Record<string, number> = {
   starter: 29900,
   growth: 59900,
   professional: 99900,
   enterprise: 149900,
 };
 
-const OVERAGE_PRICE_CENTS = 1500; // $15 per extra user per month
+const FALLBACK_OVERAGE_CENTS = 1500;
 
 // ─── Helper ───────────────────────────────────────────────────────────────────
 
@@ -117,10 +120,15 @@ router.post(
       const lineItems: ILineItem[] = [];
 
       const planKey = org.plan as string;
-      const basePriceCents = PLAN_PRICING[planKey] ?? PLAN_PRICING['starter']!;
+
+      // Look up plan pricing from DB; fall back to hardcoded map
+      const planRecord = await Plan.findOne({ key: planKey }).lean();
+      const basePriceCents = planRecord?.priceMonthly ?? FALLBACK_PLAN_PRICING[planKey] ?? FALLBACK_PLAN_PRICING['starter']!;
+      const overagePriceCents = planRecord?.overagePriceCents ?? FALLBACK_OVERAGE_CENTS;
+      const planName = planRecord?.name ?? `${planKey.charAt(0).toUpperCase()}${planKey.slice(1)}`;
 
       lineItems.push({
-        description: `${org.plan.charAt(0).toUpperCase()}${org.plan.slice(1)} plan — base subscription`,
+        description: `${planName} plan — base subscription`,
         quantity: 1,
         unitPrice: basePriceCents,
         amount: basePriceCents,
@@ -129,11 +137,13 @@ router.post(
       const maxUsers = org.maxUsers ?? 0;
       if (userCount > maxUsers) {
         const extraUsers = userCount - maxUsers;
-        const overageAmount = extraUsers * OVERAGE_PRICE_CENTS;
+        const overagePerUser = overagePriceCents;
+        const overageAmount = extraUsers * overagePerUser;
+        const overageUnitFormatted = `$${(overagePerUser / 100).toFixed(0)}`;
         lineItems.push({
-          description: `User overage — ${extraUsers} extra user${extraUsers === 1 ? '' : 's'} × $15/user/month`,
+          description: `User overage — ${extraUsers} extra user${extraUsers === 1 ? '' : 's'} × ${overageUnitFormatted}/user/month`,
           quantity: extraUsers,
-          unitPrice: OVERAGE_PRICE_CENTS,
+          unitPrice: overagePerUser,
           amount: overageAmount,
         });
       }
@@ -320,6 +330,39 @@ router.post(
       // Format amounts for email (cents → dollars)
       const fmt = (cents: number): string =>
         `$${(cents / 100).toFixed(2)} ${invoice.currency}`;
+
+      // ── Hub: message + notification for every org admin ──────────────────────
+      const orgAdmins = await User.find({
+        organizationId: invoice.organizationId,
+        role: 'admin',
+        isActive: true,
+      }).setOptions({ bypassTenantCheck: true });
+
+      if (orgAdmins.length > 0) {
+        const systemAdminId = new mongoose.Types.ObjectId(req.user!.userId);
+        const orgOid = new mongoose.Types.ObjectId(invoice.organizationId.toString());
+        const dueDateStr2 = invoice.dueDate.toLocaleDateString('en-US', {
+          year: 'numeric', month: 'long', day: 'numeric',
+        });
+
+        await Promise.all(orgAdmins.flatMap((admin) => [
+          Message.create({
+            organizationId: orgOid,
+            fromUserId: systemAdminId,
+            toUserId: admin._id,
+            content: `Invoice ${invoice.invoiceNumber} has been issued for ${org.name} — ${fmt(invoice.total)} due ${dueDateStr2}. Visit your Billing page to review and pay: ${config.frontendUrl}/billing`,
+          }),
+
+          Notification.create({
+            organizationId: orgOid,
+            userId: admin._id,
+            type: 'system',
+            title: `Invoice ${invoice.invoiceNumber} — ${fmt(invoice.total)} due`,
+            body: `A new invoice has been issued. Amount: ${fmt(invoice.total)}, due ${dueDateStr2}.`,
+            link: '/billing',
+          }),
+        ]));
+      }
 
       const lineItemRows = invoice.lineItems
         .map(

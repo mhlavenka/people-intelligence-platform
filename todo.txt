@@ -1,20 +1,45 @@
 I. HIGH
 -------
-- Recent activity on dashboard is not being updated
-- Dashboard tabs have random numbers, get the real stats
-- conflict analysis view has manager conversation guide in raw json
-- manager conflict guides conversation guide has the topic titles words concatenated - split words
-- IDP card - allow to delete by admin, hr and coach
-           - how is the status changed from draft to active to completed?
-           - should be able to regenerate only draft IDP. Do not allow active or completed
+- the auto-logout is triggered even if there is activity
 
+
+Conflict Intelligence
+    Analysis
+         - Conflict analysis - support intake (individual or team) via surveys / interview /
+         - Each analysis one liner with view details.
+         - Generate metric and chart per conflict type
+         - Allow to generate department analysis for a specific conflict type
+         - change rules for analysis based on intake type
+
+    Knowledge & Skill Building
+         - Education Path
+                - Recommend other modules and tools (ex. EQi2)
+         - Skill Developemnt - generate IDP for conflict based
+
+Surveys - Rename Survey to Intake or Situational Assessment
+        - Allow intake types (ex. survey / interview / assessment)
+        - missing a way for a coach to condact the intview based on a chosen template. Create a new menu item for coach
+
+Subscription Plans - include number of AI analysis allowed
+                    - number of users
+                    - Modules included
+                    - other options - analyze
+
+
+Coaching Module - subscription plans for individual coaches
+                -
 
 II MEDIUM
 ---------
+- Leadership & Succession IDP cards - how is the status changed from draft to active to completed?
 - Billing framework - will need to work more on taxation - prioritize canada and quebec/ontario
-- Leadership HUb - Add coaching journal
-                 - IDP nodes - add some background so it stands out. Why is it called "draft"?
-- message hub - messages and alerts are joined together - what's the idea here?
+                    - payment reminders
+                    - overdue / access suspensions
+- Reporting module  - ar aging report
+- Leadership Hub - Add coaching journal
+- Message hub - messages and alerts are joined together - what's the idea here?
+- Organization setup - put together users / departments / orgchart in more logical way
+- create general app settings for system admin that will include typical application generic settings (auto logout, password strength, etc.)
 
 III. LOW
 --------
@@ -25,6 +50,8 @@ III. LOW
 IV. NICE TO HAVE
 ----------------
 - in all modules include some graphics. Curently it is all text, although very relevant, it feels crowded and hard to read
+- user guide + how tos
+
 
 
 

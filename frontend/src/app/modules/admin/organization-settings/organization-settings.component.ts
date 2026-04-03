@@ -184,6 +184,7 @@ const RADIUS_OPTIONS = [
         <div class="loading-center"><mat-spinner diameter="36" /></div>
       } @else if (org()) {
         <div class="settings-layout">
+          <div class="col-left">
 
           <!-- Profile card -->
           <div class="card">
@@ -279,8 +280,220 @@ const RADIUS_OPTIONS = [
             </form>
           </div>
 
-          <!-- Billing Details card -->
+          <!-- ── Departments ──────────────────────────────────────────────── -->
           <div class="card">
+            <div class="card-header">
+              <div class="card-icon" style="background:rgba(39,196,160,0.12);color:#1a9678">
+                <mat-icon>corporate_fare</mat-icon>
+              </div>
+              <div>
+                <h2>Departments</h2>
+                <p style="font-size:13px;color:#5a6a7e;margin:2px 0 0">Define the departments in your organization. Used in Conflict Intelligence analysis and the Org Chart.</p>
+              </div>
+            </div>
+            <mat-divider />
+
+            <div class="dept-section">
+              <!-- existing department chips -->
+              <div class="dept-chips">
+                @for (dept of departments(); track dept) {
+                  <div class="dept-chip">
+                    <span>{{ dept }}</span>
+                    <button class="dept-remove" (click)="removeDepartment(dept)"
+                            [disabled]="savingDepts()">
+                      <mat-icon>close</mat-icon>
+                    </button>
+                  </div>
+                }
+                @if (departments().length === 0) {
+                  <span class="dept-empty">No departments defined yet.</span>
+                }
+              </div>
+
+              <!-- add new department -->
+              <div class="dept-add-row">
+                <mat-form-field appearance="outline" class="dept-input">
+                  <mat-label>New department name</mat-label>
+                  <input matInput #deptInput2
+                         [disabled]="savingDepts()"
+                         (keydown.enter)="addDepartmentFromInput(deptInput2); $event.preventDefault()"
+                         placeholder="e.g. Engineering" />
+                </mat-form-field>
+                <button mat-stroked-button
+                        [disabled]="savingDepts()"
+                        (click)="addDepartmentFromInput(deptInput2)">
+                  @if (savingDepts()) { <mat-spinner diameter="16" /> }
+                  @else { <mat-icon>add</mat-icon> Add }
+                </button>
+              </div>
+            </div>
+          </div>
+
+            <!-- Brand & Theme card -->
+            <div class="card">
+              <div class="card-header">
+                <mat-icon>palette</mat-icon>
+                <h2>Brand &amp; Theme</h2>
+              </div>
+              <mat-divider />
+              <div class="card-body">
+
+                <!-- Presets -->
+                <div class="section-label">Quick Presets</div>
+                <div class="presets-grid">
+                  @for (preset of presets; track preset.name) {
+                    <button type="button" class="preset-btn"
+                            [class.active]="isPresetActive(preset)"
+                            (click)="applyPreset(preset)">
+                      <div class="preset-swatches">
+                        <div class="swatch" [style.background]="preset.theme.primaryColor"></div>
+                        <div class="swatch" [style.background]="preset.theme.accentColor"></div>
+                        <div class="swatch" [style.background]="preset.theme.backgroundColor"></div>
+                      </div>
+                      <div class="preset-name">{{ preset.name }}</div>
+                      @if (preset.source) {
+                        <div class="preset-source">{{ preset.source }}</div>
+                      }
+                    </button>
+                  }
+                </div>
+
+                <mat-divider />
+
+                <!-- Colors -->
+                <div class="section-label" style="margin-top:4px">Colors</div>
+                <form [formGroup]="themeForm" class="colors-grid">
+                  @for (field of colorFields; track field.key) {
+                    <div class="color-row">
+                      <label class="color-swatch-wrap">
+                        <input type="color" class="color-native"
+                               [value]="themeForm.get(field.key)!.value"
+                               (input)="themeForm.get(field.key)!.setValue($any($event.target).value)" />
+                        <div class="color-swatch"
+                             [style.background]="themeForm.get(field.key)!.value"></div>
+                      </label>
+                      <div class="color-meta">
+                        <span class="color-label">{{ field.label }}</span>
+                        <span class="color-desc">{{ field.desc }}</span>
+                      </div>
+                      <input class="hex-input" [formControlName]="field.key"
+                             maxlength="7" spellcheck="false" />
+                    </div>
+                  }
+                </form>
+
+                <mat-divider />
+
+                <!-- Typography -->
+                <div class="section-label" style="margin-top:4px">Typography</div>
+                <form [formGroup]="themeForm" class="font-grid">
+                  <mat-form-field appearance="outline">
+                    <mat-label>Heading Font</mat-label>
+                    <mat-select formControlName="headingFont">
+                      @for (f of fonts; track f) {
+                        <mat-option [value]="f">
+                          <span [style.fontFamily]="f + ', sans-serif'">{{ f }}</span>
+                        </mat-option>
+                      }
+                    </mat-select>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Body Font</mat-label>
+                    <mat-select formControlName="bodyFont">
+                      @for (f of fonts; track f) {
+                        <mat-option [value]="f">
+                          <span [style.fontFamily]="f + ', sans-serif'">{{ f }}</span>
+                        </mat-option>
+                      }
+                    </mat-select>
+                  </mat-form-field>
+                </form>
+
+                <!-- Corner radius -->
+                <div class="section-label">Corner Style</div>
+                <div class="radius-group">
+                  @for (r of radiusOptions; track r.value) {
+                    <button type="button" class="radius-btn"
+                            [class.active]="themeForm.get('borderRadius')!.value === r.value"
+                            (click)="themeForm.get('borderRadius')!.setValue(r.value)">
+                      <div class="radius-demo" [style.borderRadius]="r.demo"></div>
+                      <span>{{ r.label }}</span>
+                    </button>
+                  }
+                </div>
+
+                <mat-divider />
+
+                <!-- Live preview -->
+                <div class="section-label" style="margin-top:4px">Preview</div>
+                <div class="theme-preview"
+                     [style.background]="themeForm.get('backgroundColor')!.value"
+                     [style.fontFamily]="themeForm.get('bodyFont')!.value + ', sans-serif'">
+
+                  <div class="preview-nav"
+                       [style.background]="themeForm.get('primaryColor')!.value">
+                  <span class="preview-nav-brand"
+                        [style.fontFamily]="themeForm.get('headingFont')!.value + ', sans-serif'">
+                    {{ org()!.name }}
+                  </span>
+                    <div class="preview-nav-links">
+                      <span>Dashboard</span>
+                      <span class="active"
+                            [style.color]="themeForm.get('accentColor')!.value">Reports</span>
+                      <span>Settings</span>
+                    </div>
+                  </div>
+
+                  <div class="preview-body">
+                    <div class="preview-card"
+                         [style.background]="themeForm.get('surfaceColor')!.value"
+                         [style.borderRadius]="previewRadius()">
+                      <div class="preview-card-label"
+                           [style.color]="themeForm.get('accentColor')!.value">
+                        Conflict Intelligence™
+                      </div>
+                      <div class="preview-card-title"
+                           [style.fontFamily]="themeForm.get('headingFont')!.value + ', sans-serif'"
+                           [style.color]="themeForm.get('primaryColor')!.value">
+                        Team Wellbeing Report
+                      </div>
+                      <p class="preview-card-body">
+                        AI-powered insights based on 42 survey responses from your team members.
+                      </p>
+                      <div class="preview-actions">
+                        <div class="preview-btn"
+                             [style.background]="themeForm.get('primaryColor')!.value"
+                             [style.borderRadius]="previewBtnRadius()">
+                          View Report
+                        </div>
+                        <div class="preview-chip"
+                             [style.color]="themeForm.get('accentColor')!.value"
+                             [style.borderColor]="themeForm.get('accentColor')!.value"
+                             [style.borderRadius]="previewBtnRadius()">
+                          Active
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-actions">
+                  <button mat-raised-button color="primary"
+                          (click)="saveTheme()" [disabled]="savingTheme()">
+                    @if (savingTheme()) { <mat-spinner diameter="18" /> }
+                    @else { <mat-icon>save</mat-icon> Save Theme }
+                  </button>
+                </div>
+
+              </div>
+            </div>
+            
+          </div><!-- /col-left -->
+          <div class="col-right">
+
+          <!-- Billing Details card -->
+          <div class="card" style="min-height: 650px;">
             <div class="card-header">
               <mat-icon>receipt_long</mat-icon>
               <h2>Billing Details</h2>
@@ -301,7 +514,7 @@ const RADIUS_OPTIONS = [
                   <input matInput formControlName="billingCity" />
                 </mat-form-field>
                 <mat-form-field appearance="outline">
-                  <mat-label>State / Region</mat-label>
+                  <mat-label>Province / State</mat-label>
                   <input matInput formControlName="billingState" />
                 </mat-form-field>
               </div>
@@ -366,221 +579,16 @@ const RADIUS_OPTIONS = [
             </div>
           </div>
 
-          <!-- Brand & Theme card -->
-          <div class="card">
-            <div class="card-header">
-              <mat-icon>palette</mat-icon>
-              <h2>Brand &amp; Theme</h2>
-            </div>
-            <mat-divider />
-            <div class="card-body">
+          
 
-              <!-- Presets -->
-              <div class="section-label">Quick Presets</div>
-              <div class="presets-grid">
-                @for (preset of presets; track preset.name) {
-                  <button type="button" class="preset-btn"
-                          [class.active]="isPresetActive(preset)"
-                          (click)="applyPreset(preset)">
-                    <div class="preset-swatches">
-                      <div class="swatch" [style.background]="preset.theme.primaryColor"></div>
-                      <div class="swatch" [style.background]="preset.theme.accentColor"></div>
-                      <div class="swatch" [style.background]="preset.theme.backgroundColor"></div>
-                    </div>
-                    <div class="preset-name">{{ preset.name }}</div>
-                    @if (preset.source) {
-                      <div class="preset-source">{{ preset.source }}</div>
-                    }
-                  </button>
-                }
-              </div>
-
-              <mat-divider />
-
-              <!-- Colors -->
-              <div class="section-label" style="margin-top:4px">Colors</div>
-              <form [formGroup]="themeForm" class="colors-grid">
-                @for (field of colorFields; track field.key) {
-                  <div class="color-row">
-                    <label class="color-swatch-wrap">
-                      <input type="color" class="color-native"
-                             [value]="themeForm.get(field.key)!.value"
-                             (input)="themeForm.get(field.key)!.setValue($any($event.target).value)" />
-                      <div class="color-swatch"
-                           [style.background]="themeForm.get(field.key)!.value"></div>
-                    </label>
-                    <div class="color-meta">
-                      <span class="color-label">{{ field.label }}</span>
-                      <span class="color-desc">{{ field.desc }}</span>
-                    </div>
-                    <input class="hex-input" [formControlName]="field.key"
-                           maxlength="7" spellcheck="false" />
-                  </div>
-                }
-              </form>
-
-              <mat-divider />
-
-              <!-- Typography -->
-              <div class="section-label" style="margin-top:4px">Typography</div>
-              <form [formGroup]="themeForm" class="font-grid">
-                <mat-form-field appearance="outline">
-                  <mat-label>Heading Font</mat-label>
-                  <mat-select formControlName="headingFont">
-                    @for (f of fonts; track f) {
-                      <mat-option [value]="f">
-                        <span [style.fontFamily]="f + ', sans-serif'">{{ f }}</span>
-                      </mat-option>
-                    }
-                  </mat-select>
-                </mat-form-field>
-
-                <mat-form-field appearance="outline">
-                  <mat-label>Body Font</mat-label>
-                  <mat-select formControlName="bodyFont">
-                    @for (f of fonts; track f) {
-                      <mat-option [value]="f">
-                        <span [style.fontFamily]="f + ', sans-serif'">{{ f }}</span>
-                      </mat-option>
-                    }
-                  </mat-select>
-                </mat-form-field>
-              </form>
-
-              <!-- Corner radius -->
-              <div class="section-label">Corner Style</div>
-              <div class="radius-group">
-                @for (r of radiusOptions; track r.value) {
-                  <button type="button" class="radius-btn"
-                          [class.active]="themeForm.get('borderRadius')!.value === r.value"
-                          (click)="themeForm.get('borderRadius')!.setValue(r.value)">
-                    <div class="radius-demo" [style.borderRadius]="r.demo"></div>
-                    <span>{{ r.label }}</span>
-                  </button>
-                }
-              </div>
-
-              <mat-divider />
-
-              <!-- Live preview -->
-              <div class="section-label" style="margin-top:4px">Preview</div>
-              <div class="theme-preview"
-                   [style.background]="themeForm.get('backgroundColor')!.value"
-                   [style.fontFamily]="themeForm.get('bodyFont')!.value + ', sans-serif'">
-
-                <div class="preview-nav"
-                     [style.background]="themeForm.get('primaryColor')!.value">
-                  <span class="preview-nav-brand"
-                        [style.fontFamily]="themeForm.get('headingFont')!.value + ', sans-serif'">
-                    {{ org()!.name }}
-                  </span>
-                  <div class="preview-nav-links">
-                    <span>Dashboard</span>
-                    <span class="active"
-                          [style.color]="themeForm.get('accentColor')!.value">Reports</span>
-                    <span>Settings</span>
-                  </div>
-                </div>
-
-                <div class="preview-body">
-                  <div class="preview-card"
-                       [style.background]="themeForm.get('surfaceColor')!.value"
-                       [style.borderRadius]="previewRadius()">
-                    <div class="preview-card-label"
-                         [style.color]="themeForm.get('accentColor')!.value">
-                      Conflict Intelligence™
-                    </div>
-                    <div class="preview-card-title"
-                         [style.fontFamily]="themeForm.get('headingFont')!.value + ', sans-serif'"
-                         [style.color]="themeForm.get('primaryColor')!.value">
-                      Team Wellbeing Report
-                    </div>
-                    <p class="preview-card-body">
-                      AI-powered insights based on 42 survey responses from your team members.
-                    </p>
-                    <div class="preview-actions">
-                      <div class="preview-btn"
-                           [style.background]="themeForm.get('primaryColor')!.value"
-                           [style.borderRadius]="previewBtnRadius()">
-                        View Report
-                      </div>
-                      <div class="preview-chip"
-                           [style.color]="themeForm.get('accentColor')!.value"
-                           [style.borderColor]="themeForm.get('accentColor')!.value"
-                           [style.borderRadius]="previewBtnRadius()">
-                        Active
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="form-actions">
-                <button mat-raised-button color="primary"
-                        (click)="saveTheme()" [disabled]="savingTheme()">
-                  @if (savingTheme()) { <mat-spinner diameter="18" /> }
-                  @else { <mat-icon>save</mat-icon> Save Theme }
-                </button>
-              </div>
-
-            </div>
-          </div>
-
-          <!-- ── Departments ──────────────────────────────────────────────── -->
-          <div class="settings-card">
-            <div class="card-header">
-              <div class="card-icon" style="background:rgba(39,196,160,0.12);color:#1a9678">
-                <mat-icon>corporate_fare</mat-icon>
-              </div>
-              <div>
-                <h2>Departments</h2>
-                <p>Define the departments in your organization. Used in Conflict Intelligence analysis and the Org Chart.</p>
-              </div>
-            </div>
-            <mat-divider />
-
-            <div class="dept-section">
-              <!-- existing department chips -->
-              <div class="dept-chips">
-                @for (dept of departments(); track dept) {
-                  <div class="dept-chip">
-                    <span>{{ dept }}</span>
-                    <button class="dept-remove" (click)="removeDepartment(dept)"
-                            [disabled]="savingDepts()">
-                      <mat-icon>close</mat-icon>
-                    </button>
-                  </div>
-                }
-                @if (departments().length === 0) {
-                  <span class="dept-empty">No departments defined yet.</span>
-                }
-              </div>
-
-              <!-- add new department -->
-              <div class="dept-add-row">
-                <mat-form-field appearance="outline" class="dept-input">
-                  <mat-label>New department name</mat-label>
-                  <input matInput #deptInput
-                         [disabled]="savingDepts()"
-                         (keydown.enter)="addDepartmentFromInput(deptInput); $event.preventDefault()"
-                         placeholder="e.g. Engineering" />
-                </mat-form-field>
-                <button mat-stroked-button
-                        [disabled]="savingDepts()"
-                        (click)="addDepartmentFromInput(deptInput)">
-                  @if (savingDepts()) { <mat-spinner diameter="16" /> }
-                  @else { <mat-icon>add</mat-icon> Add }
-                </button>
-              </div>
-            </div>
-          </div>
+          </div><!-- /col-right -->
 
         </div>
       }
     </div>
   `,
   styles: [`
-    .org-page { padding: 32px; max-width: 900px; }
+    .org-page { padding: 32px; }
 
     .page-header {
       margin-bottom: 28px;
@@ -589,7 +597,8 @@ const RADIUS_OPTIONS = [
     }
 
     .loading-center { display: flex; justify-content: center; padding: 64px; }
-    .settings-layout { display: flex; flex-direction: column; gap: 20px; }
+    .settings-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+    .col-left, .col-right { display: flex; flex-direction: column; gap: 20px; }
 
     .card {
       background: white; border-radius: 16px;
@@ -600,6 +609,11 @@ const RADIUS_OPTIONS = [
       display: flex; align-items: center; gap: 10px; padding: 20px 24px;
       mat-icon { color: #3A9FD6; }
       h2 { font-size: 16px; color: #1B2A47; margin: 0; font-weight: 600; }
+      .card-icon {
+        width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
+        display: flex; align-items: center; justify-content: center;
+        mat-icon { font-size: 20px; width: 20px; height: 20px; }
+      }
     }
 
     .card-body { padding: 20px 24px; display: flex; flex-direction: column; gap: 8px; }
@@ -860,7 +874,7 @@ const RADIUS_OPTIONS = [
     }
 
     /* ── Departments ── */
-    .dept-section { padding: 16px 0 4px; }
+    .dept-section { padding: 16px 24px 20px; }
 
     .dept-chips {
       display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; min-height: 32px;

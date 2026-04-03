@@ -71,6 +71,16 @@ interface OrgOption {
   taxId?: string;
 }
 
+interface AvailablePlan {
+  _id: string;
+  key: string;
+  name: string;
+  priceMonthly: number;
+  overagePriceCents: number;
+  maxUsers: number;
+  features: string[];
+}
+
 // Standard VAT/GST rates by country (percentage)
 const COUNTRY_TAX_RATES: Record<string, number> = {
   AT: 20, AU: 10, BE: 21, CA: 5,  CH: 8.1, CZ: 21, DE: 19, DK: 25,
@@ -112,7 +122,7 @@ const COUNTRY_TAX_RATES: Record<string, number> = {
       <div class="page-header">
         <div>
           <h1>Invoices</h1>
-          <p>Generate, manage and track all organisation invoices</p>
+          <p>Generate, manage and track all organization invoices</p>
         </div>
         <button mat-raised-button color="primary" (click)="toggleGenerate()">
           <mat-icon>add</mat-icon> Generate Invoice
@@ -154,9 +164,9 @@ const COUNTRY_TAX_RATES: Record<string, number> = {
           </div>
 
           <div class="generate-form">
-            <!-- Organisation -->
+            <!-- Organization -->
             <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Organisation</mat-label>
+              <mat-label>Organization</mat-label>
               <mat-select [(ngModel)]="genOrgId" (ngModelChange)="onOrgChange($event)">
                 @for (org of orgs(); track org._id) {
                   <mat-option [value]="org._id">{{ org.name }} ({{ org.plan }})</mat-option>
@@ -185,7 +195,7 @@ const COUNTRY_TAX_RATES: Record<string, number> = {
                     @if (genSelectedOrg()!.billingAddress?.country) {
                       <span class="country-badge">{{ genSelectedOrg()!.billingAddress!.country }}</span>
                     } @else {
-                      <span class="missing-address">No billing address on file — set it in Organisation settings</span>
+                      <span class="missing-address">No billing address on file — set it in Organization settings</span>
                     }
                   </div>
                 </div>
@@ -199,6 +209,17 @@ const COUNTRY_TAX_RATES: Record<string, number> = {
                   <div class="org-billing-row tax-suggestion">
                     <mat-icon>auto_fix_high</mat-icon>
                     <span>Suggested VAT rate for {{ genSelectedOrg()!.billingAddress!.country }}: <strong>{{ genTaxRate }}%</strong></span>
+                  </div>
+                }
+                @if (selectedPlan(); as sp) {
+                  <div class="org-billing-row plan-info">
+                    <mat-icon>sell</mat-icon>
+                    <span>
+                      <strong>{{ sp.name }}</strong> plan —
+                      {{ formatAmount(sp.priceMonthly) }}/mo base ·
+                      {{ sp.maxUsers }} seats incl. ·
+                      {{ formatAmount(sp.overagePriceCents) }}/extra user
+                    </span>
                   </div>
                 }
               </div>
@@ -280,7 +301,7 @@ const COUNTRY_TAX_RATES: Record<string, number> = {
         <mat-form-field appearance="outline" class="search-field">
           <mat-label>Search</mat-label>
           <mat-icon matPrefix>search</mat-icon>
-          <input matInput [(ngModel)]="searchQuery" (ngModelChange)="onFilterChange()" placeholder="Invoice # or organisation name…" />
+          <input matInput [(ngModel)]="searchQuery" (ngModelChange)="onFilterChange()" placeholder="Invoice # or organization name…" />
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="status-select">
@@ -312,7 +333,7 @@ const COUNTRY_TAX_RATES: Record<string, number> = {
             <!-- Table header -->
             <div class="table-header-row">
               <div class="col-invoice-num">Invoice #</div>
-              <div class="col-org">Organisation</div>
+              <div class="col-org">Organization</div>
               <div class="col-period">Period</div>
               <div class="col-amount">Amount</div>
               <div class="col-status">Status</div>
@@ -333,7 +354,7 @@ const COUNTRY_TAX_RATES: Record<string, number> = {
                   <span class="invoice-num-link">{{ invoice.invoiceNumber }}</span>
                 </div>
 
-                <!-- Organisation -->
+                <!-- Organization -->
                 <div class="col-org">
                   <span class="org-name">{{ orgName(invoice) }}</span>
                   @if (orgBillingEmail(invoice)) {
@@ -438,7 +459,7 @@ const COUNTRY_TAX_RATES: Record<string, number> = {
 
               <!-- Org info -->
               <div class="detail-section">
-                <div class="detail-label">Organisation</div>
+                <div class="detail-label">Organization</div>
                 <div class="detail-value org-detail-name">{{ orgName(selectedInvoice()!) }}</div>
                 @if (orgBillingEmail(selectedInvoice()!)) {
                   <div class="detail-value org-detail-email">{{ orgBillingEmail(selectedInvoice()!) }}</div>
@@ -1181,6 +1202,9 @@ const COUNTRY_TAX_RATES: Record<string, number> = {
     .send-btn      { color: #3A9FD6; border-color: #3A9FD6; }
     .mark-paid-btn { color: #27C4A0; border-color: #27C4A0; }
     .void-btn      { color: #e53e3e; border-color: #e53e3e; }
+
+    .plan-info { background: #f0fdf4; border-radius: 6px; padding: 4px 8px; }
+    .plan-info mat-icon { color: #27C4A0 !important; }
   `],
 })
 export class InvoicesComponent implements OnInit {
@@ -1191,6 +1215,7 @@ export class InvoicesComponent implements OnInit {
 
   invoices  = signal<Invoice[]>([]);
   orgs      = signal<OrgOption[]>([]);
+  plans     = signal<AvailablePlan[]>([]);
   loading   = signal(true);
   sending   = signal<string | null>(null);
 
@@ -1256,6 +1281,12 @@ export class InvoicesComponent implements OnInit {
     return this.invoices().filter((inv) => inv.status === 'overdue').length;
   });
 
+  selectedPlan = computed<AvailablePlan | null>(() => {
+    const org = this.genSelectedOrg();
+    if (!org) return null;
+    return this.plans().find((p) => p.key === org.plan) ?? null;
+  });
+
   // -------------------------------------------------------------------------
   // Constructor
   // -------------------------------------------------------------------------
@@ -1272,6 +1303,7 @@ export class InvoicesComponent implements OnInit {
   ngOnInit(): void {
     this.loadInvoices();
     this.loadOrgs();
+    this.loadPlans();
   }
 
   // -------------------------------------------------------------------------
@@ -1295,6 +1327,13 @@ export class InvoicesComponent implements OnInit {
   loadOrgs(): void {
     this.api.get<OrgOption[]>('/system-admin/organizations').subscribe({
       next:  (list) => this.orgs.set(list),
+      error: ()     => {},
+    });
+  }
+
+  loadPlans(): void {
+    this.api.get<AvailablePlan[]>('/plans/admin').subscribe({
+      next:  (list) => this.plans.set(list),
       error: ()     => {},
     });
   }
@@ -1413,7 +1452,7 @@ export class InvoicesComponent implements OnInit {
 
   previewGenerate(): void {
     if (!this.genOrgId || !this.genPeriodFrom || !this.genPeriodTo) {
-      this.snack.open('Please fill in organisation and period fields', 'Close', { duration: 3000 });
+      this.snack.open('Please fill in organization and period fields', 'Close', { duration: 3000 });
       return;
     }
 

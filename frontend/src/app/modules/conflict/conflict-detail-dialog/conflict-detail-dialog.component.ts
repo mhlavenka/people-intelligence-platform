@@ -1,14 +1,21 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { ApiService } from '../../../core/api.service';
+
+type ScriptSection =
+  | { key: string; label: string; type: 'string'; value: string }
+  | { key: string; label: string; type: 'list'; items: string[] }
+  | { key: string; label: string; type: 'topics'; topics: { topic: string; points: string[] }[] };
 
 interface ConflictAnalysis {
   _id: string;
-  departmentId: string;
+  departmentId?: string;
   surveyPeriod: string;
   riskScore: number;
   riskLevel: 'low' | 'medium' | 'high' | 'critical';
@@ -16,6 +23,8 @@ interface ConflictAnalysis {
   aiNarrative: string;
   managerScript: string;
   escalationRequested: boolean;
+  focusConflictType?: string;
+  parentId?: string;
   createdAt: string;
 }
 
@@ -29,6 +38,7 @@ interface ConflictAnalysis {
     MatIconModule,
     MatChipsModule,
     MatDividerModule,
+    MatProgressSpinnerModule,
   ],
   template: `
     <h2 mat-dialog-title>
@@ -81,8 +91,120 @@ interface ConflictAnalysis {
         <mat-divider />
         <div class="section">
           <h3><mat-icon>record_voice_over</mat-icon> Manager Conversation Guide</h3>
-          <div class="script-box">
-            <pre class="script-text">{{ data.managerScript }}</pre>
+
+          @if (scriptSections().length > 0) {
+            <div class="script-sections">
+              @for (section of scriptSections(); track section.key) {
+                <div class="script-section">
+                  <div class="script-section-title">{{ section.label }}</div>
+
+                  @if (section.type === 'string') {
+                    <p class="script-para">{{ section.value }}</p>
+                  }
+
+                  @if (section.type === 'list') {
+                    <ul class="script-list">
+                      @for (item of section.items; track $index) {
+                        <li>{{ item }}</li>
+                      }
+                    </ul>
+                  }
+
+                  @if (section.type === 'topics') {
+                    <table class="topics-table">
+                      <thead>
+                        <tr>
+                          <th>Topic</th>
+                          <th>Talking Points</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        @for (row of section.topics; track $index) {
+                          <tr>
+                            <td class="topic-name">{{ row.topic }}</td>
+                            <td>
+                              <ul class="script-list tight">
+                                @for (pt of row.points; track $index) {
+                                  <li>{{ pt }}</li>
+                                }
+                              </ul>
+                            </td>
+                          </tr>
+                        }
+                      </tbody>
+                    </table>
+                  }
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="script-box">
+              <pre class="script-text">{{ data.managerScript }}</pre>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Sub-analysis drill-down section -->
+      @if (data.conflictTypes.length) {
+        <mat-divider />
+        <div class="section">
+          <h3><mat-icon>manage_search</mat-icon> Drill-down by Conflict Type</h3>
+          <p class="drill-hint">Run a focused sub-analysis for each detected conflict type to get deeper insights and targeted manager scripts.</p>
+
+          <div class="sub-analyses-list">
+            @for (ct of data.conflictTypes; track ct) {
+              <div class="sub-row" [class]="subAnalysisFor(ct)?.riskLevel || ''">
+                <div class="sub-left">
+                  @if (subAnalysisFor(ct); as sub) {
+                    <!-- Mini gauge SVG -->
+                    <svg class="mini-gauge" viewBox="0 0 80 50" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M10,45 A30,30 0 0,1 70,45" fill="none" stroke="#e8edf4" stroke-width="8" stroke-linecap="round"/>
+                      <path [attr.d]="miniGaugeArc(sub.riskScore)" fill="none" [attr.stroke]="riskColor(sub.riskLevel)" stroke-width="8" stroke-linecap="round"/>
+                      <text x="40" y="44" text-anchor="middle" font-size="13" font-weight="700" [attr.fill]="riskColor(sub.riskLevel)">{{ sub.riskScore }}</text>
+                    </svg>
+                  } @else {
+                    <!-- Placeholder gauge -->
+                    <svg class="mini-gauge" viewBox="0 0 80 50" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M10,45 A30,30 0 0,1 70,45" fill="none" stroke="#e8edf4" stroke-width="8" stroke-linecap="round"/>
+                      <text x="40" y="44" text-anchor="middle" font-size="10" fill="#b0bec5">--</text>
+                    </svg>
+                  }
+                </div>
+
+                <div class="sub-center">
+                  <div class="sub-type-label">{{ ct }}</div>
+                  @if (subAnalysisFor(ct); as sub) {
+                    <div class="sub-score-bar-wrap">
+                      <div class="sub-score-bar" [style.width.%]="sub.riskScore" [style.background]="riskColor(sub.riskLevel)"></div>
+                    </div>
+                    <div class="sub-narrative">{{ sub.aiNarrative | slice:0:200 }}{{ sub.aiNarrative.length > 200 ? '…' : '' }}</div>
+                  } @else {
+                    <div class="sub-score-bar-wrap empty">
+                      <div class="sub-score-bar-placeholder">No sub-analysis yet</div>
+                    </div>
+                  }
+                </div>
+
+                <div class="sub-right">
+                  @if (subAnalysisFor(ct); as sub) {
+                    <span class="risk-badge" [class]="sub.riskLevel">{{ sub.riskLevel | titlecase }}</span>
+                  }
+                  @if (!subAnalysisFor(ct)) {
+                    <button mat-stroked-button color="primary"
+                      [disabled]="runningFor() === ct"
+                      (click)="runSubAnalysis(ct)">
+                      @if (runningFor() === ct) {
+                        <mat-spinner diameter="16" />
+                      } @else {
+                        <mat-icon>play_arrow</mat-icon>
+                      }
+                      {{ runningFor() === ct ? 'Analyzing…' : 'Run Sub-Analysis' }}
+                    </button>
+                  }
+                </div>
+              </div>
+            }
           </div>
         </div>
       }
@@ -111,7 +233,7 @@ interface ConflictAnalysis {
     }
 
     mat-dialog-content {
-      min-width: 560px; max-width: 700px;
+      min-width: 560px; max-width: 820px;
       padding-top: 8px !important;
       display: flex; flex-direction: column; gap: 0;
     }
@@ -170,6 +292,68 @@ interface ConflictAnalysis {
       white-space: pre-wrap;
     }
 
+    .drill-hint {
+      font-size: 13px; color: #6b7280; margin: -4px 0 16px; line-height: 1.5;
+    }
+
+    /* Sub-analysis rows */
+    .sub-analyses-list {
+      display: flex; flex-direction: column; gap: 10px;
+    }
+
+    .sub-row {
+      display: flex; align-items: center; gap: 14px;
+      background: #f8fafc; border-radius: 10px; padding: 12px 14px;
+      border-left: 4px solid #e8edf4;
+      transition: border-color 0.2s;
+      &.low      { border-left-color: #27C4A0; }
+      &.medium   { border-left-color: #f0a500; }
+      &.high     { border-left-color: #e86c3a; }
+      &.critical { border-left-color: #e53e3e; }
+    }
+
+    .sub-left {
+      flex-shrink: 0;
+      .mini-gauge { width: 70px; height: 44px; display: block; }
+    }
+
+    .sub-center {
+      flex: 1; min-width: 0;
+    }
+
+    .sub-type-label {
+      font-size: 13px; font-weight: 600; color: #1B2A47; margin-bottom: 6px;
+    }
+
+    .sub-score-bar-wrap {
+      background: #e8edf4; border-radius: 4px; height: 6px; margin-bottom: 6px;
+      overflow: hidden;
+      &.empty { display: flex; align-items: center; background: transparent; height: auto; }
+    }
+
+    .sub-score-bar {
+      height: 100%; border-radius: 4px; transition: width 0.5s ease;
+    }
+
+    .sub-score-bar-placeholder {
+      font-size: 12px; color: #9aa5b4; font-style: italic;
+    }
+
+    .sub-narrative {
+      font-size: 12px; color: #5a6a7e; line-height: 1.5;
+    }
+
+    .sub-right {
+      flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 6px;
+      .risk-badge { margin-top: 0; }
+      button {
+        display: flex; align-items: center; gap: 4px; font-size: 12px; white-space: nowrap;
+        mat-icon { font-size: 16px; width: 16px; height: 16px; }
+        mat-spinner { margin: 0 2px; }
+      }
+    }
+
+    /* Script sections */
     .script-box {
       background: #f8fafc; border-radius: 10px; padding: 16px;
       border-left: 3px solid #3A9FD6;
@@ -178,6 +362,46 @@ interface ConflictAnalysis {
     .script-text {
       font-family: inherit; font-size: 13px; color: #374151;
       line-height: 1.7; margin: 0; white-space: pre-wrap; word-break: break-word;
+    }
+
+    .script-sections {
+      display: flex; flex-direction: column; gap: 12px;
+    }
+
+    .script-section {
+      background: #f8fafc; border-radius: 10px; padding: 14px 16px;
+      border-left: 3px solid #3A9FD6;
+    }
+
+    .script-section-title {
+      font-size: 12px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.05em; color: #3A9FD6; margin-bottom: 8px;
+    }
+
+    .script-para {
+      font-size: 13px; color: #374151; line-height: 1.7; margin: 0;
+    }
+
+    .script-list {
+      margin: 0; padding-left: 18px;
+      li { font-size: 13px; color: #374151; line-height: 1.7; margin-bottom: 2px; }
+      &.tight li { margin-bottom: 0; }
+    }
+
+    .topics-table {
+      width: 100%; border-collapse: collapse; font-size: 13px;
+      th {
+        text-align: left; padding: 6px 10px;
+        background: #edf2f7; color: #1B2A47; font-weight: 600; font-size: 12px;
+        &:first-child { border-radius: 6px 0 0 0; width: 30%; }
+        &:last-child  { border-radius: 0 6px 0 0; }
+      }
+      td {
+        padding: 8px 10px; vertical-align: top; color: #374151;
+        border-bottom: 1px solid #e8edf4;
+      }
+      tr:last-child td { border-bottom: none; }
+      .topic-name { font-weight: 600; color: #1B2A47; }
     }
 
     .escalation-banner {
@@ -190,9 +414,120 @@ interface ConflictAnalysis {
     mat-dialog-actions { gap: 8px; }
   `],
 })
-export class ConflictDetailDialogComponent {
+export class ConflictDetailDialogComponent implements OnInit {
   data = inject<ConflictAnalysis>(MAT_DIALOG_DATA);
   private dialogRef = inject(MatDialogRef<ConflictDetailDialogComponent>);
+  private api = inject(ApiService);
+
+  subAnalyses = signal<ConflictAnalysis[]>([]);
+  runningFor = signal<string | null>(null);
+
+  ngOnInit(): void {
+    this.loadSubAnalyses();
+  }
+
+  private loadSubAnalyses(): void {
+    this.api.get<ConflictAnalysis[]>(`/conflict/analyses/${this.data._id}/sub-analyses`).subscribe({
+      next: (list) => this.subAnalyses.set(list),
+      error: () => {},
+    });
+  }
+
+  subAnalysisFor(conflictType: string): ConflictAnalysis | undefined {
+    return this.subAnalyses().find((s) => s.focusConflictType === conflictType);
+  }
+
+  runSubAnalysis(conflictType: string): void {
+    this.runningFor.set(conflictType);
+    this.api.post<ConflictAnalysis>(`/conflict/analyses/${this.data._id}/sub-analyses`, {
+      focusConflictType: conflictType,
+    }).subscribe({
+      next: (sub) => {
+        this.subAnalyses.update((list) => {
+          const idx = list.findIndex((s) => s.focusConflictType === conflictType);
+          return idx >= 0 ? list.map((s, i) => i === idx ? sub : s) : [...list, sub];
+        });
+        this.runningFor.set(null);
+      },
+      error: () => this.runningFor.set(null),
+    });
+  }
+
+  miniGaugeArc(score: number): string {
+    const pct = Math.min(Math.max(score, 0), 100) / 100;
+    const startAngle = Math.PI;
+    const endAngle   = startAngle + pct * Math.PI;
+    const r = 30;
+    const cx = 40, cy = 45;
+    const x1 = cx + r * Math.cos(startAngle);
+    const y1 = cy + r * Math.sin(startAngle);
+    const x2 = cx + r * Math.cos(endAngle);
+    const y2 = cy + r * Math.sin(endAngle);
+    const large = pct > 0.5 ? 1 : 0;
+    return `M${x1},${y1} A${r},${r} 0 ${large},1 ${x2},${y2}`;
+  }
+
+  riskColor(level: string): string {
+    const map: Record<string, string> = {
+      low: '#27C4A0', medium: '#f0a500', high: '#e86c3a', critical: '#e53e3e',
+    };
+    return map[level] ?? '#9aa5b4';
+  }
+
+  private splitWords(s: string): string {
+    return s
+      .replace(/([a-z])([A-Z])/g, '$1 $2')
+      .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2')
+      .replace(/[_\-]+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .replace(/^./, (c) => c.toUpperCase());
+  }
+
+  scriptSections(): ScriptSection[] {
+    const raw = this.data.managerScript;
+    if (!raw) return [];
+
+    let parsed: Record<string, unknown>;
+    try {
+      parsed = JSON.parse(raw);
+      if (typeof parsed !== 'object' || Array.isArray(parsed)) return [];
+    } catch {
+      return [];
+    }
+
+    const POINTS_RE = /^(points|talkingPoints|talking_points|actions|suggestions|tips|items|bullets|scripts|keyPoints|key_points|strategies)$/i;
+    const TOPIC_RE  = /^(topic|title|area|name|subject|issue|category|type|heading|label)$/i;
+
+    return Object.entries(parsed).map(([key, val]): ScriptSection => {
+      const label = this.splitWords(key);
+
+      if (Array.isArray(val) && val.length > 0 && typeof val[0] === 'object') {
+        const topics = (val as Record<string, unknown>[]).map((item) => {
+          const topicKey = Object.keys(item).find((k) => TOPIC_RE.test(k));
+          const topicRaw = topicKey ? String(item[topicKey] ?? '') : '';
+          const topic = topicRaw ? this.splitWords(topicRaw) : label;
+
+          const pointsKey = Object.keys(item).find((k) => POINTS_RE.test(k));
+          const rawPoints = pointsKey ? item[pointsKey] : null;
+          const points: string[] = Array.isArray(rawPoints)
+            ? rawPoints.map(String)
+            : Object.values(item)
+                .filter((v) => typeof v === 'string' && v !== topicRaw)
+                .map(String);
+
+          return { topic, points };
+        });
+        return { key, label, type: 'topics', topics };
+      }
+
+      if (Array.isArray(val)) {
+        return { key, label, type: 'list', items: val.map(String) };
+      }
+
+      return { key, label, type: 'string', value: String(val ?? '') };
+    });
+  }
 
   escalate(): void {
     this.dialogRef.close({ action: 'escalate', id: this.data._id });

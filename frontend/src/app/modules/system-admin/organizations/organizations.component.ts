@@ -50,11 +50,11 @@ interface Stats {
       <!-- Header -->
       <div class="page-header">
         <div>
-          <h1>Organisations</h1>
-          <p>Manage all tenant organisations, plans, and access</p>
+          <h1>Organizations</h1>
+          <p>Manage all tenant organizations, plans, and access</p>
         </div>
         <button mat-raised-button color="primary" (click)="openCreate()">
-          <mat-icon>add</mat-icon> New Organisation
+          <mat-icon>add</mat-icon> New Organization
         </button>
       </div>
 
@@ -128,7 +128,7 @@ interface Stats {
           <table mat-table [dataSource]="filtered()" class="orgs-table">
 
             <ng-container matColumnDef="name">
-              <th mat-header-cell *matHeaderCellDef>Organisation</th>
+              <th mat-header-cell *matHeaderCellDef>Organization</th>
               <td mat-cell *matCellDef="let o">
                 <div class="org-name-cell">
                   <span class="org-name">{{ o.name }}</span>
@@ -203,7 +203,7 @@ interface Stats {
           @if (filtered().length === 0) {
             <div class="no-results">
               <mat-icon>search_off</mat-icon>
-              <span>No organisations match your filters</span>
+              <span>No organizations match your filters</span>
             </div>
           }
         </div>
@@ -428,10 +428,10 @@ export class OrganizationsComponent implements OnInit {
     const ref = this.dialog.open(ConfirmDialogComponent, {
       width: '420px',
       data: {
-        title:        newState ? 'Reactivate Organisation' : 'Suspend Organisation',
+        title:        newState ? 'Reactivate Organization' : 'Suspend Organization',
         message:      newState
           ? `Reactivate "${org.name}"? Users will regain access immediately.`
-          : `Suspend "${org.name}"? All users in this organisation will lose access.`,
+          : `Suspend "${org.name}"? All users in this organization will lose access.`,
         confirmLabel: newState ? 'Reactivate' : 'Suspend',
         confirmColor: newState ? 'primary' : 'warn',
         icon:         newState ? 'check_circle' : 'block',
@@ -446,7 +446,7 @@ export class OrganizationsComponent implements OnInit {
 
       req$.subscribe({
         next: () => {
-          this.snack.open(`Organisation ${action}d`, 'Close', { duration: 2500 });
+          this.snack.open(`Organization ${action}d`, 'Close', { duration: 2500 });
           this.loadOrgs();
           this.loadStats();
         },

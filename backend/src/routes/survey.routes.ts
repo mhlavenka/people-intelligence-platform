@@ -70,11 +70,17 @@ router.get(
     try {
       const template = await SurveyTemplate.findOne({
         _id: req.params['id'],
-        organizationId: req.user!.organizationId,
-        isActive: true,
-      });
+        $or: [
+          { organizationId: req.user!.organizationId },
+          { isGlobal: true },
+        ],
+      }).setOptions({ bypassTenantCheck: true });
       if (!template) {
         res.status(404).json({ error: 'Survey template not found' });
+        return;
+      }
+      if (!template.isActive) {
+        res.status(410).json({ error: 'This survey is no longer active.' });
         return;
       }
       res.json(template);

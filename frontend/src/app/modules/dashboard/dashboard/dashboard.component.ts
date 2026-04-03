@@ -1,12 +1,27 @@
 import { Component, OnInit, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ApiService } from '../../../core/api.service';
 import { AuthService } from '../../../core/auth.service';
+
+interface DashboardStats {
+  conflict:       { value: number | null; label: string };
+  neuroinclusion: { value: number | null; label: string };
+  succession:     { value: number | null; label: string };
+  surveys:        { responses: number; activeSurveys: number };
+}
+
+interface ActivityItem {
+  type: 'survey_response' | 'conflict_analysis' | 'idp' | 'neuroinclusion';
+  label: string;
+  detail: string;
+  createdAt: string;
+}
 
 interface ModuleCard {
   title: string;
@@ -14,7 +29,7 @@ interface ModuleCard {
   icon: string;
   color: string;
   route: string;
-  metric: string;
+  metric: string | null;
   metricLabel: string;
   status: 'active' | 'warning' | 'inactive';
 }
@@ -22,7 +37,7 @@ interface ModuleCard {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink, MatCardModule, MatIconModule, MatButtonModule, MatProgressBarModule],
+  imports: [CommonModule, RouterLink, MatCardModule, MatIconModule, MatButtonModule, MatProgressBarModule, MatProgressSpinnerModule, DatePipe],
   template: `
     <div class="dashboard-page">
       <div class="page-header">
@@ -37,7 +52,7 @@ interface ModuleCard {
 
       <!-- Module cards -->
       <div class="module-grid">
-        @for (card of moduleCards; track card.route) {
+        @for (card of moduleCards(); track card.route) {
           <div class="module-card" [class]="'module-card--' + card.status" [routerLink]="card.route">
             <div class="card-header">
               <div class="card-icon" [style.background]="card.color">
@@ -50,8 +65,13 @@ interface ModuleCard {
               <p>{{ card.subtitle }}</p>
             </div>
             <div class="card-metric">
-              <span class="metric-value">{{ card.metric }}</span>
-              <span class="metric-label">{{ card.metricLabel }}</span>
+              @if (card.metric !== null) {
+                <span class="metric-value">{{ card.metric }}</span>
+                <span class="metric-label">{{ card.metricLabel }}</span>
+              } @else {
+                <span class="metric-value metric-none">—</span>
+                <span class="metric-label">no data yet</span>
+              }
             </div>
             <div class="card-footer">
               <button mat-button color="primary">Open Module →</button>
@@ -63,32 +83,27 @@ interface ModuleCard {
       <!-- Recent activity -->
       <div class="section-card">
         <h2>Recent Activity</h2>
-        <div class="activity-list">
-          <div class="activity-item">
-            <mat-icon class="activity-icon conflict">warning_amber</mat-icon>
-            <div class="activity-content">
-              <strong>Conflict Analysis completed</strong>
-              <span>Engineering department — Risk score: 62 (Medium)</span>
-            </div>
-            <span class="activity-time">2 hours ago</span>
+        @if (activityLoading()) {
+          <div class="activity-loading"><mat-spinner diameter="28" /></div>
+        } @else if (activity().length === 0) {
+          <div class="activity-empty">
+            <mat-icon>history</mat-icon>
+            <span>No activity yet. Activity will appear here as your team uses the platform.</span>
           </div>
-          <div class="activity-item">
-            <mat-icon class="activity-icon succession">trending_up</mat-icon>
-            <div class="activity-content">
-              <strong>IDP generated</strong>
-              <span>Sarah M. — Leadership development plan created</span>
-            </div>
-            <span class="activity-time">Yesterday</span>
+        } @else {
+          <div class="activity-list">
+            @for (item of activity(); track item.createdAt) {
+              <div class="activity-item">
+                <mat-icon class="activity-icon" [class]="activityIconClass(item.type)">{{ activityIcon(item.type) }}</mat-icon>
+                <div class="activity-content">
+                  <strong>{{ item.label }}</strong>
+                  <span>{{ item.detail }}</span>
+                </div>
+                <span class="activity-time">{{ item.createdAt | date:'MMM d, h:mm a' }}</span>
+              </div>
+            }
           </div>
-          <div class="activity-item">
-            <mat-icon class="activity-icon neuroinclusion">psychology</mat-icon>
-            <div class="activity-content">
-              <strong>Neuroinclusion assessment submitted</strong>
-              <span>HR Manager role — Maturity score: 71/100</span>
-            </div>
-            <span class="activity-time">3 days ago</span>
-          </div>
-        </div>
+        }
       </div>
     </div>
   `,
@@ -161,6 +176,7 @@ interface ModuleCard {
         gap: 8px;
         margin-bottom: 16px;
         .metric-value { font-size: 32px; font-weight: 700; color: #1B2A47; }
+        .metric-value.metric-none { color: #9aa5b4; }
         .metric-label { font-size: 13px; color: #9aa5b4; }
       }
 
@@ -175,6 +191,14 @@ interface ModuleCard {
       padding: 24px;
       box-shadow: 0 2px 12px rgba(0,0,0,0.06);
       h2 { font-size: 18px; color: #1B2A47; margin-bottom: 20px; }
+    }
+
+    .activity-loading { display: flex; justify-content: center; padding: 32px; }
+
+    .activity-empty {
+      display: flex; align-items: center; gap: 10px;
+      padding: 24px; color: #9aa5b4; font-size: 14px;
+      mat-icon { font-size: 20px; width: 20px; height: 20px; }
     }
 
     .activity-list { display: flex; flex-direction: column; gap: 16px; }
@@ -215,44 +239,111 @@ interface ModuleCard {
 })
 export class DashboardComponent implements OnInit {
   firstName = signal('');
+  activity = signal<ActivityItem[]>([]);
+  activityLoading = signal(true);
+  moduleCards = signal<ModuleCard[]>(this.defaultCards());
 
-  moduleCards: ModuleCard[] = [
-    {
-      title: 'Conflict Intelligence™',
-      subtitle: 'Workplace conflict detection and mediation escalation',
-      icon: 'warning_amber',
-      color: 'linear-gradient(135deg, #e86c3a, #e53e3e)',
-      route: '/conflict',
-      metric: '3',
-      metricLabel: 'active analyses',
-      status: 'warning',
-    },
-    {
-      title: 'Neuro-Inclusion Compass™',
-      subtitle: 'Organizational neuroinclusion maturity assessment',
-      icon: 'psychology',
-      color: 'linear-gradient(135deg, #27C4A0, #1a9678)',
-      route: '/neuroinclusion',
-      metric: '71',
-      metricLabel: 'maturity score',
-      status: 'active',
-    },
-    {
-      title: 'Leadership & Succession Hub™',
-      subtitle: 'AI-generated IDPs and succession planning',
-      icon: 'trending_up',
-      color: 'linear-gradient(135deg, #3A9FD6, #2080b0)',
-      route: '/succession',
-      metric: '8',
-      metricLabel: 'active IDPs',
-      status: 'active',
-    },
-  ];
+  activityIcon(type: ActivityItem['type']): string {
+    const map: Record<ActivityItem['type'], string> = {
+      survey_response:   'assignment_turned_in',
+      conflict_analysis: 'warning_amber',
+      idp:               'trending_up',
+      neuroinclusion:    'psychology',
+    };
+    return map[type];
+  }
+
+  activityIconClass(type: ActivityItem['type']): string {
+    const map: Record<ActivityItem['type'], string> = {
+      survey_response:   'conflict',
+      conflict_analysis: 'conflict',
+      idp:               'succession',
+      neuroinclusion:    'neuroinclusion',
+    };
+    return map[type];
+  }
+
+  private defaultCards(): ModuleCard[] {
+    return [
+      {
+        title: 'Conflict Intelligence™',
+        subtitle: 'Workplace conflict detection and mediation escalation',
+        icon: 'warning_amber',
+        color: 'linear-gradient(135deg, #e86c3a, #e53e3e)',
+        route: '/conflict',
+        metric: null,
+        metricLabel: 'active analyses',
+        status: 'active',
+      },
+      {
+        title: 'Neuro-Inclusion Compass™',
+        subtitle: 'Organizational neuroinclusion maturity assessment',
+        icon: 'psychology',
+        color: 'linear-gradient(135deg, #27C4A0, #1a9678)',
+        route: '/neuroinclusion',
+        metric: null,
+        metricLabel: 'avg maturity score',
+        status: 'active',
+      },
+      {
+        title: 'Leadership & Succession Hub™',
+        subtitle: 'AI-generated IDPs and succession planning',
+        icon: 'trending_up',
+        color: 'linear-gradient(135deg, #3A9FD6, #2080b0)',
+        route: '/succession',
+        metric: null,
+        metricLabel: 'active IDPs',
+        status: 'active',
+      },
+      {
+        title: 'Intakes',
+        subtitle: 'Active intake templates and responses collected',
+        icon: 'assignment',
+        color: 'linear-gradient(135deg, #7c5cbf, #5a3ea0)',
+        route: '/intakes',
+        metric: null,
+        metricLabel: 'responses collected',
+        status: 'active',
+      },
+    ];
+  }
+
+  private applyStats(stats: DashboardStats): void {
+    this.moduleCards.update((cards) => cards.map((card) => {
+      if (card.route === '/conflict') {
+        const v = stats.conflict.value;
+        return { ...card, metric: v !== null ? String(v) : null, metricLabel: stats.conflict.label, status: (v && v > 0 ? 'warning' : 'active') as ModuleCard['status'] };
+      }
+      if (card.route === '/neuroinclusion') {
+        const v = stats.neuroinclusion.value;
+        return { ...card, metric: v !== null ? String(v) : null, metricLabel: stats.neuroinclusion.label };
+      }
+      if (card.route === '/succession') {
+        const v = stats.succession.value;
+        return { ...card, metric: v !== null ? String(v) : null, metricLabel: stats.succession.label };
+      }
+      if (card.route === '/intakes') {
+        const { responses, activeSurveys } = stats.surveys;
+        return { ...card, metric: String(activeSurveys), metricLabel: `active intakes · ${responses} responses` };
+      }
+      return card;
+    }));
+  }
 
   constructor(private authService: AuthService, private api: ApiService) {}
 
   ngOnInit(): void {
     const user = this.authService.currentUser();
     if (user) this.firstName.set(user.firstName);
+
+    this.api.get<ActivityItem[]>('/dashboard/activity').subscribe({
+      next: (items) => { this.activity.set(items); this.activityLoading.set(false); },
+      error: () => this.activityLoading.set(false),
+    });
+
+    this.api.get<DashboardStats>('/dashboard/stats').subscribe({
+      next: (stats) => this.applyStats(stats),
+      error: () => {},
+    });
   }
 }

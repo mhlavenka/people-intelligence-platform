@@ -62,6 +62,13 @@ import { AuthService } from '../../../core/auth.service';
             <mat-icon>receipt_long</mat-icon>
             @if (!collapsed()) { <span>Invoices</span> }
           </a>
+          <a routerLink="/system-admin/plans" routerLinkActive="active"
+             class="nav-item"
+             [matTooltip]="collapsed() ? 'Plans' : ''"
+             matTooltipPosition="right">
+            <mat-icon>sell</mat-icon>
+            @if (!collapsed()) { <span>Plans</span> }
+          </a>
         </nav>
 
         <!-- User menu -->

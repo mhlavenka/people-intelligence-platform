@@ -20,6 +20,8 @@ import hubRoutes from './routes/hub.routes';
 import billingRoutes from './routes/billing.routes';
 import systemAdminBillingRoutes from './routes/system-admin-billing.routes';
 import orgChartRoutes from './routes/org-chart.routes';
+import dashboardRoutes from './routes/dashboard.routes';
+import plansRoutes from './routes/plans.routes';
 
 const app = express();
 
@@ -59,6 +61,8 @@ app.use('/api/hub', hubRoutes);
 app.use('/api/billing', billingRoutes);
 app.use('/api/system-admin/billing', systemAdminBillingRoutes);
 app.use('/api/org-chart', orgChartRoutes);
+app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/plans', plansRoutes);
 
 // 404 and error handlers (must be last)
 app.use(notFound);

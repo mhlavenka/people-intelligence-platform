@@ -20,6 +20,7 @@ interface SurveyTemplate {
   _id: string;
   title: string;
   moduleType: 'conflict' | 'neuroinclusion' | 'succession';
+  intakeType: 'survey' | 'interview' | 'assessment';
   questions: { id: string; text: string; type: string; category: string }[];
   isActive: boolean;
   createdAt: string;
@@ -47,25 +48,39 @@ interface SurveyTemplate {
     <div class="surveys-page">
       <div class="page-header">
         <div>
-          <h1>Survey Management</h1>
-          <p>Create and manage survey templates across all modules</p>
+          <h1>Intake Management</h1>
+          <p>Create and manage intake templates across all modules</p>
         </div>
         <button mat-raised-button color="primary" (click)="openCreateDialog()">
-          <mat-icon>add</mat-icon> New Template
+          <mat-icon>add</mat-icon> New Intake
         </button>
       </div>
 
-      <!-- Module filter tabs -->
+      <!-- Filter rows -->
       <div class="filter-tabs">
-        @for (tab of tabs; track tab.key) {
+        @for (tab of moduleTabs; track tab.key) {
           <button
             class="filter-tab"
-            [class.active]="activeFilter() === tab.key"
-            (click)="activeFilter.set(tab.key)"
+            [class.active]="activeModuleFilter() === tab.key"
+            (click)="activeModuleFilter.set(tab.key)"
           >
             <mat-icon>{{ tab.icon }}</mat-icon>
             {{ tab.label }}
             <span class="tab-count">{{ countByModule(tab.key) }}</span>
+          </button>
+        }
+      </div>
+
+      <div class="filter-tabs intake-type-tabs">
+        @for (tab of intakeTypeTabs; track tab.key) {
+          <button
+            class="filter-tab"
+            [class.active]="activeTypeFilter() === tab.key"
+            (click)="activeTypeFilter.set(tab.key)"
+          >
+            <mat-icon>{{ tab.icon }}</mat-icon>
+            {{ tab.label }}
+            <span class="tab-count">{{ countByType(tab.key) }}</span>
           </button>
         }
       </div>
@@ -75,10 +90,10 @@ interface SurveyTemplate {
       } @else if (filteredTemplates().length === 0) {
         <div class="empty-state">
           <mat-icon>assignment</mat-icon>
-          <h3>No survey templates yet</h3>
-          <p>Create your first template to start collecting responses.</p>
+          <h3>No intake templates yet</h3>
+          <p>Create your first intake template to start collecting responses.</p>
           <button mat-raised-button color="primary" (click)="openCreateDialog()">
-            <mat-icon>add</mat-icon> Create Template
+            <mat-icon>add</mat-icon> Create Intake
           </button>
         </div>
       } @else {
@@ -86,9 +101,15 @@ interface SurveyTemplate {
           @for (t of filteredTemplates(); track t._id) {
             <div class="template-card" [class.inactive]="!t.isActive">
               <div class="card-top">
-                <div class="module-badge" [class]="t.moduleType">
-                  <mat-icon>{{ moduleIcon(t.moduleType) }}</mat-icon>
-                  {{ moduleLabel(t.moduleType) }}
+                <div class="badges-row">
+                  <div class="module-badge" [class]="t.moduleType">
+                    <mat-icon>{{ moduleIcon(t.moduleType) }}</mat-icon>
+                    {{ moduleLabel(t.moduleType) }}
+                  </div>
+                  <div class="intake-type-badge" [class]="t.intakeType ?? 'survey'">
+                    <mat-icon>{{ intakeTypeIcon(t.intakeType) }}</mat-icon>
+                    {{ intakeTypeLabel(t.intakeType) }}
+                  </div>
                 </div>
                 <div class="card-actions">
                   <mat-slide-toggle
@@ -105,7 +126,7 @@ interface SurveyTemplate {
                       <mat-icon>edit</mat-icon> Edit
                     </button>
                     <button mat-menu-item (click)="copySurveyLink(t)">
-                      <mat-icon>link</mat-icon> Copy Survey Link
+                      <mat-icon>link</mat-icon> Copy Intake Link
                     </button>
                     <button mat-menu-item (click)="viewResponses(t)">
                       <mat-icon>bar_chart</mat-icon> View Responses
@@ -152,7 +173,7 @@ interface SurveyTemplate {
 
               <div class="card-footer">
                 <button mat-stroked-button (click)="copySurveyLink(t)" [disabled]="!t.isActive">
-                  <mat-icon>link</mat-icon> Copy Link
+                  <mat-icon>link</mat-icon> Copy Intake Link
                 </button>
                 <button mat-stroked-button (click)="openEditDialog(t)">
                   <mat-icon>edit</mat-icon> Edit
@@ -179,9 +200,10 @@ interface SurveyTemplate {
     }
 
     .filter-tabs {
-      display: flex; gap: 8px; margin-bottom: 24px;
+      display: flex; gap: 8px; margin-bottom: 12px;
       flex-wrap: wrap;
     }
+    .intake-type-tabs { margin-bottom: 24px; }
 
     .filter-tab {
       display: flex; align-items: center; gap: 6px;
@@ -230,14 +252,23 @@ interface SurveyTemplate {
       display: flex; align-items: center; justify-content: space-between;
     }
 
-    .module-badge {
+    .badges-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+
+    .module-badge, .intake-type-badge {
       display: inline-flex; align-items: center; gap: 5px;
       padding: 3px 10px; border-radius: 999px;
       font-size: 11px; font-weight: 700; text-transform: uppercase;
       mat-icon { font-size: 14px; width: 14px; height: 14px; }
+    }
+    .module-badge {
       &.conflict       { background: rgba(232,108,58,0.12); color: #c04a14; }
       &.neuroinclusion { background: rgba(39,196,160,0.12);  color: #1a9678; }
       &.succession     { background: rgba(58,159,214,0.12);  color: #2080b0; }
+    }
+    .intake-type-badge {
+      &.survey     { background: rgba(124,92,191,0.12); color: #6135b3; }
+      &.interview  { background: rgba(27,42,71,0.10);   color: #1B2A47; }
+      &.assessment { background: rgba(240,165,0,0.12);  color: #a06800; }
     }
 
     .card-actions { display: flex; align-items: center; gap: 4px; }
@@ -275,30 +306,55 @@ interface SurveyTemplate {
 export class SurveyManagementComponent implements OnInit {
   templates = signal<SurveyTemplate[]>([]);
   loading = signal(true);
-  activeFilter = signal('all');
+  activeModuleFilter = signal('all');
+  activeTypeFilter   = signal('all');
 
-  tabs = [
-    { key: 'all',            label: 'All',            icon: 'assignment' },
+  moduleTabs = [
+    { key: 'all',            label: 'All Modules',    icon: 'apps' },
     { key: 'conflict',       label: 'Conflict',       icon: 'warning_amber' },
     { key: 'neuroinclusion', label: 'Neuro-Inclusion', icon: 'psychology' },
     { key: 'succession',     label: 'Succession',     icon: 'trending_up' },
   ];
 
-  filteredTemplates = () =>
-    this.activeFilter() === 'all'
-      ? this.templates()
-      : this.templates().filter((t) => t.moduleType === this.activeFilter());
+  intakeTypeTabs = [
+    { key: 'all',        label: 'All Types',  icon: 'assignment' },
+    { key: 'survey',     label: 'Survey',     icon: 'poll' },
+    { key: 'interview',  label: 'Interview',  icon: 'record_voice_over' },
+    { key: 'assessment', label: 'Assessment', icon: 'fact_check' },
+  ];
+
+  filteredTemplates = () => {
+    let list = this.templates();
+    if (this.activeModuleFilter() !== 'all') {
+      list = list.filter((t) => t.moduleType === this.activeModuleFilter());
+    }
+    if (this.activeTypeFilter() !== 'all') {
+      list = list.filter((t) => (t.intakeType ?? 'survey') === this.activeTypeFilter());
+    }
+    return list;
+  };
 
   countByModule = (key: string) =>
     key === 'all'
       ? this.templates().length
       : this.templates().filter((t) => t.moduleType === key).length;
 
+  countByType = (key: string) =>
+    key === 'all'
+      ? this.templates().length
+      : this.templates().filter((t) => (t.intakeType ?? 'survey') === key).length;
+
   moduleIcon = (type: string) =>
     type === 'conflict' ? 'warning_amber' : type === 'neuroinclusion' ? 'psychology' : 'trending_up';
 
   moduleLabel = (type: string) =>
     type === 'conflict' ? 'Conflict' : type === 'neuroinclusion' ? 'Neuro-Inclusion' : 'Succession';
+
+  intakeTypeIcon = (type: string) =>
+    type === 'interview' ? 'record_voice_over' : type === 'assessment' ? 'fact_check' : 'poll';
+
+  intakeTypeLabel = (type: string) =>
+    type === 'interview' ? 'Interview' : type === 'assessment' ? 'Assessment' : 'Survey';
 
   questionIcon = (type: string) =>
     type === 'scale' ? 'linear_scale' : type === 'boolean' ? 'toggle_on' : 'short_text';
@@ -372,9 +428,9 @@ export class SurveyManagementComponent implements OnInit {
   }
 
   copySurveyLink(template: SurveyTemplate): void {
-    const url = `${window.location.origin}/survey/${template._id}`;
+    const url = `${window.location.origin}/intake/${template._id}`;
     navigator.clipboard.writeText(url).then(() => {
-      this.snackBar.open('Survey link copied!', 'Close', { duration: 2500 });
+      this.snackBar.open('Intake link copied!', 'Close', { duration: 2500 });
     });
   }
 

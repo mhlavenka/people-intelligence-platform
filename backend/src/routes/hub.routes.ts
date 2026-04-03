@@ -114,7 +114,7 @@ router.post('/messages', async (req: AuthRequest, res: Response, next: NextFunct
     const recipient = await User.findOne({ _id: toId, organizationId: orgId })
       .setOptions({ bypassTenantCheck: true });
     if (!recipient) {
-      res.status(404).json({ error: 'Recipient not found in this organisation' });
+      res.status(404).json({ error: 'Recipient not found in this organization' });
       return;
     }
 

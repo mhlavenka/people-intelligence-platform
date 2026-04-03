@@ -57,7 +57,7 @@ export interface OrgRow {
   template: `
     <h2 mat-dialog-title>
       <mat-icon>business</mat-icon>
-      {{ data._id ? 'Edit Organisation' : 'New Organisation' }}
+      {{ data._id ? 'Edit Organization' : 'New Organization' }}
     </h2>
 
     <mat-dialog-content>
@@ -92,7 +92,7 @@ export interface OrgRow {
 
         <div class="form-row">
           <mat-form-field>
-            <mat-label>Organisation Name</mat-label>
+            <mat-label>Organization Name</mat-label>
             <input matInput formControlName="name" />
           </mat-form-field>
           <mat-form-field>
@@ -125,7 +125,7 @@ export interface OrgRow {
             <input matInput formControlName="billingAddressCity" />
           </mat-form-field>
           <mat-form-field>
-            <mat-label>State / Region</mat-label>
+            <mat-label>Province / State</mat-label>
             <input matInput formControlName="billingAddressState" />
           </mat-form-field>
         </div>

@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
@@ -198,6 +198,13 @@ function isGroup(entry: NavEntry): entry is NavGroup {
 
       <!-- Main content -->
       <main class="main-content">
+        @if (inactivityWarning()) {
+          <div class="inactivity-banner">
+            <mat-icon>timer</mat-icon>
+            <span>You've been inactive. You'll be logged out in 2 minutes.</span>
+            <button (click)="authService.startActivityTracking()">Stay logged in</button>
+          </div>
+        }
         <router-outlet />
       </main>
     </div>
@@ -435,9 +442,34 @@ function isGroup(entry: NavEntry): entry is NavGroup {
       overflow-y: auto;
       background: #EBF5FB;
     }
+
+    .inactivity-banner {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #f0a500;
+      color: #1B2A47;
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: 500;
+      mat-icon { font-size: 18px; width: 18px; height: 18px; flex-shrink: 0; }
+      span { flex: 1; }
+      button {
+        background: #1B2A47;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 6px 14px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        white-space: nowrap;
+        &:hover { background: #2a3f66; }
+      }
+    }
   `],
 })
-export class AppShellComponent implements OnInit {
+export class AppShellComponent implements OnInit, OnDestroy {
   sidebarCollapsed = signal(false);
   openGroups = signal<Set<string>>(new Set(['Administration']));
 
@@ -448,13 +480,13 @@ export class AppShellComponent implements OnInit {
     { label: 'Conflict Intelligence',   icon: 'warning_amber',route: '/conflict',    roles: ['admin', 'hr_manager', 'manager'] },
     { label: 'Neuro-Inclusion',         icon: 'psychology',   route: '/neuroinclusion', roles: ['admin', 'hr_manager', 'manager'] },
     { label: 'Leadership & Succession', icon: 'trending_up',  route: '/succession',  roles: ['admin', 'hr_manager', 'coach', 'coachee'] },
+    { label: 'Org Chart',         icon: 'account_tree',        route: '/org-chart',            roles: ['admin', 'hr_manager'] },
     {
       label: 'Administration',
       icon: 'admin_panel_settings',
       children: [
-        { label: 'Survey Management', icon: 'assignment',          route: '/surveys',              roles: ['admin', 'hr_manager'] },
+        { label: 'Intake Management', icon: 'assignment',           route: '/intakes',              roles: ['admin', 'hr_manager'] },
         { label: 'Users',             icon: 'group',               route: '/admin/users',          roles: ['admin', 'hr_manager'] },
-        { label: 'Org Chart',         icon: 'account_tree',        route: '/org-chart',            roles: ['admin', 'hr_manager'] },
         { label: 'Organization',      icon: 'business',            route: '/admin/organization',   roles: ['admin'] },
         { label: 'Role Permissions',  icon: 'policy',              route: '/admin/roles',          roles: ['admin', 'hr_manager'] },
         { label: 'Billing',           icon: 'receipt_long',        route: '/billing',              roles: ['admin'] },
@@ -491,12 +523,14 @@ export class AppShellComponent implements OnInit {
   unreadCount = signal(0);
 
   constructor(
-    private authService: AuthService,
+    public authService: AuthService,
     private router: Router,
     private api: ApiService,
     private themeService: ThemeService,
     private dialog: MatDialog,
   ) {}
+
+  inactivityWarning = computed(() => this.authService.inactivityWarning());
 
   ngOnInit(): void {
     this.api.get<OrgInfo>('/organizations/me').subscribe({
@@ -507,6 +541,11 @@ export class AppShellComponent implements OnInit {
       error: () => {},
     });
     this.loadUnreadCount();
+    this.authService.startActivityTracking();
+  }
+
+  ngOnDestroy(): void {
+    this.authService.stopActivityTracking();
   }
 
   loadUnreadCount(): void {

@@ -3,7 +3,7 @@ import { AuthRequest } from '../middleware/auth.middleware';
 import { SurveyResponse } from '../models/SurveyResponse.model';
 import { ConflictAnalysis } from '../models/ConflictAnalysis.model';
 import { Organization } from '../models/Organization.model';
-import { buildConflictAnalysisPrompt, callClaude } from '../services/ai.service';
+import { buildConflictAnalysisPrompt, buildConflictSubAnalysisPrompt, callClaude } from '../services/ai.service';
 
 const MIN_GROUP_SIZE = 5;
 
@@ -140,6 +140,113 @@ export async function getAnalysis(
       return;
     }
     res.json(analysis);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getSubAnalyses(
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const organizationId = req.user!.organizationId;
+    const subAnalyses = await ConflictAnalysis.find({
+      organizationId,
+      parentId: req.params['id'],
+    }).sort({ createdAt: -1 });
+    res.json(subAnalyses);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function createSubAnalysis(
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const organizationId = req.user!.organizationId;
+    const { focusConflictType } = req.body as { focusConflictType: string };
+
+    if (!focusConflictType) {
+      res.status(400).json({ error: 'focusConflictType is required' });
+      return;
+    }
+
+    const parent = await ConflictAnalysis.findOne({ _id: req.params['id'], organizationId });
+    if (!parent) {
+      res.status(404).json({ error: 'Parent analysis not found' });
+      return;
+    }
+
+    // Prevent duplicate sub-analyses for the same conflict type
+    const existing = await ConflictAnalysis.findOne({
+      organizationId,
+      parentId: parent._id,
+      focusConflictType,
+    });
+    if (existing) {
+      res.json(existing);
+      return;
+    }
+
+    const prompt = buildConflictSubAnalysisPrompt(focusConflictType, {
+      departmentId: parent.departmentId || 'All Departments',
+      surveyPeriod: parent.surveyPeriod,
+      riskScore: parent.riskScore,
+      riskLevel: parent.riskLevel,
+      aiNarrative: parent.aiNarrative,
+    });
+
+    const aiResponse = await callClaude(prompt);
+
+    let parsed: {
+      riskScore: number;
+      riskLevel: string;
+      conflictTypes: string[];
+      aiNarrative: string;
+      managerScript: unknown;
+    };
+
+    try {
+      let clean = aiResponse.replace(/```(?:json)?\r?\n?/g, '').replace(/```/g, '').trim();
+      const jsonStart = clean.indexOf('{');
+      const jsonEnd   = clean.lastIndexOf('}');
+      if (jsonStart !== -1 && jsonEnd > jsonStart) clean = clean.slice(jsonStart, jsonEnd + 1);
+      parsed = JSON.parse(clean);
+    } catch {
+      parsed = {
+        riskScore: parent.riskScore,
+        riskLevel: parent.riskLevel,
+        conflictTypes: [focusConflictType],
+        aiNarrative: aiResponse,
+        managerScript: '',
+      };
+    }
+
+    const managerScript =
+      typeof parsed.managerScript === 'string'
+        ? parsed.managerScript
+        : JSON.stringify(parsed.managerScript, null, 2);
+
+    const subAnalysis = await ConflictAnalysis.create({
+      organizationId,
+      surveyPeriod: parent.surveyPeriod,
+      departmentId: parent.departmentId,
+      parentId: parent._id,
+      focusConflictType,
+      riskScore: parsed.riskScore,
+      riskLevel: parsed.riskLevel as 'low' | 'medium' | 'high' | 'critical',
+      conflictTypes: parsed.conflictTypes?.length ? parsed.conflictTypes : [focusConflictType],
+      aiNarrative: parsed.aiNarrative,
+      managerScript,
+      escalationRequested: false,
+    });
+
+    res.status(201).json(subAnalysis);
   } catch (error) {
     next(error);
   }
