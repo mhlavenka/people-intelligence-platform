@@ -108,7 +108,7 @@ interface ConflictAnalysis {
                     <div class="sub-score-bar-wrap">
                       <div class="sub-score-bar" [style.width.%]="sub.riskScore" [style.background]="riskColor(sub.riskLevel)"></div>
                     </div>
-                    <div class="sub-narrative">{{ sub.aiNarrative | slice:0:200 }}{{ sub.aiNarrative.length > 200 ? '…' : '' }}</div>
+                    <div class="sub-narrative">{{ sub.aiNarrative | slice:0:1000 }}{{ sub.aiNarrative.length > 1000 ? '…' : '' }}</div>
                   } @else {
                     <div class="sub-score-bar-wrap empty">
                       <div class="sub-score-bar-placeholder">No sub-analysis yet</div>
