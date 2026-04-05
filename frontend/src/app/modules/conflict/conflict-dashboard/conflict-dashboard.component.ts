@@ -611,14 +611,14 @@ export class ConflictDashboardComponent implements OnInit {
 
   externalTools = [
     {
-      url: 'https://mhs.com/solutions/eq-i-2-0/',
+      url: 'https://cad.storefront.mhs.com/collections/eq-i-2-0/',
       title: 'MHS EQ-i 2.0',
       description: "The world's leading emotional intelligence assessment. Measure self-awareness, empathy, and stress tolerance — core competencies for conflict-resilient teams.",
       icon: 'insights',
       color: '#e86c3a',
     },
     {
-      url: 'https://www.mhs.com/solutions/eq-360/',
+      url: 'https://cad.storefront.mhs.com/collections/eq-360/',
       title: 'MHS EQ 360',
       description: 'Multi-rater emotional intelligence feedback to reveal blind spots and strengthen leadership effectiveness in high-conflict environments.',
       icon: '360',

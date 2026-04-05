@@ -1,5 +1,5 @@
 /**
- * Seed default survey templates for the HeadSoft Internal org.
+ * Seed default intake templates for the HeadSoft Internal org.
  * Run once: npm run seed:surveys
  *
  * Creates 5 templates across all three modules:
@@ -381,7 +381,7 @@ async function seed(): Promise<void> {
   }
 
   console.log(`\n─────────────────────────────────────`);
-  console.log(`  Survey templates: ${created} created, ${skipped} already existed`);
+  console.log(`  Intake templates: ${created} created, ${skipped} already existed`);
   console.log(`─────────────────────────────────────\n`);
 
   await mongoose.disconnect();

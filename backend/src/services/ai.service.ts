@@ -74,7 +74,7 @@ export function buildConflictAnalysisPrompt(
 
 Organization: ${orgContext.name} (${orgContext.industry || 'Unknown industry'}, ~${orgContext.employeeCount || 'unknown'} employees)
 Department: ${surveyData.departmentId}
-Survey Period: ${surveyData.surveyPeriod}
+Intake Period: ${surveyData.surveyPeriod}
 Respondent Count: ${surveyData.responseCount} (aggregated — no individual data)
 
 Aggregated Survey Results:

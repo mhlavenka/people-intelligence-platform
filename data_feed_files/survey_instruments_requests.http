@@ -1,0 +1,32 @@
+### 2. Login
+POST http://localhost:3030/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@helenacoaching.com",
+  "password": "ChangeMe123!"
+}
+
+### ============================================================
+### SURVEYS
+### ============================================================
+
+### 9. Create Conflict Intake Template
+POST http://localhost:3030/api/surveys/templates
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OWM5MzUyZmYxMmJjMjc3NzBiYTNlZTciLCJvcmdhbml6YXRpb25JZCI6IjY5YzkzNTJmZjEyYmMyNzc3MGJhM2VlNSIsInJvbGUiOiJhZG1pbiIsImVtYWlsIjoiYWRtaW5AaGVsZW5hY29hY2hpbmcuY29tIiwiaWF0IjoxNzc0Nzk2MjUyLCJleHAiOjE3NzQ3OTcxNTJ9.F9-q8VC-_1BLWQSV_liIpAFyaDKpP4DOz50EhI77U1U
+
+{
+  "moduleType": "conflict",
+  "title": "Workplace Conflict Assessment Q1 2026",
+  "questions": [
+    { "id": "q1", "text": "How would you rate the overall team communication?", "type": "scale", "category": "communication" },
+    { "id": "q2", "text": "How often do disagreements escalate into conflicts?", "type": "scale", "category": "conflict_frequency" },
+    { "id": "q3", "text": "How safe do you feel raising concerns with your manager?", "type": "scale", "category": "psychological_safety" },
+    { "id": "q4", "text": "How fairly are workloads distributed in your team?", "type": "scale", "category": "fairness" },
+    { "id": "q5", "text": "How well does your team resolve disagreements constructively?", "type": "scale", "category": "resolution" },
+    { "id": "q6", "text": "How respected do you feel by your colleagues?", "type": "scale", "category": "respect" },
+    { "id": "q7", "text": "How clear are roles and responsibilities in your team?", "type": "scale", "category": "role_clarity" },
+    { "id": "q8", "text": "How would you rate leadership transparency?", "type": "scale", "category": "leadership" }
+  ]
+}

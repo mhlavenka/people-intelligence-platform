@@ -1,0 +1,191 @@
+### ============================================================
+### INSTRUMENT: Rahim Organizational Conflict Inventory-II (ROCI-II)
+### Developer: M. Afzalur Rahim (1983)
+### Format: 28 Likert-scale items (1–5) | Normative (interval) scoring
+### Subscales: integrating, obliging, dominating, avoiding, compromising
+### Level: Individual
+### Admin time: 10–15 minutes
+### ============================================================
+###
+### ⚠ NEW SCHEMA REQUIREMENTS FOR THIS INSTRUMENT:
+###
+###   "scale_range": { "min": 1, "max": 5, "labels": { ... } }
+###     Defines the Likert anchor labels. Unlike the existing "scale" type
+###     (which may default to 1–10 or similar), this instrument uses a
+###     strict 1–5 range with named anchors.
+###
+###   "subscale": "integrating" | "obliging" | "dominating" | "avoiding" | "compromising"
+###     Each item belongs to exactly one subscale. The scoring engine
+###     averages items within each subscale to produce a subscale score.
+###
+###   "scoring": { "method": "normative" }
+###     Unlike TKI's ipsative method, ROCI-II uses interval scoring.
+###     Subscale scores can be compared across individuals and groups.
+###     Enables parametric statistics (t-tests, ANOVA, regression).
+###
+###   "reverse_scored": true
+###     Items flagged with this field must have their raw response
+###     subtracted from (max + 1) before subscale averaging.
+###     e.g., for a 1–5 scale: reverse = 6 - raw_score.
+###     ROCI-II dominating items 13, 14 are reverse scored.
+###
+###   "relationship_target": "supervisor" | "subordinate" | "peer"
+###     ROCI-II has three parallel forms — one for each relationship type.
+###     The same item text applies but norms differ by target. This field
+###     routes the response to the correct norm table at scoring time.
+###
+### ============================================================
+
+POST http://localhost:3030/api/surveys/templates
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OWM5MzUyZmYxMmJjMjc3NzBiYTNlZTciLCJvcmdhbml6YXRpb25JZCI6IjY5YzkzNTJmZjEyYmMyNzc3MGJhM2VlNSIsInJvbGUiOiJhZG1pbiIsImVtYWlsIjoiYWRtaW5AaGVsZW5hY29hY2hpbmcuY29tIiwiaWF0IjoxNzc0Nzk2MjUyLCJleHAiOjE3NzQ3OTcxNTJ9.F9-q8VC-_1BLWQSV_liIpAFyaDKpP4DOz50EhI77U1U
+
+{
+  "moduleType": "conflict",
+  "instrumentId": "ROCI-II",
+  "instrumentVersion": "1983",
+  "title": "Rahim Organizational Conflict Inventory-II (ROCI-II)",
+  "description": "Measures five styles of handling interpersonal conflict in organizational settings. Unlike forced-choice instruments, ROCI-II uses interval scaling, enabling cross-person and cross-group comparison.",
+  "level_of_analysis": "individual",
+  "relationship_target": "peer",
+  "scoring": {
+    "method": "normative",
+    "subscales": {
+      "integrating": { "items": ["q1","q2","q3","q4","q5","q6","q7"], "item_count": 7 },
+      "obliging":    { "items": ["q8","q9","q10","q11","q12","q13"], "item_count": 6 },
+      "dominating":  { "items": ["q14","q15","q16","q17","q18"], "item_count": 5 },
+      "avoiding":    { "items": ["q19","q20","q21","q22","q23","q24"], "item_count": 6 },
+      "compromising":{ "items": ["q25","q26","q27","q28"], "item_count": 4 }
+    },
+    "score_range_per_subscale": { "min": 1, "max": 5 },
+    "note": "Subscale score = mean of items within subscale. Higher scores indicate greater use of that style."
+  },
+  "scale_range": {
+    "min": 1,
+    "max": 5,
+    "labels": {
+      "1": "Strongly Disagree",
+      "2": "Disagree",
+      "3": "Neutral",
+      "4": "Agree",
+      "5": "Strongly Agree"
+    }
+  },
+  "instructions": "Please indicate how often you use each of the following behaviors when handling conflict with your colleague/peer. Use the 1–5 scale below.",
+  "questions": [
+
+    { "id": "q1",  "type": "scale", "subscale": "integrating", "category": "conflict_style",
+      "text": "I try to investigate an issue with my peer to find a solution acceptable to both of us.",
+      "scale_range": { "min": 1, "max": 5 } },
+
+    { "id": "q2",  "type": "scale", "subscale": "integrating", "category": "conflict_style",
+      "text": "I generally try to satisfy the needs of my peer.",
+      "scale_range": { "min": 1, "max": 5 } },
+
+    { "id": "q3",  "type": "scale", "subscale": "integrating", "category": "conflict_style",
+      "text": "I exchange accurate information with my peer to solve a problem together.",
+      "scale_range": { "min": 1, "max": 5 } },
+
+    { "id": "q4",  "type": "scale", "subscale": "integrating", "category": "conflict_style",
+      "text": "I try to bring all our concerns out in the open so that the issues can be resolved in the best possible way.",
+      "scale_range": { "min": 1, "max": 5 } },
+
+    { "id": "q5",  "type": "scale", "subscale": "integrating", "category": "conflict_style",
+      "text": "I collaborate with my peer to come up with decisions acceptable to both of us.",
+      "scale_range": { "min": 1, "max": 5 } },
+
+    { "id": "q6",  "type": "scale", "subscale": "integrating", "category": "conflict_style",
+      "text": "I try to work with my peer for a proper understanding of a problem.",
+      "scale_range": { "min": 1, "max": 5 } },
+
+    { "id": "q7",  "type": "scale", "subscale": "integrating", "category": "conflict_style",
+      "text": "I try to integrate my ideas with those of my peer to achieve a joint decision.",
+      "scale_range": { "min": 1, "max": 5 } },
+
+    { "id": "q8",  "type": "scale", "subscale": "obliging", "category": "conflict_style",
+      "text": "I generally accommodate the wishes of my peer.",
+      "scale_range": { "min": 1, "max": 5 } },
+
+    { "id": "q9",  "type": "scale", "subscale": "obliging", "category": "conflict_style",
+      "text": "I give in to the wishes of my peer.",
+      "scale_range": { "min": 1, "max": 5 } },
+
+    { "id": "q10", "type": "scale", "subscale": "obliging", "category": "conflict_style",
+      "text": "I satisfy the expectations of my peer.",
+      "scale_range": { "min": 1, "max": 5 } },
+
+    { "id": "q11", "type": "scale", "subscale": "obliging", "category": "conflict_style",
+      "text": "I often go along with the suggestions of my peer.",
+      "scale_range": { "min": 1, "max": 5 } },
+
+    { "id": "q12", "type": "scale", "subscale": "obliging", "category": "conflict_style",
+      "text": "I try to satisfy the needs of my peer.",
+      "scale_range": { "min": 1, "max": 5 } },
+
+    { "id": "q13", "type": "scale", "subscale": "obliging", "category": "conflict_style",
+      "text": "I agree to the position of my peer.",
+      "scale_range": { "min": 1, "max": 5 } },
+
+    { "id": "q14", "type": "scale", "subscale": "dominating", "category": "conflict_style",
+      "text": "I use my authority to make a decision in my favor.",
+      "scale_range": { "min": 1, "max": 5 } },
+
+    { "id": "q15", "type": "scale", "subscale": "dominating", "category": "conflict_style",
+      "text": "I use my expertise to make a decision in my favor.",
+      "scale_range": { "min": 1, "max": 5 } },
+
+    { "id": "q16", "type": "scale", "subscale": "dominating", "category": "conflict_style",
+      "text": "I usually hold on firmly to my position on an issue.",
+      "scale_range": { "min": 1, "max": 5 } },
+
+    { "id": "q17", "type": "scale", "subscale": "dominating", "category": "conflict_style",
+      "reverse_scored": true,
+      "text": "I try to win my position on an issue.",
+      "scale_range": { "min": 1, "max": 5 } },
+
+    { "id": "q18", "type": "scale", "subscale": "dominating", "category": "conflict_style",
+      "reverse_scored": true,
+      "text": "I do not usually share information with my peer to make a joint decision.",
+      "scale_range": { "min": 1, "max": 5 } },
+
+    { "id": "q19", "type": "scale", "subscale": "avoiding", "category": "conflict_style",
+      "text": "I try to avoid unpleasant exchanges with my peer.",
+      "scale_range": { "min": 1, "max": 5 } },
+
+    { "id": "q20", "type": "scale", "subscale": "avoiding", "category": "conflict_style",
+      "text": "I avoid an encounter with my peer.",
+      "scale_range": { "min": 1, "max": 5 } },
+
+    { "id": "q21", "type": "scale", "subscale": "avoiding", "category": "conflict_style",
+      "text": "I try to stay away from disagreement with my peer.",
+      "scale_range": { "min": 1, "max": 5 } },
+
+    { "id": "q22", "type": "scale", "subscale": "avoiding", "category": "conflict_style",
+      "text": "I try to keep my disagreement with my peer to myself to avoid hard feelings.",
+      "scale_range": { "min": 1, "max": 5 } },
+
+    { "id": "q23", "type": "scale", "subscale": "avoiding", "category": "conflict_style",
+      "text": "I avoid open discussion of my differences with my peer.",
+      "scale_range": { "min": 1, "max": 5 } },
+
+    { "id": "q24", "type": "scale", "subscale": "avoiding", "category": "conflict_style",
+      "text": "I try to avoid unpleasant exchanges with my peer by remaining noncommittal.",
+      "scale_range": { "min": 1, "max": 5 } },
+
+    { "id": "q25", "type": "scale", "subscale": "compromising", "category": "conflict_style",
+      "text": "I try to find middle course solutions to move us past the impasse.",
+      "scale_range": { "min": 1, "max": 5 } },
+
+    { "id": "q26", "type": "scale", "subscale": "compromising", "category": "conflict_style",
+      "text": "I negotiate with my peer so that a compromise can be reached.",
+      "scale_range": { "min": 1, "max": 5 } },
+
+    { "id": "q27", "type": "scale", "subscale": "compromising", "category": "conflict_style",
+      "text": "I use give and take so that a compromise can be made.",
+      "scale_range": { "min": 1, "max": 5 } },
+
+    { "id": "q28", "type": "scale", "subscale": "compromising", "category": "conflict_style",
+      "text": "I try to find an acceptable middle ground position to resolve an impasse.",
+      "scale_range": { "min": 1, "max": 5 } }
+  ]
+}

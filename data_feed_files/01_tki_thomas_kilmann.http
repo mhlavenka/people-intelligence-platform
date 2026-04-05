@@ -1,0 +1,297 @@
+### ============================================================
+### INSTRUMENT: Thomas-Kilmann Conflict Mode Instrument (TKI)
+### Developer: Kenneth Thomas & Ralph Kilmann (1974; revised 2007)
+### Format: 30 forced-choice item pairs | Ipsative scoring
+### Subscales: competing, collaborating, compromising, avoiding, accommodating
+### Level: Individual
+### Admin time: 15–20 minutes
+### ============================================================
+###
+### ⚠ NEW SCHEMA REQUIREMENTS FOR THIS INSTRUMENT:
+###
+###   "type": "forced_choice"
+###     A new question type where the respondent picks one of exactly
+###     two statements (A or B). Neither is "correct" — both are
+###     socially desirable to prevent acquiescence bias.
+###
+###   "options": [ { "value": "A", "text": "...", "subscale": "..." },
+###                { "value": "B", "text": "...", "subscale": "..." } ]
+###     Each forced-choice pair maps each option to a different subscale.
+###     The scoring engine increments the chosen subscale's raw score.
+###
+###   "pair_id": integer
+###     Sequential pair number (1–30). Used by the scoring engine to
+###     reconstruct the full 5×6 scoring matrix.
+###
+###   "scoring": { "method": "ipsative" }
+###     Signals that scores are relative (sum = 30 across all subscales),
+###     not absolute. Prevents cross-person parametric comparison.
+###
+###   "scale_descriptor": "forced_choice_dyad"
+###     Indicates no Likert scale is used; UI renders two radio options.
+###
+### ============================================================
+
+POST http://localhost:3030/api/surveys/templates
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OWM5MzUyZmYxMmJjMjc3NzBiYTNlZTciLCJvcmdhbml6YXRpb25JZCI6IjY5YzkzNTJmZjEyYmMyNzc3MGJhM2VlNSIsInJvbGUiOiJhZG1pbiIsImVtYWlsIjoiYWRtaW5AaGVsZW5hY29hY2hpbmcuY29tIiwiaWF0IjoxNzc0Nzk2MjUyLCJleHAiOjE3NzQ3OTcxNTJ9.F9-q8VC-_1BLWQSV_liIpAFyaDKpP4DOz50EhI77U1U
+
+{
+  "moduleType": "conflict",
+  "instrumentId": "TKI",
+  "instrumentVersion": "2007",
+  "title": "Thomas-Kilmann Conflict Mode Instrument (TKI)",
+  "description": "Measures an individual's typical behavior in conflict situations across five modes: Competing, Collaborating, Compromising, Avoiding, and Accommodating.",
+  "level_of_analysis": "individual",
+  "scoring": {
+    "method": "ipsative",
+    "subscales": ["competing", "collaborating", "compromising", "avoiding", "accommodating"],
+    "items_per_subscale": 6,
+    "total_items": 30,
+    "score_range_per_subscale": { "min": 0, "max": 12 },
+    "note": "Scores are relative. All subscale scores sum to 30. Do not compare scores across individuals using parametric statistics."
+  },
+  "instructions": "Think about situations in which your wishes differ from those of another person. How do you usually respond to such situations? For each of the following pairs, choose the statement (A or B) that is most characteristic of your own behavior.",
+  "questions": [
+    {
+      "id": "q1", "pair_id": 1, "type": "forced_choice", "category": "conflict_mode",
+      "scale_descriptor": "forced_choice_dyad",
+      "options": [
+        { "value": "A", "text": "There are times when I let others take responsibility for solving the problem.", "subscale": "accommodating" },
+        { "value": "B", "text": "Rather than negotiate the things on which we disagree, I try to stress those things upon which we both agree.", "subscale": "avoiding" }
+      ]
+    },
+    {
+      "id": "q2", "pair_id": 2, "type": "forced_choice", "category": "conflict_mode",
+      "scale_descriptor": "forced_choice_dyad",
+      "options": [
+        { "value": "A", "text": "I try to find a compromise solution.", "subscale": "compromising" },
+        { "value": "B", "text": "I attempt to deal with all of the other person's and my concerns.", "subscale": "collaborating" }
+      ]
+    },
+    {
+      "id": "q3", "pair_id": 3, "type": "forced_choice", "category": "conflict_mode",
+      "scale_descriptor": "forced_choice_dyad",
+      "options": [
+        { "value": "A", "text": "I am usually firm in pursuing my goals.", "subscale": "competing" },
+        { "value": "B", "text": "I might try to soothe the other's feelings and preserve our relationship.", "subscale": "accommodating" }
+      ]
+    },
+    {
+      "id": "q4", "pair_id": 4, "type": "forced_choice", "category": "conflict_mode",
+      "scale_descriptor": "forced_choice_dyad",
+      "options": [
+        { "value": "A", "text": "I try to find a compromise solution.", "subscale": "compromising" },
+        { "value": "B", "text": "I sometimes sacrifice my own wishes for the wishes of the other person.", "subscale": "accommodating" }
+      ]
+    },
+    {
+      "id": "q5", "pair_id": 5, "type": "forced_choice", "category": "conflict_mode",
+      "scale_descriptor": "forced_choice_dyad",
+      "options": [
+        { "value": "A", "text": "I consistently seek the other's help in working out a solution.", "subscale": "collaborating" },
+        { "value": "B", "text": "I try to do what is necessary to avoid useless tensions.", "subscale": "avoiding" }
+      ]
+    },
+    {
+      "id": "q6", "pair_id": 6, "type": "forced_choice", "category": "conflict_mode",
+      "scale_descriptor": "forced_choice_dyad",
+      "options": [
+        { "value": "A", "text": "I try to avoid creating unpleasantness for myself.", "subscale": "avoiding" },
+        { "value": "B", "text": "I try to win my position.", "subscale": "competing" }
+      ]
+    },
+    {
+      "id": "q7", "pair_id": 7, "type": "forced_choice", "category": "conflict_mode",
+      "scale_descriptor": "forced_choice_dyad",
+      "options": [
+        { "value": "A", "text": "I try to postpone the issue until I have had some time to think it over.", "subscale": "avoiding" },
+        { "value": "B", "text": "I give up some points in exchange for others.", "subscale": "compromising" }
+      ]
+    },
+    {
+      "id": "q8", "pair_id": 8, "type": "forced_choice", "category": "conflict_mode",
+      "scale_descriptor": "forced_choice_dyad",
+      "options": [
+        { "value": "A", "text": "I am usually firm in pursuing my goals.", "subscale": "competing" },
+        { "value": "B", "text": "I attempt to get all concerns and issues immediately out in the open.", "subscale": "collaborating" }
+      ]
+    },
+    {
+      "id": "q9", "pair_id": 9, "type": "forced_choice", "category": "conflict_mode",
+      "scale_descriptor": "forced_choice_dyad",
+      "options": [
+        { "value": "A", "text": "I feel that differences are not always worth worrying about.", "subscale": "avoiding" },
+        { "value": "B", "text": "I make some effort to get my way.", "subscale": "competing" }
+      ]
+    },
+    {
+      "id": "q10", "pair_id": 10, "type": "forced_choice", "category": "conflict_mode",
+      "scale_descriptor": "forced_choice_dyad",
+      "options": [
+        { "value": "A", "text": "I am firm in pursuing my goals.", "subscale": "competing" },
+        { "value": "B", "text": "I try to find a compromise solution.", "subscale": "compromising" }
+      ]
+    },
+    {
+      "id": "q11", "pair_id": 11, "type": "forced_choice", "category": "conflict_mode",
+      "scale_descriptor": "forced_choice_dyad",
+      "options": [
+        { "value": "A", "text": "I attempt to get all concerns and issues immediately out in the open.", "subscale": "collaborating" },
+        { "value": "B", "text": "I might try to soothe the other's feelings and preserve our relationship.", "subscale": "accommodating" }
+      ]
+    },
+    {
+      "id": "q12", "pair_id": 12, "type": "forced_choice", "category": "conflict_mode",
+      "scale_descriptor": "forced_choice_dyad",
+      "options": [
+        { "value": "A", "text": "I sometimes avoid taking positions which would create controversy.", "subscale": "avoiding" },
+        { "value": "B", "text": "I will let the other person have some of what they want if they let me have some of what I want.", "subscale": "compromising" }
+      ]
+    },
+    {
+      "id": "q13", "pair_id": 13, "type": "forced_choice", "category": "conflict_mode",
+      "scale_descriptor": "forced_choice_dyad",
+      "options": [
+        { "value": "A", "text": "I propose a middle ground.", "subscale": "compromising" },
+        { "value": "B", "text": "I press to get my points made.", "subscale": "competing" }
+      ]
+    },
+    {
+      "id": "q14", "pair_id": 14, "type": "forced_choice", "category": "conflict_mode",
+      "scale_descriptor": "forced_choice_dyad",
+      "options": [
+        { "value": "A", "text": "I tell the other person my ideas and ask for theirs.", "subscale": "collaborating" },
+        { "value": "B", "text": "I try to show the other person the logic and benefits of my position.", "subscale": "competing" }
+      ]
+    },
+    {
+      "id": "q15", "pair_id": 15, "type": "forced_choice", "category": "conflict_mode",
+      "scale_descriptor": "forced_choice_dyad",
+      "options": [
+        { "value": "A", "text": "I might try to soothe the other's feelings and preserve our relationship.", "subscale": "accommodating" },
+        { "value": "B", "text": "I try to do what is necessary to avoid tensions.", "subscale": "avoiding" }
+      ]
+    },
+    {
+      "id": "q16", "pair_id": 16, "type": "forced_choice", "category": "conflict_mode",
+      "scale_descriptor": "forced_choice_dyad",
+      "options": [
+        { "value": "A", "text": "I try not to hurt the other's feelings.", "subscale": "accommodating" },
+        { "value": "B", "text": "I try to convince the other person of the merits of my position.", "subscale": "competing" }
+      ]
+    },
+    {
+      "id": "q17", "pair_id": 17, "type": "forced_choice", "category": "conflict_mode",
+      "scale_descriptor": "forced_choice_dyad",
+      "options": [
+        { "value": "A", "text": "I am usually firm in pursuing my goals.", "subscale": "competing" },
+        { "value": "B", "text": "I try to do what is necessary to avoid useless tensions.", "subscale": "avoiding" }
+      ]
+    },
+    {
+      "id": "q18", "pair_id": 18, "type": "forced_choice", "category": "conflict_mode",
+      "scale_descriptor": "forced_choice_dyad",
+      "options": [
+        { "value": "A", "text": "If it makes the other person happy, I might let them maintain their views.", "subscale": "accommodating" },
+        { "value": "B", "text": "I will let the other person have some of what they want if they let me have some of what I want.", "subscale": "compromising" }
+      ]
+    },
+    {
+      "id": "q19", "pair_id": 19, "type": "forced_choice", "category": "conflict_mode",
+      "scale_descriptor": "forced_choice_dyad",
+      "options": [
+        { "value": "A", "text": "I attempt to get all concerns and issues immediately out in the open.", "subscale": "collaborating" },
+        { "value": "B", "text": "I try to postpone the issue until I have had some time to think it over.", "subscale": "avoiding" }
+      ]
+    },
+    {
+      "id": "q20", "pair_id": 20, "type": "forced_choice", "category": "conflict_mode",
+      "scale_descriptor": "forced_choice_dyad",
+      "options": [
+        { "value": "A", "text": "I attempt to immediately work through our differences.", "subscale": "collaborating" },
+        { "value": "B", "text": "I try to find a fair combination of gains and losses for both of us.", "subscale": "compromising" }
+      ]
+    },
+    {
+      "id": "q21", "pair_id": 21, "type": "forced_choice", "category": "conflict_mode",
+      "scale_descriptor": "forced_choice_dyad",
+      "options": [
+        { "value": "A", "text": "In approaching negotiations, I try to be considerate of the other person's wishes.", "subscale": "accommodating" },
+        { "value": "B", "text": "I always lean toward a direct discussion of the problem.", "subscale": "collaborating" }
+      ]
+    },
+    {
+      "id": "q22", "pair_id": 22, "type": "forced_choice", "category": "conflict_mode",
+      "scale_descriptor": "forced_choice_dyad",
+      "options": [
+        { "value": "A", "text": "I try to find a position that is intermediate between the other person's and mine.", "subscale": "compromising" },
+        { "value": "B", "text": "I assert my wishes.", "subscale": "competing" }
+      ]
+    },
+    {
+      "id": "q23", "pair_id": 23, "type": "forced_choice", "category": "conflict_mode",
+      "scale_descriptor": "forced_choice_dyad",
+      "options": [
+        { "value": "A", "text": "I am very often concerned with satisfying all our wishes.", "subscale": "collaborating" },
+        { "value": "B", "text": "There are times when I let others take responsibility for solving the problem.", "subscale": "accommodating" }
+      ]
+    },
+    {
+      "id": "q24", "pair_id": 24, "type": "forced_choice", "category": "conflict_mode",
+      "scale_descriptor": "forced_choice_dyad",
+      "options": [
+        { "value": "A", "text": "If the other's position seems very important to them, I would try to meet their wishes.", "subscale": "accommodating" },
+        { "value": "B", "text": "I try to get the other person to settle for a compromise.", "subscale": "compromising" }
+      ]
+    },
+    {
+      "id": "q25", "pair_id": 25, "type": "forced_choice", "category": "conflict_mode",
+      "scale_descriptor": "forced_choice_dyad",
+      "options": [
+        { "value": "A", "text": "I try to show the other person the logic and benefits of my position.", "subscale": "competing" },
+        { "value": "B", "text": "In approaching negotiations, I try to be considerate of the other person's wishes.", "subscale": "accommodating" }
+      ]
+    },
+    {
+      "id": "q26", "pair_id": 26, "type": "forced_choice", "category": "conflict_mode",
+      "scale_descriptor": "forced_choice_dyad",
+      "options": [
+        { "value": "A", "text": "I propose a middle ground.", "subscale": "compromising" },
+        { "value": "B", "text": "I am nearly always concerned with satisfying all our wishes.", "subscale": "collaborating" }
+      ]
+    },
+    {
+      "id": "q27", "pair_id": 27, "type": "forced_choice", "category": "conflict_mode",
+      "scale_descriptor": "forced_choice_dyad",
+      "options": [
+        { "value": "A", "text": "I sometimes avoid taking positions that would create controversy.", "subscale": "avoiding" },
+        { "value": "B", "text": "If it makes the other person happy, I might let them maintain their views.", "subscale": "accommodating" }
+      ]
+    },
+    {
+      "id": "q28", "pair_id": 28, "type": "forced_choice", "category": "conflict_mode",
+      "scale_descriptor": "forced_choice_dyad",
+      "options": [
+        { "value": "A", "text": "I am usually firm in pursuing my goals.", "subscale": "competing" },
+        { "value": "B", "text": "I usually seek the other's help in working out a solution.", "subscale": "collaborating" }
+      ]
+    },
+    {
+      "id": "q29", "pair_id": 29, "type": "forced_choice", "category": "conflict_mode",
+      "scale_descriptor": "forced_choice_dyad",
+      "options": [
+        { "value": "A", "text": "I propose a middle ground.", "subscale": "compromising" },
+        { "value": "B", "text": "I feel that differences are not always worth worrying about.", "subscale": "avoiding" }
+      ]
+    },
+    {
+      "id": "q30", "pair_id": 30, "type": "forced_choice", "category": "conflict_mode",
+      "scale_descriptor": "forced_choice_dyad",
+      "options": [
+        { "value": "A", "text": "I try not to hurt the other's feelings.", "subscale": "accommodating" },
+        { "value": "B", "text": "I always share the problem with the other person so that we can work it out.", "subscale": "collaborating" }
+      ]
+    }
+  ]
+}
