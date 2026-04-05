@@ -413,16 +413,27 @@ export class SurveyManagementComponent implements OnInit {
   }
 
   toggleActive(template: SurveyTemplate): void {
-    this.api.put(`/surveys/templates/${template._id}`, { isActive: !template.isActive }).subscribe({
+    const newValue = !template.isActive;
+
+    // Optimistic update — keeps the toggle in the new position during the API call
+    this.templates.update((list) =>
+      list.map((t) => (t._id === template._id ? { ...t, isActive: newValue } : t))
+    );
+
+    this.api.put(`/surveys/templates/${template._id}`, { isActive: newValue }).subscribe({
       next: () => {
-        this.templates.update((list) =>
-          list.map((t) => (t._id === template._id ? { ...t, isActive: !t.isActive } : t))
-        );
         this.snackBar.open(
-          `Template ${!template.isActive ? 'activated' : 'deactivated'}`,
+          `Template ${newValue ? 'activated' : 'deactivated'}`,
           'Close',
           { duration: 2500 }
         );
+      },
+      error: () => {
+        // Revert on failure
+        this.templates.update((list) =>
+          list.map((t) => (t._id === template._id ? { ...t, isActive: template.isActive } : t))
+        );
+        this.snackBar.open('Failed to update template status', 'Close', { duration: 3000 });
       },
     });
   }

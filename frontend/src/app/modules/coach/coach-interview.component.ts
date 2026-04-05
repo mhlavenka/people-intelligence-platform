@@ -522,9 +522,9 @@ export class CoachInterviewComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    this.api.get<SurveyTemplate[]>('/survey/templates').subscribe({
+    this.api.get<SurveyTemplate[]>('/surveys/templates').subscribe({
       next: (all) => {
-        this.templates.set(all);
+        this.templates.set(all.filter((t) => t.intakeType === 'interview' || t.intakeType === 'assessment'));
         this.loading.set(false);
       },
       error: () => this.loading.set(false),
@@ -579,7 +579,7 @@ export class CoachInterviewComponent implements OnInit {
       body['departmentId'] = coachee.department ?? null;
     }
 
-    this.api.post('/survey/respond', body).subscribe({
+    this.api.post('/surveys/respond', body).subscribe({
       next: () => { this.submitting.set(false); this.step.set('done'); },
       error: () => this.submitting.set(false),
     });
