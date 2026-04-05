@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -57,18 +57,28 @@ interface SurveyTemplate {
       </div>
 
       <!-- Filter rows -->
-      <div class="filter-tabs">
-        @for (tab of moduleTabs; track tab.key) {
-          <button
-            class="filter-tab"
-            [class.active]="activeModuleFilter() === tab.key"
-            (click)="activeModuleFilter.set(tab.key)"
-          >
-            <mat-icon>{{ tab.icon }}</mat-icon>
-            {{ tab.label }}
-            <span class="tab-count">{{ countByModule(tab.key) }}</span>
-          </button>
-        }
+      <div class="filter-bar">
+        <div class="filter-tabs">
+          @for (tab of moduleTabs; track tab.key) {
+            <button
+              class="filter-tab"
+              [class.active]="activeModuleFilter() === tab.key"
+              (click)="activeModuleFilter.set(tab.key)"
+            >
+              <mat-icon>{{ tab.icon }}</mat-icon>
+              {{ tab.label }}
+              <span class="tab-count">{{ countByModule(tab.key) }}</span>
+            </button>
+          }
+        </div>
+
+        <mat-slide-toggle
+          [checked]="showInactive()"
+          (change)="onShowInactiveChange($event.checked)"
+          color="primary"
+        >
+          Show inactive
+        </mat-slide-toggle>
       </div>
 
       <div class="filter-tabs intake-type-tabs">
@@ -199,8 +209,13 @@ interface SurveyTemplate {
       p  { color: #5a6a7e; margin: 0; }
     }
 
+    .filter-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 12px; flex-wrap: wrap; gap: 8px;
+    }
+
     .filter-tabs {
-      display: flex; gap: 8px; margin-bottom: 12px;
+      display: flex; gap: 8px;
       flex-wrap: wrap;
     }
     .intake-type-tabs { margin-bottom: 24px; }
@@ -308,6 +323,7 @@ export class SurveyManagementComponent implements OnInit {
   loading = signal(true);
   activeModuleFilter = signal('all');
   activeTypeFilter   = signal('all');
+  showInactive       = signal(false);
 
   moduleTabs = [
     { key: 'all',            label: 'All Modules',    icon: 'apps' },
@@ -323,7 +339,7 @@ export class SurveyManagementComponent implements OnInit {
     { key: 'assessment', label: 'Assessment', icon: 'fact_check' },
   ];
 
-  filteredTemplates = () => {
+  filteredTemplates = computed(() => {
     let list = this.templates();
     if (this.activeModuleFilter() !== 'all') {
       list = list.filter((t) => t.moduleType === this.activeModuleFilter());
@@ -332,7 +348,7 @@ export class SurveyManagementComponent implements OnInit {
       list = list.filter((t) => (t.intakeType ?? 'survey') === this.activeTypeFilter());
     }
     return list;
-  };
+  });
 
   countByModule = (key: string) =>
     key === 'all'
@@ -371,15 +387,22 @@ export class SurveyManagementComponent implements OnInit {
 
   loadTemplates(): void {
     this.loading.set(true);
-    this.api.get<SurveyTemplate[]>('/surveys/templates').subscribe({
+    const url = this.showInactive()
+      ? '/surveys/templates?includeInactive=true'
+      : '/surveys/templates';
+    this.api.get<SurveyTemplate[]>(url).subscribe({
       next: (templates) => {
-        // Load response counts for each template
         this.templates.set(templates);
         this.loading.set(false);
         templates.forEach((t) => this.loadResponseCount(t._id));
       },
       error: () => this.loading.set(false),
     });
+  }
+
+  onShowInactiveChange(value: boolean): void {
+    this.showInactive.set(value);
+    this.loadTemplates();
   }
 
   loadResponseCount(templateId: string): void {

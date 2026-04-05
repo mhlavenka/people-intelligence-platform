@@ -86,20 +86,17 @@ interface ConflictAnalysis {
             @for (ct of data.conflictTypes; track ct) {
               <div class="sub-row" [class]="subAnalysisFor(ct)?.riskLevel || ''">
                 <div class="sub-left">
-                  @if (subAnalysisFor(ct); as sub) {
-                    <!-- Mini gauge SVG -->
-                    <svg class="mini-gauge" viewBox="0 0 80 50" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M10,45 A30,30 0 0,1 70,45" fill="none" stroke="#e8edf4" stroke-width="8" stroke-linecap="round"/>
-                      <path [attr.d]="miniGaugeArc(sub.riskScore)" fill="none" [attr.stroke]="riskColor(sub.riskLevel)" stroke-width="8" stroke-linecap="round"/>
-                      <text x="40" y="44" text-anchor="middle" font-size="13" font-weight="700" [attr.fill]="riskColor(sub.riskLevel)">{{ sub.riskScore }}</text>
-                    </svg>
-                  } @else {
-                    <!-- Placeholder gauge -->
-                    <svg class="mini-gauge" viewBox="0 0 80 50" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M10,45 A30,30 0 0,1 70,45" fill="none" stroke="#e8edf4" stroke-width="8" stroke-linecap="round"/>
-                      <text x="40" y="44" text-anchor="middle" font-size="10" fill="#b0bec5">--</text>
-                    </svg>
-                  }
+                  <svg class="mini-gauge" viewBox="0 0 80 52" xmlns="http://www.w3.org/2000/svg" style="overflow:visible">
+                    <path d="M10,44 A30,30 0 0,1 70,44" fill="none" stroke="#e8edf4" stroke-width="8" stroke-linecap="round"/>
+                    <path [attr.d]="gaugeArcFor(ct)"
+                          fill="none"
+                          [attr.stroke]="subAnalysisFor(ct) ? riskColor(subAnalysisFor(ct)!.riskLevel) : 'none'"
+                          stroke-width="8" stroke-linecap="round"/>
+                    <text x="40" y="43" text-anchor="middle"
+                          [attr.font-size]="subAnalysisFor(ct) ? 13 : 10"
+                          font-weight="700"
+                          [attr.fill]="subAnalysisFor(ct) ? riskColor(subAnalysisFor(ct)!.riskLevel) : '#b0bec5'">{{ subAnalysisFor(ct)?.riskScore ?? '--' }}</text>
+                  </svg>
                 </div>
 
                 <div class="sub-center">
@@ -215,6 +212,9 @@ interface ConflictAnalysis {
     </mat-dialog-content>
 
     <mat-dialog-actions align="end">
+      <button mat-stroked-button (click)="exportPdf()" style="margin-right: auto">
+        <mat-icon>picture_as_pdf</mat-icon> Export PDF
+      </button>
       @if (!data.escalationRequested && data.riskLevel !== 'low') {
         <button mat-stroked-button color="warn" (click)="escalate()">
           <mat-icon>escalator_warning</mat-icon> Escalate to HR
@@ -311,7 +311,7 @@ interface ConflictAnalysis {
 
     .sub-left {
       flex-shrink: 0;
-      .mini-gauge { width: 70px; height: 44px; display: block; }
+      .mini-gauge { width: 72px; height: 46px; display: block; }
     }
 
     .sub-center {
@@ -468,18 +468,23 @@ export class ConflictDetailDialogComponent implements OnInit {
     });
   }
 
+  gaugeArcFor(conflictType: string): string {
+    const sub = this.subAnalysisFor(conflictType);
+    if (!sub || sub.riskScore <= 0) return '';
+    return this.miniGaugeArc(sub.riskScore);
+  }
+
   miniGaugeArc(score: number): string {
     const pct = Math.min(Math.max(score, 0), 100) / 100;
     const startAngle = Math.PI;
     const endAngle   = startAngle + pct * Math.PI;
     const r = 30;
-    const cx = 40, cy = 45;
+    const cx = 40, cy = 44;
     const x1 = cx + r * Math.cos(startAngle);
     const y1 = cy + r * Math.sin(startAngle);
     const x2 = cx + r * Math.cos(endAngle);
     const y2 = cy + r * Math.sin(endAngle);
-    const large = pct > 0.5 ? 1 : 0;
-    return `M${x1},${y1} A${r},${r} 0 ${large},1 ${x2},${y2}`;
+    return `M${x1.toFixed(2)},${y1.toFixed(2)} A${r},${r} 0 0,1 ${x2.toFixed(2)},${y2.toFixed(2)}`;
   }
 
   riskColor(level: string): string {
@@ -542,6 +547,92 @@ export class ConflictDetailDialogComponent implements OnInit {
 
       return { key, label, type: 'string', value: String(val ?? '') };
     });
+  }
+
+  exportPdf(): void {
+    const d = this.data;
+    const riskColors: Record<string, string> = {
+      low: '#27C4A0', medium: '#f0a500', high: '#e86c3a', critical: '#e53e3e',
+    };
+    const color = riskColors[d.riskLevel] ?? '#9aa5b4';
+
+    const subRows = this.subAnalyses().map((s) => `
+      <div class="sub-block">
+        <div class="sub-header">
+          <span class="sub-type">${s.focusConflictType ?? ''}</span>
+          <span class="badge" style="background:${riskColors[s.riskLevel]}22;color:${riskColors[s.riskLevel]}">${s.riskLevel.toUpperCase()} — ${s.riskScore}</span>
+        </div>
+        <p>${s.aiNarrative}</p>
+      </div>`).join('');
+
+    const scriptHtml = (() => {
+      const sections = this.scriptSections();
+      if (!sections.length) return `<pre>${d.managerScript}</pre>`;
+      return sections.map((sec) => {
+        if (sec.type === 'string') return `<div class="script-sec"><div class="sec-title">${sec.label}</div><p>${sec.value}</p></div>`;
+        if (sec.type === 'list') return `<div class="script-sec"><div class="sec-title">${sec.label}</div><ul>${sec.items.map((i) => `<li>${i}</li>`).join('')}</ul></div>`;
+        if (sec.type === 'topics') return `<div class="script-sec"><div class="sec-title">${sec.label}</div><table><thead><tr><th>Topic</th><th>Talking Points</th></tr></thead><tbody>${sec.topics.map((t) => `<tr><td><strong>${t.topic}</strong></td><td><ul>${t.points.map((p) => `<li>${p}</li>`).join('')}</ul></td></tr>`).join('')}</tbody></table></div>`;
+        return '';
+      }).join('');
+    })();
+
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
+<title>Conflict Analysis — ${d.departmentId || 'All Departments'}</title>
+<style>
+  body { font-family: Arial, sans-serif; font-size: 13px; color: #1B2A47; margin: 0; padding: 32px; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  .meta { font-size: 12px; color: #5a6a7e; margin-bottom: 20px; }
+  .score-block { display: inline-flex; flex-direction: column; align-items: center;
+    padding: 16px 24px; border-radius: 12px; background: ${color}22; color: ${color};
+    margin-bottom: 20px; }
+  .score-num { font-size: 36px; font-weight: 700; line-height: 1; }
+  .score-lbl { font-size: 11px; margin-top: 4px; }
+  .badge { padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700;
+    background: ${color}22; color: ${color}; display: inline-block; margin-left: 10px; }
+  h2 { font-size: 15px; border-bottom: 2px solid #edf2f7; padding-bottom: 6px; margin: 24px 0 12px; }
+  .narrative { line-height: 1.7; white-space: pre-wrap; }
+  .sub-block { background: #f8fafc; border-left: 4px solid #e8edf4; border-radius: 6px;
+    padding: 12px 16px; margin-bottom: 10px; }
+  .sub-header { display: flex; align-items: center; margin-bottom: 6px; }
+  .sub-type { font-weight: 700; }
+  .script-sec { background: #f8fafc; border-left: 3px solid #3A9FD6; border-radius: 4px;
+    padding: 12px 16px; margin-bottom: 10px; }
+  .sec-title { font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.05em; color: #3A9FD6; margin-bottom: 8px; }
+  ul { margin: 0; padding-left: 18px; } li { margin-bottom: 2px; }
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; padding: 6px 10px; background: #edf2f7; font-size: 12px; }
+  td { padding: 8px 10px; border-bottom: 1px solid #e8edf4; vertical-align: top; }
+  pre { white-space: pre-wrap; word-break: break-word; }
+  @media print { body { padding: 16px; } }
+</style></head><body>
+<h1>Conflict Intelligence™ Analysis</h1>
+<div class="meta">
+  ${d.departmentId || 'All Departments'} &nbsp;·&nbsp; ${d.surveyPeriod} &nbsp;·&nbsp;
+  Generated ${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+</div>
+<div class="score-block">
+  <div class="score-num">${d.riskScore}</div>
+  <div class="score-lbl">Risk Score</div>
+</div>
+<span class="badge">${d.riskLevel.toUpperCase()} RISK</span>
+
+<h2>AI Analysis</h2>
+<p class="narrative">${d.aiNarrative}</p>
+
+${this.subAnalyses().length ? `<h2>Drill-down by Conflict Type</h2>${subRows}` : ''}
+
+${d.managerScript ? `<h2>Manager Conversation Guide</h2>${scriptHtml}` : ''}
+
+${d.escalationRequested ? '<p style="color:#e53e3e;font-weight:700">⚠ Escalation has been requested.</p>' : ''}
+</body></html>`;
+
+    const win = window.open('', '_blank');
+    if (!win) return;
+    win.document.write(html);
+    win.document.close();
+    win.focus();
+    setTimeout(() => { win.print(); }, 500);
   }
 
   escalate(): void {

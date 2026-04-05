@@ -50,13 +50,16 @@ router.get(
   '/templates',
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
-      const templates = await SurveyTemplate.find({
+      const filter: Record<string, unknown> = {
         $or: [
           { organizationId: req.user!.organizationId },
           { isGlobal: true },
         ],
-        isActive: true,
-      }).setOptions({ bypassTenantCheck: true });
+      };
+      if (req.query['includeInactive'] !== 'true') {
+        filter['isActive'] = true;
+      }
+      const templates = await SurveyTemplate.find(filter).setOptions({ bypassTenantCheck: true });
       res.json(templates);
     } catch (e) {
       next(e);
@@ -76,11 +79,11 @@ router.get(
         ],
       }).setOptions({ bypassTenantCheck: true });
       if (!template) {
-        res.status(404).json({ error: 'Survey template not found' });
+        res.status(404).json({ error: 'Intake template not found' });
         return;
       }
       if (!template.isActive) {
-        res.status(410).json({ error: 'This survey is no longer active.' });
+        res.status(410).json({ error: 'This intake is no longer active.' });
         return;
       }
       res.json(template);
@@ -96,12 +99,12 @@ router.put(
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const template = await SurveyTemplate.findOneAndUpdate(
-        { _id: req.params['id'], organizationId: req.user!.organizationId },
+        { _id: req.params['id'], $or: [{ organizationId: req.user!.organizationId }, { isGlobal: true }] },
         req.body,
         { new: true, runValidators: true }
-      );
+      ).setOptions({ bypassTenantCheck: true });
       if (!template) {
-        res.status(404).json({ error: 'Survey template not found' });
+        res.status(404).json({ error: 'Intake template not found' });
         return;
       }
       res.json(template);
@@ -118,10 +121,10 @@ router.delete(
     try {
       const template = await SurveyTemplate.findOneAndDelete({
         _id: req.params['id'],
-        organizationId: req.user!.organizationId,
-      });
+        $or: [{ organizationId: req.user!.organizationId }, { isGlobal: true }],
+      }).setOptions({ bypassTenantCheck: true });
       if (!template) {
-        res.status(404).json({ error: 'Survey template not found' });
+        res.status(404).json({ error: 'Intake template not found' });
         return;
       }
       res.json({ message: 'Template deleted' });
@@ -189,7 +192,7 @@ router.post('/respond', async (req: AuthRequest, res: Response, next: NextFuncti
 
 router.get(
   '/responses/:templateId/count',
-  requireRole('admin', 'hr_manager', 'manager'),
+  requireRole('admin', 'hr_manager', 'manager', 'coach'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const count = await SurveyResponse.countDocuments({
@@ -205,7 +208,7 @@ router.get(
 
 router.get(
   '/responses/:templateId',
-  requireRole('admin', 'hr_manager', 'manager'),
+  requireRole('admin', 'hr_manager', 'manager', 'coach'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const organizationId = req.user!.organizationId;

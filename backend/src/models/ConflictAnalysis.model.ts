@@ -6,6 +6,8 @@ export type EscalationStatus = 'pending' | 'in_progress' | 'resolved' | 'escalat
 
 export interface IConflictAnalysis extends Document {
   organizationId: mongoose.Types.ObjectId;
+  templateId?: mongoose.Types.ObjectId;
+  templateTitle?: string;
   surveyPeriod: string;
   departmentId?: string;
   parentId?: mongoose.Types.ObjectId;
@@ -29,6 +31,8 @@ const ConflictAnalysisSchema = new Schema<IConflictAnalysis>(
       required: true,
       index: true,
     },
+    templateId: { type: Schema.Types.ObjectId, ref: 'SurveyTemplate' },
+    templateTitle: { type: String },
     surveyPeriod: { type: String, required: true },
     departmentId: { type: String },
     parentId: { type: Schema.Types.ObjectId, ref: 'ConflictAnalysis', index: true },

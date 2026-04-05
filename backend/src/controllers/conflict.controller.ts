@@ -1,6 +1,7 @@
 import { Response, NextFunction } from 'express';
 import { AuthRequest } from '../middleware/auth.middleware';
 import { SurveyResponse } from '../models/SurveyResponse.model';
+import { SurveyTemplate } from '../models/SurveyTemplate.model';
 import { ConflictAnalysis } from '../models/ConflictAnalysis.model';
 import { Organization } from '../models/Organization.model';
 import { buildConflictAnalysisPrompt, buildConflictSubAnalysisPrompt, callClaude } from '../services/ai.service';
@@ -22,9 +23,12 @@ export async function analyzeConflict(
 
     const responses = await SurveyResponse.find(responseFilter);
 
-    if (responses.length < MIN_GROUP_SIZE) {
+    const template = await SurveyTemplate.findById(templateId).setOptions({ bypassTenantCheck: true });
+    const isSurvey = !template || template.intakeType === 'survey';
+    const minRequired = isSurvey ? MIN_GROUP_SIZE : 1;
+    if (responses.length < minRequired) {
       res.status(400).json({
-        error: `Minimum ${MIN_GROUP_SIZE} responses required for analysis. Current: ${responses.length}`,
+        error: `Minimum ${minRequired} response${minRequired > 1 ? 's' : ''} required for analysis. Current: ${responses.length}`,
       });
       return;
     }
@@ -94,6 +98,8 @@ export async function analyzeConflict(
 
     const analysis = await ConflictAnalysis.create({
       organizationId,
+      templateId,
+      templateTitle: template?.title,
       surveyPeriod,
       departmentId,
       riskScore: parsed.riskScore,

@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
@@ -14,6 +14,7 @@ interface SurveyTemplate {
   _id: string;
   title: string;
   moduleType: string;
+  intakeType: 'survey' | 'interview' | 'assessment';
   questions: unknown[];
 }
 
@@ -49,14 +50,14 @@ interface OrgResponse {
       @if (noTemplates()) {
         <div class="warn-banner">
           <mat-icon>info</mat-icon>
-          No conflict survey templates found. Create a survey template first, collect at least
+          No conflict intake templates found. Create a intake template first, collect at least
           5 responses, then run an analysis.
         </div>
       } @else {
         <form [formGroup]="form" class="dialog-form">
           <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Survey Template</mat-label>
-            <mat-select formControlName="templateId">
+            <mat-label>Intake Template</mat-label>
+            <mat-select formControlName="templateId" (selectionChange)="selectedTemplateId.set($event.value)">
               @for (t of templates(); track t._id) {
                 <mat-option [value]="t._id">
                   {{ t.title }} ({{ t.questions.length }} questions)
@@ -79,17 +80,19 @@ interface OrgResponse {
           </mat-form-field>
 
           <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Survey Period</mat-label>
+            <mat-label>Intake Period</mat-label>
             <input matInput formControlName="surveyPeriod"
               placeholder="e.g. Q1 2026, March 2026" />
             <mat-hint>Label this analysis period for reporting</mat-hint>
           </mat-form-field>
 
-          <div class="info-box">
-            <mat-icon>shield</mat-icon>
-            <p>Analysis requires a minimum of <strong>5 responses</strong> to protect individual
-            privacy. Results are aggregated — no individual data is shown.</p>
-          </div>
+          @if (selectedIntakeType() === 'survey') {
+            <div class="info-box">
+              <mat-icon>shield</mat-icon>
+              <p>Analysis requires a minimum of <strong>5 responses</strong> to protect individual
+              privacy. Results are aggregated — no individual data is shown.</p>
+            </div>
+          }
         </form>
       }
     </mat-dialog-content>
@@ -145,6 +148,11 @@ interface OrgResponse {
 export class ConflictAnalyzeDialogComponent implements OnInit {
   form: FormGroup;
   templates = signal<SurveyTemplate[]>([]);
+  selectedTemplateId = signal('');
+  selectedIntakeType = computed(() => {
+    const t = this.templates().find((t) => t._id === this.selectedTemplateId());
+    return t?.intakeType ?? 'survey';
+  });
   loadingTemplates = signal(true);
   analyzing = signal(false);
   error = signal('');
@@ -171,6 +179,7 @@ export class ConflictAnalyzeDialogComponent implements OnInit {
         this.noTemplates.set(conflictTemplates.length === 0);
         if (conflictTemplates.length === 1) {
           this.form.patchValue({ templateId: conflictTemplates[0]._id });
+          this.selectedTemplateId.set(conflictTemplates[0]._id);
         }
         this.loadingTemplates.set(false);
       },
@@ -181,7 +190,7 @@ export class ConflictAnalyzeDialogComponent implements OnInit {
       next: (org) => this.departments.set(org.departments ?? []),
     });
 
-    // Default survey period to current month/year
+    // Default intake period to current month/year
     const now = new Date();
     const label = now.toLocaleString('default', { month: 'long', year: 'numeric' });
     this.form.patchValue({ surveyPeriod: label });

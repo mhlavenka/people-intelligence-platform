@@ -494,11 +494,11 @@ export class AppShellComponent implements OnInit, OnDestroy {
     { label: 'Leadership & Succession', icon: 'trending_up',  route: '/succession',  roles: ['admin', 'hr_manager', 'coach', 'coachee'] },
     { label: 'Org Chart',         icon: 'account_tree',        route: '/org-chart',            roles: ['admin', 'hr_manager'] },
     {
-      label: 'Coach',
+      label: 'Intakes',
       icon: 'record_voice_over',
       children: [
         { label: 'Conduct Interview', icon: 'mic',        route: '/coach/interview', roles: ['coach'] as AppRole[] },
-        { label: 'Intake Templates',  icon: 'assignment', route: '/intakes',         roles: ['coach'] as AppRole[] },
+        { label: 'Intake Management',  icon: 'assignment', route: '/intakes',         roles: ['coach'] as AppRole[] },
       ],
     },
     {

@@ -1,5 +1,6 @@
 import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -14,6 +15,7 @@ interface SurveyTemplate { _id: string; title: string; moduleType: string; }
 
 interface ConflictAnalysis {
   _id: string;
+  templateTitle?: string;
   departmentId: string;
   surveyPeriod: string;
   riskScore: number;
@@ -30,6 +32,7 @@ interface ConflictAnalysis {
   standalone: true,
   imports: [
     CommonModule,
+    RouterLink,
     MatIconModule,
     MatButtonModule,
     MatProgressSpinnerModule,
@@ -48,7 +51,7 @@ interface ConflictAnalysis {
         </div>
         <div class="header-actions">
           <button mat-stroked-button (click)="copySurveyLink()" [disabled]="!surveyTemplateId()">
-            <mat-icon>link</mat-icon> Copy Intake Link
+            <mat-icon>link</mat-icon> Copy Link
           </button>
           <button mat-raised-button color="primary" (click)="runNewAnalysis()">
             <mat-icon>add</mat-icon> New Analysis
@@ -82,25 +85,6 @@ interface ConflictAnalysis {
           }
         </div>
 
-        <div class="gauge-mini-wrap">
-          <div class="gauge-mini">
-            <svg viewBox="0 0 160 90" class="gauge-svg">
-              <path d="M 16 80 A 64 64 0 0 1 144 80" fill="none" stroke="#e8edf4" stroke-width="13" stroke-linecap="round"/>
-              <path [attr.d]="gaugeArcPath()" fill="none" [attr.stroke]="gaugeColor()"
-                    stroke-width="13" stroke-linecap="round" class="gauge-arc"/>
-              <text x="80" y="72" text-anchor="middle" class="gauge-score">{{ avgRiskScore() }}</text>
-              <text x="80" y="86" text-anchor="middle" class="gauge-label-txt">Avg Risk</text>
-            </svg>
-          </div>
-
-          <!-- Central risk legend -->
-          <div class="risk-legend-central">
-            <span class="legend-dot low"></span><span class="legend-txt">Low 0–25</span>
-            <span class="legend-dot medium"></span><span class="legend-txt">Medium 26–50</span>
-            <span class="legend-dot high"></span><span class="legend-txt">High 51–75</span>
-            <span class="legend-dot critical"></span><span class="legend-txt">Critical 76–100</span>
-          </div>
-        </div>
       </div>
 
       <!-- Analyses list -->
@@ -134,20 +118,22 @@ interface ConflictAnalysis {
                     <text x="50" y="48" text-anchor="middle" class="mini-score">{{ a.riskScore }}</text>
                   </svg>
                   <span class="risk-badge" [class]="a.riskLevel">{{ a.riskLevel }}</span>
-                </div>
-
-                <!-- Score bar / heatmap -->
-                <div class="score-heatmap">
-                  <div class="score-bar-track">
-                    <div class="score-bar-fill" [class]="a.riskLevel" [style.width.%]="a.riskScore"></div>
-                  </div>
-                  <div class="score-bar-labels">
-                    <span>0</span><span>25</span><span>50</span><span>75</span><span>100</span>
+                  <div class="risk-legend-central">
+                    <span class="legend-dot low"></span><span class="legend-txt">Low</span>
+                    <span class="legend-dot medium"></span><span class="legend-txt">Med</span>
+                    <span class="legend-dot high"></span><span class="legend-txt">High</span>
+                    <span class="legend-dot critical"></span><span class="legend-txt">Crit</span>
                   </div>
                 </div>
 
                 <!-- Meta -->
                 <div class="analysis-meta">
+                  @if (a.templateTitle) {
+                    <div class="meta-template">
+                      <mat-icon>assignment</mat-icon>
+                      <span>{{ a.templateTitle }}</span>
+                    </div>
+                  }
                   <div class="meta-dept">
                     <mat-icon>corporate_fare</mat-icon>
                     <strong>{{ a.departmentId || 'All Departments' }}</strong>
@@ -231,6 +217,55 @@ interface ConflictAnalysis {
            mat-stroked-button class="escalation-cta">
           <mat-icon>email</mat-icon> Contact Helena for Mediation
         </a>
+      </div>
+
+      <!-- Knowledge & Skill Building -->
+      <div class="section-card knowledge">
+        <div class="section-header">
+          <div class="section-icon blue"><mat-icon>school</mat-icon></div>
+          <div>
+            <h3>Knowledge &amp; Skill Building</h3>
+            <p>Structured learning paths to build conflict literacy, emotional intelligence, and leadership capability — drawing on tools available within this platform and leading external assessments.</p>
+          </div>
+        </div>
+
+        <div class="edu-columns">
+
+          <!-- In-platform -->
+          <div class="edu-col">
+            <div class="edu-col-label"><mat-icon>layers</mat-icon> In-Platform Modules</div>
+            @for (item of inPlatformPaths; track item.route) {
+              <a class="edu-card internal" [routerLink]="item.route">
+                <div class="edu-icon" [style.background]="item.color + '18'" [style.color]="item.color">
+                  <mat-icon>{{ item.icon }}</mat-icon>
+                </div>
+                <div class="edu-info">
+                  <strong>{{ item.title }}</strong>
+                  <span>{{ item.description }}</span>
+                </div>
+                <mat-icon class="edu-arrow">chevron_right</mat-icon>
+              </a>
+            }
+          </div>
+
+          <!-- External tools -->
+          <div class="edu-col">
+            <div class="edu-col-label"><mat-icon>open_in_new</mat-icon> External Assessments &amp; Tools</div>
+            @for (item of externalTools; track item.url) {
+              <a class="edu-card external" [href]="item.url" target="_blank" rel="noopener">
+                <div class="edu-icon" [style.background]="item.color + '18'" [style.color]="item.color">
+                  <mat-icon>{{ item.icon }}</mat-icon>
+                </div>
+                <div class="edu-info">
+                  <strong>{{ item.title }}</strong>
+                  <span>{{ item.description }}</span>
+                </div>
+                <mat-icon class="edu-arrow">open_in_new</mat-icon>
+              </a>
+            }
+          </div>
+
+        </div>
       </div>
 
       <!-- Interest-Based Negotiation Toolkit -->
@@ -328,17 +363,18 @@ interface ConflictAnalysis {
 
     /* Central risk legend */
     .risk-legend-central {
-      display: flex; align-items: center; gap: 8px; flex-wrap: nowrap;
-      font-size: 11px; color: #5a6a7e; white-space: nowrap;
+      display: grid; grid-template-columns: auto auto auto auto;
+      align-items: center; gap: 3px 6px;
+      font-size: 10px; color: #5a6a7e;
     }
     .legend-dot {
-      width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+      width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
       &.low      { background: #27C4A0; }
       &.medium   { background: #f0a500; }
       &.high     { background: #e86c3a; }
       &.critical { background: #e53e3e; }
     }
-    .legend-txt { margin-right: 4px; }
+    .legend-txt { }
 
     /* ── Analyses list ────────────────────────────── */
     .analyses-section {
@@ -365,7 +401,7 @@ interface ConflictAnalysis {
 
     .analysis-row {
       display: grid;
-      grid-template-columns: 110px 180px 1fr auto;
+      grid-template-columns: 140px 1fr auto;
       gap: 20px;
       align-items: center;
       padding: 16px 24px;
@@ -373,7 +409,8 @@ interface ConflictAnalysis {
       border-left: 4px solid transparent;
       transition: background 0.12s;
       &:last-child { border-bottom: none; }
-      &:hover { background: #fafbfc; }
+      &:nth-child(even) { background: #f8fafc; }
+      &:hover { background: #eef4fa; }
       &.border-low      { border-left-color: #27C4A0; }
       &.border-medium   { border-left-color: #f0a500; }
       &.border-high     { border-left-color: #e86c3a; }
@@ -397,26 +434,13 @@ interface ConflictAnalysis {
       &.critical { background: rgba(229,62,62,0.15);  color: #c53030; }
     }
 
-    /* Score bar / heatmap */
-    .score-heatmap { display: flex; flex-direction: column; gap: 4px; }
-    .score-bar-track {
-      height: 10px; background: #f0f4f8; border-radius: 5px; overflow: hidden;
-    }
-    .score-bar-fill {
-      height: 100%; border-radius: 5px; transition: width 0.4s ease;
-      &.low      { background: #27C4A0; }
-      &.medium   { background: #f0a500; }
-      &.high     { background: #e86c3a; }
-      &.critical { background: #e53e3e; }
-    }
-    .score-bar-labels {
-      display: flex; justify-content: space-between;
-      font-size: 9px; color: #c4cdd6;
-    }
-
     /* Analysis meta */
     .analysis-meta {
       display: flex; flex-direction: column; gap: 5px; min-width: 0;
+    }
+    .meta-template {
+      display: flex; align-items: center; gap: 5px; font-size: 12px; color: #3A9FD6;
+      mat-icon { font-size: 14px; width: 14px; height: 14px; }
     }
     .meta-dept, .meta-period {
       display: flex; align-items: center; gap: 5px; font-size: 13px;
@@ -496,6 +520,48 @@ interface ConflictAnalysis {
       span   { font-size: 12px; color: #5a6a7e; }
     }
     .download-btn { color: #3A9FD6; }
+
+    /* ── Knowledge & Skill Building ──────────────── */
+    .section-icon.blue { background: rgba(58,159,214,0.12); color: #2080b0; }
+
+    .edu-columns {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 24px;
+    }
+
+    .edu-col-label {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.7px; color: #9aa5b4; margin-bottom: 10px;
+      mat-icon { font-size: 15px; width: 15px; height: 15px; }
+    }
+
+    .edu-card {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 14px; border-radius: 10px; margin-bottom: 8px;
+      border: 1px solid #e8edf4; text-decoration: none; cursor: pointer;
+      transition: background 0.13s, border-color 0.13s;
+      &:last-child { margin-bottom: 0; }
+      &:hover { background: #f0f8ff; border-color: #3A9FD6; }
+      &.internal { background: #fafbfc; }
+      &.external { background: #fafbfc; }
+    }
+
+    .edu-icon {
+      width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      mat-icon { font-size: 20px; }
+    }
+
+    .edu-info {
+      flex: 1; min-width: 0;
+      strong { display: block; font-size: 13px; color: #1B2A47; margin-bottom: 2px; }
+      span   { font-size: 11px; color: #6b7280; line-height: 1.4; display: block; }
+    }
+
+    .edu-arrow {
+      color: #c4cdd6; font-size: 18px; width: 18px; height: 18px; flex-shrink: 0;
+      .edu-card:hover & { color: #3A9FD6; }
+    }
   `],
 })
 export class ConflictDashboardComponent implements OnInit {
@@ -517,6 +583,61 @@ export class ConflictDashboardComponent implements OnInit {
     { title: 'Interest Mapping Worksheet', description: "Guided exercise to map each party's interests before entering a difficult conversation.", icon: 'account_tree', color: '#27C4A0' },
     { title: 'Conflict Type Diagnostic', description: 'Determine whether conflict is interpersonal, structural, cultural, or positional to choose the right intervention.', icon: 'category', color: '#e86c3a' },
     { title: 'Manager Conversation Planner', description: 'Step-by-step guide for preparing and facilitating a conflict conversation using GROW methodology.', icon: 'edit_note', color: '#7c3aed' },
+  ];
+
+  inPlatformPaths = [
+    {
+      route: '/neuroinclusion',
+      title: 'Neuro-Inclusion Assessment',
+      description: 'Identify neuroinclusion gaps that often underlie perceived conflict — communication style mismatches, sensory overload, and cognitive diversity barriers.',
+      icon: 'psychology',
+      color: '#27C4A0',
+    },
+    {
+      route: '/succession',
+      title: 'Leadership IDP (GROW Model)',
+      description: 'Build individual development plans using the GROW coaching model to strengthen self-awareness and conflict-resilient leadership behaviours.',
+      icon: 'trending_up',
+      color: '#3A9FD6',
+    },
+    {
+      route: '/coach/interview',
+      title: 'Coach-Led Interview',
+      description: 'Conduct structured one-to-one or group intake interviews to surface unspoken tensions before they escalate.',
+      icon: 'record_voice_over',
+      color: '#7c3aed',
+    },
+  ];
+
+  externalTools = [
+    {
+      url: 'https://mhs.com/solutions/eq-i-2-0/',
+      title: 'MHS EQ-i 2.0',
+      description: "The world's leading emotional intelligence assessment. Measure self-awareness, empathy, and stress tolerance — core competencies for conflict-resilient teams.",
+      icon: 'insights',
+      color: '#e86c3a',
+    },
+    {
+      url: 'https://www.mhs.com/solutions/eq-360/',
+      title: 'MHS EQ 360',
+      description: 'Multi-rater emotional intelligence feedback to reveal blind spots and strengthen leadership effectiveness in high-conflict environments.',
+      icon: '360',
+      color: '#f0a500',
+    },
+    {
+      url: 'https://www.themyersbriggs.com/en-US/Products-and-Services/Myers-Briggs',
+      title: 'MBTI Assessment',
+      description: 'Understand personality type differences that drive communication friction and team conflict — foundational for mediation and coaching.',
+      icon: 'people_alt',
+      color: '#1B2A47',
+    },
+    {
+      url: 'https://www.viacharacter.org/',
+      title: 'VIA Character Strengths',
+      description: 'Free evidence-based strengths profiling. Reframe conflict conversations around what each person brings rather than what divides them.',
+      icon: 'star_outline',
+      color: '#27C4A0',
+    },
   ];
 
   riskColor(level: string): string {
