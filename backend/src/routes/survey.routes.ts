@@ -147,14 +147,16 @@ router.get('/check/:templateId', async (req: AuthRequest, res: Response, next: N
 
 router.post('/respond', async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const { templateId, isAnonymous = true, departmentId, responses } = req.body;
-    const userId = req.user!.userId.toString();
-    const submissionToken = makeSubmissionToken(userId, templateId);
+    const { templateId, isAnonymous = true, departmentId, responses, coacheeId, sessionFormat, targetName } = req.body;
+
+    // When a coach submits on behalf of a coachee, de-duplicate by coachee+template
+    const tokenSubject = coacheeId ? coacheeId.toString() : req.user!.userId.toString();
+    const submissionToken = makeSubmissionToken(tokenSubject, templateId);
 
     // Duplicate check — DB unique index is the safety net, but give a friendly error here
     const existing = await SurveyResponse.findOne({ submissionToken }).setOptions({ bypassTenantCheck: true });
     if (existing) {
-      res.status(409).json({ error: 'You have already submitted a response for this survey.' });
+      res.status(409).json({ error: 'A response for this coachee and template has already been submitted.' });
       return;
     }
 
@@ -164,12 +166,17 @@ router.post('/respond', async (req: AuthRequest, res: Response, next: NextFuncti
       submissionToken,
       departmentId,
       responses,
-      isAnonymous,
+      isAnonymous: coacheeId ? false : isAnonymous,
       submittedAt: new Date(),
     };
 
-    // Only store the raw user reference when explicitly NOT anonymous
-    if (!isAnonymous) {
+    // Coach-led submission: attribute to the coachee
+    if (coacheeId) {
+      doc['respondentId'] = coacheeId;
+      doc['coachId'] = req.user!.userId;
+      if (sessionFormat) doc['sessionFormat'] = sessionFormat;
+      if (targetName)    doc['targetName']    = targetName;
+    } else if (!isAnonymous) {
       doc['respondentId'] = req.user!.userId;
     }
 

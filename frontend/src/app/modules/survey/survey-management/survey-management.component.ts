@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -12,6 +12,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatDividerModule } from '@angular/material/divider';
 import { ApiService } from '../../../core/api.service';
+import { AuthService } from '../../../core/auth.service';
 import { SurveyTemplateDialogComponent } from '../survey-template-dialog/survey-template-dialog.component';
 import { SurveyResponsesDialogComponent } from '../survey-responses-dialog/survey-responses-dialog.component';
 import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog.component';
@@ -51,9 +52,11 @@ interface SurveyTemplate {
           <h1>Intake Management</h1>
           <p>Create and manage intake templates across all modules</p>
         </div>
-        <button mat-raised-button color="primary" (click)="openCreateDialog()">
-          <mat-icon>add</mat-icon> New Intake
-        </button>
+        @if (!isReadOnly()) {
+          <button mat-raised-button color="primary" (click)="openCreateDialog()">
+            <mat-icon>add</mat-icon> New Intake
+          </button>
+        }
       </div>
 
       <!-- Filter rows -->
@@ -91,10 +94,12 @@ interface SurveyTemplate {
         <div class="empty-state">
           <mat-icon>assignment</mat-icon>
           <h3>No intake templates yet</h3>
-          <p>Create your first intake template to start collecting responses.</p>
-          <button mat-raised-button color="primary" (click)="openCreateDialog()">
-            <mat-icon>add</mat-icon> Create Intake
-          </button>
+          <p>{{ isReadOnly() ? 'No intake templates have been created yet.' : 'Create your first intake template to start collecting responses.' }}</p>
+          @if (!isReadOnly()) {
+            <button mat-raised-button color="primary" (click)="openCreateDialog()">
+              <mat-icon>add</mat-icon> Create Intake
+            </button>
+          }
         </div>
       } @else {
         <div class="templates-grid">
@@ -106,35 +111,41 @@ interface SurveyTemplate {
                     <mat-icon>{{ moduleIcon(t.moduleType) }}</mat-icon>
                     {{ moduleLabel(t.moduleType) }}
                   </div>
-                  <div class="intake-type-badge" [class]="t.intakeType ?? 'survey'">
+                  <div class="intake-type-badge" [class]="t.intakeType">
                     <mat-icon>{{ intakeTypeIcon(t.intakeType) }}</mat-icon>
                     {{ intakeTypeLabel(t.intakeType) }}
                   </div>
                 </div>
                 <div class="card-actions">
-                  <mat-slide-toggle
-                    [checked]="t.isActive"
-                    (change)="toggleActive(t)"
-                    [matTooltip]="t.isActive ? 'Deactivate' : 'Activate'"
-                    color="primary"
-                  ></mat-slide-toggle>
+                  @if (!isReadOnly()) {
+                    <mat-slide-toggle
+                      [checked]="t.isActive"
+                      (change)="toggleActive(t)"
+                      [matTooltip]="t.isActive ? 'Deactivate' : 'Activate'"
+                      color="primary"
+                    ></mat-slide-toggle>
+                  }
                   <button mat-icon-button [matMenuTriggerFor]="cardMenu">
                     <mat-icon>more_vert</mat-icon>
                   </button>
                   <mat-menu #cardMenu="matMenu">
-                    <button mat-menu-item (click)="openEditDialog(t)">
-                      <mat-icon>edit</mat-icon> Edit
-                    </button>
+                    @if (!isReadOnly()) {
+                      <button mat-menu-item (click)="openEditDialog(t)">
+                        <mat-icon>edit</mat-icon> Edit
+                      </button>
+                    }
                     <button mat-menu-item (click)="copySurveyLink(t)">
                       <mat-icon>link</mat-icon> Copy Intake Link
                     </button>
                     <button mat-menu-item (click)="viewResponses(t)">
                       <mat-icon>bar_chart</mat-icon> View Responses
                     </button>
-                    <mat-divider></mat-divider>
-                    <button mat-menu-item class="danger-item" (click)="deleteTemplate(t)">
-                      <mat-icon>delete</mat-icon> Delete
-                    </button>
+                    @if (!isReadOnly()) {
+                      <mat-divider></mat-divider>
+                      <button mat-menu-item class="danger-item" (click)="deleteTemplate(t)">
+                        <mat-icon>delete</mat-icon> Delete
+                      </button>
+                    }
                   </mat-menu>
                 </div>
               </div>
@@ -304,6 +315,11 @@ interface SurveyTemplate {
   `],
 })
 export class SurveyManagementComponent implements OnInit {
+  private authService = inject(AuthService);
+
+  /** Coaches can browse templates but cannot create/edit/delete */
+  isReadOnly = computed(() => this.authService.currentUser()?.role === 'coach');
+
   templates = signal<SurveyTemplate[]>([]);
   loading = signal(true);
   activeModuleFilter = signal('all');

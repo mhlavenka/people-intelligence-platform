@@ -153,6 +153,22 @@ router.post('/me/test-email', async (req: AuthRequest, res: Response, next: Next
   } catch (e) { next(e); }
 });
 
+// ── Coach endpoint: list coachees in same org ────────────────────────────────
+
+router.get(
+  '/coachees',
+  requireRole('admin', 'hr_manager', 'coach'),
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const users = await User.find({
+        organizationId: req.user!.organizationId,
+        role: 'coachee',
+      }).select('_id firstName lastName email department');
+      res.json(users);
+    } catch (e) { next(e); }
+  }
+);
+
 // ── Admin / HR endpoints ─────────────────────────────────────────────────────
 
 router.get(

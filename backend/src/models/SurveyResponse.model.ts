@@ -10,6 +10,9 @@ export interface ISurveyResponse extends Document {
   organizationId: mongoose.Types.ObjectId;
   templateId: mongoose.Types.ObjectId;
   respondentId?: mongoose.Types.ObjectId; // only stored when isAnonymous = false
+  coachId?: mongoose.Types.ObjectId;      // set when a coach conducts on behalf of a coachee
+  sessionFormat?: 'individual' | 'team' | 'group';
+  targetName?: string;                    // free-text target identifier for coach-led sessions
   submissionToken: string;               // SHA-256(userId + templateId) — used for dedup
   departmentId?: string;
   responses: IResponseItem[];
@@ -37,6 +40,9 @@ const SurveyResponseSchema = new Schema<ISurveyResponse>(
     },
     templateId: { type: Schema.Types.ObjectId, ref: 'SurveyTemplate', required: true },
     respondentId: { type: Schema.Types.ObjectId, ref: 'User' }, // optional — omitted when anonymous
+    coachId: { type: Schema.Types.ObjectId, ref: 'User' },      // set for coach-led sessions
+    sessionFormat: { type: String, enum: ['individual', 'team', 'group'] },
+    targetName: { type: String },
     submissionToken: { type: String, required: true },          // one-way hash, always present
     departmentId: { type: String },
     responses: [ResponseItemSchema],

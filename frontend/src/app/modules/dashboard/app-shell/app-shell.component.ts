@@ -62,24 +62,22 @@ function isGroup(entry: NavEntry): entry is NavGroup {
         <div class="sidebar-header" [class.collapsed]="sidebarCollapsed()">
           @if (sidebarCollapsed()) {
             <!-- Collapsed: logo centred, toggle below -->
-            <img src="assets/headsoft-logo.png" alt="HeadSoft" class="brand-logo" />
+            <img src="assets/PIP_Icon_512.png" alt="PIP" class="brand-logo" />
             <button class="expand-btn" (click)="sidebarCollapsed.set(false)" title="Expand sidebar">
               <mat-icon>chevron_right</mat-icon>
             </button>
           } @else {
             <!-- Expanded: logo + text left, toggle right -->
             <div class="brand">
-              <img src="assets/headsoft-logo.png" alt="HeadSoft" class="brand-logo" />
-              <div class="brand-text">
-                <span class="brand-name">People Intelligence</span>
-                <span class="brand-sub">HeadSoft × Helena</span>
-              </div>
+              <img src="assets/PIP_Logo_Dark_Transparent.png" alt="PIP" class="brand-logo-wide" />
             </div>
             <button mat-icon-button class="collapse-btn" (click)="sidebarCollapsed.set(true)">
               <mat-icon>chevron_left</mat-icon>
             </button>
           }
         </div>
+
+        
 
         <!-- Org switcher -->
         @if (!sidebarCollapsed()) {
@@ -254,10 +252,24 @@ function isGroup(entry: NavEntry): entry is NavGroup {
       }
 
       .brand-logo {
-        width: 36px;
-        height: 36px;
+        width: 64px; height: 64px;
         object-fit: contain;
         flex-shrink: 0;
+      }
+
+      .brand-logo-wide {
+        width: 200px; height: 64px;
+        object-fit: contain;
+        flex-shrink: 0;
+      }
+      .auth-brand-footer {
+        text-align: center;
+        margin-top: 24px;
+        h1 { font-size: 20px; color: #1B2A47; margin: 0 0 4px; }
+        p  { font-size: 12px; color: #9aa5b4; margin: 0; }
+      }
+      .icon-logo {
+        width: 16px; height: 16px; margin: -3px 2px;
       }
 
       .brand-text {
@@ -481,6 +493,14 @@ export class AppShellComponent implements OnInit, OnDestroy {
     { label: 'Neuro-Inclusion',         icon: 'psychology',   route: '/neuroinclusion', roles: ['admin', 'hr_manager', 'manager'] },
     { label: 'Leadership & Succession', icon: 'trending_up',  route: '/succession',  roles: ['admin', 'hr_manager', 'coach', 'coachee'] },
     { label: 'Org Chart',         icon: 'account_tree',        route: '/org-chart',            roles: ['admin', 'hr_manager'] },
+    {
+      label: 'Coach',
+      icon: 'record_voice_over',
+      children: [
+        { label: 'Conduct Interview', icon: 'mic',        route: '/coach/interview', roles: ['coach'] as AppRole[] },
+        { label: 'Intake Templates',  icon: 'assignment', route: '/intakes',         roles: ['coach'] as AppRole[] },
+      ],
+    },
     {
       label: 'Administration',
       icon: 'admin_panel_settings',

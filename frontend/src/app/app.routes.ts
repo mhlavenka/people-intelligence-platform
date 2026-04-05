@@ -3,10 +3,12 @@ import { authGuard } from './core/auth.guard';
 import { systemAdminGuard } from './core/system-admin.guard';
 import { roleGuard } from './core/role.guard';
 
-const ADMIN_HR   = ['admin', 'hr_manager']                     as const;
-const ADMIN_ONLY = ['admin']                                    as const;
-const OPS        = ['admin', 'hr_manager', 'manager']          as const;
-const SUCCESSION = ['admin', 'hr_manager', 'coach', 'coachee'] as const;
+const ADMIN_HR   = ['admin', 'hr_manager']                              as const;
+const ADMIN_ONLY = ['admin']                                             as const;
+const OPS        = ['admin', 'hr_manager', 'manager']                   as const;
+const SUCCESSION = ['admin', 'hr_manager', 'coach', 'coachee']          as const;
+const COACH_ROLE = ['coach']                                             as const;
+const INTAKES    = ['admin', 'hr_manager', 'coach']                     as const;
 
 export const routes: Routes = [
   {
@@ -96,8 +98,16 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'coach/interview',
+        canActivate: [roleGuard([...COACH_ROLE])],
+        loadComponent: () =>
+          import('./modules/coach/coach-interview.component').then(
+            (m) => m.CoachInterviewComponent
+          ),
+      },
+      {
         path: 'intakes',
-        canActivate: [roleGuard([...ADMIN_HR])],
+        canActivate: [roleGuard([...INTAKES])],
         loadComponent: () =>
           import('./modules/survey/survey-management/survey-management.component').then(
             (m) => m.SurveyManagementComponent
