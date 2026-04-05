@@ -23,21 +23,17 @@ import { AuthService } from '../../../core/auth.service';
     MatProgressSpinnerModule,
   ],
   template: `
-    <div class="auth-page">
+      <div class="auth-page" xmlns="http://www.w3.org/1999/html">
       <div class="auth-card">
         <div class="auth-brand">
           <div class="brand-logo">
-            <img src="assets/headsoft-logo.png" alt="HeadSoft" class="logo-img" />
+            <img src="assets/PIP_Logo_Light.png" alt="HeadSoft" class="logo-img" />
           </div>
-          <h1>People Intelligence Platform</h1>
-          <p>HeadSoft Tech × Helena Coaching</p>
         </div>
 
         @if (!twoFactorStep()) {
           <!-- Step 1: email + password -->
           <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
-            <h2>Sign in to your workspace</h2>
-
             @if (error()) {
               <div class="error-banner">{{ error() }}</div>
             }
@@ -78,6 +74,10 @@ import { AuthService } from '../../../core/auth.service';
               <a routerLink="/auth/register">Create organization</a>
             </div>
           </form>
+
+          <div class="auth-brand-footer">
+            <p><a href="https://www.headsoft.net" target="_blank"><img class="icon-logo" src="assets/headsoft-logo-black.jpeg"/>HeadSoft Tech</a> | <a href="https://www.helenacoaching.com" target="_blank"><img class="icon-logo" src="assets/Helena-H-Icon_transparent-1024-px.png"/>Helena Coaching</a></p>
+          </div>
 
         } @else {
           <!-- Step 2: TOTP code -->
@@ -122,7 +122,7 @@ import { AuthService } from '../../../core/auth.service';
       min-height: 100vh;
       display: flex; align-items: center; justify-content: center;
       background: linear-gradient(135deg, #1B2A47 0%, #2a3f6b 50%, #3A9FD6 100%);
-      padding: 24px;
+      padding: 16px;
     }
 
     .auth-card {
@@ -134,13 +134,32 @@ import { AuthService } from '../../../core/auth.service';
     .auth-brand {
       text-align: center; margin-bottom: 32px;
       .brand-logo {
-        width: 64px; height: 64px; border-radius: 16px; margin: 0 auto 16px;
-        display: flex; align-items: center; justify-content: center;
-        overflow: hidden;
-        .logo-img { width: 56px; height: 56px; object-fit: contain; }
+        width: 100%; max-width: 320px; height: auto; border-radius: 16px; margin: 0 auto;
+        display: flex; align-items: center; justify-content: center; overflow: hidden;
+        .logo-img { width: 100%; height: auto; max-height: 120px; object-fit: contain; display: block; }
       }
       h1 { font-size: 18px; font-weight: 700; color: #1B2A47; margin: 0 0 4px; }
       p  { font-size: 12px; color: #9aa5b4; margin: 0; }
+    }
+
+    @media (max-width: 480px) {
+      .auth-card { padding: 32px 24px; border-radius: 12px; }
+      .auth-brand .brand-logo { max-width: 240px; }
+    }
+
+    @media (max-width: 360px) {
+      .auth-card { padding: 24px 16px; }
+      .auth-brand { margin-bottom: 24px; }
+      .auth-brand .brand-logo { max-width: 200px; }
+    }
+    .auth-brand-footer {
+      text-align: center;
+      margin-top: 24px;
+      h1 { font-size: 20px; color: #1B2A47; margin: 0 0 4px; }
+      p  { font-size: 12px; color: #9aa5b4; margin: 0; }
+    }
+    .icon-logo {
+      width: 16px; height: 16px; margin: -3px 2px;
     }
 
     h2 { font-size: 20px; color: #1B2A47; margin-bottom: 24px; font-weight: 600; }
