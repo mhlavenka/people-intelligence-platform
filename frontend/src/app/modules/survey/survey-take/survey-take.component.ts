@@ -155,7 +155,7 @@ const DEPARTMENTS = [
           @if (phase() === 'questions') {
             @if (currentQuestion(); as q) {
               <div class="question-block">
-                @if (q.type !== 'forced_choice') {
+                @if (q.text) {
                   <p class="question-text">{{ q.text }}</p>
                 }
 
@@ -219,7 +219,9 @@ const DEPARTMENTS = [
                 <!-- Forced choice (TKI-style ipsative A/B) -->
                 @if (q.type === 'forced_choice') {
                   <div class="fc-container">
-                    <p class="fc-intro">Choose the statement that best describes your behaviour:</p>
+                    @if (!q.text) {
+                      <p class="fc-intro">Choose the statement that best describes your behaviour:</p>
+                    }
                     @for (opt of q.options; track opt.value) {
                       <button type="button" class="fc-card"
                               [class.selected]="answers()[q.id] === opt.value"
