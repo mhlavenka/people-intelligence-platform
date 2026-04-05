@@ -524,7 +524,7 @@ export class CoachInterviewComponent implements OnInit {
   ngOnInit(): void {
     this.api.get<SurveyTemplate[]>('/survey/templates').subscribe({
       next: (all) => {
-        this.templates.set(all.filter((t) => t.intakeType === 'interview' || t.intakeType === 'assessment'));
+        this.templates.set(all);
         this.loading.set(false);
       },
       error: () => this.loading.set(false),

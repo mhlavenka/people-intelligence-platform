@@ -16,7 +16,7 @@ router.use(authenticateToken, tenantResolver);
 
 router.post(
   '/templates',
-  requireRole('admin', 'hr_manager'),
+  requireRole('admin', 'hr_manager', 'coach'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const template = await SurveyTemplate.create({
@@ -92,7 +92,7 @@ router.get(
 
 router.put(
   '/templates/:id',
-  requireRole('admin', 'hr_manager'),
+  requireRole('admin', 'hr_manager', 'coach'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const template = await SurveyTemplate.findOneAndUpdate(
@@ -113,7 +113,7 @@ router.put(
 
 router.delete(
   '/templates/:id',
-  requireRole('admin', 'hr_manager'),
+  requireRole('admin', 'hr_manager', 'coach'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const template = await SurveyTemplate.findOneAndDelete({
