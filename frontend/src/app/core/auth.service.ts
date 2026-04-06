@@ -14,6 +14,9 @@ export interface User {
   lastName: string;
   role: AppRole;
   organizationId: string;
+  permissions?: string[];
+  customRoleId?: string;
+  customRoleName?: string;
 }
 
 export interface AuthResponse {

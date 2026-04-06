@@ -17,9 +17,17 @@ export interface OrgUser {
   lastName: string;
   role: string;
   department?: string;
+  customRoleId?: string;
   isActive: boolean;
   lastLoginAt?: string;
   createdAt: string;
+}
+
+interface CustomRoleOption {
+  _id: string;
+  name: string;
+  color: string;
+  baseRole: string;
 }
 
 const ROLES = [
@@ -73,13 +81,35 @@ const ROLES = [
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Role</mat-label>
+          <mat-label>System Role</mat-label>
           <mat-select formControlName="role">
             @for (r of roles; track r.value) {
               <mat-option [value]="r.value">{{ r.label }}</mat-option>
             }
           </mat-select>
+          <mat-hint>Base access level — determines API route access</mat-hint>
         </mat-form-field>
+
+        @if (customRolesAvailable().length > 0) {
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Custom Role (optional)</mat-label>
+            <mat-select formControlName="customRoleId">
+              <mat-option [value]="''">
+                <em>None — use system role permissions</em>
+              </mat-option>
+              @for (cr of customRolesAvailable(); track cr._id) {
+                <mat-option [value]="cr._id">
+                  <span class="cr-option">
+                    <span class="cr-dot" [style.background]="cr.color"></span>
+                    {{ cr.name }}
+                    <span class="cr-base-label">{{ baseLabel(cr.baseRole) }}</span>
+                  </span>
+                </mat-option>
+              }
+            </mat-select>
+            <mat-hint>Overrides the system role with custom permissions</mat-hint>
+          </mat-form-field>
+        }
 
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Department (optional)</mat-label>
@@ -135,6 +165,18 @@ const ROLES = [
     .name-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
     .full-width { width: 100%; }
+
+    .cr-option {
+      display: flex; align-items: center; gap: 8px;
+    }
+
+    .cr-dot {
+      width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+    }
+
+    .cr-base-label {
+      font-size: 11px; color: #9aa5b4; margin-left: auto;
+    }
   `],
 })
 export class UserDialogComponent implements OnInit {
@@ -147,18 +189,27 @@ export class UserDialogComponent implements OnInit {
   saving = signal(false);
   error = signal('');
   departments = signal<string[]>([]);
+  customRolesAvailable = signal<CustomRoleOption[]>([]);
   showPwd = false;
   roles = ROLES;
 
+  private readonly BASE_LABELS: Record<string, string> = {
+    admin: 'Admin', hr_manager: 'HR Manager', manager: 'Manager',
+    coach: 'Coach', coachee: 'Employee',
+  };
+
   isEdit = () => !!this.existingUser;
+
+  baseLabel = (key: string) => this.BASE_LABELS[key] ?? key;
 
   ngOnInit(): void {
     this.form = this.fb.group({
-      firstName:  [this.existingUser?.firstName  ?? '', Validators.required],
-      lastName:   [this.existingUser?.lastName   ?? '', Validators.required],
-      email:      [this.existingUser?.email      ?? '', [Validators.required, Validators.email]],
-      role:       [this.existingUser?.role       ?? 'coachee', Validators.required],
-      department: [this.existingUser?.department ?? ''],
+      firstName:    [this.existingUser?.firstName  ?? '', Validators.required],
+      lastName:     [this.existingUser?.lastName   ?? '', Validators.required],
+      email:        [this.existingUser?.email      ?? '', [Validators.required, Validators.email]],
+      role:         [this.existingUser?.role        ?? 'coachee', Validators.required],
+      customRoleId: [this.existingUser?.customRoleId ?? ''],
+      department:   [this.existingUser?.department ?? ''],
       ...(this.isEdit() ? {} : {
         password: ['', [Validators.required, Validators.minLength(8)]],
       }),
@@ -167,6 +218,10 @@ export class UserDialogComponent implements OnInit {
     this.api.get<{ departments: string[] }>('/organizations/me').subscribe({
       next: (org) => this.departments.set(org.departments ?? []),
     });
+
+    this.api.get<CustomRoleOption[]>('/roles').subscribe({
+      next: (roles) => this.customRolesAvailable.set(roles),
+    });
   }
 
   save(): void {
@@ -174,9 +229,13 @@ export class UserDialogComponent implements OnInit {
     this.saving.set(true);
     this.error.set('');
 
+    const payload = { ...this.form.value };
+    // Send null to clear custom role when empty string selected
+    if (!payload.customRoleId) { payload.customRoleId = null; }
+
     const request = this.isEdit()
-      ? this.api.put(`/users/${this.existingUser!._id}`, this.form.value)
-      : this.api.post('/users', this.form.value);
+      ? this.api.put(`/users/${this.existingUser!._id}`, payload)
+      : this.api.post('/users', payload);
 
     request.subscribe({
       next: (result) => { this.saving.set(false); this.dialogRef.close(result); },

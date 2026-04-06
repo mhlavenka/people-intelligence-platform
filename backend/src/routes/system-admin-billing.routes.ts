@@ -6,9 +6,10 @@ import { Organization } from '../models/Organization.model';
 import { User } from '../models/User.model';
 import { Message } from '../models/Message.model';
 import { Notification } from '../models/Notification.model';
-import { sendEmail } from '../services/email.service';
+import { sendEmail, sendPaymentReminderEmail, sendSuspensionEmail } from '../services/email.service';
 import { config } from '../config/env';
 import { Plan } from '../models/Plan.model';
+import { calculateTax, getTaxRates } from '../config/tax-rates';
 
 const router = Router();
 
@@ -84,6 +85,7 @@ router.post(
         periodFrom,
         periodTo,
         taxRate = 0,
+        taxExempt = false,
         notes,
         preview = false,
       } = req.body as {
@@ -91,12 +93,10 @@ router.post(
         periodFrom: string;
         periodTo: string;
         taxRate?: number;
+        taxExempt?: boolean;
         notes?: string;
         preview?: boolean;
       };
-
-      // taxRate arrives as a percentage (e.g. 21 = 21%) — convert to decimal
-      const taxRateDecimal = taxRate / 100;
 
       if (!organizationId || !periodFrom || !periodTo) {
         res.status(400).json({ error: 'organizationId, periodFrom and periodTo are required' });
@@ -159,8 +159,6 @@ router.post(
       const dueDate = new Date(periodToDate);
       dueDate.setDate(dueDate.getDate() + 30);
 
-      const { subtotal, tax, total } = recalcTotals(lineItems, taxRateDecimal);
-
       const billingAddress = org.billingAddress
         ? {
             line1:      org.billingAddress.line1,
@@ -172,17 +170,53 @@ router.post(
           }
         : undefined;
 
+      // Calculate tax — auto-detect from billing address for Canadian orgs,
+      // or use manually supplied taxRate as fallback.
+      // Tax-exempt overrides everything (e.g. Indigenous organizations).
+      const lineSubtotal = lineItems.reduce((sum: number, item: ILineItem) => sum + item.amount, 0);
+      let taxCalc;
+      let taxRateDecimalFinal: number;
+
+      const country = billingAddress?.country?.toUpperCase();
+      const province = billingAddress?.state?.toUpperCase();
+
+      if (taxExempt || org.taxExempt) {
+        taxCalc = null;
+        taxRateDecimalFinal = 0;
+      } else if (country === 'CA') {
+        // Automatic Canadian tax based on province
+        taxCalc = calculateTax(lineSubtotal, country, province);
+        taxRateDecimalFinal = taxCalc.rates.combined;
+      } else if (taxRate > 0) {
+        // Manual rate for non-Canadian (taxRate arrives as percentage)
+        taxRateDecimalFinal = taxRate / 100;
+        taxCalc = null;
+      } else {
+        taxRateDecimalFinal = 0;
+        taxCalc = null;
+      }
+
+      const subtotal = lineSubtotal;
+      const tax = taxCalc ? taxCalc.totalTax : Math.round(subtotal * taxRateDecimalFinal);
+      const total = subtotal + tax;
+      const taxBreakdown = taxCalc
+        ? { gst: taxCalc.gst, hst: taxCalc.hst, pst: taxCalc.pst, qst: taxCalc.qst }
+        : undefined;
+
       // Preview mode: return calculated data without persisting
       if (preview) {
+        const taxInfo = country === 'CA' ? getTaxRates(country, province) : null;
         res.json({
           invoiceNumber,
           period: { from: new Date(periodFrom), to: periodToDate },
           lineItems,
           subtotal,
-          taxRate: taxRateDecimal,
+          taxRate: taxRateDecimalFinal,
+          taxBreakdown,
+          taxLabel: taxInfo?.label,
           tax,
           total,
-          currency: 'USD',
+          currency: 'CAD',
           dueDate,
           billingAddress,
           taxId: org.taxId,
@@ -198,10 +232,11 @@ router.post(
         period: { from: new Date(periodFrom), to: periodToDate },
         lineItems,
         subtotal,
-        taxRate: taxRateDecimal,
+        taxRate: taxRateDecimalFinal,
+        taxBreakdown,
         tax,
         total,
-        currency: 'USD',
+        currency: 'CAD',
         status: 'draft',
         dueDate,
         billingAddress,
@@ -327,9 +362,9 @@ router.post(
       invoice.sentAt = new Date();
       await invoice.save();
 
-      // Format amounts for email (cents → dollars)
+      // Format amounts for email (cents → currency)
       const fmt = (cents: number): string =>
-        `$${(cents / 100).toFixed(2)} ${invoice.currency}`;
+        `$${(cents / 100).toFixed(2)} CAD`;
 
       // ── Hub: message + notification for every org admin ──────────────────────
       const orgAdmins = await User.find({
@@ -445,7 +480,31 @@ router.post(
             <td style="padding:4px 12px;color:#5a6a7e;text-align:right;">Subtotal</td>
             <td style="padding:4px 12px;color:#1B2A47;font-weight:600;text-align:right;">${fmt(invoice.subtotal)}</td>
           </tr>
-          ${invoice.tax > 0
+          ${invoice.taxBreakdown?.gst
+            ? `<tr>
+                <td style="padding:4px 12px;color:#5a6a7e;text-align:right;">GST (5%)</td>
+                <td style="padding:4px 12px;color:#1B2A47;font-weight:600;text-align:right;">${fmt(invoice.taxBreakdown.gst)}</td>
+              </tr>`
+            : ''}
+          ${invoice.taxBreakdown?.hst
+            ? `<tr>
+                <td style="padding:4px 12px;color:#5a6a7e;text-align:right;">HST (${(invoice.taxRate * 100).toFixed(0)}%)</td>
+                <td style="padding:4px 12px;color:#1B2A47;font-weight:600;text-align:right;">${fmt(invoice.taxBreakdown.hst)}</td>
+              </tr>`
+            : ''}
+          ${invoice.taxBreakdown?.pst
+            ? `<tr>
+                <td style="padding:4px 12px;color:#5a6a7e;text-align:right;">PST</td>
+                <td style="padding:4px 12px;color:#1B2A47;font-weight:600;text-align:right;">${fmt(invoice.taxBreakdown.pst)}</td>
+              </tr>`
+            : ''}
+          ${invoice.taxBreakdown?.qst
+            ? `<tr>
+                <td style="padding:4px 12px;color:#5a6a7e;text-align:right;">QST (9.975%)</td>
+                <td style="padding:4px 12px;color:#1B2A47;font-weight:600;text-align:right;">${fmt(invoice.taxBreakdown.qst)}</td>
+              </tr>`
+            : ''}
+          ${invoice.tax > 0 && !invoice.taxBreakdown
             ? `<tr>
                 <td style="padding:4px 12px;color:#5a6a7e;text-align:right;">Tax (${(invoice.taxRate * 100).toFixed(1).replace(/\.0$/, '')}%)</td>
                 <td style="padding:4px 12px;color:#1B2A47;font-weight:600;text-align:right;">${fmt(invoice.tax)}</td>
@@ -513,6 +572,277 @@ router.delete(
     } catch (e) {
       next(e);
     }
+  }
+);
+
+// ─── POST /api/system-admin/billing/invoices/:id/remind ──────────────────────
+// Send a payment reminder email for a specific invoice.
+
+router.post(
+  '/invoices/:id/remind',
+  async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const invoice = await Invoice.findById(req.params['id'])
+        .setOptions({ bypassTenantCheck: true });
+
+      if (!invoice) {
+        res.status(404).json({ error: 'Invoice not found' });
+        return;
+      }
+
+      if (invoice.status !== 'sent' && invoice.status !== 'overdue') {
+        res.status(400).json({ error: 'Can only send reminders for sent or overdue invoices' });
+        return;
+      }
+
+      const org = await Organization.findById(invoice.organizationId);
+      if (!org) {
+        res.status(404).json({ error: 'Organization not found' });
+        return;
+      }
+
+      const fmt = (cents: number): string => `$${(cents / 100).toFixed(2)} CAD`;
+      const now = new Date();
+      const daysOverdue = Math.max(0, Math.floor((now.getTime() - invoice.dueDate.getTime()) / (1000 * 60 * 60 * 24)));
+      const isOverdue = now > invoice.dueDate;
+
+      await sendPaymentReminderEmail({
+        email: org.billingEmail,
+        orgName: org.name,
+        invoiceNumber: invoice.invoiceNumber,
+        totalFormatted: fmt(invoice.total),
+        dueDateFormatted: invoice.dueDate.toLocaleDateString('en-CA', {
+          year: 'numeric', month: 'long', day: 'numeric',
+        }),
+        daysOverdue,
+        isOverdue,
+      });
+
+      invoice.reminderSentAt = now;
+      invoice.reminderCount = (invoice.reminderCount ?? 0) + 1;
+      await invoice.save();
+
+      res.json({ message: 'Reminder sent', reminderCount: invoice.reminderCount });
+    } catch (e) {
+      next(e);
+    }
+  }
+);
+
+// ─── POST /api/system-admin/billing/mark-overdue ─────────────────────────────
+// Scan all sent invoices past their due date and mark them as overdue.
+// Optionally sends reminders. Call this periodically (e.g. daily cron).
+
+router.post(
+  '/mark-overdue',
+  async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { sendReminders = false } = req.body as { sendReminders?: boolean };
+      const now = new Date();
+
+      // Find sent invoices past due
+      const overdueInvoices = await Invoice.find({
+        status: 'sent',
+        dueDate: { $lt: now },
+      }).setOptions({ bypassTenantCheck: true });
+
+      const results: { invoiceNumber: string; orgId: string; daysOverdue: number; reminderSent: boolean }[] = [];
+
+      for (const invoice of overdueInvoices) {
+        invoice.status = 'overdue';
+        await invoice.save();
+
+        const daysOverdue = Math.floor((now.getTime() - invoice.dueDate.getTime()) / (1000 * 60 * 60 * 24));
+
+        let reminderSent = false;
+        if (sendReminders) {
+          const org = await Organization.findById(invoice.organizationId);
+          if (org) {
+            const fmt = (cents: number): string => `$${(cents / 100).toFixed(2)} CAD`;
+            await sendPaymentReminderEmail({
+              email: org.billingEmail,
+              orgName: org.name,
+              invoiceNumber: invoice.invoiceNumber,
+              totalFormatted: fmt(invoice.total),
+              dueDateFormatted: invoice.dueDate.toLocaleDateString('en-CA', {
+                year: 'numeric', month: 'long', day: 'numeric',
+              }),
+              daysOverdue,
+              isOverdue: true,
+            });
+            invoice.reminderSentAt = now;
+            invoice.reminderCount = (invoice.reminderCount ?? 0) + 1;
+            await invoice.save();
+            reminderSent = true;
+          }
+        }
+
+        results.push({
+          invoiceNumber: invoice.invoiceNumber,
+          orgId: invoice.organizationId.toString(),
+          daysOverdue,
+          reminderSent,
+        });
+      }
+
+      res.json({
+        message: `${results.length} invoice(s) marked overdue`,
+        invoices: results,
+      });
+    } catch (e) {
+      next(e);
+    }
+  }
+);
+
+// ─── POST /api/system-admin/billing/suspend-overdue ──────────────────────────
+// Suspend organizations with invoices overdue beyond a threshold (default: 30 days).
+
+router.post(
+  '/suspend-overdue',
+  async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { daysThreshold = 30, dryRun = false } = req.body as {
+        daysThreshold?: number;
+        dryRun?: boolean;
+      };
+
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - daysThreshold);
+
+      // Find overdue invoices past the threshold
+      const overdueInvoices = await Invoice.find({
+        status: 'overdue',
+        dueDate: { $lt: cutoff },
+      }).setOptions({ bypassTenantCheck: true });
+
+      // Group by org — only suspend once per org
+      const orgIds = [...new Set(overdueInvoices.map((i) => i.organizationId.toString()))];
+
+      const results: { orgId: string; orgName: string; invoiceNumber: string; daysOverdue: number; suspended: boolean }[] = [];
+
+      for (const orgId of orgIds) {
+        const org = await Organization.findById(orgId);
+        if (!org || !org.isActive) continue;
+
+        const orgInvoices = overdueInvoices.filter((i) => i.organizationId.toString() === orgId);
+        const oldestOverdue = orgInvoices.sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime())[0]!;
+        const daysOverdue = Math.floor((Date.now() - oldestOverdue.dueDate.getTime()) / (1000 * 60 * 60 * 24));
+
+        if (!dryRun) {
+          org.isActive = false;
+          org.suspendedAt = new Date();
+          org.suspensionReason = `Invoice ${oldestOverdue.invoiceNumber} overdue by ${daysOverdue} days`;
+          await org.save();
+
+          const fmt = (cents: number): string => `$${(cents / 100).toFixed(2)} CAD`;
+          await sendSuspensionEmail({
+            email: org.billingEmail,
+            orgName: org.name,
+            reason: `Outstanding invoice ${oldestOverdue.invoiceNumber} (${fmt(oldestOverdue.total)}) is ${daysOverdue} days overdue.`,
+            invoiceNumber: oldestOverdue.invoiceNumber,
+          });
+
+          // Notify org admins
+          const admins = await User.find({
+            organizationId: org._id,
+            role: 'admin',
+            isActive: true,
+          }).setOptions({ bypassTenantCheck: true });
+
+          const systemAdminId = new mongoose.Types.ObjectId(req.user!.userId);
+          await Promise.all(admins.map((admin) =>
+            Notification.create({
+              organizationId: org._id,
+              userId: admin._id,
+              type: 'system',
+              title: 'Account Suspended — Payment Required',
+              body: `Your account has been suspended due to an overdue invoice (${oldestOverdue.invoiceNumber}). Please pay immediately to restore access.`,
+              link: '/billing',
+            })
+          ));
+        }
+
+        results.push({
+          orgId,
+          orgName: org.name,
+          invoiceNumber: oldestOverdue.invoiceNumber,
+          daysOverdue,
+          suspended: !dryRun,
+        });
+      }
+
+      res.json({
+        message: dryRun
+          ? `${results.length} organization(s) would be suspended (dry run)`
+          : `${results.length} organization(s) suspended`,
+        threshold: `${daysThreshold} days`,
+        organizations: results,
+      });
+    } catch (e) {
+      next(e);
+    }
+  }
+);
+
+// ─── POST /api/system-admin/billing/reactivate/:orgId ────────────────────────
+// Reactivate a suspended organization after payment is resolved.
+
+router.post(
+  '/reactivate/:orgId',
+  async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const org = await Organization.findById(req.params['orgId']);
+      if (!org) {
+        res.status(404).json({ error: 'Organization not found' });
+        return;
+      }
+
+      if (org.isActive) {
+        res.status(400).json({ error: 'Organization is already active' });
+        return;
+      }
+
+      org.isActive = true;
+      org.suspendedAt = undefined;
+      org.suspensionReason = undefined;
+      await org.save();
+
+      // Notify org admins
+      const admins = await User.find({
+        organizationId: org._id,
+        role: 'admin',
+        isActive: true,
+      }).setOptions({ bypassTenantCheck: true });
+
+      await Promise.all(admins.map((admin) =>
+        Notification.create({
+          organizationId: org._id,
+          userId: admin._id,
+          type: 'system',
+          title: 'Account Reactivated',
+          body: 'Your account has been reactivated. Full platform access has been restored.',
+          link: '/dashboard',
+        })
+      ));
+
+      res.json({ message: 'Organization reactivated', orgId: org._id, name: org.name });
+    } catch (e) {
+      next(e);
+    }
+  }
+);
+
+// ─── GET /api/system-admin/billing/tax-rates ─────────────────────────────────
+// Return Canadian tax rate info for a given province. Used by UI for preview.
+
+router.get(
+  '/tax-rates',
+  async (req: AuthRequest, res: Response): Promise<void> => {
+    const country = (req.query['country'] as string) || 'CA';
+    const province = (req.query['province'] as string) || '';
+    const rates = getTaxRates(country, province);
+    res.json(rates);
   }
 );
 

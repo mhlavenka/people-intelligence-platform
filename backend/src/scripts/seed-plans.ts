@@ -19,10 +19,12 @@ const plans = [
     priceMonthly: 59900,          // CAD $599/mo
     overagePriceCents: 1500,
     maxUsers: 50,
+    modules: ['conflict'],
+    limits: { maxAIAnalyses: 10, maxSurveyResponses: 500, maxCoachingSessions: 0, maxFileStorageMB: 500 },
     features: [
       'Up to 50 employees',
       'Conflict Intelligence™ module',
-      'AI-powered conflict analysis',
+      '10 AI analyses per month',
       'Manager conversation guides',
       'Email support',
     ],
@@ -36,10 +38,12 @@ const plans = [
     priceMonthly: 119900,         // CAD $1,199/mo
     overagePriceCents: 1200,
     maxUsers: 200,
+    modules: ['conflict'],
+    limits: { maxAIAnalyses: 50, maxSurveyResponses: 2000, maxCoachingSessions: 0, maxFileStorageMB: 2000 },
     features: [
       'Up to 200 employees',
       'Conflict Intelligence™ module',
-      'AI-powered conflict analysis',
+      '50 AI analyses per month',
       'Manager conversation guides',
       'Escalation workflow',
       'Priority support',
@@ -54,9 +58,12 @@ const plans = [
     priceMonthly: 0,              // Custom — quoted separately
     overagePriceCents: 0,
     maxUsers: 999,
+    modules: ['conflict'],
+    limits: { maxAIAnalyses: 0, maxSurveyResponses: 0, maxCoachingSessions: 0, maxFileStorageMB: 0 },
     features: [
       '200–500+ employees',
       'Conflict Intelligence™ module',
+      'Unlimited AI analyses',
       'Full platform access',
       'Dedicated success manager',
       'Custom integrations',
@@ -74,10 +81,13 @@ const plans = [
     priceMonthly: 250000,         // CAD $2,500 one-time (stored as monthly for invoicing)
     overagePriceCents: 0,
     maxUsers: 999,
+    modules: ['neuroinclusion'],
+    limits: { maxAIAnalyses: 1, maxSurveyResponses: 0, maxCoachingSessions: 0, maxFileStorageMB: 500 },
     features: [
       'One-time, full organization',
       'Neuro-Inclusion Compass™ assessment',
       '7-dimension analysis',
+      '1 AI analysis report',
       'Comprehensive PDF report',
       'Actionable recommendations',
     ],
@@ -91,9 +101,12 @@ const plans = [
     priceMonthly: 70000,          // CAD $8,400/yr ÷ 12 = $700/mo
     overagePriceCents: 0,
     maxUsers: 999,
+    modules: ['neuroinclusion'],
+    limits: { maxAIAnalyses: 10, maxSurveyResponses: 0, maxCoachingSessions: 0, maxFileStorageMB: 1000 },
     features: [
       'Annual subscription',
       'Continuous monitoring',
+      '10 AI analyses per month',
       'Quarterly re-assessments',
       'Trend analytics dashboard',
       'Inclusion maturity tracking',
@@ -108,9 +121,12 @@ const plans = [
     priceMonthly: 600000,         // CAD $6,000 one-time
     overagePriceCents: 0,
     maxUsers: 999,
+    modules: ['neuroinclusion'],
+    limits: { maxAIAnalyses: 5, maxSurveyResponses: 0, maxCoachingSessions: 4, maxFileStorageMB: 1000 },
     features: [
       '3-month guided program',
       'Add-on to Compass Subscription',
+      '5 AI analyses per month',
       'Facilitated workshops',
       'Manager coaching sessions',
       'Action plan development',
@@ -125,8 +141,11 @@ const plans = [
     priceMonthly: 0,              // Custom
     overagePriceCents: 0,
     maxUsers: 999,
+    modules: ['neuroinclusion'],
+    limits: { maxAIAnalyses: 0, maxSurveyResponses: 0, maxCoachingSessions: 0, maxFileStorageMB: 0 },
     features: [
       'Multi-department deployment',
+      'Unlimited AI analyses',
       'White-label option',
       'Custom assessment dimensions',
       'Dedicated analyst',
@@ -144,9 +163,12 @@ const plans = [
     priceMonthly: 40000,          // CAD $4,800/yr ÷ 12 = $400/mo
     overagePriceCents: 0,
     maxUsers: 5,
+    modules: ['succession'],
+    limits: { maxAIAnalyses: 10, maxSurveyResponses: 100, maxCoachingSessions: 0, maxFileStorageMB: 500 },
     features: [
       'Up to 5 successors',
       'AI-generated IDPs (GROW model)',
+      '10 AI analyses per month',
       'Milestone tracking',
       'EQ-i score integration',
       'Coaching session logs',
@@ -161,9 +183,12 @@ const plans = [
     priceMonthly: 80000,          // CAD $9,600/yr ÷ 12 = $800/mo
     overagePriceCents: 0,
     maxUsers: 15,
+    modules: ['succession'],
+    limits: { maxAIAnalyses: 30, maxSurveyResponses: 500, maxCoachingSessions: 0, maxFileStorageMB: 1000 },
     features: [
       'Up to 15 leaders',
       'AI-generated IDPs (GROW model)',
+      '30 AI analyses per month',
       'Milestone tracking',
       'Team succession dashboard',
       'Progress reporting',
@@ -178,9 +203,12 @@ const plans = [
     priceMonthly: 150000,         // CAD $18,000/yr ÷ 12 = $1,500/mo
     overagePriceCents: 0,
     maxUsers: 999,
+    modules: ['succession'],
+    limits: { maxAIAnalyses: 0, maxSurveyResponses: 0, maxCoachingSessions: 4, maxFileStorageMB: 5000 },
     features: [
       'Unlimited successors',
       '4 Helena coaching sessions/yr',
+      'Unlimited AI analyses',
       'AI-generated IDPs (GROW model)',
       'Full analytics suite',
       'Priority support',
@@ -195,8 +223,11 @@ const plans = [
     priceMonthly: 120000,         // CAD $1,200/person
     overagePriceCents: 0,
     maxUsers: 1,
+    modules: ['succession'],
+    limits: { maxAIAnalyses: 2, maxSurveyResponses: 0, maxCoachingSessions: 0, maxFileStorageMB: 100 },
     features: [
       'Standalone per-person plan',
+      '2 AI analyses',
       'Single AI-generated IDP',
       'GROW model framework',
       'Milestone tracking',
@@ -213,10 +244,13 @@ const plans = [
     priceMonthly: 200000,         // CAD $24,000/yr ÷ 12 = $2,000/mo
     overagePriceCents: 0,
     maxUsers: 999,
+    modules: ['conflict', 'neuroinclusion', 'succession'],
+    limits: { maxAIAnalyses: 0, maxSurveyResponses: 0, maxCoachingSessions: 2, maxFileStorageMB: 0 },
     features: [
       'Conflict Intelligence™',
       'Neuro-Inclusion Compass™',
       'Leadership & Succession Hub™',
+      'Unlimited AI analyses',
       '2 Helena coaching days/year',
       'Bundle saves 25%',
       'Dedicated success manager',

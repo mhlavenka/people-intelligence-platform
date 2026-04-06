@@ -41,6 +41,13 @@ interface BillingAddress {
   country?: string;
 }
 
+interface TaxBreakdown {
+  gst: number;
+  hst: number;
+  pst: number;
+  qst: number;
+}
+
 interface Invoice {
   _id: string;
   organizationId: OrgRef | string;
@@ -49,6 +56,8 @@ interface Invoice {
   lineItems: LineItem[];
   subtotal: number;
   tax: number;
+  taxBreakdown?: TaxBreakdown;
+  taxLabel?: string;
   total: number;
   taxRate: number;
   currency: string;
@@ -69,6 +78,7 @@ interface OrgOption {
   billingEmail?: string;
   billingAddress?: BillingAddress;
   taxId?: string;
+  taxExempt?: boolean;
 }
 
 interface AvailablePlan {
@@ -81,9 +91,18 @@ interface AvailablePlan {
   features: string[];
 }
 
-// Standard VAT/GST rates by country (percentage)
+interface TaxRatesInfo {
+  gst: number;
+  hst: number;
+  pst: number;
+  qst: number;
+  combined: number;
+  label: string;
+}
+
+// Standard VAT/GST rates by country (percentage) — fallback for non-Canadian
 const COUNTRY_TAX_RATES: Record<string, number> = {
-  AT: 20, AU: 10, BE: 21, CA: 5,  CH: 8.1, CZ: 21, DE: 19, DK: 25,
+  AT: 20, AU: 10, BE: 21, CH: 8.1, CZ: 21, DE: 19, DK: 25,
   ES: 21, FI: 25.5, FR: 20, GB: 20, HR: 25, HU: 27, IE: 23, IT: 22,
   NL: 21, NO: 25, PL: 23, PT: 23, RO: 19, SE: 25, SI: 22, SK: 20,
   US: 0,
@@ -138,11 +157,11 @@ const COUNTRY_TAX_RATES: Record<string, number> = {
           <span class="stat-label">Total Invoices</span>
         </div>
         <div class="stat-card">
-          <span class="stat-value blue">{{ outstandingTotal() | currency:'USD':'symbol':'1.2-2' }}</span>
+          <span class="stat-value blue">{{ outstandingTotal() | currency:'CAD':'symbol':'1.2-2' }}</span>
           <span class="stat-label">Outstanding</span>
         </div>
         <div class="stat-card">
-          <span class="stat-value green">{{ paidThisMonth() | currency:'USD':'symbol':'1.2-2' }}</span>
+          <span class="stat-value green">{{ paidThisMonth() | currency:'CAD':'symbol':'1.2-2' }}</span>
           <span class="stat-label">Paid This Month</span>
         </div>
         <div class="stat-card">
@@ -205,10 +224,24 @@ const COUNTRY_TAX_RATES: Record<string, number> = {
                     <span>Tax ID: <strong>{{ genSelectedOrg()!.taxId }}</strong></span>
                   </div>
                 }
-                @if (genSelectedOrg()!.billingAddress?.country && genTaxRate > 0) {
+                @if (genTaxInfo) {
                   <div class="org-billing-row tax-suggestion">
                     <mat-icon>auto_fix_high</mat-icon>
-                    <span>Suggested VAT rate for {{ genSelectedOrg()!.billingAddress!.country }}: <strong>{{ genTaxRate }}%</strong></span>
+                    <span>
+                      {{ genSelectedOrg()!.billingAddress!.country }}
+                      @if (genSelectedOrg()!.billingAddress?.state) {
+                        / {{ genSelectedOrg()!.billingAddress!.state }}
+                      }
+                      — <strong>{{ genTaxInfo.label }}</strong>
+                    </span>
+                  </div>
+                } @else if (genSelectedOrg()!.billingAddress?.country && genTaxRate > 0) {
+                  <div class="org-billing-row tax-suggestion">
+                    <mat-icon>auto_fix_high</mat-icon>
+                    <span>
+                      {{ genSelectedOrg()!.billingAddress!.country }}:
+                      <strong>{{ genTaxLabel || (genTaxRate + '%') }}</strong>
+                    </span>
                   </div>
                 }
                 @if (selectedPlan(); as sp) {
@@ -243,11 +276,61 @@ const COUNTRY_TAX_RATES: Record<string, number> = {
               </mat-form-field>
             </div>
 
-            <!-- Tax Rate -->
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Tax Rate (%)</mat-label>
-              <input matInput type="number" [(ngModel)]="genTaxRate" min="0" max="100" step="0.1" />
-            </mat-form-field>
+            <!-- Tax -->
+            <div class="tax-section">
+              <div class="tax-section-header">
+                <mat-icon>receipt_long</mat-icon>
+                <span>Taxation</span>
+                <label class="tax-exempt-toggle">
+                  <input type="checkbox" [(ngModel)]="genTaxExempt" (ngModelChange)="onTaxExemptChange()" />
+                  Tax Exempt (e.g. Indigenous)
+                </label>
+              </div>
+              @if (!genTaxExempt) {
+                <div class="tax-fields">
+                  @if (genTaxInfo) {
+                    <div class="tax-auto-label">
+                      <mat-icon>auto_fix_high</mat-icon>
+                      <span>{{ genTaxInfo.label }} — auto-detected from billing address</span>
+                    </div>
+                  }
+                  <div class="form-row">
+                    @if (genTaxInfo?.isHST) {
+                      <mat-form-field appearance="outline" class="half-width">
+                        <mat-label>HST (%)</mat-label>
+                        <input matInput type="number" [(ngModel)]="genHST" min="0" max="100" step="0.1" />
+                      </mat-form-field>
+                    } @else {
+                      <mat-form-field appearance="outline" class="half-width">
+                        <mat-label>GST (%)</mat-label>
+                        <input matInput type="number" [(ngModel)]="genGST" min="0" max="100" step="0.1" />
+                      </mat-form-field>
+                      @if (genTaxInfo?.hasQST) {
+                        <mat-form-field appearance="outline" class="half-width">
+                          <mat-label>QST (%)</mat-label>
+                          <input matInput type="number" [(ngModel)]="genQST" min="0" max="100" step="0.001" />
+                        </mat-form-field>
+                      } @else if (genTaxInfo?.hasPST) {
+                        <mat-form-field appearance="outline" class="half-width">
+                          <mat-label>PST (%)</mat-label>
+                          <input matInput type="number" [(ngModel)]="genPST" min="0" max="100" step="0.1" />
+                        </mat-form-field>
+                      } @else if (!genTaxInfo) {
+                        <mat-form-field appearance="outline" class="half-width">
+                          <mat-label>Tax Rate (%)</mat-label>
+                          <input matInput type="number" [(ngModel)]="genTaxRate" min="0" max="100" step="0.1" />
+                        </mat-form-field>
+                      }
+                    }
+                  </div>
+                </div>
+              } @else {
+                <div class="tax-exempt-note">
+                  <mat-icon>info</mat-icon>
+                  <span>No tax will be applied to this invoice.</span>
+                </div>
+              }
+            </div>
 
             <!-- Notes -->
             <mat-form-field appearance="outline" class="full-width">
@@ -263,9 +346,26 @@ const COUNTRY_TAX_RATES: Record<string, number> = {
                   <span>Preview — {{ previewInvoice()!.invoiceNumber }}</span>
                 </div>
                 <div class="preview-totals">
-                  <span>Subtotal: <strong>{{ (previewInvoice()!.subtotal / 100) | currency:'USD':'symbol':'1.2-2' }}</strong></span>
-                  <span>Tax ({{ previewInvoice()!.taxRate * 100 | number:'1.0-1' }}%): <strong>{{ (previewInvoice()!.tax / 100) | currency:'USD':'symbol':'1.2-2' }}</strong></span>
-                  <span>Total: <strong class="total-amount">{{ (previewInvoice()!.total / 100) | currency:'USD':'symbol':'1.2-2' }}</strong></span>
+                  <span>Subtotal: <strong>{{ (previewInvoice()!.subtotal / 100) | currency:'CAD':'symbol':'1.2-2' }}</strong></span>
+                  @if (previewInvoice()!.taxBreakdown?.gst) {
+                    <span>GST (5%): <strong>{{ (previewInvoice()!.taxBreakdown!.gst / 100) | currency:'CAD':'symbol':'1.2-2' }}</strong></span>
+                  }
+                  @if (previewInvoice()!.taxBreakdown?.hst) {
+                    <span>HST: <strong>{{ (previewInvoice()!.taxBreakdown!.hst / 100) | currency:'CAD':'symbol':'1.2-2' }}</strong></span>
+                  }
+                  @if (previewInvoice()!.taxBreakdown?.pst) {
+                    <span>PST: <strong>{{ (previewInvoice()!.taxBreakdown!.pst / 100) | currency:'CAD':'symbol':'1.2-2' }}</strong></span>
+                  }
+                  @if (previewInvoice()!.taxBreakdown?.qst) {
+                    <span>QST (9.975%): <strong>{{ (previewInvoice()!.taxBreakdown!.qst / 100) | currency:'CAD':'symbol':'1.2-2' }}</strong></span>
+                  }
+                  @if (previewInvoice()!.tax > 0 && !previewInvoice()!.taxBreakdown) {
+                    <span>Tax ({{ previewInvoice()!.taxRate * 100 | number:'1.0-1' }}%): <strong>{{ (previewInvoice()!.tax / 100) | currency:'CAD':'symbol':'1.2-2' }}</strong></span>
+                  }
+                  @if (previewInvoice()!.taxLabel) {
+                    <span class="tax-label-hint">{{ previewInvoice()!.taxLabel }}</span>
+                  }
+                  <span>Total: <strong class="total-amount">{{ (previewInvoice()!.total / 100) | currency:'CAD':'symbol':'1.2-2' }}</strong></span>
                 </div>
               </div>
             }
@@ -1205,6 +1305,34 @@ const COUNTRY_TAX_RATES: Record<string, number> = {
 
     .plan-info { background: #f0fdf4; border-radius: 6px; padding: 4px 8px; }
     .plan-info mat-icon { color: #27C4A0 !important; }
+
+    /* Tax section */
+    .tax-section {
+      background: #f8fafc; border-radius: 10px; padding: 14px 16px;
+      border: 1px solid #e8eef4;
+    }
+    .tax-section-header {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+      font-size: 13px; font-weight: 600; color: #1B2A47;
+      mat-icon { font-size: 18px; color: #3A9FD6; }
+    }
+    .tax-exempt-toggle {
+      margin-left: auto; display: flex; align-items: center; gap: 6px;
+      font-size: 12px; font-weight: 400; color: #5a6a7e; cursor: pointer;
+      input[type=checkbox] { accent-color: #e86c3a; }
+    }
+    .tax-fields { display: flex; flex-direction: column; gap: 8px; }
+    .tax-auto-label {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 12px; color: #27C4A0; margin-bottom: 4px;
+      mat-icon { font-size: 16px; width: 16px; height: 16px; color: #27C4A0; }
+    }
+    .tax-exempt-note {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 13px; color: #9aa5b4; font-style: italic;
+      mat-icon { font-size: 16px; width: 16px; height: 16px; }
+    }
+    .tax-label-hint { font-size: 11px; color: #9aa5b4; font-style: italic; }
   `],
 })
 export class InvoicesComponent implements OnInit {
@@ -1231,7 +1359,14 @@ export class InvoicesComponent implements OnInit {
   genSelectedOrg  = signal<OrgOption | null>(null);
   genPeriodFrom: Date | null = null;
   genPeriodTo:   Date | null = null;
-  genTaxRate    = 0;
+  genTaxRate    = 0;    // fallback for non-Canadian
+  genGST        = 0;
+  genHST        = 0;
+  genPST        = 0;
+  genQST        = 0;
+  genTaxExempt  = false;
+  genTaxLabel   = '';
+  genTaxInfo: { label: string; isHST: boolean; hasQST: boolean; hasPST: boolean } | null = null;
   genNotes      = '';
   generating    = signal(false);
   previewInvoice = signal<Invoice | null>(null);
@@ -1420,14 +1555,59 @@ export class InvoicesComponent implements OnInit {
   onOrgChange(orgId: string): void {
     const org = this.orgs().find((o) => o._id === orgId) ?? null;
     this.genSelectedOrg.set(org);
-    // Auto-suggest VAT rate based on org country
-    if (org?.billingAddress?.country) {
-      const suggested = COUNTRY_TAX_RATES[org.billingAddress.country];
+    this.genTaxLabel = '';
+    this.genTaxInfo = null;
+    this.genGST = 0;
+    this.genHST = 0;
+    this.genPST = 0;
+    this.genQST = 0;
+    this.genTaxRate = 0;
+    this.genTaxExempt = org?.taxExempt ?? false;
+    this.previewInvoice.set(null);
+
+    if (this.genTaxExempt || !org?.billingAddress?.country) return;
+
+    const country = org.billingAddress.country.toUpperCase();
+    if (country === 'CA') {
+      const province = (org.billingAddress.state || '').toUpperCase();
+      this.api.get<TaxRatesInfo>(`/system-admin/billing/tax-rates?country=CA&province=${province}`).subscribe({
+        next: (rates) => {
+          this.genTaxLabel = rates.label;
+          const isHST = rates.hst > 0;
+          const hasQST = rates.qst > 0;
+          const hasPST = rates.pst > 0;
+
+          this.genTaxInfo = { label: rates.label, isHST, hasQST, hasPST };
+
+          if (isHST) {
+            this.genHST = Math.round(rates.hst * 10000) / 100;
+          } else {
+            this.genGST = Math.round(rates.gst * 10000) / 100;
+            if (hasQST) this.genQST = Math.round(rates.qst * 100000) / 1000;
+            if (hasPST) this.genPST = Math.round(rates.pst * 10000) / 100;
+          }
+        },
+      });
+    } else {
+      const suggested = COUNTRY_TAX_RATES[country];
       if (suggested !== undefined) {
         this.genTaxRate = suggested;
+        this.genTaxLabel = `VAT ${suggested}%`;
       }
     }
-    this.previewInvoice.set(null);
+  }
+
+  onTaxExemptChange(): void {
+    if (this.genTaxExempt) {
+      this.genGST = 0;
+      this.genHST = 0;
+      this.genPST = 0;
+      this.genQST = 0;
+      this.genTaxRate = 0;
+    } else {
+      // Re-fetch rates for the selected org
+      if (this.genOrgId) this.onOrgChange(this.genOrgId);
+    }
   }
 
   resetGenerateForm(): void {
@@ -1436,16 +1616,32 @@ export class InvoicesComponent implements OnInit {
     this.genPeriodFrom = null;
     this.genPeriodTo   = null;
     this.genTaxRate    = 0;
+    this.genGST        = 0;
+    this.genHST        = 0;
+    this.genPST        = 0;
+    this.genQST        = 0;
+    this.genTaxExempt  = false;
+    this.genTaxLabel   = '';
+    this.genTaxInfo    = null;
     this.genNotes      = '';
     this.previewInvoice.set(null);
   }
 
   buildGeneratePayload(): Record<string, unknown> {
+    // Combine individual tax fields into the single taxRate percentage the backend expects
+    // For Canadian orgs the backend auto-calculates from address, so we send 0 to let it auto-detect
+    // For non-Canadian we send the manual rate
+    const isCanadian = this.genSelectedOrg()?.billingAddress?.country?.toUpperCase() === 'CA';
+    const taxRate = this.genTaxExempt ? 0
+      : isCanadian ? 0   // backend auto-calculates from address
+      : this.genTaxRate;
+
     return {
       organizationId: this.genOrgId,
       periodFrom: this.genPeriodFrom ? this.genPeriodFrom.toISOString() : null,
       periodTo:   this.genPeriodTo   ? this.genPeriodTo.toISOString()   : null,
-      taxRate: this.genTaxRate,
+      taxRate,
+      taxExempt: this.genTaxExempt,
       notes:   this.genNotes || undefined,
     };
   }

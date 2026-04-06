@@ -164,6 +164,50 @@ Rules:
 - NO objects, NO nested arrays, NO extra fields`;
 }
 
+export function buildConflictIDPPrompt(
+  userProfile: { firstName: string; role: string },
+  conflictAnalysis: {
+    riskScore: number;
+    riskLevel: string;
+    conflictTypes: string[];
+    aiNarrative: string;
+  },
+  goals: string
+): string {
+  return `Generate a professional Individual Development Plan (IDP) focused on conflict resolution and interpersonal skill development using the GROW model.
+
+Context: A workplace conflict analysis has been conducted with the following results:
+- Risk Score: ${conflictAnalysis.riskScore}/100 (${conflictAnalysis.riskLevel})
+- Conflict Types Detected: ${conflictAnalysis.conflictTypes.join(', ')}
+- Analysis Summary: ${conflictAnalysis.aiNarrative.slice(0, 800)}
+
+Target Individual:
+- Name: ${userProfile.firstName}
+- Role: ${userProfile.role}
+- Development Goals: ${goals}
+
+Create a development plan that specifically addresses the conflict patterns identified above. Focus on:
+- Conflict resolution skills relevant to the detected conflict types
+- Communication and emotional intelligence competencies
+- Interest-based negotiation techniques
+- Team dynamics and relationship repair strategies
+- Self-awareness and conflict style management
+
+Please create a comprehensive IDP with:
+1. **GROW Framework**:
+   - Goal: Specific, measurable conflict-resolution development goal
+   - Reality: Current conflict landscape and skill baseline
+   - Options: 4-6 development strategies targeting the identified conflict types
+   - Will: 3-5 concrete committed actions with timelines
+
+2. **Milestones**: 4 milestone checkpoints over 6 months with success criteria
+
+3. **Resources**: Recommended tools, training, or support for conflict skill building
+
+Respond with ONLY valid JSON — no explanation, no markdown, no code fences. Start your response with { and end with }.
+Required JSON shape: { "goal": string, "currentReality": string, "options": string[], "willDoActions": string[], "milestones": [{"title":string,"weeksFromNow":number,"successCriteria":string}], "resources": string[], "competencyGaps": string[] }`;
+}
+
 export function buildIDPPrompt(
   coacheeProfile: {
     firstName: string;

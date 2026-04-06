@@ -6,11 +6,19 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ApiService } from '../../../core/api.service';
+
+interface PlanLimits {
+  maxAIAnalyses: number;
+  maxSurveyResponses: number;
+  maxCoachingSessions: number;
+  maxFileStorageMB: number;
+}
 
 interface Plan {
   _id: string;
@@ -20,6 +28,8 @@ interface Plan {
   priceMonthly: number;
   overagePriceCents: number;
   maxUsers: number;
+  modules: string[];
+  limits: PlanLimits;
   features: string[];
   isActive: boolean;
   sortOrder: number;
@@ -32,10 +42,18 @@ interface PlanForm {
   priceMonthly: number | null;
   overagePriceCents: number | null;
   maxUsers: number | null;
+  modules: Record<string, boolean>;
+  limits: PlanLimits;
   featuresRaw: string;   // newline-separated
   isActive: boolean;
   sortOrder: number | null;
 }
+
+const MODULE_DEFS = [
+  { key: 'conflict',       label: 'Conflict Intelligence\u2122',      icon: 'warning_amber' },
+  { key: 'neuroinclusion', label: 'Neuro-Inclusion Compass\u2122',    icon: 'psychology' },
+  { key: 'succession',     label: 'Leadership & Succession Hub\u2122', icon: 'trending_up' },
+];
 
 function emptyForm(): PlanForm {
   return {
@@ -45,6 +63,8 @@ function emptyForm(): PlanForm {
     priceMonthly: null,
     overagePriceCents: 1500,
     maxUsers: null,
+    modules: { conflict: false, neuroinclusion: false, succession: false },
+    limits: { maxAIAnalyses: 0, maxSurveyResponses: 0, maxCoachingSessions: 0, maxFileStorageMB: 0 },
     featuresRaw: '',
     isActive: true,
     sortOrder: 0,
@@ -62,6 +82,7 @@ function emptyForm(): PlanForm {
     MatFormFieldModule,
     MatInputModule,
     MatSlideToggleModule,
+    MatCheckboxModule,
     MatProgressSpinnerModule,
     MatSnackBarModule,
     MatDividerModule,
@@ -138,6 +159,53 @@ function emptyForm(): PlanForm {
                 </mat-form-field>
               </div>
 
+              <!-- Included Modules -->
+              <div class="section-label">
+                <mat-icon>extension</mat-icon>
+                Included Modules
+              </div>
+              <div class="module-check-row">
+                @for (m of moduleDefs; track m.key) {
+                  <label class="module-check">
+                    <mat-checkbox [(ngModel)]="form().modules[m.key]" color="primary" />
+                    <mat-icon [style.color]="moduleColor(m.key)">{{ m.icon }}</mat-icon>
+                    <span>{{ m.label }}</span>
+                  </label>
+                }
+              </div>
+
+              <!-- Usage Limits -->
+              <div class="section-label">
+                <mat-icon>speed</mat-icon>
+                Usage Limits
+                <span class="section-hint">0 = unlimited</span>
+              </div>
+              <div class="form-row">
+                <mat-form-field appearance="outline" class="field-sm">
+                  <mat-label>AI Analyses / month</mat-label>
+                  <input matInput type="number" [(ngModel)]="form().limits.maxAIAnalyses" min="0" />
+                  <mat-icon matPrefix class="field-icon">smart_toy</mat-icon>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="field-sm">
+                  <mat-label>Survey Responses / month</mat-label>
+                  <input matInput type="number" [(ngModel)]="form().limits.maxSurveyResponses" min="0" />
+                  <mat-icon matPrefix class="field-icon">assignment</mat-icon>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="field-sm">
+                  <mat-label>Coaching Sessions / year</mat-label>
+                  <input matInput type="number" [(ngModel)]="form().limits.maxCoachingSessions" min="0" />
+                  <mat-icon matPrefix class="field-icon">psychology_alt</mat-icon>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="field-sm">
+                  <mat-label>File Storage (MB)</mat-label>
+                  <input matInput type="number" [(ngModel)]="form().limits.maxFileStorageMB" min="0" />
+                  <mat-icon matPrefix class="field-icon">cloud_upload</mat-icon>
+                </mat-form-field>
+              </div>
+
               <mat-form-field appearance="outline" class="full-width">
                 <mat-label>Features (one per line)</mat-label>
                 <textarea matInput [(ngModel)]="form().featuresRaw" rows="5"
@@ -201,8 +269,48 @@ function emptyForm(): PlanForm {
                     <span class="price-per">/mo</span>
                   </div>
                   <div class="price-meta">
-                    {{ plan.maxUsers }} included seats · {{ formatPrice(plan.overagePriceCents) }}/extra user
+                    {{ plan.maxUsers }} included seats
+                    @if (plan.overagePriceCents > 0) {
+                      · {{ formatPrice(plan.overagePriceCents) }}/extra user
+                    }
                   </div>
+                </div>
+
+                <!-- Modules -->
+                @if (plan.modules.length) {
+                  <div class="plan-modules">
+                    @for (mod of plan.modules; track mod) {
+                      <span class="module-chip" [style.background]="moduleColor(mod) + '18'"
+                            [style.color]="moduleColor(mod)">
+                        <mat-icon>{{ moduleIcon(mod) }}</mat-icon>
+                        {{ moduleLabel(mod) }}
+                      </span>
+                    }
+                  </div>
+                }
+
+                <!-- Limits -->
+                <div class="plan-limits">
+                  <div class="limit-item" [matTooltip]="plan.limits.maxAIAnalyses === 0 ? 'Unlimited' : plan.limits.maxAIAnalyses + ' per month'">
+                    <mat-icon>smart_toy</mat-icon>
+                    <span>{{ plan.limits.maxAIAnalyses === 0 ? '∞' : plan.limits.maxAIAnalyses }} AI analyses</span>
+                  </div>
+                  <div class="limit-item" [matTooltip]="plan.limits.maxSurveyResponses === 0 ? 'Unlimited' : plan.limits.maxSurveyResponses + ' per month'">
+                    <mat-icon>assignment</mat-icon>
+                    <span>{{ plan.limits.maxSurveyResponses === 0 ? '∞' : plan.limits.maxSurveyResponses }} responses</span>
+                  </div>
+                  @if (plan.limits.maxCoachingSessions) {
+                    <div class="limit-item">
+                      <mat-icon>psychology_alt</mat-icon>
+                      <span>{{ plan.limits.maxCoachingSessions }} coaching/yr</span>
+                    </div>
+                  }
+                  @if (plan.limits.maxFileStorageMB) {
+                    <div class="limit-item">
+                      <mat-icon>cloud_upload</mat-icon>
+                      <span>{{ plan.limits.maxFileStorageMB >= 1000 ? (plan.limits.maxFileStorageMB / 1000) + ' GB' : plan.limits.maxFileStorageMB + ' MB' }}</span>
+                    </div>
+                  }
                 </div>
 
                 @if (plan.features.length > 0) {
@@ -266,10 +374,29 @@ function emptyForm(): PlanForm {
       padding: 16px 24px 24px;
     }
 
+    /* Section labels */
+    .section-label {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 13px; font-weight: 700; color: #1B2A47;
+      margin-top: 8px;
+      mat-icon { font-size: 18px; color: #3A9FD6; }
+    }
+    .section-hint { font-size: 11px; color: #9aa5b4; font-weight: 400; margin-left: auto; }
+
+    /* Module checkboxes in form */
+    .module-check-row { display: flex; gap: 20px; flex-wrap: wrap; }
+    .module-check {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 13px; color: #374151; cursor: pointer;
+      mat-icon { font-size: 18px; width: 18px; height: 18px; }
+    }
+
+    .field-icon { font-size: 18px !important; color: #9aa5b4; }
+
     /* ── Plans grid ─────────────────────────────────────── */
     .plans-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
       gap: 20px;
     }
 
@@ -324,6 +451,26 @@ function emptyForm(): PlanForm {
     .price-per { font-size: 13px; color: #9ca3af; }
     .price-meta { font-size: 11px; color: #9ca3af; }
 
+    /* Modules chips */
+    .plan-modules {
+      display: flex; gap: 6px; flex-wrap: wrap;
+    }
+    .module-chip {
+      display: flex; align-items: center; gap: 4px;
+      font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 6px;
+      mat-icon { font-size: 14px; width: 14px; height: 14px; }
+    }
+
+    /* Limits row */
+    .plan-limits {
+      display: flex; gap: 12px; flex-wrap: wrap;
+    }
+    .limit-item {
+      display: flex; align-items: center; gap: 4px;
+      font-size: 11px; color: #6b7280;
+      mat-icon { font-size: 14px; width: 14px; height: 14px; color: #9aa5b4; }
+    }
+
     .plan-divider { margin: 0; }
 
     .features-list {
@@ -358,6 +505,8 @@ export class PlansComponent implements OnInit {
   editingId = signal<string | null>(null);
   form = signal<PlanForm>(emptyForm());
 
+  moduleDefs = MODULE_DEFS;
+
   sortedPlans = computed(() =>
     [...this.plans()].sort((a, b) => a.sortOrder - b.sortOrder || a.priceMonthly - b.priceMonthly)
   );
@@ -391,6 +540,17 @@ export class PlansComponent implements OnInit {
       priceMonthly: plan.priceMonthly,
       overagePriceCents: plan.overagePriceCents,
       maxUsers: plan.maxUsers,
+      modules: {
+        conflict:       plan.modules?.includes('conflict') ?? false,
+        neuroinclusion: plan.modules?.includes('neuroinclusion') ?? false,
+        succession:     plan.modules?.includes('succession') ?? false,
+      },
+      limits: {
+        maxAIAnalyses:       plan.limits?.maxAIAnalyses ?? 0,
+        maxSurveyResponses:  plan.limits?.maxSurveyResponses ?? 0,
+        maxCoachingSessions: plan.limits?.maxCoachingSessions ?? 0,
+        maxFileStorageMB:    plan.limits?.maxFileStorageMB ?? 0,
+      },
       featuresRaw: plan.features.join('\n'),
       isActive: plan.isActive,
       sortOrder: plan.sortOrder,
@@ -410,6 +570,11 @@ export class PlansComponent implements OnInit {
       return;
     }
 
+    const modules: string[] = [];
+    if (f.modules['conflict'])       modules.push('conflict');
+    if (f.modules['neuroinclusion']) modules.push('neuroinclusion');
+    if (f.modules['succession'])     modules.push('succession');
+
     const payload = {
       key: f.key.trim().toLowerCase().replace(/\s+/g, '-'),
       name: f.name.trim(),
@@ -417,6 +582,13 @@ export class PlansComponent implements OnInit {
       priceMonthly: Number(f.priceMonthly),
       overagePriceCents: Number(f.overagePriceCents ?? 1500),
       maxUsers: Number(f.maxUsers),
+      modules,
+      limits: {
+        maxAIAnalyses:       Number(f.limits.maxAIAnalyses ?? 0),
+        maxSurveyResponses:  Number(f.limits.maxSurveyResponses ?? 0),
+        maxCoachingSessions: Number(f.limits.maxCoachingSessions ?? 0),
+        maxFileStorageMB:    Number(f.limits.maxFileStorageMB ?? 0),
+      },
       features: f.featuresRaw.split('\n').map((l) => l.trim()).filter(Boolean),
       isActive: f.isActive,
       sortOrder: Number(f.sortOrder ?? 0),
@@ -464,10 +636,29 @@ export class PlansComponent implements OnInit {
 
   centsToDisplay(cents: number | null): string {
     if (cents === null || cents === undefined) return '';
-    return `$${(cents / 100).toFixed(2)} USD`;
+    return `$${(cents / 100).toFixed(2)} CAD`;
   }
 
   formatPrice(cents: number): string {
+    if (cents === 0) return 'Custom';
     return '$' + (cents / 100).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+  }
+
+  moduleColor(key: string): string {
+    const map: Record<string, string> = {
+      conflict: '#e86c3a', neuroinclusion: '#27C4A0', succession: '#3A9FD6',
+    };
+    return map[key] ?? '#9aa5b4';
+  }
+
+  moduleIcon(key: string): string {
+    return MODULE_DEFS.find((m) => m.key === key)?.icon ?? 'extension';
+  }
+
+  moduleLabel(key: string): string {
+    const map: Record<string, string> = {
+      conflict: 'Conflict', neuroinclusion: 'Neuro-Inclusion', succession: 'Succession',
+    };
+    return map[key] ?? key;
   }
 }

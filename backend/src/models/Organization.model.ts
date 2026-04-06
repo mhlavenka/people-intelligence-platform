@@ -22,11 +22,12 @@ export interface IBillingAddress {
 export interface IOrganization extends Document {
   name: string;
   slug: string;
-  plan: 'starter' | 'professional' | 'enterprise';
+  plan: string;
   modules: string[];
   billingEmail: string;
   billingAddress?: IBillingAddress;
   taxId?: string;          // VAT number, EIN, etc.
+  taxExempt: boolean;      // e.g. Indigenous organizations
   stripeCustomerId?: string;
   employeeCount?: number;
   industry?: string;
@@ -37,6 +38,8 @@ export interface IOrganization extends Document {
   trialEndsAt?: Date;
   maxUsers: number;
   notes?: string;
+  suspendedAt?: Date;
+  suspensionReason?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -47,7 +50,6 @@ const OrganizationSchema = new Schema<IOrganization>(
     slug: { type: String, required: true, unique: true, lowercase: true, trim: true },
     plan: {
       type: String,
-      enum: ['starter', 'professional', 'enterprise'],
       default: 'starter',
     },
     modules: [{ type: String }],
@@ -63,13 +65,16 @@ const OrganizationSchema = new Schema<IOrganization>(
       }, { _id: false }),
     },
     taxId: { type: String, trim: true },
+    taxExempt: { type: Boolean, default: false },
     stripeCustomerId: { type: String },
     employeeCount: { type: Number },
     industry: { type: String },
-    isActive:    { type: Boolean, default: true },
-    trialEndsAt: { type: Date },
-    maxUsers:    { type: Number, default: 100 },
-    notes:       { type: String, trim: true },
+    isActive:         { type: Boolean, default: true },
+    trialEndsAt:      { type: Date },
+    maxUsers:         { type: Number, default: 100 },
+    notes:            { type: String, trim: true },
+    suspendedAt:      { type: Date },
+    suspensionReason: { type: String, trim: true },
     logoUrl:     { type: String },
     departments: [{ type: String, trim: true }],
     theme: {

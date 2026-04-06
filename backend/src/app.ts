@@ -22,6 +22,8 @@ import systemAdminBillingRoutes from './routes/system-admin-billing.routes';
 import orgChartRoutes from './routes/org-chart.routes';
 import dashboardRoutes from './routes/dashboard.routes';
 import plansRoutes from './routes/plans.routes';
+import rolesRoutes from './routes/roles.routes';
+import systemAdminSettingsRoutes from './routes/system-admin-settings.routes';
 
 const app = express();
 
@@ -63,6 +65,8 @@ app.use('/api/system-admin/billing', systemAdminBillingRoutes);
 app.use('/api/org-chart', orgChartRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/plans', plansRoutes);
+app.use('/api/roles', rolesRoutes);
+app.use('/api/system-admin/settings', systemAdminSettingsRoutes);
 
 // 404 and error handlers (must be last)
 app.use(notFound);

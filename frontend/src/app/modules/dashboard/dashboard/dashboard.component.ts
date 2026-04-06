@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
@@ -7,7 +7,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ApiService } from '../../../core/api.service';
-import { AuthService } from '../../../core/auth.service';
+import { AuthService, AppRole } from '../../../core/auth.service';
+import { OrgContextService } from '../../../core/org-context.service';
 
 interface DashboardStats {
   conflict:       { value: number | null; label: string };
@@ -32,6 +33,8 @@ interface ModuleCard {
   metric: string | null;
   metricLabel: string;
   status: 'active' | 'warning' | 'inactive';
+  module?: string;        // org subscription module key required
+  roles?: AppRole[];      // user roles allowed (undefined = all)
 }
 
 @Component({
@@ -52,7 +55,7 @@ interface ModuleCard {
 
       <!-- Module cards -->
       <div class="module-grid">
-        @for (card of moduleCards(); track card.route) {
+        @for (card of visibleCards(); track card.route) {
           <div class="module-card" [class]="'module-card--' + card.status" [routerLink]="card.route">
             <div class="card-header">
               <div class="card-icon" [style.background]="card.color">
@@ -80,19 +83,27 @@ interface ModuleCard {
         }
       </div>
 
+      @if (visibleCards().length === 0 && orgCtx.loaded()) {
+        <div class="empty-state">
+          <mat-icon>dashboard_customize</mat-icon>
+          <h3>No modules available</h3>
+          <p>Your subscription does not include any modules, or your role does not have access. Contact your administrator.</p>
+        </div>
+      }
+
       <!-- Recent activity -->
       <div class="section-card">
         <h2>Recent Activity</h2>
         @if (activityLoading()) {
           <div class="activity-loading"><mat-spinner diameter="28" /></div>
-        } @else if (activity().length === 0) {
+        } @else if (filteredActivity().length === 0) {
           <div class="activity-empty">
             <mat-icon>history</mat-icon>
             <span>No activity yet. Activity will appear here as your team uses the platform.</span>
           </div>
         } @else {
           <div class="activity-list">
-            @for (item of activity(); track item.createdAt) {
+            @for (item of filteredActivity(); track item.createdAt) {
               <div class="activity-item">
                 <mat-icon class="activity-icon" [class]="activityIconClass(item.type)">{{ activityIcon(item.type) }}</mat-icon>
                 <div class="activity-content">
@@ -185,6 +196,16 @@ interface ModuleCard {
 
     .module-card--warning { border-color: rgba(240, 165, 0, 0.3); }
 
+    .empty-state {
+      display: flex; flex-direction: column; align-items: center;
+      padding: 48px; gap: 12px; text-align: center;
+      background: white; border-radius: 16px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06); margin-bottom: 28px;
+      mat-icon { font-size: 48px; width: 48px; height: 48px; color: #c5d0db; }
+      h3 { font-size: 18px; color: #1B2A47; margin: 0; }
+      p  { font-size: 14px; color: #9aa5b4; margin: 0; max-width: 400px; }
+    }
+
     .section-card {
       background: white;
       border-radius: 16px;
@@ -238,10 +259,47 @@ interface ModuleCard {
   `],
 })
 export class DashboardComponent implements OnInit {
+  private authService = inject(AuthService);
+  private api = inject(ApiService);
+  orgCtx = inject(OrgContextService);
+
   firstName = signal('');
   activity = signal<ActivityItem[]>([]);
   activityLoading = signal(true);
   moduleCards = signal<ModuleCard[]>(this.defaultCards());
+
+  /** Module cards filtered by org subscription + user role. */
+  visibleCards = computed(() => {
+    const cards = this.moduleCards();
+    const modules = this.orgCtx.modules();
+    const role = this.authService.currentUser()?.role;
+    if (!role) return [];
+
+    return cards.filter((card) => {
+      if (card.module && !modules.includes(card.module)) return false;
+      if (card.roles && !card.roles.includes(role)) return false;
+      return true;
+    });
+  });
+
+  /** Activity items filtered to only show items from enabled modules. */
+  filteredActivity = computed(() => {
+    const items = this.activity();
+    const modules = this.orgCtx.modules();
+
+    const typeModuleMap: Record<string, string> = {
+      conflict_analysis: 'conflict',
+      neuroinclusion: 'neuroinclusion',
+      idp: 'succession',
+    };
+
+    return items.filter((item) => {
+      const mod = typeModuleMap[item.type];
+      // survey_response has no specific module — always show
+      if (!mod) return true;
+      return modules.includes(mod);
+    });
+  });
 
   activityIcon(type: ActivityItem['type']): string {
     const map: Record<ActivityItem['type'], string> = {
@@ -266,7 +324,7 @@ export class DashboardComponent implements OnInit {
   private defaultCards(): ModuleCard[] {
     return [
       {
-        title: 'Conflict Intelligence™',
+        title: 'Conflict Intelligence\u2122',
         subtitle: 'Workplace conflict detection and mediation escalation',
         icon: 'warning_amber',
         color: 'linear-gradient(135deg, #e86c3a, #e53e3e)',
@@ -274,9 +332,11 @@ export class DashboardComponent implements OnInit {
         metric: null,
         metricLabel: 'active analyses',
         status: 'active',
+        module: 'conflict',
+        roles: ['admin', 'hr_manager', 'manager'],
       },
       {
-        title: 'Neuro-Inclusion Compass™',
+        title: 'Neuro-Inclusion Compass\u2122',
         subtitle: 'Organizational neuroinclusion maturity assessment',
         icon: 'psychology',
         color: 'linear-gradient(135deg, #27C4A0, #1a9678)',
@@ -284,9 +344,11 @@ export class DashboardComponent implements OnInit {
         metric: null,
         metricLabel: 'avg maturity score',
         status: 'active',
+        module: 'neuroinclusion',
+        roles: ['admin', 'hr_manager', 'manager'],
       },
       {
-        title: 'Leadership & Succession Hub™',
+        title: 'Leadership & Succession Hub\u2122',
         subtitle: 'AI-generated IDPs and succession planning',
         icon: 'trending_up',
         color: 'linear-gradient(135deg, #3A9FD6, #2080b0)',
@@ -294,6 +356,8 @@ export class DashboardComponent implements OnInit {
         metric: null,
         metricLabel: 'active IDPs',
         status: 'active',
+        module: 'succession',
+        roles: ['admin', 'hr_manager', 'coach', 'coachee'],
       },
       {
         title: 'Intakes',
@@ -304,6 +368,7 @@ export class DashboardComponent implements OnInit {
         metric: null,
         metricLabel: 'responses collected',
         status: 'active',
+        roles: ['admin', 'hr_manager', 'coach'],
       },
     ];
   }
@@ -324,13 +389,11 @@ export class DashboardComponent implements OnInit {
       }
       if (card.route === '/intakes') {
         const { responses, activeSurveys } = stats.surveys;
-        return { ...card, metric: String(activeSurveys), metricLabel: `active intakes · ${responses} responses` };
+        return { ...card, metric: String(activeSurveys), metricLabel: `active intakes \u00b7 ${responses} responses` };
       }
       return card;
     }));
   }
-
-  constructor(private authService: AuthService, private api: ApiService) {}
 
   ngOnInit(): void {
     const user = this.authService.currentUser();

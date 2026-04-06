@@ -13,6 +13,8 @@ export interface IDevelopmentPlan extends Document {
   organizationId: mongoose.Types.ObjectId;
   coacheeId: mongoose.Types.ObjectId;
   coachId?: mongoose.Types.ObjectId;
+  sourceModule: string;              // 'succession' | 'conflict' | 'neuroinclusion' | 'coaching'
+  sourceAnalysisId?: mongoose.Types.ObjectId;  // link to ConflictAnalysis, NeuroinclustionAssessment, etc.
   goal: string;
   currentReality: string;
   options: string[];
@@ -47,6 +49,8 @@ const DevelopmentPlanSchema = new Schema<IDevelopmentPlan>(
     },
     coacheeId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     coachId: { type: Schema.Types.ObjectId, ref: 'User' },
+    sourceModule: { type: String, default: 'succession' },
+    sourceAnalysisId: { type: Schema.Types.ObjectId },
     goal: { type: String, required: true },
     currentReality: { type: String, default: '' },
     options: [{ type: String }],

@@ -1,5 +1,5 @@
 import { Component, OnInit, signal, computed } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -7,9 +7,32 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatExpansionModule } from '@angular/material/expansion';
 import { ApiService } from '../../../core/api.service';
 import { ConflictAnalyzeDialogComponent } from '../conflict-analyze-dialog/conflict-analyze-dialog.component';
 import { ConflictDetailDialogComponent } from '../conflict-detail-dialog/conflict-detail-dialog.component';
+import { ConflictIdpDialogComponent } from '../conflict-idp-dialog/conflict-idp-dialog.component';
+
+interface ConflictMilestone {
+  _id: string;
+  title: string;
+  dueDate: string;
+  status: 'pending' | 'in_progress' | 'completed';
+  notes?: string;
+}
+
+interface ConflictIDP {
+  _id: string;
+  coacheeId: { _id: string; firstName: string; lastName: string } | string;
+  goal: string;
+  currentReality: string;
+  options: string[];
+  willDoActions: string[];
+  competencyGaps: string[];
+  milestones: ConflictMilestone[];
+  status: 'draft' | 'active' | 'completed';
+  createdAt: string;
+}
 
 interface SurveyTemplate { _id: string; title: string; moduleType: string; }
 
@@ -39,6 +62,8 @@ interface ConflictAnalysis {
     MatDialogModule,
     MatSnackBarModule,
     MatTooltipModule,
+    MatExpansionModule,
+    DatePipe,
   ],
   template: `
     <div class="conflict-page">
@@ -217,6 +242,140 @@ interface ConflictAnalysis {
            mat-stroked-button class="escalation-cta">
           <mat-icon>email</mat-icon> Contact Helena for Mediation
         </a>
+      </div>
+
+      <!-- Skill Development — Conflict IDPs -->
+      <div class="section-card skill-dev">
+        <div class="section-header">
+          <div class="section-icon purple"><mat-icon>psychology</mat-icon></div>
+          <div>
+            <h3>Skill Development Plans</h3>
+            <p>Generate AI-powered Individual Development Plans (IDPs) based on conflict analysis findings — targeted skill building using the GROW model.</p>
+          </div>
+          @if (analyses().length > 0) {
+            <button mat-raised-button color="primary" class="section-action-btn" (click)="openConflictIdpDialog()">
+              <mat-icon>add_circle</mat-icon> Generate Conflict IDP
+            </button>
+          }
+        </div>
+
+        @if (conflictIdpsLoading()) {
+          <div class="loading-center" style="padding: 24px"><mat-spinner diameter="28" /></div>
+        } @else if (conflictIdps().length === 0) {
+          <div class="skill-empty">
+            <mat-icon>psychology</mat-icon>
+            <p>No conflict-based development plans yet. Run an analysis first, then generate a targeted IDP for team members.</p>
+          </div>
+        } @else {
+          <div class="idp-grid">
+            @for (idp of conflictIdps(); track idp._id) {
+              <div class="idp-card" [class]="'status-' + idp.status">
+                <div class="idp-card-header">
+                  <div class="idp-status-badge" [class]="idp.status">{{ idp.status }}</div>
+                  @if (isPopulatedCoachee(idp.coacheeId)) {
+                    <span class="idp-coachee-name">
+                      <mat-icon class="coachee-icon">person</mat-icon>
+                      {{ idp.coacheeId.firstName }} {{ idp.coacheeId.lastName }}
+                    </span>
+                  }
+                  <span class="idp-date-label">{{ idp.createdAt | date:'MMM d, y' }}</span>
+                  <button class="card-action-btn delete-btn"
+                          matTooltip="Delete IDP"
+                          (click)="deleteConflictIdp(idp)">
+                    <mat-icon>delete_outline</mat-icon>
+                  </button>
+                </div>
+
+                <!-- GROW sections -->
+                <mat-accordion class="grow-accordion">
+                  <mat-expansion-panel class="grow-panel goal-panel">
+                    <mat-expansion-panel-header>
+                      <mat-panel-title>
+                        <mat-icon>flag</mat-icon> Goal
+                      </mat-panel-title>
+                    </mat-expansion-panel-header>
+                    <p>{{ idp.goal }}</p>
+                  </mat-expansion-panel>
+
+                  <mat-expansion-panel class="grow-panel reality-panel">
+                    <mat-expansion-panel-header>
+                      <mat-panel-title>
+                        <mat-icon>explore</mat-icon> Reality
+                      </mat-panel-title>
+                    </mat-expansion-panel-header>
+                    <p>{{ idp.currentReality }}</p>
+                  </mat-expansion-panel>
+
+                  <mat-expansion-panel class="grow-panel options-panel">
+                    <mat-expansion-panel-header>
+                      <mat-panel-title>
+                        <mat-icon>lightbulb</mat-icon> Options ({{ idp.options.length }})
+                      </mat-panel-title>
+                    </mat-expansion-panel-header>
+                    <ul>
+                      @for (opt of idp.options; track opt) {
+                        <li>{{ opt }}</li>
+                      }
+                    </ul>
+                  </mat-expansion-panel>
+
+                  <mat-expansion-panel class="grow-panel will-panel">
+                    <mat-expansion-panel-header>
+                      <mat-panel-title>
+                        <mat-icon>bolt</mat-icon> Will Do ({{ idp.willDoActions.length }})
+                      </mat-panel-title>
+                    </mat-expansion-panel-header>
+                    <ul>
+                      @for (action of idp.willDoActions; track action) {
+                        <li>{{ action }}</li>
+                      }
+                    </ul>
+                  </mat-expansion-panel>
+                </mat-accordion>
+
+                <!-- Milestone timeline -->
+                <div class="milestone-section">
+                  <h4>Milestones</h4>
+                  <div class="milestone-timeline">
+                    @for (ms of idp.milestones; track ms._id) {
+                      <div class="milestone-item" [class]="ms.status">
+                        <div class="ms-dot"></div>
+                        <div class="ms-content">
+                          <span class="ms-title">{{ ms.title }}</span>
+                          <span class="ms-date">{{ ms.dueDate | date:'MMM d' }}</span>
+                        </div>
+                        <div class="ms-actions">
+                          @if (ms.status !== 'completed') {
+                            <button mat-icon-button [matTooltip]="'Mark complete'"
+                                    (click)="updateConflictMilestone(idp._id, ms._id, 'completed')">
+                              <mat-icon>check_circle_outline</mat-icon>
+                            </button>
+                          }
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
+
+                <!-- Conflict areas -->
+                @if (idp.competencyGaps.length) {
+                  <mat-expansion-panel class="grow-panel conflict-areas-panel">
+                    <mat-expansion-panel-header>
+                      <mat-panel-title>
+                        <mat-icon>warning_amber</mat-icon> Conflict Areas ({{ idp.competencyGaps.length }})
+                      </mat-panel-title>
+                    </mat-expansion-panel-header>
+                    <ul>
+                      @for (gap of idp.competencyGaps; track gap) {
+                        <li>{{ gap }}</li>
+                      }
+                    </ul>
+                  </mat-expansion-panel>
+                }
+              </div>
+            }
+          </div>
+        }
       </div>
 
       <!-- Knowledge & Skill Building -->
@@ -521,6 +680,114 @@ interface ConflictAnalysis {
     }
     .download-btn { color: #3A9FD6; }
 
+    /* ── Skill Development ─────────────────────── */
+    .section-icon.purple { background: rgba(124,92,191,0.12); color: #7c5cbf; }
+
+    .section-action-btn { margin-left: auto; flex-shrink: 0; }
+
+    .skill-empty {
+      display: flex; align-items: center; gap: 12px; padding: 24px;
+      color: #9aa5b4; font-size: 14px;
+      mat-icon { font-size: 24px; width: 24px; height: 24px; color: #c5d0db; }
+      p { margin: 0; }
+    }
+
+    /* ── IDP cards (matching succession view) ── */
+    .idp-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(440px, 1fr));
+      gap: 20px;
+    }
+
+    .idp-card {
+      background: white; border-radius: 16px; padding: 20px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      border-left: 4px solid #9aa5b4;
+      &.status-draft   { border-left-color: #9aa5b4; }
+      &.status-active  { border-left-color: #3A9FD6; }
+      &.status-completed { border-left-color: #27C4A0; }
+    }
+
+    .idp-card-header {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;
+    }
+
+    .idp-status-badge {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      padding: 2px 10px; border-radius: 999px;
+      &.draft     { background: #f0f4f8; color: #9aa5b4; }
+      &.active    { background: #EBF5FB; color: #3A9FD6; }
+      &.completed { background: #e8faf4; color: #27C4A0; }
+    }
+
+    .idp-coachee-name {
+      display: flex; align-items: center; gap: 4px;
+      font-size: 14px; font-weight: 600; color: #1B2A47;
+      .coachee-icon { font-size: 16px; width: 16px; height: 16px; color: #3A9FD6; }
+    }
+
+    .idp-date-label { font-size: 12px; color: #9aa5b4; margin-left: auto; }
+
+    .card-action-btn {
+      width: 28px; height: 28px; border: none; background: none;
+      cursor: pointer; border-radius: 6px; display: flex; align-items: center; justify-content: center;
+      color: #9aa5b4; padding: 0;
+      mat-icon { font-size: 18px; width: 18px; height: 18px; }
+      &:hover { background: #f0f4f8; color: #1B2A47; }
+    }
+    .delete-btn:hover { color: #e53e3e !important; background: #fef2f2 !important; }
+
+    /* GROW accordion */
+    .grow-accordion { margin-bottom: 12px; }
+
+    .grow-panel {
+      box-shadow: none !important;
+      border-radius: 8px !important;
+      margin-bottom: 4px !important;
+      &::ng-deep .mat-expansion-panel-body { padding: 0 16px 12px; }
+      p { margin: 0; font-size: 13px; color: #5a6a7e; line-height: 1.6; }
+      ul { margin: 0; padding-left: 18px; font-size: 13px; color: #5a6a7e; line-height: 1.8; }
+    }
+
+    .goal-panel    { background: #f0fdf4 !important; }
+    .reality-panel { background: #eff6ff !important; }
+    .options-panel { background: #fefce8 !important; }
+    .will-panel    { background: #fdf2f8 !important; }
+
+    ::ng-deep .grow-panel .mat-expansion-panel-header {
+      padding: 0 16px !important; height: 40px !important;
+      font-size: 13px !important; font-weight: 600 !important;
+    }
+    ::ng-deep .grow-panel mat-panel-title {
+      display: flex; align-items: center; gap: 6px;
+      mat-icon { font-size: 16px; width: 16px; height: 16px; }
+    }
+
+    /* Milestones */
+    .milestone-section {
+      margin-top: 8px;
+      h4 { font-size: 13px; font-weight: 600; color: #1B2A47; margin: 0 0 8px; }
+    }
+
+    .milestone-timeline { display: flex; flex-direction: column; gap: 6px; }
+
+    .milestone-item {
+      display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-radius: 6px;
+      &.completed { .ms-dot { background: #27C4A0; } .ms-title { text-decoration: line-through; color: #9aa5b4; } }
+      &.in_progress { .ms-dot { background: #3A9FD6; } }
+      &.pending { .ms-dot { background: #dce6f0; } }
+    }
+
+    .ms-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .ms-content { flex: 1; display: flex; align-items: center; gap: 8px; min-width: 0; }
+    .ms-title { font-size: 13px; color: #374151; }
+    .ms-date { font-size: 11px; color: #9aa5b4; }
+    .ms-actions {
+      button { width: 28px; height: 28px; color: #27C4A0; }
+      mat-icon { font-size: 18px; width: 18px; height: 18px; }
+    }
+
+    .conflict-areas-panel { background: #fff5f0 !important; margin-top: 4px !important; }
+
     /* ── Knowledge & Skill Building ──────────────── */
     .section-icon.blue { background: rgba(58,159,214,0.12); color: #2080b0; }
 
@@ -640,6 +907,60 @@ export class ConflictDashboardComponent implements OnInit {
     },
   ];
 
+  // ── Conflict IDPs ──────────────────────────────────────────────
+  conflictIdps = signal<ConflictIDP[]>([]);
+  conflictIdpsLoading = signal(true);
+
+  idpCoacheeName(idp: ConflictIDP): string {
+    if (typeof idp.coacheeId === 'object') {
+      return `${idp.coacheeId.firstName} ${idp.coacheeId.lastName}`;
+    }
+    return 'Unknown';
+  }
+
+  idpMilestonesDone(idp: ConflictIDP): number {
+    return idp.milestones.filter((m) => m.status === 'completed').length;
+  }
+
+  loadConflictIdps(): void {
+    this.conflictIdpsLoading.set(true);
+    this.api.get<ConflictIDP[]>('/succession/idps?module=conflict').subscribe({
+      next: (idps) => { this.conflictIdps.set(idps); this.conflictIdpsLoading.set(false); },
+      error: () => this.conflictIdpsLoading.set(false),
+    });
+  }
+
+  isPopulatedCoachee(coacheeId: ConflictIDP['coacheeId']): coacheeId is { _id: string; firstName: string; lastName: string } {
+    return typeof coacheeId === 'object' && coacheeId !== null;
+  }
+
+  updateConflictMilestone(idpId: string, milestoneId: string, status: string): void {
+    this.api.put(`/succession/idps/${idpId}/milestone`, { milestoneId, status }).subscribe({
+      next: () => this.loadConflictIdps(),
+    });
+  }
+
+  deleteConflictIdp(idp: ConflictIDP): void {
+    if (!confirm(`Delete this development plan for ${this.idpCoacheeName(idp)}?`)) return;
+    this.api.delete(`/succession/idps/${idp._id}`).subscribe({
+      next: () => {
+        this.conflictIdps.update((list) => list.filter((i) => i._id !== idp._id));
+        this.snackBar.open('Development plan deleted', 'OK', { duration: 3000 });
+      },
+    });
+  }
+
+  openConflictIdpDialog(): void {
+    const ref = this.dialog.open(ConflictIdpDialogComponent, {
+      width: '560px',
+      disableClose: true,
+      data: { analyses: this.analyses() },
+    });
+    ref.afterClosed().subscribe((result) => {
+      if (result) this.loadConflictIdps();
+    });
+  }
+
   riskColor(level: string): string {
     const map: Record<string, string> = { low: '#27C4A0', medium: '#f0a500', high: '#e86c3a', critical: '#e53e3e' };
     return map[level] ?? '#9aa5b4';
@@ -682,6 +1003,7 @@ export class ConflictDashboardComponent implements OnInit {
       },
     });
     this.loadAnalyses();
+    this.loadConflictIdps();
   }
 
   loadAnalyses(): void {

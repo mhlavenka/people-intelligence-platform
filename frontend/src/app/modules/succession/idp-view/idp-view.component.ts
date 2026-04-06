@@ -582,7 +582,7 @@ export class IDPViewComponent implements OnInit {
   }
 
   loadIDPs(): void {
-    this.api.get<IDP[]>('/succession/idps').subscribe({
+    this.api.get<IDP[]>('/succession/idps?module=succession').subscribe({
       next: (data) => { this.idps.set(data); this.loading.set(false); },
       error: () => this.loading.set(false),
     });

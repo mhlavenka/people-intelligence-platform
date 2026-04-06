@@ -11,11 +11,13 @@ import { MatDialog } from '@angular/material/dialog';
 import { AuthService } from '../../../core/auth.service';
 import { ApiService } from '../../../core/api.service';
 import { ThemeService, OrgTheme } from '../../../core/theme.service';
+import { OrgContextService } from '../../../core/org-context.service';
 import { MessageHubDialogComponent } from '../../hub/message-hub-dialog.component';
 
 interface OrgInfo {
   name: string;
   theme?: OrgTheme;
+  modules?: string[];
 }
 
 import { AppRole } from '../../../core/auth.service';
@@ -25,6 +27,7 @@ interface NavItem {
   icon: string;
   route: string;
   roles?: AppRole[];   // undefined = visible to all authenticated users
+  module?: string;     // org subscription module required (e.g. 'conflict')
 }
 
 interface NavGroup {
@@ -489,9 +492,9 @@ export class AppShellComponent implements OnInit, OnDestroy {
 
   private readonly ALL_NAV: NavEntry[] = [
     { label: 'Dashboard',               icon: 'dashboard',    route: '/dashboard' },
-    { label: 'Conflict Intelligence',   icon: 'warning_amber',route: '/conflict',    roles: ['admin', 'hr_manager', 'manager'] },
-    { label: 'Neuro-Inclusion',         icon: 'psychology',   route: '/neuroinclusion', roles: ['admin', 'hr_manager', 'manager'] },
-    { label: 'Leadership & Succession', icon: 'trending_up',  route: '/succession',  roles: ['admin', 'hr_manager', 'coach', 'coachee'] },
+    { label: 'Conflict Intelligence',   icon: 'warning_amber',route: '/conflict',    roles: ['admin', 'hr_manager', 'manager'],                module: 'conflict' },
+    { label: 'Neuro-Inclusion',         icon: 'psychology',   route: '/neuroinclusion', roles: ['admin', 'hr_manager', 'manager'],               module: 'neuroinclusion' },
+    { label: 'Leadership & Succession', icon: 'trending_up',  route: '/succession',  roles: ['admin', 'hr_manager', 'coach', 'coachee'],        module: 'succession' },
     { label: 'Org Chart',         icon: 'account_tree',        route: '/org-chart',            roles: ['admin', 'hr_manager'] },
     {
       label: 'Intakes',
@@ -517,17 +520,22 @@ export class AppShellComponent implements OnInit, OnDestroy {
   navEntries = computed<NavEntry[]>(() => {
     const role = this.authService.currentUser()?.role as AppRole | undefined;
     if (!role) return [];
+    const modules = this.orgCtx.modules();
+
+    const isItemVisible = (item: NavItem): boolean => {
+      if (item.roles && !item.roles.includes(role)) return false;
+      if (item.module && !modules.includes(item.module)) return false;
+      return true;
+    };
 
     return this.ALL_NAV.reduce<NavEntry[]>((acc, entry) => {
       if (isGroup(entry)) {
-        const visibleChildren = entry.children.filter(
-          (c) => !c.roles || c.roles.includes(role)
-        );
+        const visibleChildren = entry.children.filter(isItemVisible);
         if (visibleChildren.length) {
           acc.push({ ...entry, children: visibleChildren });
         }
       } else {
-        if (!entry.roles || entry.roles.includes(role)) {
+        if (isItemVisible(entry)) {
           acc.push(entry);
         }
       }
@@ -548,11 +556,13 @@ export class AppShellComponent implements OnInit, OnDestroy {
     private api: ApiService,
     private themeService: ThemeService,
     private dialog: MatDialog,
+    private orgCtx: OrgContextService,
   ) {}
 
   inactivityWarning = computed(() => this.authService.inactivityWarning());
 
   ngOnInit(): void {
+    this.orgCtx.load();
     this.api.get<OrgInfo>('/organizations/me').subscribe({
       next: (org) => {
         this.orgName.set(org.name);

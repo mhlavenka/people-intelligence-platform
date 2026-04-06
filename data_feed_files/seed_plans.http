@@ -1,0 +1,496 @@
+### ============================================================
+### Subscription Plans — Seed via API
+### ============================================================
+### Prerequisites:
+###   1. Backend running on localhost:3030
+###   2. System admin token — login as system_admin user first
+###   3. Replace PASTE_TOKEN_HERE with the accessToken
+###
+### These plans match the Helena Coaching pricing structure.
+### All prices in cents (CAD). 0 = custom/unlimited.
+### Run each request top-to-bottom (### separates requests).
+### ============================================================
+
+@baseUrl = http://localhost:3030/api
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OWNhZjk1ODk2MTI3ZWM0ZjQ3NjMzMWEiLCJvcmdhbml6YXRpb25JZCI6IjY5Y2FmOTU4OTYxMjdlYzRmNDc2MzMxNSIsInJvbGUiOiJzeXN0ZW1fYWRtaW4iLCJlbWFpbCI6ImFkbWluQGhlYWRzb2Z0Lm5ldCIsInBlcm1pc3Npb25zIjpbIk1BTkFHRV9VU0VSUyIsIk1BTkFHRV9PUkdBTklaQVRJT04iLCJNQU5BR0VfSU5UQUtFX1RFTVBMQVRFUyIsIlZJRVdfQUxMX1VTRVJTIiwiVklFV19PUkdfQ0hBUlQiLCJNQU5BR0VfQklMTElORyIsIk1BTkFHRV9ST0xFUyIsIlZJRVdfQ09ORkxJQ1RfREFTSEJPQVJEIiwiUlVOX0NPTkZMSUNUX0FOQUxZU0lTIiwiRVNDQUxBVEVfQ09ORkxJQ1QiLCJWSUVXX0NPTkZMSUNUX1JFU1BPTlNFUyIsIlRBS0VfU1VSVkVZIiwiUlVOX05FVVJPSU5DTFVTSU9OIiwiVklFV19ORVVST0lOQ0xVU0lPTl9SRVNVTFRTIiwiQ09ORFVDVF9JTlRFUlZJRVdTIiwiVklFV19JTlRBS0VfVEVNUExBVEVTIiwiVklFV19BTExfSURQUyIsIkdFTkVSQVRFX0lEUCIsIlZJRVdfT1dOX0lEUCIsIlVQREFURV9JRFBfTUlMRVNUT05FUyIsIlZJRVdfSFVCIl0sImlhdCI6MTc3NTQ4MzM2MiwiZXhwIjoxNzc1NDg0MjYyfQ._sirFi5oaaj2r0q4gOj8gyFS5oHpEr6l8ds2MDkTrZ0
+
+### ── Login as System Admin ──────────────────────────────────
+POST http://localhost:3030/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@headsoft.net",
+  "password": "HeadSoftAdmin2024!"
+}
+
+### ============================================================
+### CONFLICT INTELLIGENCE (sortOrder 10–12)
+### ============================================================
+
+### CI-01: Conflict Intelligence — Starter ($599/mo, 50 users)
+POST {{baseUrl}}/plans
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "key": "ci-starter",
+  "name": "Conflict Intelligence — Starter",
+  "description": "Conflict Intelligence for teams up to 50 employees. AI-powered conflict analysis with manager conversation guides.",
+  "priceMonthly": 59900,
+  "overagePriceCents": 1500,
+  "maxUsers": 50,
+  "modules": ["conflict"],
+  "limits": {
+    "maxAIAnalyses": 10,
+    "maxSurveyResponses": 500,
+    "maxCoachingSessions": 0,
+    "maxFileStorageMB": 500
+  },
+  "features": [
+    "Up to 50 employees",
+    "Conflict Intelligence module",
+    "10 AI conflict analyses per month",
+    "Manager conversation guides",
+    "Risk score dashboard",
+    "Email support"
+  ],
+  "isActive": true,
+  "sortOrder": 10
+}
+
+### CI-02: Conflict Intelligence — Professional ($1,199/mo, 200 users)
+POST {{baseUrl}}/plans
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "key": "ci-professional",
+  "name": "Conflict Intelligence — Professional",
+  "description": "Conflict Intelligence for organizations up to 200 employees. Includes escalation workflows and priority support.",
+  "priceMonthly": 119900,
+  "overagePriceCents": 1200,
+  "maxUsers": 200,
+  "modules": ["conflict"],
+  "limits": {
+    "maxAIAnalyses": 50,
+    "maxSurveyResponses": 2000,
+    "maxCoachingSessions": 0,
+    "maxFileStorageMB": 2000
+  },
+  "features": [
+    "Up to 200 employees",
+    "Conflict Intelligence module",
+    "50 AI conflict analyses per month",
+    "Manager conversation guides",
+    "Escalation workflow to HR",
+    "Sub-analysis deep dives",
+    "Department-level heatmaps",
+    "Priority support"
+  ],
+  "isActive": true,
+  "sortOrder": 11
+}
+
+### CI-03: Conflict Intelligence — Enterprise (Custom pricing, 500+ users)
+POST {{baseUrl}}/plans
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "key": "ci-enterprise",
+  "name": "Conflict Intelligence — Enterprise",
+  "description": "Conflict Intelligence for large enterprises (200-500+ employees). Custom pricing, unlimited AI, dedicated success manager.",
+  "priceMonthly": 0,
+  "overagePriceCents": 0,
+  "maxUsers": 999,
+  "modules": ["conflict"],
+  "limits": {
+    "maxAIAnalyses": 0,
+    "maxSurveyResponses": 0,
+    "maxCoachingSessions": 0,
+    "maxFileStorageMB": 0
+  },
+  "features": [
+    "200-500+ employees",
+    "Conflict Intelligence module",
+    "Unlimited AI analyses",
+    "Full platform access",
+    "Dedicated success manager",
+    "Custom integrations",
+    "SLA guarantee",
+    "White-label option"
+  ],
+  "isActive": true,
+  "sortOrder": 12
+}
+
+### ============================================================
+### NEURO-INCLUSION COMPASS (sortOrder 20–23)
+### ============================================================
+
+### NI-01: Neuro-Inclusion — Assessment + Report ($2,500 one-time)
+POST {{baseUrl}}/plans
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "key": "ni-assessment",
+  "name": "Neuro-Inclusion — Assessment + Report",
+  "description": "One-time full-organization neuro-inclusion assessment with comprehensive 7-dimension analysis and PDF report.",
+  "priceMonthly": 250000,
+  "overagePriceCents": 0,
+  "maxUsers": 999,
+  "modules": ["neuroinclusion"],
+  "limits": {
+    "maxAIAnalyses": 1,
+    "maxSurveyResponses": 0,
+    "maxCoachingSessions": 0,
+    "maxFileStorageMB": 500
+  },
+  "features": [
+    "One-time, full organization",
+    "Neuro-Inclusion Compass assessment",
+    "7-dimension maturity analysis",
+    "1 AI analysis report",
+    "Comprehensive PDF report",
+    "Actionable recommendations"
+  ],
+  "isActive": true,
+  "sortOrder": 20
+}
+
+### NI-02: Neuro-Inclusion — Compass Subscription ($700/mo = $8,400/yr)
+POST {{baseUrl}}/plans
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "key": "ni-subscription",
+  "name": "Neuro-Inclusion — Compass Subscription",
+  "description": "Annual continuous neuro-inclusion monitoring with quarterly re-assessments and trend analytics.",
+  "priceMonthly": 70000,
+  "overagePriceCents": 0,
+  "maxUsers": 999,
+  "modules": ["neuroinclusion"],
+  "limits": {
+    "maxAIAnalyses": 10,
+    "maxSurveyResponses": 0,
+    "maxCoachingSessions": 0,
+    "maxFileStorageMB": 1000
+  },
+  "features": [
+    "Annual subscription ($8,400/yr)",
+    "Continuous monitoring",
+    "10 AI analyses per month",
+    "Quarterly re-assessments",
+    "Trend analytics dashboard",
+    "Inclusion maturity tracking"
+  ],
+  "isActive": true,
+  "sortOrder": 21
+}
+
+### NI-03: Neuro-Inclusion — Implementation Program ($6,000 one-time)
+POST {{baseUrl}}/plans
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "key": "ni-implementation",
+  "name": "Neuro-Inclusion — Implementation Program",
+  "description": "3-month guided implementation add-on with facilitated workshops and manager coaching sessions.",
+  "priceMonthly": 600000,
+  "overagePriceCents": 0,
+  "maxUsers": 999,
+  "modules": ["neuroinclusion"],
+  "limits": {
+    "maxAIAnalyses": 5,
+    "maxSurveyResponses": 0,
+    "maxCoachingSessions": 4,
+    "maxFileStorageMB": 1000
+  },
+  "features": [
+    "3-month guided program",
+    "Add-on to Compass Subscription",
+    "5 AI analyses per month",
+    "4 coaching sessions",
+    "Facilitated workshops",
+    "Manager coaching sessions",
+    "Action plan development"
+  ],
+  "isActive": true,
+  "sortOrder": 22
+}
+
+### NI-04: Neuro-Inclusion — Enterprise (Custom pricing)
+POST {{baseUrl}}/plans
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "key": "ni-enterprise",
+  "name": "Neuro-Inclusion — Enterprise",
+  "description": "Multi-department or white-label neuro-inclusion program with custom assessment dimensions and dedicated analyst.",
+  "priceMonthly": 0,
+  "overagePriceCents": 0,
+  "maxUsers": 999,
+  "modules": ["neuroinclusion"],
+  "limits": {
+    "maxAIAnalyses": 0,
+    "maxSurveyResponses": 0,
+    "maxCoachingSessions": 0,
+    "maxFileStorageMB": 0
+  },
+  "features": [
+    "Multi-department deployment",
+    "Unlimited AI analyses",
+    "White-label option",
+    "Custom assessment dimensions",
+    "Dedicated analyst",
+    "Executive reporting"
+  ],
+  "isActive": true,
+  "sortOrder": 23
+}
+
+### ============================================================
+### LEADERSHIP & SUCCESSION HUB (sortOrder 30–33)
+### ============================================================
+
+### LS-01: Leadership & Succession — Starter ($400/mo, 5 successors)
+POST {{baseUrl}}/plans
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "key": "ls-starter",
+  "name": "Leadership & Succession — Starter",
+  "description": "Leadership succession planning for up to 5 successors with AI-generated IDPs.",
+  "priceMonthly": 40000,
+  "overagePriceCents": 0,
+  "maxUsers": 5,
+  "modules": ["succession"],
+  "limits": {
+    "maxAIAnalyses": 10,
+    "maxSurveyResponses": 100,
+    "maxCoachingSessions": 0,
+    "maxFileStorageMB": 500
+  },
+  "features": [
+    "Up to 5 successors",
+    "AI-generated IDPs (GROW model)",
+    "10 AI analyses per month",
+    "Milestone tracking",
+    "EQ-i score integration",
+    "Coaching session logs"
+  ],
+  "isActive": true,
+  "sortOrder": 30
+}
+
+### LS-02: Leadership & Succession — Leadership Team ($800/mo, 15 leaders)
+POST {{baseUrl}}/plans
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "key": "ls-team",
+  "name": "Leadership & Succession — Leadership Team",
+  "description": "Leadership succession planning for up to 15 leaders with team dashboard and progress reporting.",
+  "priceMonthly": 80000,
+  "overagePriceCents": 0,
+  "maxUsers": 15,
+  "modules": ["succession"],
+  "limits": {
+    "maxAIAnalyses": 30,
+    "maxSurveyResponses": 500,
+    "maxCoachingSessions": 0,
+    "maxFileStorageMB": 1000
+  },
+  "features": [
+    "Up to 15 leaders",
+    "AI-generated IDPs (GROW model)",
+    "30 AI analyses per month",
+    "Milestone tracking",
+    "Team succession dashboard",
+    "Progress reporting"
+  ],
+  "isActive": true,
+  "sortOrder": 31
+}
+
+### LS-03: Leadership & Succession — Full Program ($1,500/mo, unlimited)
+POST {{baseUrl}}/plans
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "key": "ls-full",
+  "name": "Leadership & Succession — Full Program",
+  "description": "Unlimited successors plus 4 Helena coaching sessions per year. Full analytics and priority support.",
+  "priceMonthly": 150000,
+  "overagePriceCents": 0,
+  "maxUsers": 999,
+  "modules": ["succession"],
+  "limits": {
+    "maxAIAnalyses": 0,
+    "maxSurveyResponses": 0,
+    "maxCoachingSessions": 4,
+    "maxFileStorageMB": 5000
+  },
+  "features": [
+    "Unlimited successors",
+    "4 Helena coaching sessions/yr",
+    "Unlimited AI analyses",
+    "AI-generated IDPs (GROW model)",
+    "Full analytics suite",
+    "Priority support"
+  ],
+  "isActive": true,
+  "sortOrder": 32
+}
+
+### LS-04: Leadership & Succession — IDP-Only ($1,200 per person)
+POST {{baseUrl}}/plans
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "key": "ls-idp-only",
+  "name": "Leadership & Succession — IDP-Only",
+  "description": "Standalone per-person IDP with GROW model framework. Billed per individual.",
+  "priceMonthly": 120000,
+  "overagePriceCents": 0,
+  "maxUsers": 1,
+  "modules": ["succession"],
+  "limits": {
+    "maxAIAnalyses": 2,
+    "maxSurveyResponses": 0,
+    "maxCoachingSessions": 0,
+    "maxFileStorageMB": 100
+  },
+  "features": [
+    "Standalone per-person plan",
+    "2 AI analyses",
+    "Single AI-generated IDP",
+    "GROW model framework",
+    "Milestone tracking"
+  ],
+  "isActive": true,
+  "sortOrder": 33
+}
+
+### ============================================================
+### ALL-PLATFORM BUNDLE (sortOrder 40)
+### ============================================================
+
+### BUNDLE-01: All-Platform Bundle ($2,000/mo = $24,000/yr)
+POST {{baseUrl}}/plans
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "key": "bundle-all",
+  "name": "All-Platform Bundle",
+  "description": "All three modules plus 2 Helena coaching days/year. Bundle saves 25% compared to individual modules.",
+  "priceMonthly": 200000,
+  "overagePriceCents": 0,
+  "maxUsers": 999,
+  "modules": ["conflict", "neuroinclusion", "succession"],
+  "limits": {
+    "maxAIAnalyses": 0,
+    "maxSurveyResponses": 0,
+    "maxCoachingSessions": 2,
+    "maxFileStorageMB": 0
+  },
+  "features": [
+    "Conflict Intelligence module",
+    "Neuro-Inclusion Compass module",
+    "Leadership & Succession Hub module",
+    "Unlimited AI analyses",
+    "Unlimited survey responses",
+    "2 Helena coaching days/year",
+    "Bundle saves 25%",
+    "Dedicated success manager"
+  ],
+  "isActive": true,
+  "sortOrder": 40
+}
+
+### ============================================================
+### STARTER BUNDLES (sortOrder 50–51)
+### ============================================================
+
+### BUNDLE-02: Conflict + Neuro-Inclusion ($1,500/mo)
+POST {{baseUrl}}/plans
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "key": "bundle-ci-ni",
+  "name": "Conflict + Neuro-Inclusion Bundle",
+  "description": "Conflict Intelligence and Neuro-Inclusion Compass combined. Save 15% vs purchasing separately.",
+  "priceMonthly": 150000,
+  "overagePriceCents": 1000,
+  "maxUsers": 200,
+  "modules": ["conflict", "neuroinclusion"],
+  "limits": {
+    "maxAIAnalyses": 40,
+    "maxSurveyResponses": 2000,
+    "maxCoachingSessions": 0,
+    "maxFileStorageMB": 3000
+  },
+  "features": [
+    "Up to 200 employees",
+    "Conflict Intelligence module",
+    "Neuro-Inclusion Compass module",
+    "40 AI analyses per month",
+    "Save 15% vs separate plans",
+    "Priority support"
+  ],
+  "isActive": true,
+  "sortOrder": 50
+}
+
+### BUNDLE-03: Conflict + Succession ($1,400/mo)
+POST {{baseUrl}}/plans
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "key": "bundle-ci-ls",
+  "name": "Conflict + Succession Bundle",
+  "description": "Conflict Intelligence and Leadership & Succession Hub combined. Save 15% vs purchasing separately.",
+  "priceMonthly": 140000,
+  "overagePriceCents": 1000,
+  "maxUsers": 200,
+  "modules": ["conflict", "succession"],
+  "limits": {
+    "maxAIAnalyses": 40,
+    "maxSurveyResponses": 2000,
+    "maxCoachingSessions": 0,
+    "maxFileStorageMB": 3000
+  },
+  "features": [
+    "Up to 200 employees",
+    "Conflict Intelligence module",
+    "Leadership & Succession Hub module",
+    "40 AI analyses per month",
+    "AI-generated IDPs (GROW model)",
+    "Save 15% vs separate plans"
+  ],
+  "isActive": true,
+  "sortOrder": 51
+}
+
+### ============================================================
+### UTILITY: List all plans (verify seeding)
+### ============================================================
+
+### List all plans (system admin)
+GET {{baseUrl}}/plans/admin
+Authorization: Bearer {{token}}
+
+### List active plans only (any authenticated user)
+GET {{baseUrl}}/plans
+Authorization: Bearer {{token}}

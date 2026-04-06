@@ -29,13 +29,13 @@ import { AuthService } from '../../../core/auth.service';
       <aside class="sa-sidebar">
         <div class="sa-header" [class.collapsed]="collapsed()">
           @if (collapsed()) {
-            <img src="assets/headsoft-logo.png" alt="HS" class="brand-logo" />
+            <img src="assets/PIP_Icon_512.png" alt="PIP" class="brand-logo" />
             <button class="expand-btn" (click)="collapsed.set(false)" title="Expand">
               <mat-icon>chevron_right</mat-icon>
             </button>
           } @else {
             <div class="brand">
-              <img src="assets/headsoft-logo.png" alt="HeadSoft" class="brand-logo" />
+              <img src="assets/PIP_Logo_Dark_Transparent.png" alt="PIP" class="brand-logo-wide" />
               <div class="brand-text">
                 <span class="brand-name">HeadSoft</span>
                 <span class="brand-sub">System Administration</span>
@@ -68,6 +68,13 @@ import { AuthService } from '../../../core/auth.service';
              matTooltipPosition="right">
             <mat-icon>sell</mat-icon>
             @if (!collapsed()) { <span>Plans</span> }
+          </a>
+          <a routerLink="/system-admin/settings" routerLinkActive="active"
+             class="nav-item"
+             [matTooltip]="collapsed() ? 'Settings' : ''"
+             matTooltipPosition="right">
+            <mat-icon>settings</mat-icon>
+            @if (!collapsed()) { <span>Settings</span> }
           </a>
         </nav>
 
@@ -140,8 +147,13 @@ import { AuthService } from '../../../core/auth.service';
       }
 
       .brand-logo {
-        width: 32px;
-        height: 32px;
+        width: 64px; height: 64px;
+        object-fit: contain;
+        flex-shrink: 0;
+      }
+
+      .brand-logo-wide {
+        width: 200px; height: 64px;
         object-fit: contain;
         flex-shrink: 0;
       }

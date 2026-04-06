@@ -4,7 +4,9 @@ import jwt from 'jsonwebtoken';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { authenticator } = require('otplib') as typeof import('otplib');
 import { Organization } from '../models/Organization.model';
-import { User } from '../models/User.model';
+import { User, IUser } from '../models/User.model';
+import { CustomRole } from '../models/CustomRole.model';
+import { SYSTEM_ROLE_PERMISSIONS } from '../config/permissions';
 import { config } from '../config/env';
 
 interface TokenPayload {
@@ -12,6 +14,9 @@ interface TokenPayload {
   organizationId: string;
   role: string;
   email: string;
+  permissions?: string[];
+  customRoleId?: string;
+  customRoleName?: string;
 }
 
 function generateTokens(payload: TokenPayload): { accessToken: string; refreshToken: string } {
@@ -22,6 +27,36 @@ function generateTokens(payload: TokenPayload): { accessToken: string; refreshTo
     expiresIn: config.jwt.refreshExpiresIn,
   } as jwt.SignOptions);
   return { accessToken, refreshToken };
+}
+
+/** Build the JWT payload for a user, resolving custom role permissions if set. */
+async function buildPayload(user: IUser): Promise<TokenPayload> {
+  const base: TokenPayload = {
+    userId:         user._id.toString(),
+    organizationId: user.organizationId.toString(),
+    role:           user.role,
+    email:          user.email,
+  };
+
+  if (user.customRoleId) {
+    const customRole = await CustomRole.findById(user.customRoleId)
+      .setOptions({ bypassTenantCheck: true });
+    if (customRole) {
+      return {
+        ...base,
+        role:           customRole.baseRole,
+        permissions:    customRole.permissions,
+        customRoleId:   customRole._id.toString(),
+        customRoleName: customRole.name,
+      };
+    }
+  }
+
+  // System role: include the mapped permission set so the frontend can use it
+  return {
+    ...base,
+    permissions: SYSTEM_ROLE_PERMISSIONS[user.role] ?? [],
+  };
 }
 
 export async function register(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -52,12 +87,8 @@ export async function register(req: Request, res: Response, next: NextFunction):
       lastName,
     });
 
-    const tokens = generateTokens({
-      userId: user._id.toString(),
-      organizationId: org._id.toString(),
-      role: user.role,
-      email: user.email,
-    });
+    const payload = await buildPayload(user);
+    const tokens = generateTokens(payload);
 
     res.status(201).json({
       ...tokens,
@@ -66,7 +97,10 @@ export async function register(req: Request, res: Response, next: NextFunction):
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
-        role: user.role,
+        role: payload.role,
+        permissions: payload.permissions,
+        customRoleId: payload.customRoleId,
+        customRoleName: payload.customRoleName,
         organizationId: org._id,
       },
     });
@@ -105,12 +139,8 @@ export async function login(req: Request, res: Response, next: NextFunction): Pr
     user.lastLoginAt = new Date();
     await user.save();
 
-    const tokens = generateTokens({
-      userId: user._id.toString(),
-      organizationId: user.organizationId.toString(),
-      role: user.role,
-      email: user.email,
-    });
+    const payload = await buildPayload(user);
+    const tokens = generateTokens(payload);
 
     res.json({
       ...tokens,
@@ -119,7 +149,10 @@ export async function login(req: Request, res: Response, next: NextFunction): Pr
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
-        role: user.role,
+        role: payload.role,
+        permissions: payload.permissions,
+        customRoleId: payload.customRoleId,
+        customRoleName: payload.customRoleName,
         organizationId: user.organizationId,
       },
     });
@@ -153,21 +186,21 @@ export async function verify2fa(req: Request, res: Response, next: NextFunction)
       return;
     }
 
-    let payload: { pending2fa: boolean; userId: string; organizationId: string };
+    let pending: { pending2fa: boolean; userId: string; organizationId: string };
     try {
-      payload = jwt.verify(tempToken, config.jwt.secret) as typeof payload;
+      pending = jwt.verify(tempToken, config.jwt.secret) as typeof pending;
     } catch {
       res.status(401).json({ error: 'Invalid or expired token. Please log in again.' });
       return;
     }
 
-    if (!payload.pending2fa) {
+    if (!pending.pending2fa) {
       res.status(400).json({ error: 'Invalid token type.' });
       return;
     }
 
     // Load user with secret (field is select:false by default)
-    const user = await User.findById(payload.userId)
+    const user = await User.findById(pending.userId)
       .select('+twoFactorSecret')
       .setOptions({ bypassTenantCheck: true });
 
@@ -185,12 +218,8 @@ export async function verify2fa(req: Request, res: Response, next: NextFunction)
     user.lastLoginAt = new Date();
     await user.save();
 
-    const tokens = generateTokens({
-      userId: user._id.toString(),
-      organizationId: user.organizationId.toString(),
-      role: user.role,
-      email: user.email,
-    });
+    const payload = await buildPayload(user);
+    const tokens = generateTokens(payload);
 
     res.json({
       ...tokens,
@@ -199,7 +228,10 @@ export async function verify2fa(req: Request, res: Response, next: NextFunction)
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
-        role: user.role,
+        role: payload.role,
+        permissions: payload.permissions,
+        customRoleId: payload.customRoleId,
+        customRoleName: payload.customRoleName,
         organizationId: user.organizationId,
       },
     });

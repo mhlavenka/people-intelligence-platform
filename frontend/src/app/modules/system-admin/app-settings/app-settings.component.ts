@@ -1,0 +1,488 @@
+import { Component, OnInit, signal, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { ApiService } from '../../../core/api.service';
+
+interface AppSettings {
+  passwordPolicy: {
+    minLength: number;
+    requireUppercase: boolean;
+    requireLowercase: boolean;
+    requireNumbers: boolean;
+    requireSpecialChars: boolean;
+  };
+  loginPolicy: {
+    maxLoginAttempts: number;
+    lockoutDurationMinutes: number;
+    twoFactorEnforced: boolean;
+  };
+  sessionPolicy: {
+    autoLogoutMinutes: number;
+    showLogoutWarning: boolean;
+    logoutWarningSeconds: number;
+    maxConcurrentSessions: number;
+  };
+  tokenPolicy: {
+    accessTokenExpiresIn: string;
+    refreshTokenExpiresIn: string;
+  };
+  general: {
+    maintenanceMode: boolean;
+    maintenanceMessage: string;
+    defaultTimezone: string;
+    dataRetentionDays: number;
+    maxFileUploadMB: number;
+  };
+  updatedAt?: string;
+}
+
+const TIMEZONES = [
+  'UTC', 'US/Eastern', 'US/Central', 'US/Mountain', 'US/Pacific',
+  'Europe/London', 'Europe/Berlin', 'Europe/Paris', 'Europe/Amsterdam',
+  'Europe/Prague', 'Asia/Tokyo', 'Asia/Shanghai', 'Asia/Kolkata',
+  'Australia/Sydney', 'Pacific/Auckland', 'Africa/Johannesburg',
+];
+
+const TOKEN_EXPIRY_OPTIONS = [
+  { value: '5m',  label: '5 minutes' },
+  { value: '15m', label: '15 minutes' },
+  { value: '30m', label: '30 minutes' },
+  { value: '1h',  label: '1 hour' },
+  { value: '2h',  label: '2 hours' },
+];
+
+const REFRESH_EXPIRY_OPTIONS = [
+  { value: '1d',  label: '1 day' },
+  { value: '7d',  label: '7 days' },
+  { value: '14d', label: '14 days' },
+  { value: '30d', label: '30 days' },
+];
+
+@Component({
+  selector: 'app-app-settings',
+  standalone: true,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    MatIconModule,
+    MatButtonModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatSlideToggleModule,
+    MatDividerModule,
+    MatProgressSpinnerModule,
+    MatTooltipModule,
+    MatSnackBarModule,
+  ],
+  template: `
+    <div class="settings-page">
+      <div class="page-header">
+        <div>
+          <h1>Application Settings</h1>
+          <p>Global platform configuration — applies to all organisations</p>
+        </div>
+        @if (settings()?.updatedAt) {
+          <span class="last-saved">Last saved {{ formatDate(settings()!.updatedAt!) }}</span>
+        }
+      </div>
+
+      @if (loading()) {
+        <div class="loading"><mat-spinner diameter="36" /></div>
+      } @else {
+        <form [formGroup]="form">
+
+          <!-- ── Password Policy ─────────────────────────────── -->
+          <div class="settings-card">
+            <div class="card-header">
+              <mat-icon>lock</mat-icon>
+              <div>
+                <h3>Password Policy</h3>
+                <p>Minimum requirements for user passwords across all organisations</p>
+              </div>
+            </div>
+            <div class="card-body" formGroupName="passwordPolicy">
+              <mat-form-field appearance="outline" class="field-sm">
+                <mat-label>Minimum Length</mat-label>
+                <input matInput type="number" formControlName="minLength" min="6" max="128" />
+                <mat-hint>6–128 characters</mat-hint>
+              </mat-form-field>
+
+              <div class="toggle-grid">
+                <label class="toggle-row">
+                  <mat-slide-toggle formControlName="requireUppercase" color="primary" />
+                  <div class="toggle-info">
+                    <span class="toggle-label">Require uppercase letter</span>
+                    <span class="toggle-desc">At least one A–Z character</span>
+                  </div>
+                </label>
+                <label class="toggle-row">
+                  <mat-slide-toggle formControlName="requireLowercase" color="primary" />
+                  <div class="toggle-info">
+                    <span class="toggle-label">Require lowercase letter</span>
+                    <span class="toggle-desc">At least one a–z character</span>
+                  </div>
+                </label>
+                <label class="toggle-row">
+                  <mat-slide-toggle formControlName="requireNumbers" color="primary" />
+                  <div class="toggle-info">
+                    <span class="toggle-label">Require number</span>
+                    <span class="toggle-desc">At least one 0–9 digit</span>
+                  </div>
+                </label>
+                <label class="toggle-row">
+                  <mat-slide-toggle formControlName="requireSpecialChars" color="primary" />
+                  <div class="toggle-info">
+                    <span class="toggle-label">Require special character</span>
+                    <span class="toggle-desc">e.g. !&#64;#$%^&amp;*</span>
+                  </div>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Login Policy ────────────────────────────────── -->
+          <div class="settings-card">
+            <div class="card-header">
+              <mat-icon>login</mat-icon>
+              <div>
+                <h3>Login &amp; Authentication</h3>
+                <p>Brute-force protection and two-factor authentication settings</p>
+              </div>
+            </div>
+            <div class="card-body" formGroupName="loginPolicy">
+              <div class="field-row">
+                <mat-form-field appearance="outline" class="field-sm">
+                  <mat-label>Max Login Attempts</mat-label>
+                  <input matInput type="number" formControlName="maxLoginAttempts" min="0" max="100" />
+                  <mat-hint>0 = unlimited</mat-hint>
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="field-sm">
+                  <mat-label>Lockout Duration (min)</mat-label>
+                  <input matInput type="number" formControlName="lockoutDurationMinutes" min="1" max="1440" />
+                  <mat-hint>Minutes locked after max attempts</mat-hint>
+                </mat-form-field>
+              </div>
+
+              <label class="toggle-row">
+                <mat-slide-toggle formControlName="twoFactorEnforced" color="primary" />
+                <div class="toggle-info">
+                  <span class="toggle-label">Enforce two-factor authentication</span>
+                  <span class="toggle-desc">All users must enable 2FA — they will be prompted on next login</span>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- ── Session Policy ──────────────────────────────── -->
+          <div class="settings-card">
+            <div class="card-header">
+              <mat-icon>timer</mat-icon>
+              <div>
+                <h3>Session &amp; Timeout</h3>
+                <p>Inactivity auto-logout and concurrent session limits</p>
+              </div>
+            </div>
+            <div class="card-body" formGroupName="sessionPolicy">
+              <div class="field-row">
+                <mat-form-field appearance="outline" class="field-sm">
+                  <mat-label>Auto-Logout (minutes)</mat-label>
+                  <input matInput type="number" formControlName="autoLogoutMinutes" min="0" max="1440" />
+                  <mat-hint>0 = disabled</mat-hint>
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="field-sm">
+                  <mat-label>Warning Before Logout (sec)</mat-label>
+                  <input matInput type="number" formControlName="logoutWarningSeconds" min="10" max="600" />
+                  <mat-hint>Countdown shown to user</mat-hint>
+                </mat-form-field>
+              </div>
+
+              <label class="toggle-row">
+                <mat-slide-toggle formControlName="showLogoutWarning" color="primary" />
+                <div class="toggle-info">
+                  <span class="toggle-label">Show logout warning</span>
+                  <span class="toggle-desc">Display a countdown dialog before auto-logout</span>
+                </div>
+              </label>
+
+              <mat-form-field appearance="outline" class="field-sm" style="margin-top: 12px">
+                <mat-label>Max Concurrent Sessions</mat-label>
+                <input matInput type="number" formControlName="maxConcurrentSessions" min="0" max="50" />
+                <mat-hint>0 = unlimited</mat-hint>
+              </mat-form-field>
+            </div>
+          </div>
+
+          <!-- ── Token Policy ────────────────────────────────── -->
+          <div class="settings-card">
+            <div class="card-header">
+              <mat-icon>vpn_key</mat-icon>
+              <div>
+                <h3>Token Lifetimes</h3>
+                <p>JWT access and refresh token expiration periods</p>
+              </div>
+            </div>
+            <div class="card-body" formGroupName="tokenPolicy">
+              <div class="field-row">
+                <mat-form-field appearance="outline" class="field-md">
+                  <mat-label>Access Token Expiry</mat-label>
+                  <mat-select formControlName="accessTokenExpiresIn">
+                    @for (opt of tokenExpiryOptions; track opt.value) {
+                      <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+                    }
+                  </mat-select>
+                  <mat-hint>Short-lived authentication token</mat-hint>
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="field-md">
+                  <mat-label>Refresh Token Expiry</mat-label>
+                  <mat-select formControlName="refreshTokenExpiresIn">
+                    @for (opt of refreshExpiryOptions; track opt.value) {
+                      <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+                    }
+                  </mat-select>
+                  <mat-hint>Long-lived token for silent refresh</mat-hint>
+                </mat-form-field>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── General ─────────────────────────────────────── -->
+          <div class="settings-card">
+            <div class="card-header">
+              <mat-icon>tune</mat-icon>
+              <div>
+                <h3>General</h3>
+                <p>Platform-wide defaults and maintenance controls</p>
+              </div>
+            </div>
+            <div class="card-body" formGroupName="general">
+              <label class="toggle-row maintenance-toggle">
+                <mat-slide-toggle formControlName="maintenanceMode" color="warn" />
+                <div class="toggle-info">
+                  <span class="toggle-label">Maintenance mode</span>
+                  <span class="toggle-desc">When enabled, all non-admin users see a maintenance message and cannot access the platform</span>
+                </div>
+              </label>
+
+              @if (form.get('general.maintenanceMode')?.value) {
+                <mat-form-field appearance="outline" class="full-width" style="margin-top: 8px">
+                  <mat-label>Maintenance Message</mat-label>
+                  <textarea matInput formControlName="maintenanceMessage" rows="2"></textarea>
+                </mat-form-field>
+              }
+
+              <div class="field-row" style="margin-top: 12px">
+                <mat-form-field appearance="outline" class="field-md">
+                  <mat-label>Default Timezone</mat-label>
+                  <mat-select formControlName="defaultTimezone">
+                    @for (tz of timezones; track tz) {
+                      <mat-option [value]="tz">{{ tz }}</mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="field-sm">
+                  <mat-label>Max Upload Size (MB)</mat-label>
+                  <input matInput type="number" formControlName="maxFileUploadMB" min="1" max="100" />
+                </mat-form-field>
+              </div>
+
+              <mat-form-field appearance="outline" class="field-sm">
+                <mat-label>Data Retention (days)</mat-label>
+                <input matInput type="number" formControlName="dataRetentionDays" min="0" max="3650" />
+                <mat-hint>0 = keep indefinitely</mat-hint>
+              </mat-form-field>
+            </div>
+          </div>
+
+        </form>
+
+        <!-- Action bar -->
+        <div class="action-bar">
+          <button mat-stroked-button (click)="resetDefaults()" [disabled]="saving()"
+                  matTooltip="Reset all settings to factory defaults">
+            <mat-icon>restart_alt</mat-icon> Reset to Defaults
+          </button>
+          <button mat-raised-button color="primary" (click)="save()" [disabled]="saving() || !form.dirty">
+            @if (saving()) { <mat-spinner diameter="18" /> }
+            @else { <mat-icon>save</mat-icon> }
+            Save Settings
+          </button>
+        </div>
+      }
+    </div>
+  `,
+  styles: [`
+    .settings-page { padding: 32px; max-width: 820px; }
+
+    .page-header {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      margin-bottom: 28px;
+      h1 { font-size: 28px; color: #1B2A47; margin: 0 0 4px; }
+      p  { color: #5a6a7e; margin: 0; }
+    }
+
+    .last-saved { font-size: 12px; color: #9aa5b4; white-space: nowrap; margin-top: 6px; }
+
+    .loading { display: flex; justify-content: center; padding: 80px; }
+
+    /* Cards */
+    .settings-card {
+      background: white; border-radius: 14px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      margin-bottom: 20px; overflow: hidden;
+    }
+
+    .card-header {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 20px 24px 0;
+      mat-icon { font-size: 22px; color: #3A9FD6; margin-top: 2px; }
+      h3 { font-size: 16px; font-weight: 700; color: #1B2A47; margin: 0 0 2px; }
+      p  { font-size: 13px; color: #9aa5b4; margin: 0; }
+    }
+
+    .card-body { padding: 20px 24px 24px; }
+
+    /* Fields */
+    .field-row { display: flex; gap: 16px; flex-wrap: wrap; }
+    .field-sm  { width: 180px; }
+    .field-md  { width: 240px; }
+    .full-width { width: 100%; }
+
+    /* Toggle rows */
+    .toggle-grid { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+
+    .toggle-row {
+      display: flex; align-items: center; gap: 14px;
+      padding: 10px 14px; border-radius: 10px;
+      cursor: pointer; transition: background 0.15s;
+      &:hover { background: #f8fafc; }
+    }
+
+    .toggle-info {
+      display: flex; flex-direction: column; gap: 1px;
+    }
+    .toggle-label { font-size: 14px; font-weight: 500; color: #1B2A47; }
+    .toggle-desc  { font-size: 12px; color: #9aa5b4; }
+
+    .maintenance-toggle {
+      background: #fff8f0; border: 1px solid #fde0c2; border-radius: 10px;
+    }
+
+    /* Action bar */
+    .action-bar {
+      display: flex; justify-content: flex-end; gap: 12px;
+      padding: 16px 0 32px;
+    }
+  `],
+})
+export class AppSettingsComponent implements OnInit {
+  private fb = inject(FormBuilder);
+  private api = inject(ApiService);
+  private snack = inject(MatSnackBar);
+
+  form!: FormGroup;
+  loading = signal(true);
+  saving = signal(false);
+  settings = signal<AppSettings | null>(null);
+
+  timezones = TIMEZONES;
+  tokenExpiryOptions = TOKEN_EXPIRY_OPTIONS;
+  refreshExpiryOptions = REFRESH_EXPIRY_OPTIONS;
+
+  ngOnInit(): void {
+    this.form = this.fb.group({
+      passwordPolicy: this.fb.group({
+        minLength:           [8],
+        requireUppercase:    [true],
+        requireLowercase:    [true],
+        requireNumbers:      [true],
+        requireSpecialChars: [false],
+      }),
+      loginPolicy: this.fb.group({
+        maxLoginAttempts:       [5],
+        lockoutDurationMinutes: [15],
+        twoFactorEnforced:      [false],
+      }),
+      sessionPolicy: this.fb.group({
+        autoLogoutMinutes:     [30],
+        showLogoutWarning:     [true],
+        logoutWarningSeconds:  [120],
+        maxConcurrentSessions: [0],
+      }),
+      tokenPolicy: this.fb.group({
+        accessTokenExpiresIn:  ['15m'],
+        refreshTokenExpiresIn: ['7d'],
+      }),
+      general: this.fb.group({
+        maintenanceMode:    [false],
+        maintenanceMessage: [''],
+        defaultTimezone:    ['UTC'],
+        dataRetentionDays:  [0],
+        maxFileUploadMB:    [10],
+      }),
+    });
+
+    this.load();
+  }
+
+  load(): void {
+    this.loading.set(true);
+    this.api.get<AppSettings>('/system-admin/settings').subscribe({
+      next: (s) => {
+        this.settings.set(s);
+        this.form.patchValue(s);
+        this.form.markAsPristine();
+        this.loading.set(false);
+      },
+      error: () => this.loading.set(false),
+    });
+  }
+
+  save(): void {
+    this.saving.set(true);
+    this.api.put<AppSettings>('/system-admin/settings', this.form.value).subscribe({
+      next: (s) => {
+        this.settings.set(s);
+        this.form.markAsPristine();
+        this.saving.set(false);
+        this.snack.open('Settings saved', 'OK', { duration: 3000 });
+      },
+      error: () => {
+        this.saving.set(false);
+        this.snack.open('Failed to save settings', 'Dismiss', { duration: 5000 });
+      },
+    });
+  }
+
+  resetDefaults(): void {
+    if (!confirm('Reset all application settings to factory defaults? This cannot be undone.')) { return; }
+    this.saving.set(true);
+    this.api.post<AppSettings>('/system-admin/settings/reset', {}).subscribe({
+      next: (s) => {
+        this.settings.set(s);
+        this.form.patchValue(s);
+        this.form.markAsPristine();
+        this.saving.set(false);
+        this.snack.open('Settings reset to defaults', 'OK', { duration: 3000 });
+      },
+      error: () => {
+        this.saving.set(false);
+        this.snack.open('Failed to reset settings', 'Dismiss', { duration: 5000 });
+      },
+    });
+  }
+
+  formatDate(iso: string): string {
+    return new Date(iso).toLocaleString();
+  }
+}

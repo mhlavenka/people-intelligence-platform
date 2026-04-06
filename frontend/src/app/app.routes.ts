@@ -181,6 +181,13 @@ export const routes: Routes = [
             (m) => m.PlansComponent
           ),
       },
+      {
+        path: 'settings',
+        loadComponent: () =>
+          import('./modules/system-admin/app-settings/app-settings.component').then(
+            (m) => m.AppSettingsComponent
+          ),
+      },
     ],
   },
   { path: '**', redirectTo: 'dashboard' },

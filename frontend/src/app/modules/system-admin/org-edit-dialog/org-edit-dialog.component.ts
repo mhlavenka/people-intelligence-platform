@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, Inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
@@ -11,6 +11,15 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ApiService } from '../../../core/api.service';
+
+interface PlanOption {
+  _id: string;
+  key: string;
+  name: string;
+  maxUsers: number;
+  modules: string[];
+  priceMonthly: number;
+}
 
 export interface BillingAddress {
   line1?: string;
@@ -30,6 +39,7 @@ export interface OrgRow {
   taxId?: string;
   plan: string;
   modules: string[];
+  taxExempt?: boolean;
   isActive: boolean;
   trialEndsAt?: string;
   maxUsers: number;
@@ -124,10 +134,22 @@ export interface OrgRow {
             <mat-label>City</mat-label>
             <input matInput formControlName="billingAddressCity" />
           </mat-form-field>
-          <mat-form-field>
-            <mat-label>Province / State</mat-label>
-            <input matInput formControlName="billingAddressState" />
-          </mat-form-field>
+          @if (form.get('billingAddressCountry')?.value === 'CA') {
+            <mat-form-field>
+              <mat-label>Province</mat-label>
+              <mat-select formControlName="billingAddressState">
+                <mat-option value="">— Select —</mat-option>
+                @for (p of canadianProvinces; track p.code) {
+                  <mat-option [value]="p.code">{{ p.name }} ({{ p.code }})</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+          } @else {
+            <mat-form-field>
+              <mat-label>State / Region</mat-label>
+              <input matInput formControlName="billingAddressState" />
+            </mat-form-field>
+          }
         </div>
         <div class="form-row">
           <mat-form-field>
@@ -143,26 +165,42 @@ export interface OrgRow {
             </mat-select>
           </mat-form-field>
         </div>
-        <mat-form-field class="full-width">
-          <mat-label>Tax ID (VAT / EIN)</mat-label>
-          <input matInput formControlName="taxId" placeholder="e.g. DE123456789" />
-          <mat-hint>Used on invoices for tax compliance</mat-hint>
-        </mat-form-field>
-
         <div class="form-row">
           <mat-form-field>
-            <mat-label>Plan</mat-label>
-            <mat-select formControlName="plan">
-              <mat-option value="starter">Starter</mat-option>
-              <mat-option value="professional">Professional</mat-option>
-              <mat-option value="enterprise">Enterprise</mat-option>
-            </mat-select>
+            <mat-label>Tax ID (GST/HST # / VAT / EIN)</mat-label>
+            <input matInput formControlName="taxId" placeholder="e.g. 123456789 RT0001" />
+            <mat-hint>Used on invoices for tax compliance</mat-hint>
           </mat-form-field>
-          <mat-form-field>
-            <mat-label>Max Users</mat-label>
-            <input matInput formControlName="maxUsers" type="number" min="1" />
-          </mat-form-field>
+          <div class="toggle-field">
+            <mat-slide-toggle formControlName="taxExempt" color="warn">
+              Tax Exempt
+            </mat-slide-toggle>
+            @if (form.get('taxExempt')?.value) {
+              <span class="exempt-badge">Exempt</span>
+            }
+          </div>
         </div>
+
+        <mat-form-field class="full-width">
+          <mat-label>Plan</mat-label>
+          <mat-select formControlName="plan" (selectionChange)="onPlanChange($event.value)">
+            @for (p of plans(); track p.key) {
+              <mat-option [value]="p.key">
+                {{ p.name }}
+                @if (p.priceMonthly > 0) {
+                  — {{ formatPrice(p.priceMonthly) }}/mo
+                } @else {
+                  — Custom
+                }
+              </mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field class="full-width">
+          <mat-label>Max Users</mat-label>
+          <input matInput formControlName="maxUsers" type="number" min="1" />
+        </mat-form-field>
 
         <div class="form-row">
           <mat-form-field>
@@ -235,6 +273,12 @@ export interface OrgRow {
     .toggle-field {
       display: flex; align-items: center; gap: 12px;
       padding-top: 12px;
+    }
+
+    .exempt-badge {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      background: #fef2f2; color: #dc2626;
+      padding: 2px 8px; border-radius: 999px;
     }
 
     .suspended-badge {
@@ -319,11 +363,28 @@ export class OrgEditDialogComponent implements OnInit {
   form!: FormGroup;
   saving = false;
   logoPreview: string | null = null;
+  plans = signal<PlanOption[]>([]);
 
   availableModules = [
     { key: 'conflict',       label: 'Conflict',        icon: 'warning_amber' },
     { key: 'neuroinclusion', label: 'Neuro-Inclusion',  icon: 'psychology' },
     { key: 'succession',     label: 'Succession',       icon: 'trending_up' },
+  ];
+
+  canadianProvinces = [
+    { code: 'AB', name: 'Alberta' },
+    { code: 'BC', name: 'British Columbia' },
+    { code: 'MB', name: 'Manitoba' },
+    { code: 'NB', name: 'New Brunswick' },
+    { code: 'NL', name: 'Newfoundland and Labrador' },
+    { code: 'NS', name: 'Nova Scotia' },
+    { code: 'NT', name: 'Northwest Territories' },
+    { code: 'NU', name: 'Nunavut' },
+    { code: 'ON', name: 'Ontario' },
+    { code: 'PE', name: 'Prince Edward Island' },
+    { code: 'QC', name: 'Quebec' },
+    { code: 'SK', name: 'Saskatchewan' },
+    { code: 'YT', name: 'Yukon' },
   ];
 
   countries = [
@@ -386,12 +447,33 @@ export class OrgEditDialogComponent implements OnInit {
       billingAddressPostalCode: [addr.postalCode ?? ''],
       billingAddressCountry:  [addr.country ?? ''],
       taxId:                  [this.data.taxId ?? ''],
-      plan:                   [this.data.plan ?? 'starter', Validators.required],
+      taxExempt:              [this.data.taxExempt ?? false],
+      plan:                   [this.data.plan ?? '', Validators.required],
       maxUsers:               [this.data.maxUsers ?? 100, [Validators.required, Validators.min(1)]],
       trialEndsAt:            [trialDate],
       isActive:               [this.data.isActive ?? true],
       notes:                  [this.data.notes ?? ''],
     });
+
+    // Load plans from API
+    this.api.get<PlanOption[]>('/plans/admin').subscribe({
+      next: (plans) => this.plans.set(plans),
+    });
+  }
+
+  onPlanChange(planKey: string): void {
+    const plan = this.plans().find((p) => p.key === planKey);
+    if (!plan) return;
+
+    // Auto-fill maxUsers and modules from the selected plan
+    this.form.patchValue({ maxUsers: plan.maxUsers });
+    if (plan.modules?.length) {
+      this.selectedModules = [...plan.modules];
+    }
+  }
+
+  formatPrice(cents: number): string {
+    return '$' + (cents / 100).toLocaleString('en-CA', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
   }
 
   isModuleChecked(key: string): boolean {
@@ -416,6 +498,7 @@ export class OrgEditDialogComponent implements OnInit {
       slug:         v['slug'],
       billingEmail: v['billingEmail'],
       taxId:        v['taxId'] || undefined,
+      taxExempt:    v['taxExempt'] ?? false,
       billingAddress: {
         line1:      v['billingAddressLine1'] || undefined,
         line2:      v['billingAddressLine2'] || undefined,

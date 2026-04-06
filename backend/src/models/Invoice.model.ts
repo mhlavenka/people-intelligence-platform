@@ -19,25 +19,35 @@ export interface IBillingAddressSnapshot {
   country?: string;
 }
 
+export interface ITaxBreakdown {
+  gst: number;       // cents — 5% federal GST (all of Canada)
+  hst: number;       // cents — HST replaces GST+PST in ON, NB, NL, NS, PE
+  pst: number;       // cents — provincial (BC, SK, MB)
+  qst: number;       // cents — Quebec provincial tax (9.975%)
+}
+
 export interface IInvoice extends Document {
   organizationId: mongoose.Types.ObjectId;
   invoiceNumber: string;        // INV-2024-0001
   period: { from: Date; to: Date };
   lineItems: ILineItem[];
   subtotal: number;             // cents
-  taxRate: number;              // e.g. 0.21
-  tax: number;                  // cents
+  taxRate: number;              // effective combined rate as decimal (e.g. 0.14975)
+  tax: number;                  // total tax in cents
+  taxBreakdown?: ITaxBreakdown; // per-component breakdown for Canadian taxes
   total: number;                // cents
-  currency: string;             // 'USD'
+  currency: string;             // 'CAD'
   status: InvoiceStatus;
   dueDate: Date;
   billingAddress?: IBillingAddressSnapshot;  // snapshot from org at invoice time
-  taxId?: string;               // VAT / EIN snapshot
+  taxId?: string;               // VAT / EIN / GST/HST # snapshot
   paidAt?: Date;
   stripeCheckoutSessionId?: string;
   stripePaymentIntentId?: string;
   notes?: string;
   sentAt?: Date;
+  reminderSentAt?: Date;        // last payment reminder sent
+  reminderCount: number;        // how many reminders sent
   createdAt: Date;
   updatedAt: Date;
 }
@@ -82,12 +92,22 @@ const InvoiceSchema = new Schema<IInvoice>(
         country:    { type: String },
       }, { _id: false }),
     },
+    taxBreakdown: {
+      type: new Schema({
+        gst: { type: Number, default: 0 },
+        hst: { type: Number, default: 0 },
+        pst: { type: Number, default: 0 },
+        qst: { type: Number, default: 0 },
+      }, { _id: false }),
+    },
     taxId: { type: String },
     paidAt: { type: Date },
     stripeCheckoutSessionId: { type: String },
     stripePaymentIntentId: { type: String },
     notes: { type: String },
     sentAt: { type: Date },
+    reminderSentAt: { type: Date },
+    reminderCount: { type: Number, default: 0 },
   },
   { timestamps: true }
 );

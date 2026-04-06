@@ -8,6 +8,7 @@ export interface IUser extends Document {
   email: string;
   passwordHash: string;
   role: UserRole;
+  customRoleId?: mongoose.Types.ObjectId; // set when a custom role overrides the system role
   firstName: string;
   lastName: string;
   isActive: boolean;
@@ -35,6 +36,7 @@ const UserSchema = new Schema<IUser>(
       enum: ['admin', 'hr_manager', 'manager', 'coachee', 'coach', 'system_admin'],
       required: true,
     },
+    customRoleId: { type: Schema.Types.ObjectId, ref: 'CustomRole', default: null },
     firstName: { type: String, required: true, trim: true },
     lastName: { type: String, required: true, trim: true },
     isActive: { type: Boolean, default: true },

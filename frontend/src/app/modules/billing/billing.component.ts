@@ -26,6 +26,13 @@ interface BillingAddress {
   country?: string;
 }
 
+interface TaxBreakdown {
+  gst: number;
+  hst: number;
+  pst: number;
+  qst: number;
+}
+
 interface Invoice {
   _id: string;
   invoiceNumber: string;
@@ -33,6 +40,7 @@ interface Invoice {
   lineItems: LineItem[];
   subtotal: number;
   taxRate: number;
+  taxBreakdown?: TaxBreakdown;
   tax: number;
   total: number;
   currency: string;
@@ -42,6 +50,7 @@ interface Invoice {
   taxId?: string;
   paidAt?: string;
   sentAt?: string;
+  reminderCount?: number;
   notes?: string;
   createdAt: string;
 }
@@ -57,6 +66,8 @@ interface OrgPlan {
   billingAddress?: BillingAddress;
   taxId?: string;
   modules?: string[];
+  suspendedAt?: string;
+  suspensionReason?: string;
 }
 
 interface AvailablePlan {
@@ -106,6 +117,19 @@ interface AvailablePlan {
         }
 
         @if (!loading()) {
+
+          <!-- Suspension banner -->
+          @if (org()?.suspendedAt) {
+            <div class="suspension-banner">
+              <mat-icon>block</mat-icon>
+              <div class="suspension-content">
+                <strong>Account Suspended</strong>
+                <span>{{ org()?.suspensionReason || 'Your account has been suspended due to outstanding payments.' }}</span>
+                <span class="suspension-date">Suspended {{ org()?.suspendedAt | date:'MMM d, y' }}</span>
+              </div>
+            </div>
+          }
+
           <div class="billing-grid">
 
             <!-- LEFT: current plan + estimate + outstanding + history -->
@@ -241,10 +265,36 @@ interface AvailablePlan {
                             <td colspan="3" class="total-label">Subtotal</td>
                             <td class="col-amount">{{ formatMoney(inv.subtotal) }}</td>
                           </tr>
-                          <tr class="tax-row">
-                            <td colspan="3" class="total-label">Tax</td>
-                            <td class="col-amount">{{ formatMoney(inv.tax) }}</td>
-                          </tr>
+                          @if (inv.taxBreakdown?.gst) {
+                            <tr class="tax-row">
+                              <td colspan="3" class="total-label">GST (5%)</td>
+                              <td class="col-amount">{{ formatMoney(inv.taxBreakdown!.gst) }}</td>
+                            </tr>
+                          }
+                          @if (inv.taxBreakdown?.hst) {
+                            <tr class="tax-row">
+                              <td colspan="3" class="total-label">HST</td>
+                              <td class="col-amount">{{ formatMoney(inv.taxBreakdown!.hst) }}</td>
+                            </tr>
+                          }
+                          @if (inv.taxBreakdown?.pst) {
+                            <tr class="tax-row">
+                              <td colspan="3" class="total-label">PST</td>
+                              <td class="col-amount">{{ formatMoney(inv.taxBreakdown!.pst) }}</td>
+                            </tr>
+                          }
+                          @if (inv.taxBreakdown?.qst) {
+                            <tr class="tax-row">
+                              <td colspan="3" class="total-label">QST (9.975%)</td>
+                              <td class="col-amount">{{ formatMoney(inv.taxBreakdown!.qst) }}</td>
+                            </tr>
+                          }
+                          @if (inv.tax > 0 && !inv.taxBreakdown) {
+                            <tr class="tax-row">
+                              <td colspan="3" class="total-label">Tax</td>
+                              <td class="col-amount">{{ formatMoney(inv.tax) }}</td>
+                            </tr>
+                          }
                           <tr class="grand-total-row">
                             <td colspan="3" class="total-label grand-label">Total</td>
                             <td class="col-amount grand-amount">{{ formatMoney(inv.total) }}</td>
@@ -904,6 +954,24 @@ interface AvailablePlan {
     .status-void   { background: #f3f4f6; color: #9ca3af; }
 
     /* ── Section 3: Outstanding Banner ──────────── */
+    .suspension-banner {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 18px 22px;
+      background: #fef2f2;
+      border: 2px solid #fecaca;
+      border-radius: 14px;
+      margin-bottom: 20px;
+      mat-icon { color: #dc2626; font-size: 28px; width: 28px; height: 28px; margin-top: 2px; }
+      .suspension-content {
+        display: flex; flex-direction: column; gap: 4px;
+        strong { font-size: 16px; color: #dc2626; }
+        span { font-size: 13px; color: #5a6a7e; line-height: 1.5; }
+        .suspension-date { font-size: 12px; color: #9aa5b4; }
+      }
+    }
+
     .outstanding-banner {
       display: flex;
       align-items: center;

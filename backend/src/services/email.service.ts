@@ -201,6 +201,102 @@ export async function sendIDPReadyEmail(params: {
   });
 }
 
+export async function sendPaymentReminderEmail(params: {
+  email: string;
+  orgName: string;
+  invoiceNumber: string;
+  totalFormatted: string;
+  dueDateFormatted: string;
+  daysOverdue: number;
+  isOverdue: boolean;
+}): Promise<void> {
+  const billingUrl = `${config.frontendUrl}/billing`;
+  const urgency = params.isOverdue
+    ? `<p style="color:#dc2626;font-weight:600;margin:0 0 16px;font-size:15px;">
+         This invoice is ${params.daysOverdue} day${params.daysOverdue === 1 ? '' : 's'} overdue.
+         Please pay immediately to avoid service interruption.
+       </p>`
+    : `<p style="color:#f59e0b;font-weight:500;margin:0 0 16px;font-size:14px;">
+         Payment is due on ${params.dueDateFormatted}. Please ensure timely payment.
+       </p>`;
+
+  await sendEmail({
+    to: params.email,
+    subject: params.isOverdue
+      ? `[OVERDUE] Invoice ${params.invoiceNumber} — ${params.totalFormatted} past due`
+      : `Payment reminder — Invoice ${params.invoiceNumber} due ${params.dueDateFormatted}`,
+    html: brandedHtml('Payment Reminder', `
+      <h2 style="color:#1B2A47;margin:0 0 8px;font-size:22px;">
+        Payment ${params.isOverdue ? 'Overdue' : 'Reminder'}
+      </h2>
+      <p style="color:#5a6a7e;margin:0 0 4px;line-height:1.6;">
+        <strong>Organization:</strong> ${params.orgName}
+      </p>
+      <p style="color:#5a6a7e;margin:0 0 4px;line-height:1.6;">
+        <strong>Invoice:</strong> ${params.invoiceNumber}
+      </p>
+      <p style="color:#5a6a7e;margin:0 0 16px;line-height:1.6;">
+        <strong>Amount due:</strong> ${params.totalFormatted}
+      </p>
+      ${urgency}
+      <a href="${billingUrl}"
+         style="display:inline-block;background:${params.isOverdue ? '#dc2626' : '#3A9FD6'};color:#ffffff;
+                padding:14px 28px;border-radius:6px;text-decoration:none;
+                font-weight:600;font-size:15px;">
+        Pay Now
+      </a>
+      <p style="color:#9aa5b4;margin:20px 0 0;font-size:12px;">
+        If you have already paid, please disregard this message.
+      </p>
+    `),
+    text: `Payment ${params.isOverdue ? 'OVERDUE' : 'Reminder'}\n\nOrganization: ${params.orgName}\nInvoice: ${params.invoiceNumber}\nAmount: ${params.totalFormatted}\nDue: ${params.dueDateFormatted}\n\nPay at: ${billingUrl}`,
+  });
+}
+
+export async function sendSuspensionEmail(params: {
+  email: string;
+  orgName: string;
+  reason: string;
+  invoiceNumber?: string;
+}): Promise<void> {
+  const billingUrl = `${config.frontendUrl}/billing`;
+  await sendEmail({
+    to: params.email,
+    subject: `[Action Required] ${params.orgName} — Account suspended`,
+    html: brandedHtml('Account Suspended', `
+      <h2 style="color:#dc2626;margin:0 0 8px;font-size:22px;">
+        Account Suspended
+      </h2>
+      <p style="color:#5a6a7e;margin:0 0 8px;line-height:1.6;">
+        Access to <strong>${params.orgName}</strong> on the People Intelligence Platform
+        has been suspended.
+      </p>
+      <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;
+                  padding:14px 18px;margin:16px 0;">
+        <p style="color:#dc2626;margin:0;font-weight:500;">
+          <strong>Reason:</strong> ${params.reason}
+        </p>
+      </div>
+      ${params.invoiceNumber
+        ? `<p style="color:#5a6a7e;margin:0 0 16px;line-height:1.6;">
+             Related invoice: <strong>${params.invoiceNumber}</strong>
+           </p>`
+        : ''}
+      <p style="color:#5a6a7e;margin:0 0 24px;line-height:1.6;">
+        To restore access, please settle the outstanding balance. Your data remains
+        safe and will be fully available once the account is reactivated.
+      </p>
+      <a href="${billingUrl}"
+         style="display:inline-block;background:#dc2626;color:#ffffff;
+                padding:14px 28px;border-radius:6px;text-decoration:none;
+                font-weight:600;font-size:15px;">
+        Resolve Now
+      </a>
+    `),
+    text: `Account Suspended\n\nOrganization: ${params.orgName}\nReason: ${params.reason}\n\nResolve at: ${billingUrl}`,
+  });
+}
+
 export async function sendMessageNotificationEmail(params: {
   email: string;
   firstName: string;

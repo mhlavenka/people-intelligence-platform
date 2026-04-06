@@ -3,7 +3,8 @@ import { authenticateToken, requireRole, AuthRequest } from '../middleware/auth.
 import { tenantResolver } from '../middleware/tenant.middleware';
 import { DevelopmentPlan } from '../models/DevelopmentPlan.model';
 import { User } from '../models/User.model';
-import { buildIDPPrompt, callClaude, extractJson } from '../services/ai.service';
+import { ConflictAnalysis } from '../models/ConflictAnalysis.model';
+import { buildIDPPrompt, buildConflictIDPPrompt, callClaude, extractJson } from '../services/ai.service';
 
 const router = Router();
 router.use(authenticateToken, tenantResolver);
@@ -14,7 +15,7 @@ router.post(
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const organizationId = req.user!.organizationId;
-      const { coacheeId, coachId, eqiScores, competencyGaps, goals } = req.body;
+      const { coacheeId, coachId, eqiScores, competencyGaps, goals, sourceModule } = req.body;
 
       const coachee = await User.findOne({ _id: coacheeId, organizationId });
       if (!coachee) {
@@ -69,6 +70,7 @@ router.post(
         organizationId,
         coacheeId,
         coachId,
+        sourceModule: sourceModule || 'succession',
         goal: parsed.goal || goals,
         currentReality: parsed.currentReality,
         options: parsed.options,
@@ -76,6 +78,100 @@ router.post(
         milestones,
         eqiScores,
         competencyGaps,
+        aiGeneratedContent: aiResponse,
+        status: 'draft',
+      });
+
+      res.status(201).json(idp);
+    } catch (e) {
+      next(e);
+    }
+  }
+);
+
+/** Generate an IDP from a conflict analysis — used by the Conflict Intelligence "Skill Development" section. */
+router.post(
+  '/idp/generate-from-conflict',
+  requireRole('admin', 'hr_manager', 'coach', 'manager'),
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const organizationId = req.user!.organizationId;
+      const { coacheeId, analysisId, goals } = req.body;
+
+      const coachee = await User.findOne({ _id: coacheeId, organizationId });
+      if (!coachee) {
+        res.status(404).json({ error: 'User not found in this organization' });
+        return;
+      }
+
+      const analysis = await ConflictAnalysis.findOne({ _id: analysisId, organizationId });
+      if (!analysis) {
+        res.status(404).json({ error: 'Conflict analysis not found' });
+        return;
+      }
+
+      const prompt = buildConflictIDPPrompt(
+        { firstName: coachee.firstName, role: coachee.role },
+        {
+          riskScore: analysis.riskScore,
+          riskLevel: analysis.riskLevel,
+          conflictTypes: analysis.conflictTypes,
+          aiNarrative: analysis.aiNarrative,
+        },
+        goals
+      );
+
+      const aiResponse = await callClaude(prompt, undefined, 4096);
+      let parsed: {
+        goal: string;
+        currentReality: string;
+        options: string[];
+        willDoActions: string[];
+        milestones: Array<{ title: string; weeksFromNow: number; successCriteria: string }>;
+        resources?: string[];
+        competencyGaps?: string[];
+      };
+
+      try {
+        parsed = JSON.parse(extractJson(aiResponse));
+      } catch {
+        console.error('[Conflict IDP] JSON parse failed. Raw:', aiResponse);
+        parsed = {
+          goal: goals,
+          currentReality: '',
+          options: [],
+          willDoActions: [],
+          milestones: [],
+          competencyGaps: analysis.conflictTypes,
+        };
+      }
+
+      parsed.goal           = parsed.goal           || goals;
+      parsed.currentReality = parsed.currentReality || '';
+      parsed.options        = Array.isArray(parsed.options)      ? parsed.options      : [];
+      parsed.willDoActions  = Array.isArray(parsed.willDoActions) ? parsed.willDoActions : [];
+      parsed.milestones     = Array.isArray(parsed.milestones)   ? parsed.milestones   : [];
+
+      const milestones = parsed.milestones.map((m) => ({
+        title: m.title || 'Milestone',
+        dueDate: new Date(Date.now() + (m.weeksFromNow || 4) * 7 * 24 * 3600 * 1000),
+        status: 'pending' as const,
+        notes: m.successCriteria || '',
+      }));
+
+      const idp = await DevelopmentPlan.create({
+        organizationId,
+        coacheeId,
+        coachId: req.user!.userId,
+        sourceModule: 'conflict',
+        sourceAnalysisId: analysisId,
+        goal: parsed.goal,
+        currentReality: parsed.currentReality,
+        options: parsed.options,
+        willDoActions: parsed.willDoActions,
+        milestones,
+        eqiScores: {},
+        competencyGaps: parsed.competencyGaps || analysis.conflictTypes,
         aiGeneratedContent: aiResponse,
         status: 'draft',
       });
@@ -95,6 +191,17 @@ router.get('/idps', async (req: AuthRequest, res: Response, next: NextFunction) 
     // Coachees only see their own IDP; all other roles see the full org list
     if (req.user!.role === 'coachee') {
       filter['coacheeId'] = req.user!.userId;
+    }
+
+    // Optional filter by source module (e.g. ?module=conflict)
+    if (req.query['module']) {
+      const mod = req.query['module'] as string;
+      if (mod === 'succession') {
+        // Include legacy IDPs that have no sourceModule field (created before the field existed)
+        filter['sourceModule'] = { $in: ['succession', null, undefined] };
+      } else {
+        filter['sourceModule'] = mod;
+      }
     }
 
     const idps = await DevelopmentPlan.find(filter)
