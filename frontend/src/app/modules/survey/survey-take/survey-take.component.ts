@@ -23,7 +23,7 @@ interface Question {
   type: 'scale' | 'text' | 'boolean' | 'forced_choice';
   category: string;
   options?: QuestionOption[];
-  scale_range?: { min: number; max: number; labels?: string[] };
+  scale_range?: { min: number; max: number; labels?: Record<string, string> };
 }
 
 interface SurveyTemplate {
@@ -162,16 +162,13 @@ const DEPARTMENTS = [
                 <!-- Scale -->
                 @if (q.type === 'scale') {
                   <div class="scale-container">
-                    <div class="scale-labels">
-                      @if (q.scale_range?.labels?.length) {
-                        <span>{{ q.scale_range!.labels![0] }}</span>
-                        <span>{{ q.scale_range!.labels![q.scale_range!.labels!.length - 1] }}</span>
-                      } @else {
-                        <span>{{ scaleMin(q) }} — Strongly Disagree</span>
-                        <span>{{ scaleMax(q) }} — Strongly Agree</span>
-                      }
-                    </div>
-                    <div class="scale-buttons">
+                    @if (hasLabels(q)) {
+                      <div class="scale-pole-labels">
+                        <span>{{ labelFor(q, scaleMin(q)) }}</span>
+                        <span>{{ labelFor(q, scaleMax(q)) }}</span>
+                      </div>
+                    }
+                    <div class="scale-buttons" [class.has-labels]="hasLabels(q)">
                       @for (n of scaleValuesFor(q); track n) {
                         <button
                           type="button"
@@ -179,11 +176,21 @@ const DEPARTMENTS = [
                           [class.selected]="answers()[q.id] === n"
                           [class]="scaleClass(n, q)"
                           (click)="setAnswer(q.id, n)"
-                        >{{ n }}</button>
+                        >
+                          <span class="scale-num">{{ n }}</span>
+                          @if (hasLabels(q) && labelFor(q, n)) {
+                            <span class="scale-label-text">{{ labelFor(q, n) }}</span>
+                          }
+                        </button>
                       }
                     </div>
                     @if (answers()[q.id] !== undefined) {
-                      <p class="scale-hint">Selected: <strong>{{ answers()[q.id] }}</strong></p>
+                      <p class="scale-hint">
+                        Selected: <strong>{{ answers()[q.id] }}</strong>
+                        @if (hasLabels(q) && labelFor(q, answers()[q.id])) {
+                          — {{ labelFor(q, answers()[q.id]) }}
+                        }
+                      </p>
                     }
                   </div>
                 }
@@ -355,24 +362,34 @@ const DEPARTMENTS = [
     }
 
     .scale-container {
-      .scale-labels {
+      .scale-pole-labels {
         display: flex; justify-content: space-between;
-        font-size: 12px; color: #9aa5b4; margin-bottom: 12px;
+        font-size: 12px; color: #9aa5b4; margin-bottom: 10px;
+        font-style: italic;
       }
       .scale-buttons {
         display: flex; gap: 8px; flex-wrap: wrap;
+        &.has-labels { gap: 6px; }
       }
       .scale-btn {
-        width: 48px; height: 48px; border-radius: 10px;
+        min-width: 48px; height: 48px; border-radius: 10px;
         border: 2px solid #dce6f0; background: white;
-        font-size: 16px; font-weight: 600; cursor: pointer;
-        color: #5a6a7e; transition: all 0.15s;
+        cursor: pointer; color: #5a6a7e; transition: all 0.15s;
+        display: flex; flex-direction: column; align-items: center;
+        justify-content: center; padding: 4px 8px;
         &:hover { border-color: #3A9FD6; color: #3A9FD6; }
         &.selected { color: white; border-color: transparent; }
         &.low.selected    { background: #27C4A0; }
         &.mid.selected    { background: #f0a500; }
         &.high.selected   { background: #e53e3e; }
+        .scale-num { font-size: 15px; font-weight: 700; line-height: 1; }
+        .scale-label-text {
+          font-size: 10px; line-height: 1.2; text-align: center;
+          max-width: 72px; white-space: normal; margin-top: 2px;
+        }
       }
+      /* Labeled buttons are wider */
+      .has-labels .scale-btn { min-width: 72px; height: auto; min-height: 52px; }
       .scale-hint { font-size: 13px; color: #5a6a7e; margin-top: 12px; }
     }
 
@@ -490,6 +507,12 @@ export class SurveyTakeComponent implements OnInit {
     const pct = (n - min) / span;
     return pct < 0.34 ? 'low' : pct < 0.67 ? 'mid' : 'high';
   };
+
+  hasLabels = (q: Question): boolean =>
+    !!q.scale_range?.labels && Object.keys(q.scale_range.labels).length > 0;
+
+  labelFor = (q: Question, n: number | string | boolean): string =>
+    q.scale_range?.labels?.[String(n)] ?? '';
 
   isAnswered = (q: Question): boolean => {
     const ans = this.answers()[q.id];
