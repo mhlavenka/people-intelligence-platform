@@ -102,7 +102,7 @@ interface SurveyTemplate {
         <div class="error-banner">{{ error() }}</div>
       }
 
-      <form [formGroup]="form">
+      <form [formGroup]="form" style="flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden">
         <mat-tab-group animationDuration="150ms" class="main-tabs">
 
           <!-- ══════════════════ TAB 1: IDENTITY ══════════════════ -->
@@ -622,9 +622,11 @@ interface SurveyTemplate {
     }
 
     mat-dialog-content {
-      min-width: 860px; max-width: 1000px;
-      padding-top: 8px !important;
-      overflow-y: auto;
+      min-width: 920px; max-width: 1080px;
+      height: 72vh; max-height: 72vh;
+      padding: 8px 0 0 !important;
+      overflow: hidden;
+      display: flex; flex-direction: column;
     }
 
     .error-banner {
@@ -632,9 +634,13 @@ interface SurveyTemplate {
       padding: 10px 14px; border-radius: 8px; margin-bottom: 12px; font-size: 14px;
     }
 
-    /* Tabs */
+    /* Tabs — fill the dialog content height so all tabs are the same size */
     .main-tabs {
-      ::ng-deep .mat-mdc-tab-header { margin: 0 -4px; }
+      flex: 1; display: flex; flex-direction: column; overflow: hidden; min-height: 0;
+      ::ng-deep .mat-mdc-tab-header { flex-shrink: 0; margin: 0 -4px; }
+      ::ng-deep .mat-mdc-tab-body-wrapper { flex: 1; overflow: hidden; min-height: 0; }
+      ::ng-deep .mat-mdc-tab-body { height: 100%; }
+      ::ng-deep .mat-mdc-tab-body-content { height: 100%; overflow-y: auto; }
     }
     .tab-icon { font-size: 18px; width: 18px; height: 18px; margin-right: 4px; vertical-align: middle; }
     .tab-count {
@@ -642,10 +648,11 @@ interface SurveyTemplate {
       padding: 1px 7px; border-radius: 999px; font-size: 11px;
     }
 
-    /* Tab content */
+    /* Tab content — each tab scrolls internally */
     .tab-content {
-      padding: 20px 4px 8px;
+      padding: 20px 8px 24px;
       display: flex; flex-direction: column; gap: 10px;
+      box-sizing: border-box;
     }
 
     /* Layout helpers */

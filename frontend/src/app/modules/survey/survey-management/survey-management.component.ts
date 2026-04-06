@@ -23,6 +23,19 @@ interface SurveyTemplate {
   intakeType: 'survey' | 'interview' | 'assessment';
   questions: { id: string; text: string; type: string; category: string }[];
   isActive: boolean;
+  isGlobal?: boolean;
+  instrumentId?: string;
+  instrumentVersion?: string;
+  description?: string;
+  instructions?: string;
+  level_of_analysis?: string;
+  relationship_target?: string;
+  single_construct?: boolean;
+  rater_pool?: unknown;
+  aggregation_method?: string;
+  minimum_respondents_per_team?: number;
+  scoring?: unknown;
+  rater_type?: string;
   createdAt: string;
   responseCount?: number;
 }
@@ -109,7 +122,22 @@ interface SurveyTemplate {
       } @else {
         <div class="templates-grid">
           @for (t of filteredTemplates(); track t._id) {
-            <div class="template-card" [class.inactive]="!t.isActive">
+            <div class="template-card"
+                 [class.inactive]="!t.isActive"
+                 [class.standardized]="!!t.instrumentId">
+
+              <!-- Standardized instrument header bar -->
+              @if (t.instrumentId) {
+                <div class="instrument-bar">
+                  <mat-icon>verified</mat-icon>
+                  <span class="instrument-id">{{ t.instrumentId }}</span>
+                  @if (t.instrumentVersion) {
+                    <span class="instrument-version">v{{ t.instrumentVersion }}</span>
+                  }
+                  <span class="validated-label">Validated Instrument</span>
+                </div>
+              }
+
               <div class="card-top">
                 <div class="badges-row">
                   <div class="module-badge" [class]="t.moduleType">
@@ -135,6 +163,9 @@ interface SurveyTemplate {
                     <button mat-menu-item (click)="openEditDialog(t)">
                       <mat-icon>edit</mat-icon> Edit
                     </button>
+                    <button mat-menu-item (click)="copyTemplate(t)">
+                      <mat-icon>content_copy</mat-icon> Copy
+                    </button>
                     <button mat-menu-item (click)="copySurveyLink(t)">
                       <mat-icon>link</mat-icon> Copy Link
                     </button>
@@ -142,6 +173,11 @@ interface SurveyTemplate {
                       <mat-icon>bar_chart</mat-icon> View Responses
                     </button>
                     <mat-divider></mat-divider>
+                    <button mat-menu-item
+                            (click)="clearResponses(t)"
+                            [disabled]="(t.responseCount ?? 0) === 0">
+                      <mat-icon>cleaning_services</mat-icon> Clear Responses
+                    </button>
                     <button mat-menu-item class="danger-item" (click)="deleteTemplate(t)">
                       <mat-icon>delete</mat-icon> Delete
                     </button>
@@ -214,10 +250,7 @@ interface SurveyTemplate {
       margin-bottom: 12px; flex-wrap: wrap; gap: 8px;
     }
 
-    .filter-tabs {
-      display: flex; gap: 8px;
-      flex-wrap: wrap;
-    }
+    .filter-tabs { display: flex; gap: 8px; flex-wrap: wrap; }
     .intake-type-tabs { margin-bottom: 24px; }
 
     .filter-tab {
@@ -254,13 +287,41 @@ interface SurveyTemplate {
       gap: 20px;
     }
 
+    /* Base card */
     .template-card {
-      background: white; border-radius: 16px; padding: 24px;
+      background: white; border-radius: 16px; padding: 20px 24px;
       box-shadow: 0 2px 12px rgba(0,0,0,0.06);
       display: flex; flex-direction: column; gap: 12px;
-      transition: box-shadow 0.15s;
+      transition: box-shadow 0.15s; border: 1.5px solid transparent;
       &:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.10); }
       &.inactive { opacity: 0.65; }
+    }
+
+    /* Standardized instrument card — distinct blue-tinted style */
+    .template-card.standardized {
+      background: linear-gradient(160deg, #eef6fd 0%, #f8fbff 60%, white 100%);
+      border-color: rgba(58,159,214,0.35);
+      box-shadow: 0 2px 12px rgba(58,159,214,0.10);
+      &:hover { box-shadow: 0 4px 20px rgba(58,159,214,0.18); }
+    }
+
+    /* Instrument identity bar (standardized only) */
+    .instrument-bar {
+      display: flex; align-items: center; gap: 6px;
+      background: rgba(58,159,214,0.10); border-radius: 8px;
+      padding: 5px 10px; margin: -4px -4px 0;
+      mat-icon { font-size: 15px; width: 15px; height: 15px; color: #2080b0; }
+      .instrument-id {
+        font-size: 12px; font-weight: 800; color: #1B2A47; letter-spacing: 0.4px;
+      }
+      .instrument-version {
+        font-size: 11px; color: #5a6a7e; background: rgba(0,0,0,0.07);
+        padding: 1px 6px; border-radius: 4px;
+      }
+      .validated-label {
+        margin-left: auto; font-size: 10px; font-weight: 700; text-transform: uppercase;
+        letter-spacing: 0.5px; color: #2080b0;
+      }
     }
 
     .card-top {
@@ -347,7 +408,12 @@ export class SurveyManagementComponent implements OnInit {
     if (this.activeTypeFilter() !== 'all') {
       list = list.filter((t) => (t.intakeType ?? 'survey') === this.activeTypeFilter());
     }
-    return list;
+    // Standardized instruments (with instrumentId) sort to the top
+    return [...list].sort((a, b) => {
+      const aStd = a.instrumentId ? 1 : 0;
+      const bStd = b.instrumentId ? 1 : 0;
+      return bStd - aStd;
+    });
   });
 
   countByModule = (key: string) =>
@@ -373,7 +439,8 @@ export class SurveyManagementComponent implements OnInit {
     type === 'interview' ? 'Interview' : type === 'assessment' ? 'Assessment' : 'Survey';
 
   questionIcon = (type: string) =>
-    type === 'scale' ? 'linear_scale' : type === 'boolean' ? 'toggle_on' : 'short_text';
+    type === 'scale' ? 'linear_scale' : type === 'boolean' ? 'toggle_on'
+    : type === 'forced_choice' ? 'compare_arrows' : 'short_text';
 
   constructor(
     private api: ApiService,
@@ -412,14 +479,15 @@ export class SurveyManagementComponent implements OnInit {
           list.map((t) => (t._id === templateId ? { ...t, responseCount: data.count } : t))
         );
       },
-      error: () => {}, // count endpoint may return 403 if < 5 — that's fine
+      error: () => {},
     });
   }
 
   openCreateDialog(): void {
     const ref = this.dialog.open(SurveyTemplateDialogComponent, {
-      width: '720px',
-      maxHeight: '90vh',
+      minWidth: '960px',
+      maxWidth: '1100px',
+      maxHeight: '92vh',
       disableClose: true,
     });
     ref.afterClosed().subscribe((result) => { if (result) this.loadTemplates(); });
@@ -427,8 +495,9 @@ export class SurveyManagementComponent implements OnInit {
 
   openEditDialog(template: SurveyTemplate): void {
     const ref = this.dialog.open(SurveyTemplateDialogComponent, {
-      width: '720px',
-      maxHeight: '90vh',
+      minWidth: '960px',
+      maxWidth: '1100px',
+      maxHeight: '92vh',
       disableClose: true,
       data: template,
     });
@@ -437,12 +506,9 @@ export class SurveyManagementComponent implements OnInit {
 
   toggleActive(template: SurveyTemplate): void {
     const newValue = !template.isActive;
-
-    // Optimistic update — keeps the toggle in the new position during the API call
     this.templates.update((list) =>
       list.map((t) => (t._id === template._id ? { ...t, isActive: newValue } : t))
     );
-
     this.api.put(`/surveys/templates/${template._id}`, { isActive: newValue }).subscribe({
       next: () => {
         this.snackBar.open(
@@ -452,12 +518,52 @@ export class SurveyManagementComponent implements OnInit {
         );
       },
       error: () => {
-        // Revert on failure
         this.templates.update((list) =>
           list.map((t) => (t._id === template._id ? { ...t, isActive: template.isActive } : t))
         );
         this.snackBar.open('Failed to update template status', 'Close', { duration: 3000 });
       },
+    });
+  }
+
+  copyTemplate(template: SurveyTemplate): void {
+    // Strip runtime/server fields, keep all schema fields
+    const { _id, createdAt, responseCount, isGlobal, ...rest } = template as any;
+    this.api.post<SurveyTemplate>('/surveys/templates', {
+      ...rest,
+      title: `${template.title} (Copy)`,
+      isActive: false,
+      isGlobal: false,
+    }).subscribe({
+      next: () => {
+        this.snackBar.open('Template copied — activate it when ready', 'Close', { duration: 3500 });
+        this.loadTemplates();
+      },
+      error: () => this.snackBar.open('Copy failed', 'Close', { duration: 2500 }),
+    });
+  }
+
+  clearResponses(template: SurveyTemplate): void {
+    const count = template.responseCount ?? 0;
+    const ref = this.dialog.open(ConfirmDialogComponent, {
+      width: '440px',
+      data: {
+        title: 'Clear All Responses',
+        message: `Delete all ${count} response${count !== 1 ? 's' : ''} for "${template.title}"? This cannot be undone and will reset all analytics for this intake.`,
+        confirmLabel: 'Clear Responses',
+      },
+    });
+    ref.afterClosed().subscribe((confirmed) => {
+      if (!confirmed) return;
+      this.api.delete<{ deletedCount: number }>(`/surveys/responses/${template._id}`).subscribe({
+        next: (res) => {
+          this.templates.update((list) =>
+            list.map((t) => (t._id === template._id ? { ...t, responseCount: 0 } : t))
+          );
+          this.snackBar.open(`${res.deletedCount ?? count} responses cleared`, 'Close', { duration: 2500 });
+        },
+        error: () => this.snackBar.open('Failed to clear responses', 'Close', { duration: 2500 }),
+      });
     });
   }
 

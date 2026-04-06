@@ -206,6 +206,22 @@ router.get(
   }
 );
 
+router.delete(
+  '/responses/:templateId',
+  requireRole('admin', 'hr_manager'),
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const result = await SurveyResponse.deleteMany({
+        organizationId: req.user!.organizationId,
+        templateId: req.params['templateId'],
+      });
+      res.json({ message: 'Responses cleared', deletedCount: result.deletedCount });
+    } catch (e) {
+      next(e);
+    }
+  }
+);
+
 router.get(
   '/responses/:templateId',
   requireRole('admin', 'hr_manager', 'manager', 'coach'),
