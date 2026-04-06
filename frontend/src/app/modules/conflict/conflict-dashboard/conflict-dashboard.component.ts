@@ -74,14 +74,6 @@ interface ConflictAnalysis {
           <h1>Conflict Intelligence™</h1>
           <p>Proactive workplace conflict detection and resolution grounded in Helena's coaching-integrated mediation methodology</p>
         </div>
-        <div class="header-actions">
-          <button mat-stroked-button (click)="copySurveyLink()" [disabled]="!surveyTemplateId()">
-            <mat-icon>link</mat-icon> Copy Link
-          </button>
-          <button mat-raised-button color="primary" (click)="runNewAnalysis()">
-            <mat-icon>add</mat-icon> New Analysis
-          </button>
-        </div>
       </div>
 
       <!-- Module banner -->
@@ -117,6 +109,9 @@ interface ConflictAnalysis {
         <div class="analyses-header">
           <h2>Analyses</h2>
           <span class="analyses-count">{{ analyses().length }} total</span>
+          <button mat-raised-button color="primary" class="new-analysis-btn" (click)="runNewAnalysis()">
+            <mat-icon>add</mat-icon> New Analysis
+          </button>
         </div>
 
         @if (loading()) {
@@ -130,61 +125,65 @@ interface ConflictAnalysis {
             </button>
           </div>
         } @else {
-          <div class="analyses-list">
+          <div class="analyses-grid">
             @for (a of analyses(); track a._id) {
-              <div class="analysis-row" [class]="'border-' + a.riskLevel">
-
-                <!-- Mini gauge -->
-                <div class="mini-gauge-wrap">
-                  <svg viewBox="0 0 100 60" class="mini-gauge-svg">
-                    <path d="M 10 52 A 40 40 0 0 1 90 52" fill="none" stroke="#e8edf4" stroke-width="10" stroke-linecap="round"/>
-                    <path [attr.d]="miniGaugeArc(a.riskScore)" fill="none"
-                          [attr.stroke]="riskColor(a.riskLevel)" stroke-width="10" stroke-linecap="round"/>
-                    <text x="50" y="48" text-anchor="middle" class="mini-score">{{ a.riskScore }}</text>
-                  </svg>
-                  <span class="risk-badge" [class]="a.riskLevel">{{ a.riskLevel }}</span>
-                  <div class="risk-legend-central">
-                    <span class="legend-dot low"></span><span class="legend-txt">Low</span>
-                    <span class="legend-dot medium"></span><span class="legend-txt">Med</span>
-                    <span class="legend-dot high"></span><span class="legend-txt">High</span>
-                    <span class="legend-dot critical"></span><span class="legend-txt">Crit</span>
+              <div class="analysis-card" [class]="'accent-' + a.riskLevel">
+                <div class="analysis-card-top">
+                  <!-- Mini gauge -->
+                  <div class="mini-gauge-wrap">
+                    <svg viewBox="0 0 100 60" class="mini-gauge-svg">
+                      <path d="M 10 52 A 40 40 0 0 1 90 52" fill="none" stroke="#e8edf4" stroke-width="10" stroke-linecap="round"/>
+                      <path [attr.d]="miniGaugeArc(a.riskScore)" fill="none"
+                            [attr.stroke]="riskColor(a.riskLevel)" stroke-width="10" stroke-linecap="round"/>
+                      <text x="50" y="48" text-anchor="middle" class="mini-score">{{ a.riskScore }}</text>
+                    </svg>
+                    <span class="risk-badge" [class]="a.riskLevel">{{ a.riskLevel }}</span>
                   </div>
+
+                  <!-- Meta -->
+                  <div class="analysis-meta">
+                    <div class="meta-dept">
+                      <mat-icon>corporate_fare</mat-icon>
+                      <strong>{{ a.departmentId || 'All Departments' }}</strong>
+                    </div>
+                    <div class="meta-period">
+                      <mat-icon>calendar_today</mat-icon>
+                      {{ a.surveyPeriod }}
+                    </div>
+                    @if (a.templateTitle) {
+                      <div class="meta-template">
+                        <mat-icon>assignment</mat-icon>
+                        <span>{{ a.templateTitle }}</span>
+                      </div>
+                    }
+                    @if (a.escalationRequested) {
+                      <span class="escalated-badge">
+                        <mat-icon>gavel</mat-icon> Escalated
+                      </span>
+                    }
+                  </div>
+
+                  <!-- Delete -->
+                  <button mat-icon-button class="delete-analysis-btn"
+                          matTooltip="Delete analysis"
+                          (click)="deleteAnalysis(a); $event.stopPropagation()">
+                    <mat-icon>delete_outline</mat-icon>
+                  </button>
                 </div>
 
-                <!-- Meta -->
-                <div class="analysis-meta">
-                  @if (a.templateTitle) {
-                    <div class="meta-template">
-                      <mat-icon>assignment</mat-icon>
-                      <span>{{ a.templateTitle }}</span>
-                    </div>
-                  }
-                  <div class="meta-dept">
-                    <mat-icon>corporate_fare</mat-icon>
-                    <strong>{{ a.departmentId || 'All Departments' }}</strong>
+                <!-- Conflict types -->
+                @if (a.conflictTypes.length) {
+                  <div class="type-chips">
+                    @for (t of a.conflictTypes; track t) {
+                      <span class="type-chip">{{ t }}</span>
+                    }
                   </div>
-                  <div class="meta-period">
-                    <mat-icon>calendar_today</mat-icon>
-                    {{ a.surveyPeriod }}
-                  </div>
-                  @if (a.conflictTypes.length) {
-                    <div class="type-chips">
-                      @for (t of a.conflictTypes; track t) {
-                        <span class="type-chip">{{ t }}</span>
-                      }
-                    </div>
-                  }
-                  @if (a.escalationRequested) {
-                    <span class="escalated-badge">
-                      <mat-icon>gavel</mat-icon> Escalated
-                    </span>
-                  }
-                </div>
+                }
 
                 <!-- Actions -->
-                <div class="analysis-actions">
+                <div class="analysis-card-actions">
                   <button mat-stroked-button (click)="viewAnalysis(a)">
-                    <mat-icon>open_in_new</mat-icon> View
+                    <mat-icon>open_in_new</mat-icon> View Details
                   </button>
                   @if (!a.escalationRequested && (a.riskLevel === 'high' || a.riskLevel === 'critical')) {
                     <button mat-stroked-button color="warn" (click)="escalate(a._id)">
@@ -192,7 +191,6 @@ interface ConflictAnalysis {
                     </button>
                   }
                 </div>
-
               </div>
             }
           </div>
@@ -457,14 +455,13 @@ interface ConflictAnalysis {
     </div>
   `,
   styles: [`
-    .conflict-page { padding: 32px; max-width: 1300px; }
+    .conflict-page { padding: 32px; }
 
     .page-header {
       display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 28px;
       h1 { font-size: 28px; color: #1B2A47; margin: 0 0 4px; }
-      p  { color: #5a6a7e; margin: 0; max-width: 600px; }
+      p  { color: #5a6a7e; margin: 0; max-width: 700px; }
     }
-    .header-actions { display: flex; gap: 10px; flex-shrink: 0; }
 
     /* ── Banner ──────────────────────────────────── */
     .module-banner {
@@ -538,7 +535,7 @@ interface ConflictAnalysis {
     /* ── Analyses list ────────────────────────────── */
     .analyses-section {
       background: white; border-radius: 16px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.06); margin-bottom: 24px; overflow: hidden;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06); margin-bottom: 24px;
     }
     .analyses-header {
       display: flex; align-items: center; gap: 10px;
@@ -548,6 +545,7 @@ interface ConflictAnalysis {
         font-size: 12px; background: #f0f4f8; color: #5a6a7e;
         padding: 2px 9px; border-radius: 999px;
       }
+      .new-analysis-btn { margin-left: auto; }
     }
     .loading-center { display: flex; justify-content: center; padding: 48px; }
     .empty-state {
@@ -556,24 +554,29 @@ interface ConflictAnalysis {
       p { font-size: 14px; margin-bottom: 20px; }
     }
 
-    .analyses-list { display: flex; flex-direction: column; }
-
-    .analysis-row {
+    .analyses-grid {
       display: grid;
-      grid-template-columns: 140px 1fr auto;
-      gap: 20px;
-      align-items: center;
-      padding: 16px 24px;
-      border-bottom: 1px solid #f0f4f8;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 16px; padding: 16px 20px 20px;
+    }
+
+    .analysis-card {
+      background: white;
+      border: 1px solid #e8edf4;
+      border-radius: 14px;
+      padding: 18px;
       border-left: 4px solid transparent;
-      transition: background 0.12s;
-      &:last-child { border-bottom: none; }
-      &:nth-child(even) { background: #f8fafc; }
-      &:hover { background: #eef4fa; }
-      &.border-low      { border-left-color: #27C4A0; }
-      &.border-medium   { border-left-color: #f0a500; }
-      &.border-high     { border-left-color: #e86c3a; }
-      &.border-critical { border-left-color: #e53e3e; }
+      transition: box-shadow 0.15s, border-color 0.15s;
+      display: flex; flex-direction: column; gap: 12px;
+      &:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+      &.accent-low      { border-left-color: #27C4A0; }
+      &.accent-medium   { border-left-color: #f0a500; }
+      &.accent-high     { border-left-color: #e86c3a; }
+      &.accent-critical { border-left-color: #e53e3e; }
+    }
+
+    .analysis-card-top {
+      display: flex; align-items: flex-start; gap: 16px;
     }
 
     /* Mini gauge */
@@ -620,25 +623,15 @@ interface ConflictAnalysis {
     }
 
     /* Actions */
-    .analysis-actions { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; }
+    .analysis-card-actions {
+      display: flex; gap: 8px; padding-top: 4px; border-top: 1px solid #f0f4f8;
+    }
+    .delete-analysis-btn {
+      color: #c5d0db; width: 28px; height: 28px; margin-left: auto; flex-shrink: 0;
+      &:hover { color: #e53e3e !important; }
+    }
 
-    /* ── Section cards ─────────────────────────── */
-    .section-card {
-      background: white; border-radius: 16px; padding: 28px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.06); margin-bottom: 20px;
-    }
-    .section-header {
-      display: flex; gap: 16px; align-items: flex-start; margin-bottom: 24px;
-      h3 { font-size: 17px; color: #1B2A47; margin: 0 0 4px; font-weight: 700; }
-      p  { font-size: 13px; color: #5a6a7e; margin: 0; line-height: 1.6; }
-    }
-    .section-icon {
-      width: 44px; height: 44px; border-radius: 12px;
-      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-      mat-icon { font-size: 22px; }
-      &.red   { background: rgba(229,62,62,0.12);  color: #e53e3e; }
-      &.green { background: rgba(39,196,160,0.12); color: #1a9678; }
-    }
+    /* section-card, section-header, section-icon — from global styles.scss */
 
     /* Escalation */
     .escalation-steps {
@@ -680,9 +673,7 @@ interface ConflictAnalysis {
     }
     .download-btn { color: #3A9FD6; }
 
-    /* ── Skill Development ─────────────────────── */
-    .section-icon.purple { background: rgba(124,92,191,0.12); color: #7c5cbf; }
-
+    /* ── Skill Development — component-specific only ── */
     .section-action-btn { margin-left: auto; flex-shrink: 0; }
 
     .skill-empty {
@@ -692,101 +683,7 @@ interface ConflictAnalysis {
       p { margin: 0; }
     }
 
-    /* ── IDP cards (matching succession view) ── */
-    .idp-grid {
-      display: grid; grid-template-columns: repeat(auto-fill, minmax(440px, 1fr));
-      gap: 20px;
-    }
-
-    .idp-card {
-      background: white; border-radius: 16px; padding: 20px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-      border-left: 4px solid #9aa5b4;
-      &.status-draft   { border-left-color: #9aa5b4; }
-      &.status-active  { border-left-color: #3A9FD6; }
-      &.status-completed { border-left-color: #27C4A0; }
-    }
-
-    .idp-card-header {
-      display: flex; align-items: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;
-    }
-
-    .idp-status-badge {
-      font-size: 11px; font-weight: 700; text-transform: uppercase;
-      padding: 2px 10px; border-radius: 999px;
-      &.draft     { background: #f0f4f8; color: #9aa5b4; }
-      &.active    { background: #EBF5FB; color: #3A9FD6; }
-      &.completed { background: #e8faf4; color: #27C4A0; }
-    }
-
-    .idp-coachee-name {
-      display: flex; align-items: center; gap: 4px;
-      font-size: 14px; font-weight: 600; color: #1B2A47;
-      .coachee-icon { font-size: 16px; width: 16px; height: 16px; color: #3A9FD6; }
-    }
-
-    .idp-date-label { font-size: 12px; color: #9aa5b4; margin-left: auto; }
-
-    .card-action-btn {
-      width: 28px; height: 28px; border: none; background: none;
-      cursor: pointer; border-radius: 6px; display: flex; align-items: center; justify-content: center;
-      color: #9aa5b4; padding: 0;
-      mat-icon { font-size: 18px; width: 18px; height: 18px; }
-      &:hover { background: #f0f4f8; color: #1B2A47; }
-    }
-    .delete-btn:hover { color: #e53e3e !important; background: #fef2f2 !important; }
-
-    /* GROW accordion */
-    .grow-accordion { margin-bottom: 12px; }
-
-    .grow-panel {
-      box-shadow: none !important;
-      border-radius: 8px !important;
-      margin-bottom: 4px !important;
-      &::ng-deep .mat-expansion-panel-body { padding: 0 16px 12px; }
-      p { margin: 0; font-size: 13px; color: #5a6a7e; line-height: 1.6; }
-      ul { margin: 0; padding-left: 18px; font-size: 13px; color: #5a6a7e; line-height: 1.8; }
-    }
-
-    .goal-panel    { background: #f0fdf4 !important; }
-    .reality-panel { background: #eff6ff !important; }
-    .options-panel { background: #fefce8 !important; }
-    .will-panel    { background: #fdf2f8 !important; }
-
-    ::ng-deep .grow-panel .mat-expansion-panel-header {
-      padding: 0 16px !important; height: 40px !important;
-      font-size: 13px !important; font-weight: 600 !important;
-    }
-    ::ng-deep .grow-panel mat-panel-title {
-      display: flex; align-items: center; gap: 6px;
-      mat-icon { font-size: 16px; width: 16px; height: 16px; }
-    }
-
-    /* Milestones */
-    .milestone-section {
-      margin-top: 8px;
-      h4 { font-size: 13px; font-weight: 600; color: #1B2A47; margin: 0 0 8px; }
-    }
-
-    .milestone-timeline { display: flex; flex-direction: column; gap: 6px; }
-
-    .milestone-item {
-      display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-radius: 6px;
-      &.completed { .ms-dot { background: #27C4A0; } .ms-title { text-decoration: line-through; color: #9aa5b4; } }
-      &.in_progress { .ms-dot { background: #3A9FD6; } }
-      &.pending { .ms-dot { background: #dce6f0; } }
-    }
-
-    .ms-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-    .ms-content { flex: 1; display: flex; align-items: center; gap: 8px; min-width: 0; }
-    .ms-title { font-size: 13px; color: #374151; }
-    .ms-date { font-size: 11px; color: #9aa5b4; }
-    .ms-actions {
-      button { width: 28px; height: 28px; color: #27C4A0; }
-      mat-icon { font-size: 18px; width: 18px; height: 18px; }
-    }
-
-    .conflict-areas-panel { background: #fff5f0 !important; margin-top: 4px !important; }
+    /* IDP cards, GROW panels, milestones — from global styles.scss */
 
     /* ── Knowledge & Skill Building ──────────────── */
     .section-icon.blue { background: rgba(58,159,214,0.12); color: #2080b0; }
@@ -1047,10 +944,14 @@ export class ConflictDashboardComponent implements OnInit {
     });
   }
 
-  copySurveyLink(): void {
-    const url = `${window.location.origin}/intake/${this.surveyTemplateId()}`;
-    navigator.clipboard.writeText(url).then(() => {
-      this.snackBar.open('Intake link copied!', 'Close', { duration: 3000 });
+  deleteAnalysis(analysis: ConflictAnalysis): void {
+    if (!confirm(`Delete analysis for "${analysis.departmentId || 'All Departments'}" (${analysis.surveyPeriod})? This will also delete all sub-analyses.`)) return;
+    this.api.delete(`/conflict/analyses/${analysis._id}`).subscribe({
+      next: () => {
+        this.analyses.update((list) => list.filter((a) => a._id !== analysis._id));
+        this.updateStats(this.analyses());
+        this.snackBar.open('Analysis deleted', 'OK', { duration: 3000 });
+      },
     });
   }
 

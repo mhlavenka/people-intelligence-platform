@@ -4,6 +4,7 @@ import { tenantResolver } from '../middleware/tenant.middleware';
 import { DevelopmentPlan } from '../models/DevelopmentPlan.model';
 import { User } from '../models/User.model';
 import { ConflictAnalysis } from '../models/ConflictAnalysis.model';
+import { JournalEntry } from '../models/JournalEntry.model';
 import { buildIDPPrompt, buildConflictIDPPrompt, callClaude, extractJson } from '../services/ai.service';
 
 const router = Router();
@@ -333,5 +334,63 @@ router.delete(
     }
   }
 );
+
+// ── Journal Entries ──────────────────────────────────────────────────────────
+
+/** List journal entries for the current user (or all if admin/hr/coach). */
+router.get('/journal', async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const filter: Record<string, unknown> = { organizationId: req.user!.organizationId };
+    if (req.user!.role === 'coachee') {
+      filter['userId'] = req.user!.userId;
+    }
+    if (req.query['idpId']) {
+      filter['idpId'] = req.query['idpId'];
+    }
+    const entries = await JournalEntry.find(filter)
+      .populate('userId', 'firstName lastName')
+      .populate('idpId', 'goal')
+      .sort({ createdAt: -1 })
+      .limit(100);
+    res.json(entries);
+  } catch (e) { next(e); }
+});
+
+/** Create a journal entry. */
+router.post('/journal', async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const { content, prompt, mood, tags, idpId } = req.body;
+    if (!content?.trim()) {
+      res.status(400).json({ error: 'Content is required' });
+      return;
+    }
+    const entry = await JournalEntry.create({
+      organizationId: req.user!.organizationId,
+      userId: req.user!.userId,
+      idpId: idpId || undefined,
+      prompt: prompt || undefined,
+      content: content.trim(),
+      mood: mood || undefined,
+      tags: tags || [],
+    });
+    res.status(201).json(entry);
+  } catch (e) { next(e); }
+});
+
+/** Delete a journal entry (own only, or admin/hr/coach). */
+router.delete('/journal/:id', async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const filter: Record<string, unknown> = {
+      _id: req.params['id'],
+      organizationId: req.user!.organizationId,
+    };
+    if (req.user!.role === 'coachee') {
+      filter['userId'] = req.user!.userId;
+    }
+    const entry = await JournalEntry.findOneAndDelete(filter);
+    if (!entry) { res.status(404).json({ error: 'Entry not found' }); return; }
+    res.json({ message: 'Entry deleted' });
+  } catch (e) { next(e); }
+});
 
 export default router;

@@ -551,88 +551,186 @@ export class ConflictDetailDialogComponent implements OnInit {
 
   exportPdf(): void {
     const d = this.data;
-    const riskColors: Record<string, string> = {
-      low: '#27C4A0', medium: '#f0a500', high: '#e86c3a', critical: '#e53e3e',
-    };
-    const color = riskColors[d.riskLevel] ?? '#9aa5b4';
+    const rc: Record<string, string> = { low: '#27C4A0', medium: '#f0a500', high: '#e86c3a', critical: '#e53e3e' };
+    const rcBg: Record<string, string> = { low: 'rgba(39,196,160,0.15)', medium: 'rgba(240,165,0,0.15)', high: 'rgba(232,108,58,0.15)', critical: 'rgba(229,62,62,0.15)' };
+    const color = rc[d.riskLevel] ?? '#9aa5b4';
+    const colorBg = rcBg[d.riskLevel] ?? '#f0f4f8';
+    const date = new Date(d.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
-    const subRows = this.subAnalyses().map((s) => `
-      <div class="sub-block">
-        <div class="sub-header">
+    const subHtml = this.subAnalyses().map((s) => {
+      const sc = rc[s.riskLevel] ?? '#9aa5b4';
+      const scBg = rcBg[s.riskLevel] ?? '#f0f4f8';
+      return `<div class="sub-row" style="border-left-color:${sc}">
+        <div class="sub-top">
           <span class="sub-type">${s.focusConflictType ?? ''}</span>
-          <span class="badge" style="background:${riskColors[s.riskLevel]}22;color:${riskColors[s.riskLevel]}">${s.riskLevel.toUpperCase()} — ${s.riskScore}</span>
+          <span class="sub-score" style="background:${scBg};color:${sc}">${s.riskScore} — ${s.riskLevel.toUpperCase()}</span>
         </div>
-        <p>${s.aiNarrative}</p>
-      </div>`).join('');
+        <div class="sub-bar-track"><div class="sub-bar" style="width:${s.riskScore}%;background:${sc}"></div></div>
+        <p class="sub-narrative">${s.aiNarrative}</p>
+      </div>`;
+    }).join('');
 
     const scriptHtml = (() => {
       const sections = this.scriptSections();
-      if (!sections.length) return `<pre>${d.managerScript}</pre>`;
+      if (!sections.length && d.managerScript) return `<pre class="script-raw">${d.managerScript}</pre>`;
       return sections.map((sec) => {
-        if (sec.type === 'string') return `<div class="script-sec"><div class="sec-title">${sec.label}</div><p>${sec.value}</p></div>`;
-        if (sec.type === 'list') return `<div class="script-sec"><div class="sec-title">${sec.label}</div><ul>${sec.items.map((i) => `<li>${i}</li>`).join('')}</ul></div>`;
-        if (sec.type === 'topics') return `<div class="script-sec"><div class="sec-title">${sec.label}</div><table><thead><tr><th>Topic</th><th>Talking Points</th></tr></thead><tbody>${sec.topics.map((t) => `<tr><td><strong>${t.topic}</strong></td><td><ul>${t.points.map((p) => `<li>${p}</li>`).join('')}</ul></td></tr>`).join('')}</tbody></table></div>`;
-        return '';
+        let body = '';
+        if (sec.type === 'string') body = `<p>${sec.value}</p>`;
+        if (sec.type === 'list') body = `<ul>${sec.items.map((i) => `<li>${i}</li>`).join('')}</ul>`;
+        if (sec.type === 'topics') body = `<table><thead><tr><th>Topic</th><th>Talking Points</th></tr></thead><tbody>${sec.topics.map((t) => `<tr><td class="topic-name">${t.topic}</td><td><ul>${t.points.map((p) => `<li>${p}</li>`).join('')}</ul></td></tr>`).join('')}</tbody></table>`;
+        return `<div class="script-section"><div class="script-title">${sec.label}</div>${body}</div>`;
       }).join('');
     })();
+
+    const conflictChips = d.conflictTypes.map((t) => `<span class="chip">${t}</span>`).join('');
 
     const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
 <title>Conflict Analysis — ${d.departmentId || 'All Departments'}</title>
 <style>
-  body { font-family: Arial, sans-serif; font-size: 13px; color: #1B2A47; margin: 0; padding: 32px; }
-  h1 { font-size: 20px; margin: 0 0 4px; }
-  .meta { font-size: 12px; color: #5a6a7e; margin-bottom: 20px; }
-  .score-block { display: inline-flex; flex-direction: column; align-items: center;
-    padding: 16px 24px; border-radius: 12px; background: ${color}22; color: ${color};
-    margin-bottom: 20px; }
-  .score-num { font-size: 36px; font-weight: 700; line-height: 1; }
-  .score-lbl { font-size: 11px; margin-top: 4px; }
-  .badge { padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700;
-    background: ${color}22; color: ${color}; display: inline-block; margin-left: 10px; }
-  h2 { font-size: 15px; border-bottom: 2px solid #edf2f7; padding-bottom: 6px; margin: 24px 0 12px; }
-  .narrative { line-height: 1.7; white-space: pre-wrap; }
-  .sub-block { background: #f8fafc; border-left: 4px solid #e8edf4; border-radius: 6px;
-    padding: 12px 16px; margin-bottom: 10px; }
-  .sub-header { display: flex; align-items: center; margin-bottom: 6px; }
-  .sub-type { font-weight: 700; }
-  .script-sec { background: #f8fafc; border-left: 3px solid #3A9FD6; border-radius: 4px;
-    padding: 12px 16px; margin-bottom: 10px; }
-  .sec-title { font-size: 11px; font-weight: 700; text-transform: uppercase;
-    letter-spacing: 0.05em; color: #3A9FD6; margin-bottom: 8px; }
-  ul { margin: 0; padding-left: 18px; } li { margin-bottom: 2px; }
-  table { width: 100%; border-collapse: collapse; }
-  th { text-align: left; padding: 6px 10px; background: #edf2f7; font-size: 12px; }
-  td { padding: 8px 10px; border-bottom: 1px solid #e8edf4; vertical-align: top; }
-  pre { white-space: pre-wrap; word-break: break-word; }
-  @media print { body { padding: 16px; } }
+  * { box-sizing: border-box; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 13px; color: #1B2A47; margin: 0; padding: 0; background: #EBF5FB; }
+  .page { max-width: 860px; margin: 0 auto; background: white; min-height: 100vh; }
+
+  /* Print bar */
+  .print-bar { display: flex; gap: 10px; padding: 14px 32px; background: #1B2A47; }
+  .print-bar button { padding: 8px 22px; border-radius: 6px; border: none; cursor: pointer; font-size: 13px; font-weight: 600; }
+  .print-bar .btn-print { background: #3A9FD6; color: white; }
+  .print-bar .btn-print:hover { background: #2d8bc2; }
+  .print-bar .btn-save { background: #27C4A0; color: white; }
+  .print-bar .btn-save:hover { background: #1da888; }
+  .print-bar .btn-close { background: rgba(255,255,255,0.15); color: white; }
+  .print-bar .btn-close:hover { background: rgba(255,255,255,0.25); }
+
+  .content { padding: 32px; }
+
+  /* Header */
+  .header-row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+  .header-row h1 { font-size: 22px; margin: 0; color: #1B2A47; }
+  .header-row .ci-badge { font-size: 11px; background: #e86c3a; color: white; padding: 3px 10px; border-radius: 999px; font-weight: 700; }
+  .meta-line { font-size: 12px; color: #5a6a7e; margin-bottom: 20px; }
+
+  /* Score block */
+  .score-row { display: flex; gap: 20px; align-items: flex-start; margin-bottom: 24px; }
+  .score-block {
+    width: 88px; height: 88px; border-radius: 16px; flex-shrink: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    background: ${colorBg}; color: ${color};
+  }
+  .score-num { font-size: 34px; font-weight: 700; line-height: 1; }
+  .score-lbl { font-size: 11px; margin-top: 4px; opacity: 0.8; }
+  .score-meta { display: flex; flex-direction: column; gap: 6px; padding-top: 4px; }
+  .score-meta-item { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #5a6a7e; }
+  .score-meta-icon { font-size: 14px; color: #9aa5b4; }
+  .risk-badge { display: inline-block; padding: 3px 12px; border-radius: 999px; font-size: 12px; font-weight: 700; text-transform: uppercase; background: ${colorBg}; color: ${color}; margin-top: 4px; }
+
+  /* Conflict type chips */
+  .chips-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; }
+  .chip { background: rgba(58,159,214,0.1); color: #2080b0; padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 500; }
+
+  /* Sections */
+  .section { padding: 0 0 16px; }
+  .section-title { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 700; color: #1B2A47; margin: 0 0 12px; padding-top: 16px; border-top: 2px solid #edf2f7; }
+  .section-icon { color: #3A9FD6; font-size: 18px; }
+  .narrative { font-size: 14px; color: #374151; line-height: 1.7; margin: 0; white-space: pre-wrap; }
+  .divider { border: none; border-top: 1px solid #edf2f7; margin: 8px 0; }
+
+  /* Sub-analyses */
+  .sub-row { background: #f8fafc; border-left: 4px solid #e8edf4; border-radius: 8px; padding: 14px 16px; margin-bottom: 10px; }
+  .sub-top { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .sub-type { font-size: 14px; font-weight: 700; color: #1B2A47; }
+  .sub-score { padding: 2px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+  .sub-bar-track { background: #e8edf4; border-radius: 4px; height: 6px; margin-bottom: 8px; overflow: hidden; }
+  .sub-bar { height: 100%; border-radius: 4px; }
+  .sub-narrative { font-size: 13px; color: #5a6a7e; line-height: 1.6; margin: 0; }
+
+  /* Script sections */
+  .script-section { background: #f8fafc; border-left: 3px solid #3A9FD6; border-radius: 8px; padding: 14px 16px; margin-bottom: 10px; }
+  .script-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #3A9FD6; margin-bottom: 8px; }
+  .script-section p { font-size: 13px; color: #374151; line-height: 1.7; margin: 0; }
+  .script-section ul { margin: 0; padding-left: 18px; }
+  .script-section li { font-size: 13px; color: #374151; line-height: 1.7; margin-bottom: 2px; }
+  .script-raw { font-family: inherit; font-size: 13px; color: #374151; line-height: 1.7; margin: 0; white-space: pre-wrap; word-break: break-word; background: #f8fafc; border-left: 3px solid #3A9FD6; border-radius: 8px; padding: 14px 16px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; padding: 8px 10px; background: #edf2f7; color: #1B2A47; font-weight: 600; font-size: 12px; }
+  th:first-child { border-radius: 6px 0 0 0; width: 30%; }
+  th:last-child { border-radius: 0 6px 0 0; }
+  td { padding: 8px 10px; vertical-align: top; color: #374151; border-bottom: 1px solid #e8edf4; }
+  tr:last-child td { border-bottom: none; }
+  .topic-name { font-weight: 600; color: #1B2A47; }
+
+  /* Escalation */
+  .escalation-banner { display: flex; align-items: center; gap: 8px; background: rgba(229,62,62,0.08); border-radius: 8px; padding: 12px 14px; color: #c53030; font-size: 13px; font-weight: 600; margin-top: 8px; }
+
+  /* Footer */
+  .footer { margin-top: 32px; padding-top: 16px; border-top: 1px solid #edf2f7; font-size: 11px; color: #9aa5b4; text-align: center; }
+
+  @media print {
+    body { background: white; }
+    .print-bar { display: none; }
+    .page { box-shadow: none; max-width: 100%; }
+    .content { padding: 20px; }
+  }
 </style></head><body>
-<h1>Conflict Intelligence™ Analysis</h1>
-<div class="meta">
-  ${d.departmentId || 'All Departments'} &nbsp;·&nbsp; ${d.surveyPeriod} &nbsp;·&nbsp;
-  Generated ${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+<div class="print-bar">
+  <button class="btn-print" onclick="window.print()">&#128424; Print / Save as PDF</button>
+  <button class="btn-close" onclick="window.close()">Close</button>
 </div>
-<div class="score-block">
-  <div class="score-num">${d.riskScore}</div>
-  <div class="score-lbl">Risk Score</div>
+<div class="page">
+<div class="content">
+
+<div class="header-row">
+  <h1>Conflict Intelligence&#8482; Analysis</h1>
+  <span class="ci-badge">REPORT</span>
 </div>
-<span class="badge">${d.riskLevel.toUpperCase()} RISK</span>
+<div class="meta-line">
+  ${d.departmentId || 'All Departments'} &nbsp;&middot;&nbsp; ${d.surveyPeriod} &nbsp;&middot;&nbsp; ${date}
+</div>
 
-<h2>AI Analysis</h2>
-<p class="narrative">${d.aiNarrative}</p>
+<div class="score-row">
+  <div class="score-block">
+    <div class="score-num">${d.riskScore}</div>
+    <div class="score-lbl">Risk Score</div>
+  </div>
+  <div class="score-meta">
+    <div class="score-meta-item">&#128197; ${d.surveyPeriod}</div>
+    <div class="score-meta-item">&#127970; ${d.departmentId || 'All Departments'}</div>
+    <div class="risk-badge">${d.riskLevel.toUpperCase()} RISK</div>
+  </div>
+</div>
 
-${this.subAnalyses().length ? `<h2>Drill-down by Conflict Type</h2>${subRows}` : ''}
+${d.conflictTypes.length ? `<div class="chips-row">${conflictChips}</div>` : ''}
 
-${d.managerScript ? `<h2>Manager Conversation Guide</h2>${scriptHtml}` : ''}
+<div class="section">
+  <div class="section-title"><span class="section-icon">&#10024;</span> AI Analysis</div>
+  <p class="narrative">${d.aiNarrative}</p>
+</div>
 
-${d.escalationRequested ? '<p style="color:#e53e3e;font-weight:700">⚠ Escalation has been requested.</p>' : ''}
+${this.subAnalyses().length ? `
+<div class="section">
+  <div class="section-title"><span class="section-icon">&#128269;</span> Drill-down by Conflict Type</div>
+  ${subHtml}
+</div>` : ''}
+
+${d.managerScript ? `
+<div class="section">
+  <div class="section-title"><span class="section-icon">&#128483;</span> Manager Conversation Guide</div>
+  ${scriptHtml}
+</div>` : ''}
+
+${d.escalationRequested ? '<div class="escalation-banner">&#9888; Escalation has been requested — HR / Coach has been notified.</div>' : ''}
+
+<div class="footer">
+  People Intelligence Platform &nbsp;&middot;&nbsp; Conflict Intelligence&#8482; &nbsp;&middot;&nbsp; HeadSoft Tech &times; Helena Coaching
+</div>
+
+</div>
+</div>
 </body></html>`;
 
-    const win = window.open('', '_blank');
-    if (!win) return;
-    win.document.write(html);
-    win.document.close();
-    win.focus();
-    setTimeout(() => { win.print(); }, 500);
+    const blob = new Blob([html], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    window.open(url, '_blank');
+    setTimeout(() => URL.revokeObjectURL(url), 120000);
   }
 
   escalate(): void {

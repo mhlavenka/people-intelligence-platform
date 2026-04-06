@@ -54,9 +54,33 @@ export const routes: Routes = [
         path: 'conflict',
         canActivate: [roleGuard([...OPS])],
         loadComponent: () =>
-          import('./modules/conflict/conflict-dashboard/conflict-dashboard.component').then(
-            (m) => m.ConflictDashboardComponent
+          import('./modules/conflict/conflict-shell/conflict-shell.component').then(
+            (m) => m.ConflictShellComponent
           ),
+        children: [
+          { path: '', redirectTo: 'analysis', pathMatch: 'full' },
+          {
+            path: 'analysis',
+            loadComponent: () =>
+              import('./modules/conflict/conflict-analysis/conflict-analysis.component').then(
+                (m) => m.ConflictAnalysisComponent
+              ),
+          },
+          {
+            path: 'skill-development',
+            loadComponent: () =>
+              import('./modules/conflict/conflict-skill-dev/conflict-skill-dev.component').then(
+                (m) => m.ConflictSkillDevComponent
+              ),
+          },
+          {
+            path: 'skill-building',
+            loadComponent: () =>
+              import('./modules/conflict/conflict-skill-building/conflict-skill-building.component').then(
+                (m) => m.ConflictSkillBuildingComponent
+              ),
+          },
+        ],
       },
       {
         path: 'neuroinclusion',

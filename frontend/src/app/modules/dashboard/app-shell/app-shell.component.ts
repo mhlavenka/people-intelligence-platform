@@ -33,8 +33,8 @@ interface NavItem {
 interface NavGroup {
   label: string;
   icon: string;
+  module?: string;     // org subscription module required for the whole group
   children: NavItem[];
-  // Group is shown only when ≥1 child is visible to the current role
 }
 
 type NavEntry = NavItem | NavGroup;
@@ -492,7 +492,16 @@ export class AppShellComponent implements OnInit, OnDestroy {
 
   private readonly ALL_NAV: NavEntry[] = [
     { label: 'Dashboard',               icon: 'dashboard',    route: '/dashboard' },
-    { label: 'Conflict Intelligence',   icon: 'warning_amber',route: '/conflict',    roles: ['admin', 'hr_manager', 'manager'],                module: 'conflict' },
+    {
+      label: 'Conflict Intelligence',
+      icon: 'warning_amber',
+      module: 'conflict',
+      children: [
+        { label: 'Analysis',           icon: 'analytics',   route: '/conflict/analysis',           roles: ['admin', 'hr_manager', 'manager'] as AppRole[], module: 'conflict' },
+        { label: 'Conflict IDPs',      icon: 'psychology',  route: '/conflict/skill-development',  roles: ['admin', 'hr_manager', 'manager'] as AppRole[], module: 'conflict' },
+        { label: 'Knowledge Building', icon: 'school',      route: '/conflict/skill-building',     roles: ['admin', 'hr_manager', 'manager'] as AppRole[], module: 'conflict' },
+      ],
+    },
     { label: 'Neuro-Inclusion',         icon: 'psychology',   route: '/neuroinclusion', roles: ['admin', 'hr_manager', 'manager'],               module: 'neuroinclusion' },
     { label: 'Leadership & Succession', icon: 'trending_up',  route: '/succession',  roles: ['admin', 'hr_manager', 'coach', 'coachee'],        module: 'succession' },
     { label: 'Org Chart',         icon: 'account_tree',        route: '/org-chart',            roles: ['admin', 'hr_manager'] },
@@ -530,6 +539,7 @@ export class AppShellComponent implements OnInit, OnDestroy {
 
     return this.ALL_NAV.reduce<NavEntry[]>((acc, entry) => {
       if (isGroup(entry)) {
+        if (entry.module && !modules.includes(entry.module)) return acc;
         const visibleChildren = entry.children.filter(isItemVisible);
         if (visibleChildren.length) {
           acc.push({ ...entry, children: visibleChildren });
