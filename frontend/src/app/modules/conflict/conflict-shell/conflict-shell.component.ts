@@ -42,12 +42,15 @@ import { MatIconModule } from '@angular/material/icon';
       margin-bottom: 28px;
       border-bottom: 2px solid #edf2f7;
       padding-bottom: 0;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
     }
 
     .nav-tab {
       display: flex; align-items: center; gap: 6px;
       padding: 10px 20px;
       font-size: 14px; font-weight: 500;
+      white-space: nowrap;
       color: #5a6a7e;
       text-decoration: none;
       border-bottom: 3px solid transparent;
@@ -62,6 +65,12 @@ import { MatIconModule } from '@angular/material/icon';
         border-bottom-color: #e86c3a;
         font-weight: 600;
       }
+    }
+
+    @media (max-width: 768px) {
+      .conflict-shell { padding: 16px; }
+      .nav-tab { padding: 10px 14px; font-size: 13px; }
+      .nav-tab mat-icon { display: none; }
     }
   `],
 })

@@ -156,6 +156,32 @@ export const routes: Routes = [
           ),
       },
 
+      // ── EQi Import ─────────────────────────────────────────────────────────
+      {
+        path: 'eq-import',
+        canActivate: [roleGuard([...ADMIN_HR, 'coach'])],
+        loadComponent: () =>
+          import('./modules/eq-import/eq-import-wizard/eq-import-wizard.component').then(
+            (m) => m.EqImportWizardComponent
+          ),
+      },
+      {
+        path: 'eq-import/records',
+        canActivate: [roleGuard([...ADMIN_HR, 'coach'])],
+        loadComponent: () =>
+          import('./modules/eq-import/eq-records/eq-records.component').then(
+            (m) => m.EqRecordsComponent
+          ),
+      },
+      {
+        path: 'eq-import/audit',
+        canActivate: [roleGuard([...ADMIN_HR, 'coach'])],
+        loadComponent: () =>
+          import('./modules/eq-import/eq-import-audit/eq-import-audit.component').then(
+            (m) => m.EqImportAuditComponent
+          ),
+      },
+
       // ── Administration: admin only ────────────────────────────────────────
       {
         path: 'admin/organization',

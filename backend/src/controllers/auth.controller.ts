@@ -6,6 +6,7 @@ const { authenticator } = require('otplib') as typeof import('otplib');
 import { Organization } from '../models/Organization.model';
 import { User, IUser } from '../models/User.model';
 import { CustomRole } from '../models/CustomRole.model';
+import { SystemRoleOverride } from '../models/SystemRoleOverride.model';
 import { SYSTEM_ROLE_PERMISSIONS } from '../config/permissions';
 import { config } from '../config/env';
 
@@ -52,10 +53,15 @@ export async function buildPayload(user: IUser): Promise<TokenPayload> {
     }
   }
 
-  // System role: include the mapped permission set so the frontend can use it
+  // System role: check for org-level override, fall back to defaults
+  const override = await SystemRoleOverride.findOne({
+    organizationId: user.organizationId,
+    role: user.role,
+  }).setOptions({ bypassTenantCheck: true });
+
   return {
     ...base,
-    permissions: SYSTEM_ROLE_PERMISSIONS[user.role] ?? [],
+    permissions: override ? override.permissions : (SYSTEM_ROLE_PERMISSIONS[user.role] ?? []),
   };
 }
 

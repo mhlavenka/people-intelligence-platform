@@ -20,7 +20,8 @@
       "Bash(npm run:*)",
       "Bash(git push:*)",
       "Bash(npx tsc:*)",
-      "Bash(npx ng:*)"
+      "Bash(npx ng:*)",
+      "Bash(node -e ':*)"
     ]
   }
 }

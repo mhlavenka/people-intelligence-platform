@@ -2,7 +2,8 @@ import { Router, Response, NextFunction } from 'express';
 import { authenticateToken, requireRole, AuthRequest } from '../middleware/auth.middleware';
 import { tenantResolver } from '../middleware/tenant.middleware';
 import { CustomRole } from '../models/CustomRole.model';
-import { PERMISSION_GROUPS } from '../config/permissions';
+import { SystemRoleOverride } from '../models/SystemRoleOverride.model';
+import { PERMISSION_GROUPS, SYSTEM_ROLE_PERMISSIONS } from '../config/permissions';
 
 const router = Router();
 
@@ -12,6 +13,68 @@ router.use(authenticateToken, tenantResolver);
 router.get('/permissions', (_req, res) => {
   res.json(PERMISSION_GROUPS);
 });
+
+// ── System role permission overrides (must be above /:id to avoid conflict) ──
+
+/** Get effective system role permissions for this org (defaults + overrides). */
+router.get('/system-roles', async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const orgId = req.user!.organizationId;
+    const overrides = await SystemRoleOverride.find({ organizationId: orgId });
+    const overrideMap: Record<string, string[]> = {};
+    for (const o of overrides) { overrideMap[o.role] = o.permissions; }
+
+    const result: Record<string, { permissions: string[]; isOverridden: boolean }> = {};
+    for (const role of Object.keys(SYSTEM_ROLE_PERMISSIONS)) {
+      if (role === 'system_admin') continue;
+      result[role] = {
+        permissions: overrideMap[role] ?? SYSTEM_ROLE_PERMISSIONS[role] ?? [],
+        isOverridden: !!overrideMap[role],
+      };
+    }
+    res.json(result);
+  } catch (e) { next(e); }
+});
+
+/** Update permissions for a system role (org-level override). */
+router.put(
+  '/system-roles/:role',
+  requireRole('admin'),
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const orgId = req.user!.organizationId;
+      const { role } = req.params as { role: string };
+      const { permissions } = req.body as { permissions: string[] };
+
+      if (!SYSTEM_ROLE_PERMISSIONS[role] || role === 'system_admin') {
+        res.status(400).json({ error: 'Invalid role' });
+        return;
+      }
+
+      const override = await SystemRoleOverride.findOneAndUpdate(
+        { organizationId: orgId, role },
+        { permissions, updatedBy: req.user!.userId },
+        { upsert: true, new: true, runValidators: true }
+      );
+
+      res.json(override);
+    } catch (e) { next(e); }
+  }
+);
+
+/** Reset a system role to defaults (remove override). */
+router.delete(
+  '/system-roles/:role',
+  requireRole('admin'),
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const orgId = req.user!.organizationId;
+      const { role } = req.params as { role: string };
+      await SystemRoleOverride.findOneAndDelete({ organizationId: orgId, role });
+      res.json({ message: 'Reset to defaults', permissions: SYSTEM_ROLE_PERMISSIONS[role] ?? [] });
+    } catch (e) { next(e); }
+  }
+);
 
 /** List all custom roles for the current org. */
 router.get('/', async (req: AuthRequest, res: Response, next: NextFunction) => {

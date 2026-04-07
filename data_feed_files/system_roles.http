@@ -1,0 +1,109 @@
+### ============================================================
+### System Role Permissions — API Testing
+### ============================================================
+### System roles have built-in default permissions (no seeding needed).
+### These endpoints let org admins customize permissions per role.
+### ============================================================
+
+@baseUrl = http://localhost:3030/api
+@token = PASTE_TOKEN_HERE
+
+### ── Login as Org Admin ─────────────────────────────────────
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@helenacoaching.com",
+  "password": "ChangeMe123!"
+}
+
+### ============================================================
+### READ: Get effective permissions for all system roles
+### Returns defaults if no org-level overrides exist
+### ============================================================
+
+### Get all system role permissions (defaults + any overrides)
+GET {{baseUrl}}/roles/system-roles
+Authorization: Bearer {{token}}
+
+### Get available permission groups (static definitions)
+GET {{baseUrl}}/roles/permissions
+Authorization: Bearer {{token}}
+
+### ============================================================
+### CUSTOMIZE: Override permissions for a specific role
+### ============================================================
+
+### Override Manager role — add IDP access
+PUT {{baseUrl}}/roles/system-roles/manager
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "permissions": [
+    "VIEW_CONFLICT_DASHBOARD",
+    "ESCALATE_CONFLICT",
+    "VIEW_CONFLICT_RESPONSES",
+    "RUN_NEUROINCLUSION",
+    "VIEW_NEUROINCLUSION_RESULTS",
+    "VIEW_ALL_IDPS",
+    "GENERATE_IDP",
+    "UPDATE_IDP_MILESTONES",
+    "VIEW_HUB"
+  ]
+}
+
+### Override Coach role — add conflict dashboard access
+PUT {{baseUrl}}/roles/system-roles/coach
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "permissions": [
+    "VIEW_CONFLICT_DASHBOARD",
+    "CONDUCT_INTERVIEWS",
+    "VIEW_INTAKE_TEMPLATES",
+    "VIEW_ALL_IDPS",
+    "GENERATE_IDP",
+    "UPDATE_IDP_MILESTONES",
+    "VIEW_HUB"
+  ]
+}
+
+### Override Employee (coachee) role — add journal and survey access
+PUT {{baseUrl}}/roles/system-roles/coachee
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "permissions": [
+    "TAKE_SURVEY",
+    "VIEW_OWN_IDP",
+    "UPDATE_IDP_MILESTONES",
+    "VIEW_HUB"
+  ]
+}
+
+### ============================================================
+### RESET: Remove override and revert to platform defaults
+### ============================================================
+
+### Reset Manager to defaults
+DELETE {{baseUrl}}/roles/system-roles/manager
+Authorization: Bearer {{token}}
+
+### Reset Coach to defaults
+DELETE {{baseUrl}}/roles/system-roles/coach
+Authorization: Bearer {{token}}
+
+### Reset Employee to defaults
+DELETE {{baseUrl}}/roles/system-roles/coachee
+Authorization: Bearer {{token}}
+
+### ============================================================
+### VERIFY: Check permissions again after changes
+### ============================================================
+
+### Verify — should show isOverridden flags
+GET {{baseUrl}}/roles/system-roles
+Authorization: Bearer {{token}}

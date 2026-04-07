@@ -87,7 +87,7 @@ GET http://localhost:3030/health
 ### 9. Create Conflict Intake Template
 POST http://localhost:3030/api/surveys/templates
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OWM5MzUyZmYxMmJjMjc3NzBiYTNlZTciLCJvcmdhbml6YXRpb25JZCI6IjY5YzkzNTJmZjEyYmMyNzc3MGJhM2VlNSIsInJvbGUiOiJhZG1pbiIsImVtYWlsIjoiYWRtaW5AaGVsZW5hY29hY2hpbmcuY29tIiwiaWF0IjoxNzc0Nzk2MjUyLCJleHAiOjE3NzQ3OTcxNTJ9.F9-q8VC-_1BLWQSV_liIpAFyaDKpP4DOz50EhI77U1U
+Authorization: Bearer PASTE_ACCESS_TOKEN_HERE
 
 {
   "moduleType": "conflict",
@@ -106,13 +106,12 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OWM5M
 
 ### 10. List Intake Templates (copy the _id from response)
 GET http://localhost:3030/api/surveys/templates
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OWM5MzUyZmYxMmJjMjc3NzBiYTNlZTciLCJvcmdhbml6YXRpb25JZCI6IjY5YzkzNTJmZjEyYmMyNzc3MGJhM2VlNSIsInJvbGUiOiJhZG1pbiIsImVtYWlsIjoiYWRtaW5AaGVsZW5hY29hY2hpbmcuY29tIiwiaWF0IjoxNzc0Nzk2MjUyLCJleHAiOjE3NzQ3OTcxNTJ9.F9-q8VC-_1BLWQSV_liIpAFyaDKpP4DOz50EhI77U1U
+Authorization: Bearer PASTE_ACCESS_TOKEN_HERE
 
 ### 11. Submit Survey Response #1  (replace TEMPLATE_ID below)
 POST http://localhost:3030/api/surveys/respond
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OWM5MzUyZmYxMmJjMjc3NzBiYTNlZTciLCJvcmdhbml6YXRpb25JZCI6IjY5YzkzNTJmZjEyYmMyNzc3MGJhM2VlNSIsInJvbGUiOiJhZG1pbiIsImVtYWlsIjoiYWRtaW5AaGVsZW5hY29hY2hpbmcuY29tIiwiaWF0IjoxNzc0Nzk2MjUyLCJleHAiOjE3NzQ3OTcxNTJ9.F9-q8VC-_1BLWQSV_liIpAFyaDKpP4DOz50EhI77U1U
-
+Authorization: Bearer PASTE_ACCESS_TOKEN_HERE
 {
   "templateId": "69c93dfd653713663e8345d2",
   "departmentId": "Engineering",
@@ -132,7 +131,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OWM5M
 ### 12. Submit Survey Response #2
 POST http://localhost:3030/api/surveys/respond
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OWM5MzUyZmYxMmJjMjc3NzBiYTNlZTciLCJvcmdhbml6YXRpb25JZCI6IjY5YzkzNTJmZjEyYmMyNzc3MGJhM2VlNSIsInJvbGUiOiJhZG1pbiIsImVtYWlsIjoiYWRtaW5AaGVsZW5hY29hY2hpbmcuY29tIiwiaWF0IjoxNzc0Nzk2MjUyLCJleHAiOjE3NzQ3OTcxNTJ9.F9-q8VC-_1BLWQSV_liIpAFyaDKpP4DOz50EhI77U1U
+Authorization: Bearer PASTE_ACCESS_TOKEN_HERE
 
 {
   "templateId": "69c93dfd653713663e8345d2",
@@ -153,7 +152,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OWM5M
 ### 13. Submit Survey Response #3
 POST http://localhost:3030/api/surveys/respond
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OWM5MzUyZmYxMmJjMjc3NzBiYTNlZTciLCJvcmdhbml6YXRpb25JZCI6IjY5YzkzNTJmZjEyYmMyNzc3MGJhM2VlNSIsInJvbGUiOiJhZG1pbiIsImVtYWlsIjoiYWRtaW5AaGVsZW5hY29hY2hpbmcuY29tIiwiaWF0IjoxNzc0Nzk2MjUyLCJleHAiOjE3NzQ3OTcxNTJ9.F9-q8VC-_1BLWQSV_liIpAFyaDKpP4DOz50EhI77U1U
+Authorization: Bearer PASTE_ACCESS_TOKEN_HERE
 
 {
   "templateId": "69c93dfd653713663e8345d2",
@@ -174,7 +173,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OWM5M
 ### 14. Submit Survey Response #4
 POST http://localhost:3030/api/surveys/respond
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OWM5MzUyZmYxMmJjMjc3NzBiYTNlZTciLCJvcmdhbml6YXRpb25JZCI6IjY5YzkzNTJmZjEyYmMyNzc3MGJhM2VlNSIsInJvbGUiOiJhZG1pbiIsImVtYWlsIjoiYWRtaW5AaGVsZW5hY29hY2hpbmcuY29tIiwiaWF0IjoxNzc0Nzk2MjUyLCJleHAiOjE3NzQ3OTcxNTJ9.F9-q8VC-_1BLWQSV_liIpAFyaDKpP4DOz50EhI77U1U
+Authorization: Bearer PASTE_ACCESS_TOKEN_HERE
 
 {
   "templateId": "69c93dfd653713663e8345d2",
@@ -195,7 +194,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OWM5M
 ### 15. Submit Survey Response #5
 POST http://localhost:3030/api/surveys/respond
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OWM5MzUyZmYxMmJjMjc3NzBiYTNlZTciLCJvcmdhbml6YXRpb25JZCI6IjY5YzkzNTJmZjEyYmMyNzc3MGJhM2VlNSIsInJvbGUiOiJhZG1pbiIsImVtYWlsIjoiYWRtaW5AaGVsZW5hY29hY2hpbmcuY29tIiwiaWF0IjoxNzc0Nzk2MjUyLCJleHAiOjE3NzQ3OTcxNTJ9.F9-q8VC-_1BLWQSV_liIpAFyaDKpP4DOz50EhI77U1U
+Authorization: Bearer PASTE_ACCESS_TOKEN_HERE
 
 {
   "templateId": "69c93dfd653713663e8345d2",
@@ -215,4 +214,4 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OWM5M
 
 ### 16. Verify response count (should show count >= 5)
 GET http://localhost:3030/api/surveys/responses/69c93dfd653713663e8345d2
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OWM5MzUyZmYxMmJjMjc3NzBiYTNlZTciLCJvcmdhbml6YXRpb25JZCI6IjY5YzkzNTJmZjEyYmMyNzc3MGJhM2VlNSIsInJvbGUiOiJhZG1pbiIsImVtYWlsIjoiYWRtaW5AaGVsZW5hY29hY2hpbmcuY29tIiwiaWF0IjoxNzc0Nzk2MjUyLCJleHAiOjE3NzQ3OTcxNTJ9.F9-q8VC-_1BLWQSV_liIpAFyaDKpP4DOz50EhI77U1U
+Authorization: Bearer PASTE_ACCESS_TOKEN_HERE

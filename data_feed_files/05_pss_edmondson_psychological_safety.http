@@ -13,7 +13,7 @@
 
 POST http://localhost:3030/api/surveys/templates
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OWM5MzUyZmYxMmJjMjc3NzBiYTNlZTciLCJvcmdhbml6YXRpb25JZCI6IjY5YzkzNTJmZjEyYmMyNzc3MGJhM2VlNSIsInJvbGUiOiJhZG1pbiIsImVtYWlsIjoiYWRtaW5AaGVsZW5hY29hY2hpbmcuY29tIiwiaWF0IjoxNzc1NDc3MDcwLCJleHAiOjE3NzU0Nzc5NzB9.Bu65b7nGLE4u4bfc_dcx_VO2bryJsKDI_g5rcr_d4dU
+Authorization: Bearer PASTE_ACCESS_TOKEN_HERE
 
 {
   "moduleType": "conflict",

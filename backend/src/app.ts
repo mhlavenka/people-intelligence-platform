@@ -25,6 +25,7 @@ import plansRoutes from './routes/plans.routes';
 import rolesRoutes from './routes/roles.routes';
 import authPasskeyRoutes from './routes/auth-passkey.routes';
 import reportsRoutes from './routes/reports.routes';
+import eqiImportRoutes from './routes/eqi-import.routes';
 import authOAuthRoutes from './routes/auth-oauth.routes';
 import systemAdminSettingsRoutes from './routes/system-admin-settings.routes';
 
@@ -73,6 +74,7 @@ app.use('/api/plans', plansRoutes);
 app.use('/api/roles', rolesRoutes);
 app.use('/api/system-admin/settings', systemAdminSettingsRoutes);
 app.use('/api/reports', reportsRoutes);
+app.use('/api/eq/import', eqiImportRoutes);
 
 // 404 and error handlers (must be last)
 app.use(notFound);

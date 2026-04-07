@@ -8,23 +8,19 @@ IDPs - users need to have access to it and be able to print / follow thru with c
 
 ---------
 - Leadership & Succession IDP cards - how is the status changed from draft to active to completed?
-- Message hub - messages and alerts are joined together - what's the idea here?
 - Organization setup - put together users / departments / orgchart in more logical way. Make me a proposed solution before implementing so I can approve
-
 
 II. SYSTEM
 ----------
-Roles - allow to modify system roles.
 
 
 III. LOW
 --------
-- mobile optimization + do I want an app?
-- MHS EQi import
++ do I want a mobile Android / iPhone app?
+
 
 IV. NICE TO HAVE
 ----------------
-- in all modules include some graphics. Currently, it is all text, although very relevant, it feels crowded and hard to read
 - user guide + how tos
 
 

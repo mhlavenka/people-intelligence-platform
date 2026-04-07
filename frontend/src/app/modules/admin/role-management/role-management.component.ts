@@ -7,48 +7,41 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatMenuModule } from '@angular/material/menu';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ApiService } from '../../../core/api.service';
 import { RoleDialogComponent, CustomRole } from '../role-dialog/role-dialog.component';
 
-interface Permission {
-  feature: string;
-  category: string;
-  admin: boolean;
-  hr_manager: boolean;
-  manager: boolean;
-  coach: boolean;
-  coachee: boolean;
-}
+// Permission key → display label mapping
+const PERM_LABELS: Record<string, { feature: string; category: string }> = {
+  MANAGE_USERS:            { feature: 'Manage Users',           category: 'Administration' },
+  MANAGE_ORGANIZATION:     { feature: 'Manage Organization',    category: 'Administration' },
+  MANAGE_INTAKE_TEMPLATES: { feature: 'Manage Intake Templates', category: 'Administration' },
+  VIEW_ALL_USERS:          { feature: 'View All Users',         category: 'Administration' },
+  VIEW_ORG_CHART:          { feature: 'Org Chart',              category: 'Administration' },
+  MANAGE_BILLING:          { feature: 'Billing & Subscription', category: 'Administration' },
+  MANAGE_ROLES:            { feature: 'Manage Roles',           category: 'Administration' },
+  VIEW_CONFLICT_DASHBOARD: { feature: 'View Dashboard',         category: 'Conflict Intelligence' },
+  RUN_CONFLICT_ANALYSIS:   { feature: 'Run AI Analysis',        category: 'Conflict Intelligence' },
+  ESCALATE_CONFLICT:       { feature: 'Escalate to HR',         category: 'Conflict Intelligence' },
+  VIEW_CONFLICT_RESPONSES: { feature: 'View Responses',         category: 'Conflict Intelligence' },
+  TAKE_SURVEY:             { feature: 'Take Survey',            category: 'Conflict Intelligence' },
+  RUN_NEUROINCLUSION:      { feature: 'Run Assessment',         category: 'Neuro-Inclusion' },
+  VIEW_NEUROINCLUSION_RESULTS: { feature: 'View Results',       category: 'Neuro-Inclusion' },
+  CONDUCT_INTERVIEWS:      { feature: 'Conduct Interviews',     category: 'Coach & Interviews' },
+  VIEW_INTAKE_TEMPLATES:   { feature: 'View Templates (read)',  category: 'Coach & Interviews' },
+  VIEW_ALL_IDPS:           { feature: 'View All IDPs',          category: 'Leadership & Succession' },
+  GENERATE_IDP:            { feature: 'Generate IDP (AI)',       category: 'Leadership & Succession' },
+  VIEW_OWN_IDP:            { feature: 'View Own IDP',           category: 'Leadership & Succession' },
+  UPDATE_IDP_MILESTONES:   { feature: 'Update Milestones',      category: 'Leadership & Succession' },
+  VIEW_HUB:                { feature: 'Message Hub',            category: 'Communication' },
+};
 
-const PERMISSIONS: Permission[] = [
-  // Administration
-  { category: 'Administration', feature: 'Manage Users',               admin: true,  hr_manager: true,  manager: false, coach: false, coachee: false },
-  { category: 'Administration', feature: 'Manage Organization',        admin: true,  hr_manager: false, manager: false, coach: false, coachee: false },
-  { category: 'Administration', feature: 'Manage Intake Templates',    admin: true,  hr_manager: true,  manager: false, coach: false, coachee: false },
-  { category: 'Administration', feature: 'View All Users',             admin: true,  hr_manager: true,  manager: false, coach: false, coachee: false },
-  { category: 'Administration', feature: 'Org Chart',                  admin: true,  hr_manager: true,  manager: false, coach: false, coachee: false },
-  { category: 'Administration', feature: 'Billing & Subscription',     admin: true,  hr_manager: false, manager: false, coach: false, coachee: false },
-  { category: 'Administration', feature: 'Manage Roles',               admin: true,  hr_manager: true,  manager: false, coach: false, coachee: false },
-  // Conflict Intelligence
-  { category: 'Conflict Intelligence', feature: 'View Dashboard',      admin: true,  hr_manager: true,  manager: true,  coach: false, coachee: false },
-  { category: 'Conflict Intelligence', feature: 'Run AI Analysis',     admin: true,  hr_manager: true,  manager: false, coach: false, coachee: false },
-  { category: 'Conflict Intelligence', feature: 'Escalate to HR',      admin: true,  hr_manager: true,  manager: true,  coach: false, coachee: false },
-  { category: 'Conflict Intelligence', feature: 'View Responses',      admin: true,  hr_manager: true,  manager: true,  coach: false, coachee: false },
-  { category: 'Conflict Intelligence', feature: 'Take Survey',         admin: false, hr_manager: false, manager: false, coach: false, coachee: true  },
-  // Neuro-Inclusion
-  { category: 'Neuro-Inclusion', feature: 'Run Assessment',            admin: true,  hr_manager: true,  manager: true,  coach: false, coachee: false },
-  { category: 'Neuro-Inclusion', feature: 'View Results',              admin: true,  hr_manager: true,  manager: true,  coach: false, coachee: false },
-  // Coach & Interviews
-  { category: 'Coach & Interviews', feature: 'Conduct Interviews',     admin: true,  hr_manager: true,  manager: false, coach: true,  coachee: false },
-  { category: 'Coach & Interviews', feature: 'View Templates (read)',  admin: true,  hr_manager: true,  manager: false, coach: true,  coachee: false },
-  // Leadership & Succession
-  { category: 'Leadership & Succession', feature: 'View All IDPs',     admin: true,  hr_manager: true,  manager: false, coach: true,  coachee: false },
-  { category: 'Leadership & Succession', feature: 'Generate IDP (AI)', admin: true,  hr_manager: true,  manager: false, coach: true,  coachee: false },
-  { category: 'Leadership & Succession', feature: 'View Own IDP',      admin: false, hr_manager: false, manager: false, coach: false, coachee: true  },
-  { category: 'Leadership & Succession', feature: 'Update Milestones', admin: true,  hr_manager: true,  manager: false, coach: true,  coachee: true  },
-  // Communication
-  { category: 'Communication', feature: 'Message Hub',                 admin: true,  hr_manager: true,  manager: true,  coach: true,  coachee: true  },
-];
+const ALL_PERM_KEYS = Object.keys(PERM_LABELS);
+const CATEGORIES = [...new Set(Object.values(PERM_LABELS).map((p) => p.category))];
+
+interface PermRow { key: string; feature: string; category: string; }
+const PERM_ROWS: PermRow[] = ALL_PERM_KEYS.map((k) => ({ key: k, ...PERM_LABELS[k] }));
 
 const ROLES = [
   { key: 'admin',      label: 'Admin',      color: '#1B2A47', icon: 'shield' },
@@ -58,7 +51,7 @@ const ROLES = [
   { key: 'coachee',    label: 'Employee',   color: '#5a6a7e', icon: 'person' },
 ];
 
-type RoleKey = 'admin' | 'hr_manager' | 'manager' | 'coach' | 'coachee';
+interface SystemRoleData { permissions: string[]; isOverridden: boolean; }
 
 @Component({
   selector: 'app-role-management',
@@ -71,6 +64,8 @@ type RoleKey = 'admin' | 'hr_manager' | 'manager' | 'coach' | 'coachee';
     MatButtonModule,
     MatProgressSpinnerModule,
     MatMenuModule,
+    MatCheckboxModule,
+    MatSnackBarModule,
   ],
   template: `
     <div class="roles-page">
@@ -143,21 +138,30 @@ type RoleKey = 'admin' | 'hr_manager' | 'manager' | 'coach' | 'coachee';
       <mat-divider style="margin: 32px 0 28px"></mat-divider>
 
       <!-- ── System Roles Matrix ───────────────────────────── -->
-      <div class="section-title" style="margin-bottom: 16px">
-        <mat-icon>table_chart</mat-icon>
-        System Role Permissions
+      <div class="section-header" style="margin-top: 8px">
+        <div class="section-title">
+          <mat-icon>table_chart</mat-icon>
+          System Role Permissions
+        </div>
+        @if (systemRolesDirty()) {
+          <button mat-raised-button color="primary" (click)="saveSystemRoles()" [disabled]="savingSystemRoles()">
+            <mat-icon>save</mat-icon> Save Changes
+          </button>
+        }
       </div>
 
       <!-- Role summary cards -->
       <div class="role-cards">
         @for (role of roles; track role.key) {
           <div class="role-card">
-            <div class="role-icon" [style.background]="role.color + '18'"
-                                   [style.color]="role.color">
+            <div class="role-icon" [style.background]="role.color + '18'" [style.color]="role.color">
               <mat-icon>{{ role.icon }}</mat-icon>
             </div>
             <div class="role-name">{{ role.label }}</div>
-            <div class="role-count">{{ permissionCount(role.key) }} permissions</div>
+            <div class="role-count">{{ sysPermCount(role.key) }} permissions</div>
+            @if (isOverridden(role.key)) {
+              <span class="override-badge">Customized</span>
+            }
           </div>
         }
       </div>
@@ -183,21 +187,14 @@ type RoleKey = 'admin' | 'hr_manager' | 'manager' | 'coach' | 'coachee';
                 </tr>
               </thead>
               <tbody>
-                @for (perm of permsForCategory(category); track perm.feature) {
+                @for (perm of permsForCategory(category); track perm.key) {
                   <tr>
                     <td class="feature-cell">{{ perm.feature }}</td>
                     @for (role of roles; track role.key) {
                       <td class="check-cell">
-                        @if (hasPermission(perm, role.key)) {
-                          <span class="check" [style.color]="role.color"
-                                [matTooltip]="role.label + ' can: ' + perm.feature">
-                            <mat-icon>check_circle</mat-icon>
-                          </span>
-                        } @else {
-                          <span class="cross">
-                            <mat-icon>remove</mat-icon>
-                          </span>
-                        }
+                        <mat-checkbox [checked]="hasSysPerm(role.key, perm.key)"
+                                      (change)="toggleSysPerm(role.key, perm.key, $event.checked)"
+                                      [color]="'primary'" />
                       </td>
                     }
                   </tr>
@@ -210,15 +207,16 @@ type RoleKey = 'admin' | 'hr_manager' | 'manager' | 'coach' | 'coachee';
         }
       </div>
 
-      <!-- Legend -->
+      <!-- Legend / actions -->
       <div class="legend">
-        <span class="legend-item">
-          <mat-icon class="check-icon">check_circle</mat-icon> Has permission
-        </span>
-        <span class="legend-item">
-          <mat-icon class="cross-icon">remove</mat-icon> No access
-        </span>
-        <span class="legend-note">System role permissions are fixed and cannot be changed.</span>
+        @for (role of roles; track role.key) {
+          @if (isOverridden(role.key)) {
+            <button mat-stroked-button class="reset-btn" (click)="resetRole(role.key)">
+              <mat-icon>restart_alt</mat-icon> Reset {{ role.label }}
+            </button>
+          }
+        }
+        <span class="legend-note">Changes apply on next user login.</span>
       </div>
     </div>
   `,
@@ -372,21 +370,30 @@ type RoleKey = 'admin' | 'hr_manager' | 'manager' | 'coach' | 'coachee';
       font-size: 13px; color: #5a6a7e; flex-wrap: wrap;
     }
 
-    .legend-item { display: flex; align-items: center; gap: 6px; }
-    .check-icon  { font-size: 18px; color: #27C4A0; }
-    .cross-icon  { font-size: 18px; color: #d1d5db; }
+    .override-badge {
+      font-size: 9px; font-weight: 700; text-transform: uppercase;
+      background: #FFF8E6; color: #b07800; padding: 2px 6px; border-radius: 4px;
+    }
+    .reset-btn { font-size: 12px; color: #9aa5b4; }
     .legend-note { margin-left: auto; font-size: 12px; color: #b4bec8; font-style: italic; }
   `],
 })
 export class RoleManagementComponent implements OnInit {
   private api = inject(ApiService);
   private dialog = inject(MatDialog);
+  private snackBar = inject(MatSnackBar);
 
   roles = ROLES;
-  categories = [...new Set(PERMISSIONS.map((p) => p.category))];
+  categories = CATEGORIES;
 
   customRoles = signal<CustomRole[]>([]);
   loadingCustom = signal(true);
+
+  // System role permissions (per-org, editable)
+  private sysRoles = signal<Record<string, SystemRoleData>>({});
+  private sysRoleEdits = signal<Record<string, Set<string>>>({});
+  systemRolesDirty = signal(false);
+  savingSystemRoles = signal(false);
 
   private readonly BASE_ROLE_META: Record<string, { label: string; color: string }> = {
     admin:      { label: 'Admin',      color: '#1B2A47' },
@@ -398,7 +405,86 @@ export class RoleManagementComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadCustomRoles();
+    this.loadSystemRoles();
   }
+
+  // ── System roles ──────────────────────────────────────────────
+
+  loadSystemRoles(): void {
+    this.api.get<Record<string, SystemRoleData>>('/roles/system-roles').subscribe({
+      next: (data) => {
+        this.sysRoles.set(data);
+        const edits: Record<string, Set<string>> = {};
+        for (const [role, info] of Object.entries(data)) {
+          edits[role] = new Set(info.permissions);
+        }
+        this.sysRoleEdits.set(edits);
+        this.systemRolesDirty.set(false);
+      },
+    });
+  }
+
+  hasSysPerm(role: string, key: string): boolean {
+    return this.sysRoleEdits()[role]?.has(key) ?? false;
+  }
+
+  toggleSysPerm(role: string, key: string, checked: boolean): void {
+    const edits = { ...this.sysRoleEdits() };
+    const set = new Set(edits[role] ?? []);
+    checked ? set.add(key) : set.delete(key);
+    edits[role] = set;
+    this.sysRoleEdits.set(edits);
+    this.systemRolesDirty.set(true);
+  }
+
+  sysPermCount(role: string): number {
+    return this.sysRoleEdits()[role]?.size ?? 0;
+  }
+
+  isOverridden(role: string): boolean {
+    return this.sysRoles()[role]?.isOverridden ?? false;
+  }
+
+  saveSystemRoles(): void {
+    this.savingSystemRoles.set(true);
+    const edits = this.sysRoleEdits();
+    const requests = Object.entries(edits).map(([role, permSet]) =>
+      this.api.put(`/roles/system-roles/${role}`, { permissions: [...permSet] }).toPromise()
+    );
+    Promise.all(requests).then(() => {
+      this.savingSystemRoles.set(false);
+      this.systemRolesDirty.set(false);
+      this.loadSystemRoles();
+      this.snackBar.open('System role permissions saved. Changes apply on next login.', 'OK', { duration: 4000 });
+    }).catch(() => {
+      this.savingSystemRoles.set(false);
+      this.snackBar.open('Failed to save', 'Dismiss', { duration: 3000 });
+    });
+  }
+
+  resetRole(role: string): void {
+    if (!confirm(`Reset ${this.baseLabel(role)} to default permissions?`)) return;
+    this.api.delete(`/roles/system-roles/${role}`).subscribe({
+      next: () => {
+        this.loadSystemRoles();
+        this.snackBar.open(`${this.baseLabel(role)} reset to defaults`, 'OK', { duration: 3000 });
+      },
+    });
+  }
+
+  permsForCategory = (cat: string) => PERM_ROWS.filter((p) => p.category === cat);
+
+  categoryIcon = (cat: string): string => {
+    if (cat.includes('Administration'))  return 'admin_panel_settings';
+    if (cat.includes('Conflict'))        return 'warning_amber';
+    if (cat.includes('Neuro'))           return 'psychology';
+    if (cat.includes('Coach'))           return 'psychology_alt';
+    if (cat.includes('Succession'))      return 'trending_up';
+    if (cat.includes('Communication'))   return 'forum';
+    return 'category';
+  };
+
+  // ── Custom roles ──────────────────────────────────────────────
 
   loadCustomRoles(): void {
     this.loadingCustom.set(true);
@@ -410,52 +496,29 @@ export class RoleManagementComponent implements OnInit {
 
   openCreate(): void {
     const ref = this.dialog.open(RoleDialogComponent, {
-      data: null,
-      minWidth: '600px', maxWidth: '720px', maxHeight: '92vh',
+      data: null, minWidth: '600px', maxWidth: '720px', maxHeight: '92vh',
     });
     ref.afterClosed().subscribe((result) => {
-      if (result) { this.customRoles.update((list) => [...list, result]); }
+      if (result) this.customRoles.update((list) => [...list, result]);
     });
   }
 
   openEdit(role: CustomRole): void {
     const ref = this.dialog.open(RoleDialogComponent, {
-      data: role,
-      minWidth: '600px', maxWidth: '720px', maxHeight: '92vh',
+      data: role, minWidth: '600px', maxWidth: '720px', maxHeight: '92vh',
     });
     ref.afterClosed().subscribe((result) => {
-      if (result) {
-        this.customRoles.update((list) =>
-          list.map((r) => (r._id === result._id ? result : r))
-        );
-      }
+      if (result) this.customRoles.update((list) => list.map((r) => r._id === result._id ? result : r));
     });
   }
 
   deleteRole(role: CustomRole): void {
-    if (!confirm(`Delete role "${role.name}"? Users assigned to it will revert to their base role.`)) { return; }
+    if (!confirm(`Delete role "${role.name}"?`)) return;
     this.api.delete(`/roles/${role._id}`).subscribe({
-      next: () => { this.customRoles.update((list) => list.filter((r) => r._id !== role._id)); },
+      next: () => this.customRoles.update((list) => list.filter((r) => r._id !== role._id)),
     });
   }
 
   baseLabel = (key: string) => this.BASE_ROLE_META[key]?.label ?? key;
   baseColor = (key: string) => this.BASE_ROLE_META[key]?.color ?? '#9aa5b4';
-
-  permsForCategory = (cat: string) => PERMISSIONS.filter((p) => p.category === cat);
-
-  hasPermission = (perm: Permission, roleKey: string) => perm[roleKey as RoleKey] === true;
-
-  permissionCount = (roleKey: string) =>
-    PERMISSIONS.filter((p) => p[roleKey as RoleKey]).length;
-
-  categoryIcon = (cat: string): string => {
-    if (cat.includes('Administration'))  return 'admin_panel_settings';
-    if (cat.includes('Conflict'))        return 'warning_amber';
-    if (cat.includes('Neuro'))           return 'psychology';
-    if (cat.includes('Coach'))           return 'psychology_alt';
-    if (cat.includes('Succession'))      return 'trending_up';
-    if (cat.includes('Communication'))   return 'forum';
-    return 'category';
-  };
 }

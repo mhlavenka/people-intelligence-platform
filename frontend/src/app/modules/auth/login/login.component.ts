@@ -83,8 +83,6 @@ interface OAuthProviders {
 
             <div class="auth-links">
               <a routerLink="/auth/forgot-password">Forgot password?</a>
-              <span>·</span>
-              <a routerLink="/auth/register">Create organization</a>
             </div>
 
             <!-- Passkey + OAuth divider -->

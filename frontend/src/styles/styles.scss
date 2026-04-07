@@ -325,6 +325,48 @@ a {
 .toggle-desc  { font-size: 12px; color: $text-muted; }
 
 // ============================================================
+// Mobile Responsive
+// ============================================================
+
+@media (max-width: 768px) {
+  .page-header {
+    flex-direction: column;
+    gap: 12px;
+    h1 { font-size: 22px; }
+  }
+
+  .idp-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .section-header {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  // Material dialog mobile override
+  .mat-mdc-dialog-container {
+    max-width: 95vw !important;
+  }
+
+  .cdk-overlay-pane {
+    max-width: 95vw !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-header h1 { font-size: 20px; }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  .breakdown-row {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+// ============================================================
 // Material button overrides
 // ============================================================
 

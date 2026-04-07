@@ -60,8 +60,25 @@ function isGroup(entry: NavEntry): entry is NavGroup {
   ],
   template: `
     <div class="app-layout" [class.collapsed]="sidebarCollapsed()">
+      <!-- Mobile header bar -->
+      <div class="mobile-header">
+        <button class="mobile-menu-btn" (click)="mobileMenuOpen.set(true)">
+          <mat-icon>menu</mat-icon>
+        </button>
+        <img src="assets/PIP_Icon_512.png" alt="PIP" class="mobile-logo" />
+        <span class="mobile-title">{{ orgName() }}</span>
+        <button class="mobile-bell-btn" (click)="openHub()">
+          <mat-icon [matBadge]="unreadCount() > 0 ? unreadCount() : null" matBadgeColor="warn" matBadgeSize="small">notifications</mat-icon>
+        </button>
+      </div>
+
+      <!-- Mobile overlay backdrop -->
+      @if (mobileMenuOpen()) {
+        <div class="mobile-backdrop" (click)="mobileMenuOpen.set(false)"></div>
+      }
+
       <!-- Sidebar -->
-      <aside class="sidebar">
+      <aside class="sidebar" [class.mobile-open]="mobileMenuOpen()">
         <div class="sidebar-header" [class.collapsed]="sidebarCollapsed()">
           @if (sidebarCollapsed()) {
             <!-- Collapsed: logo centred, toggle below -->
@@ -101,7 +118,8 @@ function isGroup(entry: NavEntry): entry is NavGroup {
                  routerLinkActive="active"
                  class="nav-item"
                  [matTooltip]="sidebarCollapsed() ? entry.label : ''"
-                 matTooltipPosition="right">
+                 matTooltipPosition="right"
+                 (click)="mobileMenuOpen.set(false)">
                 <mat-icon>{{ entry.icon }}</mat-icon>
                 @if (!sidebarCollapsed()) {
                   <span class="nav-label">{{ entry.label }}</span>
@@ -482,10 +500,61 @@ function isGroup(entry: NavEntry): entry is NavGroup {
         &:hover { background: #2a3f66; }
       }
     }
+
+    /* ── Mobile ───────────────────────────────────── */
+    .mobile-header { display: none; }
+    .mobile-backdrop { display: none; }
+
+    @media (max-width: 768px) {
+      .mobile-header {
+        display: flex; align-items: center; gap: 10px;
+        padding: 10px 16px;
+        background: var(--pip-primary);
+        color: white;
+        position: fixed; top: 0; left: 0; right: 0; z-index: 1001;
+        height: 56px;
+      }
+      .mobile-menu-btn, .mobile-bell-btn {
+        background: none; border: none; color: white; cursor: pointer;
+        width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;
+        border-radius: 8px; padding: 0;
+        &:hover { background: rgba(255,255,255,0.1); }
+      }
+      .mobile-logo { width: 32px; height: 32px; object-fit: contain; }
+      .mobile-title { flex: 1; font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+      .mobile-backdrop {
+        display: block; position: fixed; inset: 0; z-index: 1002;
+        background: rgba(0,0,0,0.5); animation: fadeIn 0.2s;
+      }
+
+      .sidebar {
+        position: fixed; top: 0; bottom: 0; left: 0; z-index: 1003;
+        width: 280px !important;
+        transform: translateX(-100%);
+        transition: transform 0.25s ease;
+        &.mobile-open { transform: translateX(0); }
+      }
+
+      .app-layout.collapsed .sidebar { width: 280px !important; transform: translateX(-100%); }
+      .app-layout.collapsed .sidebar.mobile-open { transform: translateX(0); }
+
+      .main-content { padding-top: 56px; }
+
+      .sidebar-header.collapsed { flex-direction: row !important; padding: 20px 16px 16px !important; }
+      .sidebar-header.collapsed .expand-btn { display: none; }
+      .sidebar-header.collapsed .brand-logo { width: 200px; height: 64px; }
+
+      .nav-item span, .nav-label { display: inline !important; }
+      .org-switcher { display: flex !important; }
+    }
+
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
   `],
 })
 export class AppShellComponent implements OnInit, OnDestroy {
   sidebarCollapsed = signal(false);
+  mobileMenuOpen = signal(false);
   openGroups = signal<Set<string>>(new Set(['Administration']));
 
   isGroup = isGroup;
@@ -521,6 +590,7 @@ export class AppShellComponent implements OnInit, OnDestroy {
         { label: 'Users',             icon: 'group',               route: '/admin/users',          roles: ['admin', 'hr_manager'] },
         { label: 'Organization',      icon: 'business',            route: '/admin/organization',   roles: ['admin'] },
         { label: 'Role Permissions',  icon: 'policy',              route: '/admin/roles',          roles: ['admin', 'hr_manager'] },
+        { label: 'EQi Assessments',    icon: 'psychology',          route: '/eq-import/records',    roles: ['admin'] },
         { label: 'Reports',           icon: 'assessment',          route: '/admin/reports',        roles: ['admin', 'hr_manager'] },
         { label: 'Billing',           icon: 'receipt_long',        route: '/billing',              roles: ['admin'] },
       ],
