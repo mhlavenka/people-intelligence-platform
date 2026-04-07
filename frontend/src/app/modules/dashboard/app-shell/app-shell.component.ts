@@ -574,7 +574,6 @@ export class AppShellComponent implements OnInit, OnDestroy {
     { label: 'Neuro-Inclusion',         icon: 'psychology',   route: '/neuroinclusion', roles: ['admin', 'hr_manager', 'manager'],               module: 'neuroinclusion' },
     { label: 'Leadership & Succession', icon: 'trending_up',  route: '/succession',  roles: ['admin', 'hr_manager', 'coach', 'coachee'],        module: 'succession' },
     { label: 'Coaching',           icon: 'psychology_alt',  route: '/coaching',    roles: ['admin', 'hr_manager', 'coach', 'coachee'],  module: 'coaching' },
-    { label: 'Org Chart',         icon: 'account_tree',        route: '/org-chart',            roles: ['admin', 'hr_manager'] },
     {
       label: 'Intakes',
       icon: 'record_voice_over',
@@ -590,6 +589,7 @@ export class AppShellComponent implements OnInit, OnDestroy {
         { label: 'Intake Management', icon: 'assignment',           route: '/intakes',              roles: ['admin', 'hr_manager'] },
         { label: 'Users',             icon: 'group',               route: '/admin/users',          roles: ['admin', 'hr_manager'] },
         { label: 'Organization',      icon: 'business',            route: '/admin/organization',   roles: ['admin'] },
+        { label: 'Org Chart',         icon: 'account_tree',        route: '/org-chart',            roles: ['admin', 'hr_manager'] },
         { label: 'Role Permissions',  icon: 'policy',              route: '/admin/roles',          roles: ['admin', 'hr_manager'] },
         { label: 'EQi Assessments',    icon: 'psychology',          route: '/eq-import/records',    roles: ['admin'] },
         { label: 'Reports',           icon: 'assessment',          route: '/admin/reports',        roles: ['admin', 'hr_manager'] },

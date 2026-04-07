@@ -46,11 +46,15 @@ const FRAMEWORKS = [
           <div class="tab-content">
             <div class="form-row">
               <mat-form-field appearance="outline">
-                <mat-label>Date & Time</mat-label>
+                <mat-label>Date</mat-label>
                 <input matInput [matDatepicker]="dp" [(ngModel)]="form.date" />
                 <mat-datepicker-toggle matIconSuffix [for]="dp" /><mat-datepicker #dp />
               </mat-form-field>
-              <mat-form-field appearance="outline">
+              <mat-form-field appearance="outline" class="time-field">
+                <mat-label>Start Time</mat-label>
+                <input matInput type="time" [(ngModel)]="startTime" />
+              </mat-form-field>
+              <mat-form-field appearance="outline" class="dur-field">
                 <mat-label>Duration (min)</mat-label>
                 <input matInput type="number" [(ngModel)]="form.duration" min="15" max="180" />
               </mat-form-field>
@@ -154,6 +158,8 @@ const FRAMEWORKS = [
     .tab-content { padding: 16px 0; display: flex; flex-direction: column; gap: 8px; }
     .full-width { width: 100%; }
     .form-row { display: flex; gap: 12px; mat-form-field { flex: 1; } }
+    .time-field { max-width: 140px; }
+    .dur-field { max-width: 120px; }
     .section-label { font-size: 12px; font-weight: 600; color: #5a6a7e; text-transform: uppercase; letter-spacing: 0.5px; margin: 4px 0; }
 
     .grow-checks { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
@@ -187,6 +193,7 @@ export class SessionDialogComponent implements OnInit {
   saving = signal(false);
   isEdit = false;
   topicsRaw = '';
+  startTime = '09:00';
   growPhases = GROW_PHASES;
   frameworks = FRAMEWORKS;
 
@@ -202,6 +209,9 @@ export class SessionDialogComponent implements OnInit {
       this.isEdit = true;
       Object.assign(this.form, this.data);
       this.form.date = new Date(this.data.date);
+      const h = this.form.date.getHours().toString().padStart(2, '0');
+      const m = this.form.date.getMinutes().toString().padStart(2, '0');
+      this.startTime = `${h}:${m}`;
     }
     this.topicsRaw = (this.form.topics || []).join(', ');
   }
@@ -218,6 +228,14 @@ export class SessionDialogComponent implements OnInit {
     this.form.topics = this.topicsRaw.split(',').map((t: string) => t.trim()).filter(Boolean);
     this.form.engagementId = this.data.engagementId;
     this.form.coacheeId = this.data.coacheeId;
+
+    // Merge startTime into date
+    if (this.startTime && this.form.date) {
+      const [hours, minutes] = this.startTime.split(':').map(Number);
+      const d = new Date(this.form.date);
+      d.setHours(hours, minutes, 0, 0);
+      this.form.date = d;
+    }
 
     const req = this.isEdit
       ? this.api.put(`/coaching/sessions/${this.data._id}`, this.form)

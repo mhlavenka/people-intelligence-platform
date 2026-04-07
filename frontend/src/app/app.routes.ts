@@ -166,6 +166,14 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'coaching/calendar',
+        canActivate: [roleGuard([...ADMIN_HR, 'coach'])],
+        loadComponent: () =>
+          import('./modules/coaching/coaching-calendar/coaching-calendar.component').then(
+            (m) => m.CoachingCalendarComponent
+          ),
+      },
+      {
         path: 'coaching/:id',
         canActivate: [roleGuard([...ADMIN_HR, 'coach', 'coachee'])],
         loadComponent: () =>

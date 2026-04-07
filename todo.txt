@@ -2,7 +2,7 @@ I. MODULES
 ----------
 Conflict Intelligence
 
-Coaching Module - subscription plans for individual coaches
+Coaching Module - when creating a session look for conflicts
 
 IDPs - users need to have access to it and be able to print / follow thru with coach follow up - notifications, reminders, etc.
 
