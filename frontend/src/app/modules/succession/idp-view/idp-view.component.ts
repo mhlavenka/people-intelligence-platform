@@ -166,7 +166,15 @@ interface IDP {
                     }
                   </button>
                 }
-                @if (canDelete()) {
+                @if (canManage() && idp.status === 'active') {
+                  <button class="card-action-btn"
+                          matTooltip="Deactivate IDP"
+                          matTooltipPosition="above"
+                          (click)="deactivateIdp(idp)">
+                    <mat-icon>pause_circle_outline</mat-icon>
+                  </button>
+                }
+                @if (canDelete() && idp.status === 'draft') {
                   <button class="card-action-btn delete-btn"
                           matTooltip="Delete IDP"
                           matTooltipPosition="above"
@@ -258,138 +266,108 @@ interface IDP {
                   </mat-chip-set>
                 </div>
               }
-            </div>
-          }
-        </div>
 
-        <!-- Coaching Journal -->
-        <div class="section-card journal-section" style="margin-top: 40px;">
-          <div class="section-header-row">
-            <div class="section-header-left">
-              <div class="section-icon green"><mat-icon>book</mat-icon></div>
-              <div>
-                <h3>Coaching Journal</h3>
-                <p>Log progress insights, session reflections, and key decisions between coaching sessions.</p>
-              </div>
-            </div>
-            <button mat-raised-button color="primary" (click)="showJournalForm.set(!showJournalForm())">
-              <mat-icon>{{ showJournalForm() ? 'close' : 'add' }}</mat-icon>
-              {{ showJournalForm() ? 'Cancel' : 'New Entry' }}
-            </button>
-          </div>
+              <!-- Inline Coaching Journal for this IDP -->
+              <div class="journal-inline">
+                <div class="journal-inline-header">
+                  <mat-icon class="journal-icon">book</mat-icon>
+                  <span class="journal-title">Coaching Journal</span>
+                  <span class="journal-count">{{ getEntries(idp._id).length }}</span>
+                  <button mat-stroked-button class="journal-add-btn" (click)="toggleJournalForm(idp._id)">
+                    <mat-icon>{{ activeJournalIdpId() === idp._id ? 'close' : 'add' }}</mat-icon>
+                    {{ activeJournalIdpId() === idp._id ? 'Cancel' : 'Add Entry' }}
+                  </button>
+                </div>
 
-          <!-- New entry form -->
-          @if (showJournalForm()) {
-            <div class="journal-form">
-              <div class="journal-form-row">
-                <mat-form-field appearance="outline" class="journal-mood-field">
-                  <mat-label>Mood / Energy</mat-label>
-                  <mat-select [(ngModel)]="journalMood">
-                    @for (n of moodOptions; track n) {
-                      <mat-option [value]="n">{{ n }} / 10</mat-option>
+                <!-- New entry form -->
+                @if (activeJournalIdpId() === idp._id) {
+                  <div class="journal-form">
+                    <mat-form-field appearance="outline" class="journal-mood-field">
+                      <mat-label>Mood / Energy</mat-label>
+                      <mat-select [(ngModel)]="journalMood">
+                        @for (n of moodOptions; track n) {
+                          <mat-option [value]="n">{{ n }} / 10</mat-option>
+                        }
+                      </mat-select>
+                    </mat-form-field>
+
+                    @if (!journalContent) {
+                      <div class="journal-prompts">
+                        <p class="prompts-label">Pick a prompt or write freely:</p>
+                        <div class="prompts-grid">
+                          @for (prompt of journalPrompts; track prompt) {
+                            <button class="prompt-card" (click)="journalPrompt = prompt; journalContent = ''">
+                              <mat-icon class="prompt-icon">chat_bubble_outline</mat-icon>
+                              <span>{{ prompt }}</span>
+                            </button>
+                          }
+                        </div>
+                      </div>
                     }
-                  </mat-select>
-                </mat-form-field>
 
-                @if (idps().length > 0) {
-                  <mat-form-field appearance="outline" class="journal-idp-field">
-                    <mat-label>Related IDP (optional)</mat-label>
-                    <mat-select [(ngModel)]="journalIdpId">
-                      <mat-option value="">— None —</mat-option>
-                      @for (idp of idps(); track idp._id) {
-                        <mat-option [value]="idp._id">{{ idp.goal | slice:0:60 }}</mat-option>
-                      }
-                    </mat-select>
-                  </mat-form-field>
+                    @if (journalPrompt) {
+                      <div class="selected-prompt">
+                        <mat-icon>format_quote</mat-icon>
+                        <span>{{ journalPrompt }}</span>
+                        <button mat-icon-button (click)="journalPrompt = ''"><mat-icon>close</mat-icon></button>
+                      </div>
+                    }
+
+                    <mat-form-field appearance="outline" class="journal-content-field">
+                      <mat-label>Your reflection</mat-label>
+                      <textarea matInput [(ngModel)]="journalContent" rows="3"
+                                placeholder="Reflect on progress, challenges, or insights..."></textarea>
+                    </mat-form-field>
+
+                    <div class="journal-form-actions">
+                      <button mat-raised-button color="primary"
+                              [disabled]="!journalContent?.trim() || journalSaving()"
+                              (click)="saveJournalEntry(idp._id)">
+                        @if (journalSaving()) { <mat-spinner diameter="16" /> }
+                        @else { <mat-icon>save</mat-icon> }
+                        Save
+                      </button>
+                    </div>
+                  </div>
+                }
+
+                <!-- Entries for this IDP -->
+                @if (getEntries(idp._id).length > 0) {
+                  <div class="journal-entries">
+                    @for (entry of getEntries(idp._id); track entry._id) {
+                      <div class="journal-entry">
+                        <div class="entry-header">
+                          <div class="entry-meta">
+                            @if (isPopulatedUser(entry.userId)) {
+                              <span class="entry-author">{{ entry.userId.firstName }} {{ entry.userId.lastName }}</span>
+                            }
+                            <span class="entry-date">{{ entry.createdAt | date:'MMM d — h:mm a' }}</span>
+                            @if (entry.mood) {
+                              <span class="entry-mood" [class]="moodClass(entry.mood)">{{ entry.mood }}/10</span>
+                            }
+                          </div>
+                          <button mat-icon-button class="entry-delete" matTooltip="Delete" (click)="deleteJournalEntry(entry)">
+                            <mat-icon>delete_outline</mat-icon>
+                          </button>
+                        </div>
+                        @if (entry.prompt) {
+                          <div class="entry-prompt">
+                            <mat-icon>format_quote</mat-icon>
+                            <span>{{ entry.prompt }}</span>
+                          </div>
+                        }
+                        <p class="entry-content">{{ entry.content }}</p>
+                      </div>
+                    }
+                  </div>
                 }
               </div>
-
-              <!-- Prompt suggestion -->
-              @if (!journalContent) {
-                <div class="journal-prompts">
-                  <p class="prompts-label">Pick a reflection prompt or write freely:</p>
-                  <div class="prompts-grid">
-                    @for (prompt of journalPrompts; track prompt) {
-                      <button class="prompt-card" (click)="journalPrompt = prompt; journalContent = ''">
-                        <mat-icon class="prompt-icon">chat_bubble_outline</mat-icon>
-                        <span>{{ prompt }}</span>
-                      </button>
-                    }
-                  </div>
-                </div>
-              }
-
-              @if (journalPrompt) {
-                <div class="selected-prompt">
-                  <mat-icon>format_quote</mat-icon>
-                  <span>{{ journalPrompt }}</span>
-                  <button mat-icon-button (click)="journalPrompt = ''"><mat-icon>close</mat-icon></button>
-                </div>
-              }
-
-              <mat-form-field appearance="outline" class="journal-content-field">
-                <mat-label>Your reflection</mat-label>
-                <textarea matInput [(ngModel)]="journalContent" rows="4"
-                          placeholder="What's on your mind? Reflect on progress, challenges, or insights..."></textarea>
-              </mat-form-field>
-
-              <div class="journal-form-actions">
-                <button mat-raised-button color="primary"
-                        [disabled]="!journalContent?.trim() || journalSaving()"
-                        (click)="saveJournalEntry()">
-                  @if (journalSaving()) { <mat-spinner diameter="16" /> }
-                  @else { <mat-icon>save</mat-icon> }
-                  Save Entry
-                </button>
-              </div>
-            </div>
-          }
-
-          <!-- Journal entries list -->
-          @if (journalEntries().length > 0) {
-            <div class="journal-entries">
-              @for (entry of journalEntries(); track entry._id) {
-                <div class="journal-entry">
-                  <div class="entry-header">
-                    <div class="entry-meta">
-                      @if (isPopulatedUser(entry.userId)) {
-                        <span class="entry-author">{{ entry.userId.firstName }} {{ entry.userId.lastName }}</span>
-                      }
-                      <span class="entry-date">{{ entry.createdAt | date:'MMM d, y — h:mm a' }}</span>
-                      @if (entry.mood) {
-                        <span class="entry-mood" [class]="moodClass(entry.mood)">{{ entry.mood }}/10</span>
-                      }
-                    </div>
-                    <button mat-icon-button class="entry-delete" matTooltip="Delete" (click)="deleteJournalEntry(entry)">
-                      <mat-icon>delete_outline</mat-icon>
-                    </button>
-                  </div>
-                  @if (entry.prompt) {
-                    <div class="entry-prompt">
-                      <mat-icon>format_quote</mat-icon>
-                      <span>{{ entry.prompt }}</span>
-                    </div>
-                  }
-                  <p class="entry-content">{{ entry.content }}</p>
-                  @if (entry.idpId && isPopulatedIdpRef(entry.idpId)) {
-                    <div class="entry-idp-link">
-                      <mat-icon>flag</mat-icon>
-                      <span>{{ entry.idpId.goal | slice:0:80 }}</span>
-                    </div>
-                  }
-                </div>
-              }
-            </div>
-          } @else if (!showJournalForm()) {
-            <div class="journal-empty">
-              <mat-icon>book</mat-icon>
-              <span>No journal entries yet. Start reflecting on your coaching journey.</span>
             </div>
           }
         </div>
 
         <!-- Helena Coaching Integration -->
-        <div class="section-card helena-section">
+        <div class="section-card helena-section" style="margin-top: 32px">
           <div class="section-header-row">
             <div class="section-header-left">
               <div class="section-icon orange"><mat-icon>video_call</mat-icon></div>
@@ -553,86 +531,74 @@ interface IDP {
     .metric-label { font-size: 12px; color: #5a6a7e; font-weight: 500; }
     .metric-sub   { font-size: 11px; color: #9aa5b4; margin-top: 3px; }
 
-    /* ── Journal ── */
+    /* ── Inline Journal (inside IDP card) ── */
+    .journal-inline {
+      margin-top: 14px; padding-top: 14px;
+      border-top: 1px solid #e8edf4;
+    }
+    .journal-inline-header {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+      .journal-icon { font-size: 18px; width: 18px; height: 18px; color: #27C4A0; }
+      .journal-title { font-size: 13px; font-weight: 600; color: #1B2A47; }
+      .journal-count {
+        font-size: 11px; background: #e8faf4; color: #1a9678;
+        padding: 1px 7px; border-radius: 999px;
+      }
+      .journal-add-btn { margin-left: auto; font-size: 12px; }
+    }
+
     .journal-form {
-      background: #f8fafc; border-radius: 12px; padding: 20px; margin-bottom: 20px;
+      background: #f8fafc; border-radius: 10px; padding: 14px; margin-bottom: 12px;
       border: 1px solid #e8edf4;
     }
-    .journal-form-row {
-      display: flex; gap: 12px; margin-bottom: 8px;
-    }
-    .journal-mood-field { width: 140px; }
-    .journal-idp-field { flex: 1; }
+    .journal-mood-field { width: 140px; margin-bottom: 8px; }
     .journal-content-field { width: 100%; }
     .journal-form-actions { display: flex; justify-content: flex-end; }
 
-    .prompts-label { font-size: 12px; color: #9aa5b4; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; margin: 0 0 12px; }
-    .prompts-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px; }
+    .prompts-label { font-size: 11px; color: #9aa5b4; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; margin: 0 0 8px; }
+    .prompts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 10px; }
     .prompt-card {
-      display: flex; gap: 10px; align-items: flex-start;
-      background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 10px; padding: 12px 14px;
-      font-size: 13px; color: #374151; line-height: 1.5; cursor: pointer;
+      display: flex; gap: 8px; align-items: flex-start;
+      background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; padding: 8px 10px;
+      font-size: 12px; color: #374151; line-height: 1.4; cursor: pointer;
       text-align: left; transition: background 0.15s;
       &:hover { background: #e0f2fe; }
-      .prompt-icon { color: #3A9FD6; font-size: 16px; width: 16px; height: 16px; flex-shrink: 0; margin-top: 2px; }
+      .prompt-icon { color: #3A9FD6; font-size: 14px; width: 14px; height: 14px; flex-shrink: 0; margin-top: 1px; }
     }
 
     .selected-prompt {
-      display: flex; align-items: center; gap: 8px; margin-bottom: 12px;
-      background: #EBF5FB; border-radius: 8px; padding: 10px 14px;
-      font-size: 13px; color: #2080b0; font-style: italic;
-      mat-icon { color: #3A9FD6; font-size: 18px; flex-shrink: 0; }
+      display: flex; align-items: center; gap: 6px; margin-bottom: 8px;
+      background: #EBF5FB; border-radius: 6px; padding: 8px 10px;
+      font-size: 12px; color: #2080b0; font-style: italic;
+      mat-icon { color: #3A9FD6; font-size: 16px; flex-shrink: 0; }
       span { flex: 1; }
-      button { width: 24px; height: 24px; color: #9aa5b4; }
+      button { width: 22px; height: 22px; color: #9aa5b4; }
     }
 
-    .journal-entries { display: flex; flex-direction: column; gap: 12px; }
+    .journal-entries { display: flex; flex-direction: column; gap: 8px; }
 
     .journal-entry {
-      border: 1px solid #e8edf4; border-radius: 12px; padding: 16px; background: #fafbfc;
+      border: 1px solid #e8edf4; border-radius: 10px; padding: 12px; background: #fafbfc;
     }
-
     .entry-header {
-      display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;
     }
-
-    .entry-meta {
-      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
-    }
-
-    .entry-author { font-size: 13px; font-weight: 600; color: #1B2A47; }
-    .entry-date { font-size: 12px; color: #9aa5b4; }
+    .entry-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .entry-author { font-size: 12px; font-weight: 600; color: #1B2A47; }
+    .entry-date { font-size: 11px; color: #9aa5b4; }
     .entry-mood {
-      font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px;
+      font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 999px;
       &.mood-high { background: #e8faf4; color: #1a9678; }
       &.mood-mid  { background: #FFF8E6; color: #b07800; }
       &.mood-low  { background: #fef2f2; color: #c53030; }
     }
-
-    .entry-delete { width: 28px; height: 28px; color: #c5d0db; &:hover { color: #e53e3e; } }
-
+    .entry-delete { width: 24px; height: 24px; color: #c5d0db; &:hover { color: #e53e3e; } }
     .entry-prompt {
-      display: flex; align-items: flex-start; gap: 6px; margin-bottom: 8px;
-      font-size: 12px; color: #3A9FD6; font-style: italic;
-      mat-icon { font-size: 14px; width: 14px; height: 14px; margin-top: 1px; }
+      display: flex; align-items: flex-start; gap: 4px; margin-bottom: 4px;
+      font-size: 11px; color: #3A9FD6; font-style: italic;
+      mat-icon { font-size: 13px; width: 13px; height: 13px; margin-top: 1px; }
     }
-
-    .entry-content {
-      font-size: 14px; color: #374151; line-height: 1.7; margin: 0;
-      white-space: pre-wrap;
-    }
-
-    .entry-idp-link {
-      display: flex; align-items: center; gap: 6px; margin-top: 8px;
-      font-size: 12px; color: #5a6a7e;
-      mat-icon { font-size: 14px; width: 14px; height: 14px; color: #3A9FD6; }
-    }
-
-    .journal-empty {
-      display: flex; align-items: center; gap: 12px; padding: 24px; color: #9aa5b4;
-      mat-icon { font-size: 24px; width: 24px; height: 24px; color: #c5d0db; }
-      span { font-size: 14px; }
-    }
+    .entry-content { font-size: 13px; color: #374151; line-height: 1.6; margin: 0; white-space: pre-wrap; }
 
     /* ── Helena services ── */
     .helena-services { display: flex; flex-direction: column; gap: 12px; }
@@ -688,14 +654,13 @@ export class IDPViewComponent implements OnInit {
     return typeof val === 'object' && val !== null && 'firstName' in val;
   }
 
-  // ── Journal ──────────────────────────────────────────────────
-  journalEntries = signal<JournalEntry[]>([]);
-  showJournalForm = signal(false);
+  // ── Journal (per-IDP) ──────────────────────────────────────────
+  private journalMap = signal<Record<string, JournalEntry[]>>({});
+  activeJournalIdpId = signal<string | null>(null);
   journalSaving = signal(false);
   journalContent = '';
   journalPrompt = '';
   journalMood: number | null = null;
-  journalIdpId = '';
   moodOptions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
   journalPrompts = [
@@ -707,28 +672,50 @@ export class IDPViewComponent implements OnInit {
     'What would "success" look like at your next coaching session?',
   ];
 
+  getEntries(idpId: string): JournalEntry[] {
+    return this.journalMap()[idpId] ?? [];
+  }
+
+  toggleJournalForm(idpId: string): void {
+    if (this.activeJournalIdpId() === idpId) {
+      this.activeJournalIdpId.set(null);
+    } else {
+      this.activeJournalIdpId.set(idpId);
+      this.journalContent = '';
+      this.journalPrompt = '';
+      this.journalMood = null;
+    }
+  }
+
   loadJournal(): void {
     this.api.get<JournalEntry[]>('/succession/journal').subscribe({
-      next: (entries) => this.journalEntries.set(entries),
+      next: (entries) => {
+        const map: Record<string, JournalEntry[]> = {};
+        for (const e of entries) {
+          const key = typeof e.idpId === 'object' && e.idpId ? e.idpId._id : (e.idpId as string) || '';
+          if (!key) continue;
+          (map[key] ??= []).push(e);
+        }
+        this.journalMap.set(map);
+      },
     });
   }
 
-  saveJournalEntry(): void {
+  saveJournalEntry(idpId: string): void {
     if (!this.journalContent?.trim()) return;
     this.journalSaving.set(true);
     this.api.post<JournalEntry>('/succession/journal', {
       content: this.journalContent,
       prompt: this.journalPrompt || undefined,
       mood: this.journalMood || undefined,
-      idpId: this.journalIdpId || undefined,
+      idpId,
     }).subscribe({
       next: () => {
         this.journalSaving.set(false);
         this.journalContent = '';
         this.journalPrompt = '';
         this.journalMood = null;
-        this.journalIdpId = '';
-        this.showJournalForm.set(false);
+        this.activeJournalIdpId.set(null);
         this.loadJournal();
         this.snackBar.open('Journal entry saved', 'OK', { duration: 3000 });
       },
@@ -743,7 +730,7 @@ export class IDPViewComponent implements OnInit {
     if (!confirm('Delete this journal entry?')) return;
     this.api.delete(`/succession/journal/${entry._id}`).subscribe({
       next: () => {
-        this.journalEntries.update((list) => list.filter((e) => e._id !== entry._id));
+        this.loadJournal();
         this.snackBar.open('Entry deleted', 'OK', { duration: 3000 });
       },
     });
@@ -751,10 +738,6 @@ export class IDPViewComponent implements OnInit {
 
   isPopulatedUser(u: JournalEntry['userId']): u is { _id: string; firstName: string; lastName: string } {
     return typeof u === 'object' && u !== null;
-  }
-
-  isPopulatedIdpRef(ref: JournalEntry['idpId']): ref is { _id: string; goal: string } {
-    return typeof ref === 'object' && ref !== null;
   }
 
   moodClass(mood: number): string {
@@ -870,6 +853,16 @@ export class IDPViewComponent implements OnInit {
           this.snackBar.open(err?.error?.error ?? 'Regeneration failed', 'Close', { duration: 4000 });
         },
       });
+    });
+  }
+
+  deactivateIdp(idp: IDP): void {
+    if (!confirm('Deactivate this IDP? It will be marked as completed.')) return;
+    this.api.put(`/succession/idps/${idp._id}/status`, { status: 'completed' }).subscribe({
+      next: () => {
+        this.idps.update((list) => list.map((i) => i._id === idp._id ? { ...i, status: 'completed' as const } : i));
+        this.snackBar.open('IDP deactivated', 'OK', { duration: 3000 });
+      },
     });
   }
 

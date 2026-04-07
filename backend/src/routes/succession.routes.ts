@@ -315,19 +315,42 @@ router.put('/idps/:id/milestone', async (req: AuthRequest, res: Response, next: 
   }
 });
 
+/** Update IDP status (e.g. draft → active, active → completed). */
+router.put(
+  '/idps/:id/status',
+  requireRole('admin', 'hr_manager', 'coach'),
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const { status } = req.body;
+      if (!['draft', 'active', 'completed'].includes(status)) {
+        res.status(400).json({ error: 'Invalid status' });
+        return;
+      }
+      const idp = await DevelopmentPlan.findOne({ _id: req.params['id'], organizationId: req.user!.organizationId });
+      if (!idp) { res.status(404).json({ error: 'IDP not found' }); return; }
+      idp.status = status;
+      await idp.save();
+      res.json(idp);
+    } catch (e) { next(e); }
+  }
+);
+
+/** Delete an IDP — only drafts can be deleted. */
 router.delete(
   '/idps/:id',
   requireRole('admin', 'hr_manager', 'coach'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
-      const idp = await DevelopmentPlan.findOneAndDelete({
-        _id: req.params['id'],
-        organizationId: req.user!.organizationId,
-      });
+      const idp = await DevelopmentPlan.findOne({ _id: req.params['id'], organizationId: req.user!.organizationId });
       if (!idp) {
         res.status(404).json({ error: 'IDP not found' });
         return;
       }
+      if (idp.status !== 'draft') {
+        res.status(400).json({ error: 'Only draft IDPs can be deleted. Deactivate active IDPs instead.' });
+        return;
+      }
+      await idp.deleteOne();
       res.json({ message: 'IDP deleted' });
     } catch (e) {
       next(e);
