@@ -39,7 +39,7 @@ export const config = {
   },
   webauthn: {
     rpName: process.env['WEBAUTHN_RP_NAME'] || 'People Intelligence Platform',
-    rpId: process.env['WEBAUTHN_RP_ID'] || 'localhost',
-    origin: process.env['WEBAUTHN_ORIGIN'] || 'http://localhost:4200',
+    rpId: process.env['WEBAUTHN_RP_ID'] || new URL(process.env['FRONTEND_URL'] || 'http://localhost:4200').hostname,
+    origin: process.env['WEBAUTHN_ORIGIN'] || process.env['FRONTEND_URL'] || 'http://localhost:4200',
   },
 };

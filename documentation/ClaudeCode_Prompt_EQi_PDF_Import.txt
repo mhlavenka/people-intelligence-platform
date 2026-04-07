@@ -1,0 +1,821 @@
+================================================================================
+CLAUDE CODE PROMPT — EQi PDF ASSESSMENT IMPORT FUNCTION
+People Intelligence Platform — EQ Companion Suite™ Add-On
+HeadSoft Tech × Helena Coaching
+================================================================================
+Copy everything below this line and paste directly into Claude Code.
+Run this inside the existing people-intelligence-platform/ monorepo,
+within the backend/ and frontend/ directories.
+--------------------------------------------------------------------------------
+
+You are adding an EQi 2.0 PDF Assessment Import System to the EQ Companion
+Suite™ module of the People Intelligence Platform. This feature allows Helena
+Coaching to import up to 100 existing MHS EQi 2.0 assessment PDF reports into
+the platform with full privacy controls and anonymization options.
+
+Read this entire prompt before writing any code.
+
+
+================================================================================
+CONTEXT & PURPOSE
+================================================================================
+
+Helena Coaching has approximately 100 historical MHS EQi 2.0 PDF assessment
+reports on file. These need to be imported into the EQ Companion Suite™ to:
+
+  1. Enable AI-powered coaching narrative generation on historical data
+  2. Seed the HEQ™ proprietary assessment norm database
+  3. Enable longitudinal progress tracking for active clients
+
+CRITICAL PRIVACY REQUIREMENT:
+  This feature handles sensitive personal data (emotional intelligence scores
+  linked to real individuals). Three import modes must be supported:
+
+  Mode A — IDENTIFIED
+    Full client profile stored encrypted. Name, email, role preserved.
+    Only for active clients who have given explicit written consent.
+    Requires consent confirmation checkbox before import completes.
+
+  Mode B — PSEUDONYMIZED
+    Client replaced with generated code (e.g. CLIENT-2026-047).
+    Scores and context stored. Name/email discarded. Coach holds
+    offline mapping key. Suitable for recent clients.
+
+  Mode C — ANONYMIZED (DEFAULT)
+    Zero identifying information stored. Scores + metadata only
+    (year, industry, role level, norm group). Feeds norm database.
+    No re-identification possible. Safe for all historical data.
+
+LEGAL CONTEXT (Canada):
+  - PIPEDA applies federally
+  - Quebec Law 25 applies for Quebec-based clients (stricter)
+  - Consent must be tracked and auditable
+  - Right to erasure must be supported
+  - Never store data beyond what is necessary
+
+
+================================================================================
+MHS EQi 2.0 REPORT STRUCTURE — WHAT TO PARSE
+================================================================================
+
+MHS produces several report types. This importer must handle all of them.
+The score layout differs slightly between types but the 15 subscales and
+5 composites are always present.
+
+---- REPORT TYPES TO SUPPORT ----
+
+  1. EQi 2.0 Workplace Report      (most common — ~80% of Helena's reports)
+  2. EQi 2.0 Leadership Report     (second most common)
+  3. EQi 2.0 Group Report          (aggregated — handle separately, see below)
+  4. EQ 360 Workplace Report       (multi-rater — self + observer scores)
+  5. EQ 360 Leadership Report      (multi-rater leadership context)
+
+---- THE 20 SCORES TO EXTRACT FROM EVERY INDIVIDUAL REPORT ----
+
+The 1-5-15 model: 1 Total EI / 5 Composites / 15 Subscales.
+All scores are standard scores (mean=100, SD=15). Valid range: 55–145.
+
+  SELF-PERCEPTION COMPOSITE
+    1.  Self-Regard                 (subscale)
+    2.  Self-Actualization          (subscale)
+    3.  Emotional Self-Awareness    (subscale)
+    [composite score]
+
+  SELF-EXPRESSION COMPOSITE
+    4.  Emotional Expression        (subscale)
+    5.  Assertiveness               (subscale)
+    6.  Independence                (subscale)
+    [composite score]
+
+  INTERPERSONAL COMPOSITE
+    7.  Interpersonal Relationships (subscale)
+    8.  Empathy                     (subscale)
+    9.  Social Responsibility       (subscale)
+    [composite score]
+
+  DECISION MAKING COMPOSITE
+    10. Problem Solving             (subscale)
+    11. Reality Testing             (subscale)
+    12. Impulse Control             (subscale)
+    [composite score]
+
+  STRESS MANAGEMENT COMPOSITE
+    13. Flexibility                 (subscale)
+    14. Stress Tolerance            (subscale)
+    15. Optimism                    (subscale)
+    [composite score]
+
+  TOTAL EI SCORE
+  WELL-BEING INDICATOR             (separate — not part of Total EI)
+
+---- METADATA TO EXTRACT WHERE PRESENT ----
+
+  Report type (Workplace / Leadership / Group / 360)
+  Assessment date (or approximate year if date not visible)
+  Norm group (e.g. General Population, Professional Global)
+  Gender (if shown — for norm context only — discard in Mode C)
+  Age range (if shown — discard in Mode C)
+
+---- FOR EQ 360 REPORTS ONLY ----
+
+  Self scores (same 20 as above)
+  Composite-level observer scores (rater average per composite)
+  Discrepancy direction per composite (self higher / lower / aligned)
+  Number of raters (if shown)
+  NOTE: Do NOT attempt to extract individual rater names — anonymized always
+
+---- FOR GROUP REPORTS ONLY ----
+
+  Group mean per subscale (not linked to any individual)
+  Group mean per composite
+  Sample size (n)
+  NOTE: Group reports are ALWAYS imported as Mode C (anonymous aggregate)
+  They contribute to the norm database only, never to individual profiles
+
+
+================================================================================
+PDF PARSING STRATEGY
+================================================================================
+
+Use the npm package 'pdf-parse' for text extraction.
+Install: npm install pdf-parse @types/pdf-parse --save
+
+MHS report PDFs contain machine-readable text (not scanned images), so
+text extraction works reliably. However, the layout varies between report
+versions and types, so the parser must be robust to variation.
+
+---- PARSING APPROACH ----
+
+Step 1: Extract full text from PDF using pdf-parse
+Step 2: Run score extraction using pattern matching (see patterns below)
+Step 3: Validate all extracted scores (range 55-145, all 20 fields present)
+Step 4: If any score fails validation, flag for manual review — do NOT import
+Step 5: Extract metadata fields using secondary patterns
+Step 6: Return structured ParseResult object (see schema below)
+
+---- SCORE EXTRACTION PATTERNS ----
+
+MHS reports render scores in several formats across versions.
+The parser must try ALL patterns and use the first that matches.
+
+Subscale scores appear near their label text. Common patterns:
+
+  Pattern A (most common — Workplace report):
+    "Self-Regard\n...\n[NUMBER]"
+    The score is typically an integer on its own line after the subscale name.
+
+  Pattern B (Leadership report):
+    "Self-Regard [NUMBER]"
+    Score appears on the same line as the label.
+
+  Pattern C (table format — some Group reports):
+    Scores appear in a tab-separated table structure.
+
+  Pattern D (360 reports):
+    "Self   [NUMBER]    Observer  [NUMBER]"
+    Two scores per line — self and observer average.
+
+The parser must search the extracted text for EACH of the 15 subscale names
+(accounting for minor variations in capitalization or hyphenation) and extract
+the integer that appears nearest to that label within a defined character window.
+
+---- SUBSCALE NAME VARIATIONS TO HANDLE ----
+
+MHS uses slightly different label text across report versions. Handle all:
+
+  "Self-Regard" / "Self Regard" / "SELF-REGARD"
+  "Self-Actualization" / "Self Actualization" / "SELF-ACTUALIZATION"
+  "Emotional Self-Awareness" / "Emotional Self Awareness" / "ESA"
+  "Emotional Expression" / "EMOTIONAL EXPRESSION"
+  "Assertiveness" / "ASSERTIVENESS"
+  "Independence" / "INDEPENDENCE"
+  "Interpersonal Relationships" / "Interpersonal" / "INTERPERSONAL REL."
+  "Empathy" / "EMPATHY"
+  "Social Responsibility" / "Social Resp." / "SOCIAL RESPONSIBILITY"
+  "Problem Solving" / "Problem-Solving" / "PROBLEM SOLVING"
+  "Reality Testing" / "Reality-Testing" / "REALITY TESTING"
+  "Impulse Control" / "Impulse-Control" / "IMPULSE CONTROL"
+  "Flexibility" / "FLEXIBILITY"
+  "Stress Tolerance" / "Stress-Tolerance" / "STRESS TOLERANCE"
+  "Optimism" / "OPTIMISM"
+  "Total EI" / "Total Emotional Intelligence" / "Overall EI" / "EI Composite"
+  "Well-Being" / "Well-Being Indicator" / "WBI" / "Happiness"
+
+---- REPORT TYPE DETECTION ----
+
+Detect report type from title text near the top of the first page:
+  Contains "Workplace"   → WORKPLACE
+  Contains "Leadership"  → LEADERSHIP
+  Contains "Group"       → GROUP (always anonymized)
+  Contains "360"         → THREESIXTY
+
+
+================================================================================
+BACKEND — FILES TO CREATE OR MODIFY
+================================================================================
+
+---- NEW FILE: backend/src/services/eqi-pdf-parser.service.ts ----
+
+  Interface ParseResult {
+    success: boolean
+    reportType: 'WORKPLACE' | 'LEADERSHIP' | 'GROUP' | 'THREESIXTY' | 'UNKNOWN'
+    scores: {
+      // 15 subscales
+      selfRegard: number | null
+      selfActualization: number | null
+      emotionalSelfAwareness: number | null
+      emotionalExpression: number | null
+      assertiveness: number | null
+      independence: number | null
+      interpersonalRelationships: number | null
+      empathy: number | null
+      socialResponsibility: number | null
+      problemSolving: number | null
+      realityTesting: number | null
+      impulseControl: number | null
+      flexibility: number | null
+      stressTolerance: number | null
+      optimism: number | null
+      // 5 composites
+      selfPerceptionComposite: number | null
+      selfExpressionComposite: number | null
+      interpersonalComposite: number | null
+      decisionMakingComposite: number | null
+      stressManagementComposite: number | null
+      // totals
+      totalEI: number | null
+      wellBeingIndicator: number | null
+    }
+    // For 360 reports only
+    observerScores?: {
+      selfPerceptionComposite: number | null
+      selfExpressionComposite: number | null
+      interpersonalComposite: number | null
+      decisionMakingComposite: number | null
+      stressManagementComposite: number | null
+    }
+    metadata: {
+      assessmentYear: number | null     // year only — not full date
+      normGroup: string | null
+      reportVersion: string | null
+    }
+    validation: {
+      allScoresPresent: boolean
+      allScoresInRange: boolean         // all between 55 and 145
+      missingFields: string[]           // list of any missing subscale names
+      outOfRangeFields: string[]        // list of any scores outside 55-145
+      requiresManualReview: boolean     // true if any validation fails
+      reviewReasons: string[]           // human-readable reasons for review
+    }
+    rawTextPreview: string              // first 500 chars of extracted text
+                                        // for debugging — strip before storage
+  }
+
+  Export this class with these public methods:
+
+  async parseFromBuffer(pdfBuffer: Buffer): Promise<ParseResult>
+    Main entry point. Accepts PDF file buffer. Returns ParseResult.
+    Never throws — always returns a ParseResult with success=false on error.
+
+  async parseFromPath(filePath: string): Promise<ParseResult>
+    Convenience wrapper for local file testing.
+
+  private extractText(pdfBuffer: Buffer): Promise<string>
+    Uses pdf-parse. Handles errors gracefully.
+
+  private detectReportType(text: string): ParseResult['reportType']
+
+  private extractScores(text: string, reportType): ParseResult['scores']
+    Tries all pattern variants. Returns null for any score not found.
+
+  private extractMetadata(text: string): ParseResult['metadata']
+
+  private validateScores(scores: ParseResult['scores']): ParseResult['validation']
+    Checks: all 20 fields present, all values 55-145, composites plausible
+    relative to their subscale averages (flag if composite differs from
+    subscale average by more than 20 points — may indicate parse error).
+
+
+---- NEW FILE: backend/src/services/eqi-import.service.ts ----
+
+  This service orchestrates the full import flow after parsing.
+
+  Interface ImportOptions {
+    privacyMode: 'IDENTIFIED' | 'PSEUDONYMIZED' | 'ANONYMIZED'
+    // Mode A fields (IDENTIFIED only)
+    clientName?: string
+    clientEmail?: string
+    clientRole?: string
+    clientOrganization?: string
+    consentObtained?: boolean
+    consentDate?: Date
+    consentMethod?: 'written' | 'verbal' | 'email'
+    // Mode B fields (PSEUDONYMIZED only)
+    clientCode?: string         // coach-assigned code — never generated by system
+    roleLevel?: 'individual_contributor' | 'manager' | 'senior_leader' |
+                'executive' | 'c_suite' | 'board'
+    // Mode A + B shared
+    industrySector?: string
+    coachingGoals?: string[]
+    // Mode C fields (ANONYMIZED)
+    industrySector?: string     // kept even in Mode C
+    roleLevel?: string          // kept even in Mode C
+    // All modes
+    assessmentYear?: number     // override if PDF parse fails to find year
+    normGroup?: string          // override if PDF parse fails to detect
+    addToNormDatabase: boolean  // always true for Mode C; optional for A/B
+    organizationId: string      // required — tenant isolation
+    coachId: string             // required
+  }
+
+  Interface ImportResult {
+    success: boolean
+    importId: string            // UUID for this import operation
+    profileId?: string          // created EqProfile ID (Mode A/B only)
+    scoreId?: string            // created EqScores ID
+    normRecordId?: string       // created norm contribution ID (if applicable)
+    privacyMode: string
+    validationPassed: boolean
+    requiresManualReview: boolean
+    reviewReasons: string[]
+    auditLogId: string          // reference to audit log entry
+    errors: string[]
+  }
+
+  Public methods:
+
+  async importSinglePDF(
+    pdfBuffer: Buffer,
+    options: ImportOptions
+  ): Promise<ImportResult>
+
+  async importBatch(
+    files: Array<{ buffer: Buffer, filename: string, options: ImportOptions }>,
+    batchOptions: { stopOnError: boolean, maxConcurrent: number }
+  ): Promise<{
+    total: number
+    succeeded: number
+    failed: number
+    requiresReview: number
+    results: ImportResult[]
+  }>
+
+  private applyPrivacyMode(
+    parseResult: ParseResult,
+    options: ImportOptions
+  ): object   // returns sanitized data object ready for database storage
+
+  private generateClientCode(): string
+    Format: CLIENT-[YEAR]-[3-digit-zero-padded-sequence]
+    Example: CLIENT-2026-047
+    Sequence is per-organization, stored in a counter collection.
+
+  private createAuditLogEntry(
+    importResult: Partial<ImportResult>,
+    options: ImportOptions,
+    coachId: string
+  ): Promise<string>
+
+
+---- NEW FILE: backend/src/models/eqi-import-audit.model.ts ----
+
+  Schema for import audit log. Every import creates one entry.
+  Used for PIPEDA/Law 25 compliance — never delete these records.
+
+  Fields:
+    importId: string (UUID)
+    organizationId: ObjectId
+    coachId: ObjectId
+    importTimestamp: Date
+    privacyMode: 'IDENTIFIED' | 'PSEUDONYMIZED' | 'ANONYMIZED'
+    reportType: string
+    assessmentYear: number
+    consentObtained: boolean (false for Mode C)
+    consentMethod: string
+    consentDate: Date
+    profileId: ObjectId (null for Mode C)
+    scoreId: ObjectId
+    validationPassed: boolean
+    requiresManualReview: boolean
+    reviewReasons: string[]
+    dataFields Stored: string[]   // list of field names actually stored
+    dataFieldsDiscarded: string[] // list of fields explicitly not stored
+    pdfFilenameHash: string       // SHA-256 of original filename — not the name
+                                  // used to detect duplicate imports
+
+
+---- NEW FILE: backend/src/models/heq-norm-contribution.model.ts ----
+
+  Anonymous data contribution to the HEQ™ norm database.
+  Created for every import where addToNormDatabase is true.
+  Zero linkage to any individual profile.
+
+  Fields:
+    contributionId: string (UUID — no relation to any other ID)
+    source: 'mhs_imported' | 'heq_native'
+    assessmentYear: number
+    industrySector: string
+    roleLevel: string
+    normGroup: string
+    // The 20 scores — all that is stored
+    subscaleScores: {[subscaleName: string]: number}
+    compositeScores: {[compositeName: string]: number}
+    totalEI: number
+    wellBeingIndicator: number
+    // NO profileId, NO clientCode, NO organizationId stored here
+    createdAt: Date
+
+
+---- NEW FILE: backend/src/routes/eqi-import.routes.ts ----
+
+  POST /api/eq/import/parse
+    Upload single PDF for parsing preview ONLY — no database write.
+    Returns ParseResult so the coach can review before committing.
+    Accepts: multipart/form-data with field 'pdf'
+    Max file size: 10MB
+    Returns: ParseResult (with rawTextPreview for debugging)
+
+  POST /api/eq/import/single
+    Parse + import a single PDF with specified privacy options.
+    Accepts: multipart/form-data with field 'pdf' + JSON body 'options'
+    Returns: ImportResult
+    Requires: auth middleware (coach role minimum)
+
+  POST /api/eq/import/batch
+    Import multiple PDFs in one operation.
+    Accepts: multipart/form-data with fields 'pdfs[]' + JSON body 'batchOptions'
+    Max files per batch: 20
+    Returns: batch ImportResult summary
+    Requires: auth middleware (coach role minimum)
+    Note: Process files sequentially (not parallel) to avoid MongoDB
+    connection pool exhaustion on Lambda.
+
+  GET /api/eq/import/audit
+    Returns paginated audit log for the authenticated coach's organization.
+    Query params: page, limit, privacyMode, dateFrom, dateTo
+    Returns: paginated list of audit log entries (never includes raw scores)
+
+  GET /api/eq/import/status/:importId
+    Returns status of a specific import (useful for batch polling).
+
+  DELETE /api/eq/import/profile/:profileId
+    Right-to-erasure endpoint. Deletes ALL data linked to a profileId:
+    eq_profiles, eq_scores, eq_sessions, eq_reports, GROW plans.
+    Does NOT delete the audit log entry (legal requirement).
+    Does NOT delete norm contributions (already anonymized).
+    Returns: confirmation with list of collections purged.
+
+
+================================================================================
+FRONTEND — COMPONENTS TO BUILD
+================================================================================
+
+---- NEW COMPONENT: eq-import-wizard ----
+
+  Route: /eq-companion/import
+  A multi-step Angular Material stepper component.
+  Steps are enforced sequentially — coach cannot skip ahead.
+
+  STEP 1: PRIVACY MODE SELECTION
+    Three large cards with clear descriptions:
+
+    Card A — IDENTIFIED (blue border)
+      Title: "Active Client — Full Profile"
+      Description: "Store complete client information. Use only for clients
+      who have given explicit written consent to data storage in this platform."
+      Warning box: "Requires consent confirmation before import completes."
+      Fields shown after selection:
+        Client Name (text)
+        Client Email (email)
+        Client Role / Title (text)
+        Organization (text)
+        Industry Sector (dropdown — see list below)
+        Coaching Goals (chip input — optional)
+        Consent checkbox: "I confirm that [client name] has given explicit
+        written consent dated [date picker] via [written/verbal/email dropdown]
+        for their EQi assessment data to be stored in this platform."
+        Consent is REQUIRED — import button disabled until checked.
+
+    Card B — PSEUDONYMIZED (amber border)
+      Title: "Recent Client — Coded Profile"
+      Description: "Replace client identity with a code. You keep the mapping
+      key offline. Suitable for clients from the past 1-2 years."
+      Info box: "The system generates a client code. You must record the
+      mapping (code → real person) in your own secure offline record.
+      The platform will never ask for or store this mapping."
+      Fields shown after selection:
+        Client Code (auto-generated, shown read-only: e.g. CLIENT-2026-047)
+        Role Level (dropdown)
+        Industry Sector (dropdown)
+        Coaching Goals (optional)
+        Checkbox: "I have recorded the mapping between this code and the
+        real client in my secure offline records."
+
+    Card C — ANONYMIZED (green border — pre-selected default)
+      Title: "Historical / Archive — Scores Only"
+      Description: "Store scores and context only. Zero identifying
+      information. Safe for all historical assessments. Contributes
+      to the shared coaching norm database."
+      Fields shown after selection:
+        Industry Sector (dropdown)
+        Role Level (dropdown)
+        Norm Group (dropdown: General Population / Professional Global /
+                    Healthcare / Education / Financial Services / Other)
+        Assessment Year (year picker — not full date)
+
+    Industry Sector dropdown options:
+      Transportation & Logistics | Financial Services | Healthcare |
+      Technology | Professional Services | Manufacturing | Education |
+      Government / Public Sector | Not-for-Profit | Retail | Energy |
+      Construction | Legal | Other
+
+  STEP 2: PDF UPLOAD & PARSING
+    Drag-and-drop zone for PDF files.
+    Accept: single file (Steps 1-4) or multiple files up to 20 (batch mode).
+    Show: file name, file size, upload progress bar.
+    On upload: immediately call POST /api/eq/import/parse.
+    Show parsing spinner: "Reading assessment report..."
+
+    After parsing — show ParseResult preview card:
+      Green header if validation passed: "✓ Report parsed successfully"
+      Amber header if review required: "⚠ Review required before import"
+      Red header if parse failed: "✗ Could not read report — see details"
+
+      ParseResult preview shows:
+        Report Type detected (Workplace / Leadership / 360 / Group)
+        Assessment Year detected (or "Not found — please enter below")
+        Total EI score detected
+        Count of subscales found (e.g. "15 of 15 subscales detected")
+        Any missing or out-of-range scores listed by name
+        If any issues: "These scores will need manual entry after import"
+
+      Mini score table showing all 15 subscales with detected values.
+      Any null values shown as "— Not detected" in amber.
+
+      Year override field: shown if year was not detected from PDF.
+      Manual score entry: if 1-3 scores are missing, allow manual entry
+      here. If 4+ scores missing, block import and show error:
+      "Too many scores missing for reliable import. Please use manual
+      score entry instead." Link to manual entry form.
+
+  STEP 3: REVIEW & CONFIRM
+    Summary card showing:
+      Privacy Mode selected (with icon)
+      Report Type
+      Client Code or "Anonymized" or client name (depending on mode)
+      Industry and Role Level
+      Total EI: [score]
+      Assessment Year: [year]
+      Norm Database: Will contribute / Will not contribute
+
+    For Mode A only — consent confirmation shown again prominently.
+
+    Data Storage Notice (always shown):
+      "The following information WILL be stored: [list fields]"
+      "The following information will NOT be stored: [list discarded fields]"
+      This list is dynamically generated based on the selected privacy mode.
+
+    "Import Assessment" button — primary action.
+    "Start Over" button — secondary, clears all steps.
+
+  STEP 4: RESULT
+    Success state (green):
+      "Assessment imported successfully"
+      Import ID shown (for audit reference)
+      For Mode B: reminder card with amber background:
+        "IMPORTANT: Record this mapping in your offline key:"
+        "[CLIENT-2026-047] = [blank line for coach to note]"
+        Print button — prints this reminder card only.
+      Quick actions: "Import Another" / "View Profile" / "Generate Debrief"
+
+    Review Required state (amber):
+      "Import saved — manual review needed"
+      List of fields that need attention
+      Link to manual score entry for the specific missing fields
+
+    Error state (red):
+      Clear error message
+      Suggested next step (manual entry link)
+
+  BATCH MODE TOGGLE
+    Toggle at top of import wizard: "Single Report" / "Batch Import (up to 20)"
+
+    In batch mode:
+      Step 1 privacy selection applies to ALL files in the batch.
+      Step 2 shows multi-file drop zone.
+      After parsing: shows a table with one row per file showing
+      parse status (✓ / ⚠ / ✗) and detected scores summary.
+      Coach can remove individual files from the batch before proceeding.
+      Batch applies the same privacy mode and metadata to all files.
+      Note shown: "For batch import, all files will use the same privacy
+      settings. If clients have different privacy requirements, import
+      them individually."
+      Progress bar during batch import showing X of Y completed.
+
+---- NEW COMPONENT: eq-import-audit-log ----
+
+  Route: /eq-companion/import/audit
+  Shows the full import audit log for the organization.
+  Table columns: Import Date | Privacy Mode | Report Type | Year |
+                 Consent | Validation | Import ID | Actions
+  Actions: View Details | Erase Client Data (Mode A/B only)
+  Filter bar: date range, privacy mode, validation status.
+  Export CSV button — for PIPEDA/Law 25 compliance records.
+
+---- MODIFY EXISTING COMPONENT: eq-dashboard ----
+
+  Add an "Import Assessments" button to the dashboard header.
+  Add an import stats card: "X assessments imported | Y contributed to norms"
+
+
+================================================================================
+MONGODB CONNECTION — LAMBDA-SAFE PATTERN
+================================================================================
+
+If deploying to Lambda (App Runner or Beanstalk also fine), the MongoDB
+connection MUST be cached outside the handler to prevent 4-5 second
+reconnects on every invocation.
+
+Create backend/src/config/db.ts with this exact pattern:
+
+  import mongoose from 'mongoose';
+
+  let cachedConnection: mongoose.Connection | null = null;
+
+  export async function connectDB(): Promise<mongoose.Connection> {
+    if (cachedConnection && cachedConnection.readyState === 1) {
+      return cachedConnection;
+    }
+    const conn = await mongoose.connect(process.env.MONGODB_URI!, {
+      serverSelectionTimeoutMS: 5000,
+      maxPoolSize: 10,
+      minPoolSize: 2,
+    });
+    cachedConnection = conn.connection;
+    return cachedConnection;
+  }
+
+Call connectDB() at the TOP of every Lambda handler and every service method,
+not inside route handlers. In Express, call it once at app startup.
+
+
+================================================================================
+VALIDATION RULES — ENFORCE IN BOTH BACKEND AND FRONTEND
+================================================================================
+
+Score validation (applied to every imported score):
+  All 15 subscale scores: integer, inclusive range 55–145
+  All 5 composite scores: integer, inclusive range 55–145
+  Total EI: integer, inclusive range 55–145
+  Well-Being Indicator: integer, inclusive range 55–145
+  Composite plausibility: composite score should be within 20 points of the
+    arithmetic mean of its 3 constituent subscales. Flag (do not block) if not.
+
+Privacy mode validation:
+  Mode A: consentObtained must be true — block import if false
+  Mode A: clientName and clientEmail required
+  Mode B: clientCode must follow format CLIENT-YYYY-NNN — validate with regex
+  Mode B: offline mapping checkbox must be checked
+  Mode C: no identifying fields accepted — strip silently if accidentally sent
+
+File validation:
+  PDF only — check MIME type (application/pdf) and magic bytes (%PDF-)
+  Max file size: 10MB per file
+  Max batch: 20 files
+  Duplicate detection: SHA-256 hash of file content compared to existing
+    pdfFilenameHash values in audit log — warn but do not block on duplicate
+
+
+================================================================================
+ENVIRONMENT VARIABLES TO ADD TO .env.example
+================================================================================
+
+# EQi Import
+EQI_MAX_FILE_SIZE_MB=10
+EQI_MAX_BATCH_SIZE=20
+EQI_SCORE_RANGE_MIN=55
+EQI_SCORE_RANGE_MAX=145
+EQI_COMPOSITE_PLAUSIBILITY_THRESHOLD=20
+EQI_AUDIT_LOG_COLLECTION=eqi_import_audit
+EQI_NORM_COLLECTION=heq_norm_contributions
+EQI_CLIENT_CODE_PREFIX=CLIENT
+
+
+================================================================================
+TESTING REQUIREMENTS
+================================================================================
+
+Create backend/src/services/__tests__/eqi-pdf-parser.test.ts
+
+Write unit tests covering:
+
+  1. Score extraction — all 15 subscales detected correctly from mock text
+  2. Composite extraction — all 5 composites detected
+  3. Total EI detected
+  4. Report type detection — all 5 report types correctly identified
+  5. Validation — score of 54 rejected (below range)
+  6. Validation — score of 146 rejected (above range)
+  7. Validation — missing subscale reported in missingFields array
+  8. Composite plausibility — flags when composite differs > 20 from subscale mean
+  9. Parser never throws — returns success:false with error details instead
+  10. Duplicate hash detection — same PDF content flagged on second import
+
+Use Jest. Mock pdf-parse with sample text strings — do not require real PDFs
+for unit tests. Create a test-fixtures/ folder with 3 sample extracted text
+strings representing different report types.
+
+
+================================================================================
+SECURITY REQUIREMENTS
+================================================================================
+
+  File upload:
+    Validate MIME type server-side (not just client-side)
+    Check PDF magic bytes: first 4 bytes must be 25 50 44 46 (%PDF)
+    Scan for excessive file size before parsing
+    Never store the uploaded PDF file — parse in memory, discard buffer
+    Never log PDF content — only log metadata
+
+  Data at rest:
+    Mode A (identified): encrypt clientName, clientEmail, clientOrganization
+    fields using AES-256-GCM before storing in MongoDB.
+    Use a field-level encryption key stored in AWS Secrets Manager.
+    All other fields (scores, metadata) stored unencrypted.
+
+  Audit log:
+    Never delete audit log entries — this is a legal compliance record
+    The audit log stores field names, not field values
+    pdfFilenameHash stored as SHA-256 — not reversible to original filename
+
+  Access control:
+    Only users with role 'coach' or 'admin' can access import endpoints
+    Coaches can only import into their own organization (organizationId check)
+    Audit log readable by coach and admin of same organization only
+
+  Right to erasure:
+    DELETE /api/eq/import/profile/:profileId removes:
+      eq_profiles document
+      eq_scores documents (all for this profile)
+      eq_sessions documents
+      eq_reports documents + S3 PDF objects
+    Does NOT remove:
+      eqi_import_audit entry (legal record — note: adds erasure timestamp)
+      heq_norm_contributions (already fully anonymized — no linkage possible)
+    After erasure, audit log entry gets field: erasedAt: Date
+
+
+================================================================================
+BUILD PRIORITY ORDER
+================================================================================
+
+Build in this exact sequence:
+
+  1.  Install pdf-parse: npm install pdf-parse @types/pdf-parse
+  2.  eqi-pdf-parser.service.ts — core parsing logic
+      Start with score extraction for Workplace report type only.
+      Add Leadership, 360, Group support after Workplace works.
+  3.  Unit tests for the parser (test-fixtures with sample text)
+  4.  eqi-import-audit.model.ts — Mongoose schema
+  5.  heq-norm-contribution.model.ts — Mongoose schema
+  6.  eqi-import.service.ts — import orchestration
+      Implement Mode C (anonymized) first — lowest risk, highest value.
+      Add Mode B (pseudonymized) second.
+      Add Mode A (identified) last — requires encryption setup.
+  7.  Import routes — POST /parse, POST /single, GET /audit, DELETE /profile
+  8.  Angular: eq-import-wizard — Mode C first, then B, then A
+  9.  Angular: eq-import-audit-log component
+  10. Batch import endpoint + batch mode in wizard
+  11. Field-level encryption for Mode A (AWS Secrets Manager key)
+  12. Duplicate detection (SHA-256 hash comparison)
+  13. Right-to-erasure DELETE endpoint
+  14. Integration test: full round-trip from PDF buffer to database record
+
+
+================================================================================
+KEY CONSTRAINTS — READ CAREFULLY
+================================================================================
+
+NEVER store the original PDF file — parse in memory, discard immediately.
+
+NEVER log personal data — log import IDs, timestamps, and field names only.
+
+NEVER allow Mode A import without consentObtained === true.
+
+NEVER link norm contributions to any profile or organization ID.
+
+NEVER allow batch imports to mix privacy modes — one mode per batch.
+
+NEVER use client name or email in any AI prompt — pass role level,
+  industry, and scores only. Even for Mode A (identified) clients.
+
+ALWAYS create the audit log entry BEFORE writing to eq_scores.
+  If the score write fails, the audit log must still exist.
+
+ALWAYS enforce organizationId on every database query — multi-tenancy.
+
+ASK before making any architectural decisions not covered in this prompt.
+
+
+================================================================================
+END OF PROMPT
+================================================================================
