@@ -1,0 +1,159 @@
+### ============================================================
+### Coaching Plans — Seed via API
+### ============================================================
+
+@baseUrl = http://localhost:3030/api
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OWNhZjk1ODk2MTI3ZWM0ZjQ3NjMzMWEiLCJvcmdhbml6YXRpb25JZCI6IjY5Y2FmOTU4OTYxMjdlYzRmNDc2MzMxNSIsInJvbGUiOiJzeXN0ZW1fYWRtaW4iLCJlbWFpbCI6ImFkbWluQGhlYWRzb2Z0Lm5ldCIsInBlcm1pc3Npb25zIjpbIk1BTkFHRV9VU0VSUyIsIk1BTkFHRV9PUkdBTklaQVRJT04iLCJNQU5BR0VfSU5UQUtFX1RFTVBMQVRFUyIsIlZJRVdfQUxMX1VTRVJTIiwiVklFV19PUkdfQ0hBUlQiLCJNQU5BR0VfQklMTElORyIsIk1BTkFHRV9ST0xFUyIsIlZJRVdfQ09ORkxJQ1RfREFTSEJPQVJEIiwiUlVOX0NPTkZMSUNUX0FOQUxZU0lTIiwiRVNDQUxBVEVfQ09ORkxJQ1QiLCJWSUVXX0NPTkZMSUNUX1JFU1BPTlNFUyIsIlRBS0VfU1VSVkVZIiwiUlVOX05FVVJPSU5DTFVTSU9OIiwiVklFV19ORVVST0lOQ0xVU0lPTl9SRVNVTFRTIiwiQ09ORFVDVF9JTlRFUlZJRVdTIiwiVklFV19JTlRBS0VfVEVNUExBVEVTIiwiVklFV19BTExfSURQUyIsIkdFTkVSQVRFX0lEUCIsIlZJRVdfT1dOX0lEUCIsIlVQREFURV9JRFBfTUlMRVNUT05FUyIsIlZJRVdfSFVCIl0sImlhdCI6MTc3NTU4OTk0MSwiZXhwIjoxNzc1NTkwODQxfQ.Vq599mKKN3TOy2DQi9Y7Co4NoCiRVVhnvmsovmMjmEI
+
+### ── Login as System Admin ──────────────────────────────────
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@headsoft.net",
+  "password": "HeadSoftAdmin2024!"
+}
+
+### ============================================================
+### COACHING PLANS (sortOrder 60–63)
+### ============================================================
+
+### COACH-01: Coaching Starter ($99/mo, 5 coachees)
+POST {{baseUrl}}/plans
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "key": "coaching-starter",
+  "name": "Coaching — Starter",
+  "description": "For individual coaches getting started. Session management, action tracking, IDP generation, and basic reporting.",
+  "priceMonthly": 9900,
+  "overagePriceCents": 0,
+  "maxUsers": 5,
+  "modules": ["coaching"],
+  "limits": {
+    "maxAIAnalyses": 10,
+    "maxSurveyResponses": 50,
+    "maxCoachingSessions": 0,
+    "maxFileStorageMB": 500
+  },
+  "features": [
+    "Up to 5 coachees",
+    "Coaching engagement management",
+    "Session notes (private + shared)",
+    "10 AI analyses per month",
+    "GROW model IDP generation",
+    "Milestone tracking",
+    "Coaching journal",
+    "Email support"
+  ],
+  "isActive": true,
+  "sortOrder": 60
+}
+
+### COACH-02: Coaching Professional ($249/mo, 15 coachees)
+POST {{baseUrl}}/plans
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "key": "coaching-professional",
+  "name": "Coaching — Professional",
+  "description": "For established coaches. AI session prep, sponsor reports, reflection journal, and 360 feedback support.",
+  "priceMonthly": 24900,
+  "overagePriceCents": 0,
+  "maxUsers": 15,
+  "modules": ["coaching", "succession", "conflict"],
+  "limits": {
+    "maxAIAnalyses": 30,
+    "maxSurveyResponses": 500,
+    "maxCoachingSessions": 0,
+    "maxFileStorageMB": 2000
+  },
+  "features": [
+    "Up to 15 coachees",
+    "Everything in Starter",
+    "30 AI analyses per month",
+    "Conflict Intelligence module",
+    "AI session prep briefs",
+    "Sponsor progress reports",
+    "360 feedback via survey engine",
+    "EQi assessment import",
+    "Priority support"
+  ],
+  "isActive": true,
+  "sortOrder": 61
+}
+
+### COACH-03: Coaching Enterprise ($499/mo, 50 coachees)
+POST {{baseUrl}}/plans
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "key": "coaching-enterprise",
+  "name": "Coaching — Enterprise",
+  "description": "For coaching practices and multi-coach organizations. Unlimited AI, ICF hours log, practice analytics, and custom branding.",
+  "priceMonthly": 49900,
+  "overagePriceCents": 0,
+  "maxUsers": 50,
+  "modules": ["coaching", "succession", "conflict", "neuroinclusion"],
+  "limits": {
+    "maxAIAnalyses": 0,
+    "maxSurveyResponses": 0,
+    "maxCoachingSessions": 0,
+    "maxFileStorageMB": 0
+  },
+  "features": [
+    "Up to 50 coachees",
+    "Everything in Professional",
+    "All three platform modules",
+    "Unlimited AI analyses",
+    "Unlimited survey responses",
+    "ICF hours logging (coming soon)",
+    "Practice dashboard & analytics",
+    "Custom branding",
+    "Dedicated support"
+  ],
+  "isActive": true,
+  "sortOrder": 62
+}
+
+### COACH-04: Coaching Pay-Per-Use ($15/coachee/mo)
+POST {{baseUrl}}/plans
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "key": "coaching-payperuse",
+  "name": "Coaching — Pay-Per-Use",
+  "description": "Usage-based pricing for coaches with variable client loads. All features included, billed per active coachee.",
+  "priceMonthly": 1500,
+  "overagePriceCents": 1500,
+  "maxUsers": 999,
+  "modules": ["coaching", "succession", "conflict", "neuroinclusion"],
+  "limits": {
+    "maxAIAnalyses": 5,
+    "maxSurveyResponses": 50,
+    "maxCoachingSessions": 0,
+    "maxFileStorageMB": 100
+  },
+  "features": [
+    "Pay per active coachee ($15/mo each)",
+    "All platform features included",
+    "All three modules",
+    "5 AI analyses per coachee/month",
+    "Scale up or down anytime",
+    "No minimum commitment"
+  ],
+  "isActive": true,
+  "sortOrder": 63
+}
+
+### ============================================================
+### VERIFY
+### ============================================================
+
+### List all plans
+GET {{baseUrl}}/plans/admin
+Authorization: Bearer {{token}}

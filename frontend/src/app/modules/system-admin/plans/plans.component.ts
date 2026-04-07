@@ -37,6 +37,7 @@ const MODULE_DEFS = [
   { key: 'conflict',       label: 'Conflict Intelligence\u2122',      icon: 'warning_amber' },
   { key: 'neuroinclusion', label: 'Neuro-Inclusion Compass\u2122',    icon: 'psychology' },
   { key: 'succession',     label: 'Leadership & Succession Hub\u2122', icon: 'trending_up' },
+  { key: 'coaching',       label: 'Coaching',                          icon: 'psychology_alt' },
 ];
 
 @Component({
@@ -368,7 +369,7 @@ export class PlansComponent implements OnInit {
   }
 
   moduleColor(key: string): string {
-    return ({ conflict: '#e86c3a', neuroinclusion: '#27C4A0', succession: '#3A9FD6' } as Record<string, string>)[key] ?? '#9aa5b4';
+    return ({ conflict: '#e86c3a', neuroinclusion: '#27C4A0', succession: '#3A9FD6', coaching: '#7c5cbf' } as Record<string, string>)[key] ?? '#9aa5b4';
   }
 
   moduleIcon(key: string): string {
@@ -376,6 +377,6 @@ export class PlansComponent implements OnInit {
   }
 
   moduleLabel(key: string): string {
-    return ({ conflict: 'Conflict', neuroinclusion: 'Neuro-Inclusion', succession: 'Succession' } as Record<string, string>)[key] ?? key;
+    return ({ conflict: 'Conflict', neuroinclusion: 'Neuro-Inclusion', succession: 'Succession', coaching: 'Coaching' } as Record<string, string>)[key] ?? key;
   }
 }

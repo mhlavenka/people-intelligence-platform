@@ -15,6 +15,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { ApiService } from '../../../core/api.service';
 import { OrgEditDialogComponent, OrgRow } from '../org-edit-dialog/org-edit-dialog.component';
+import { CreateUserDialogComponent } from '../create-user-dialog/create-user-dialog.component';
 import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog.component';
 
 interface Stats {
@@ -215,6 +216,9 @@ interface Stats {
           <button mat-menu-item (click)="openEdit(org)">
             <mat-icon>edit</mat-icon> Edit
           </button>
+          <button mat-menu-item (click)="createAdminUser(org)">
+            <mat-icon>person_add</mat-icon> Create Admin User
+          </button>
           <button mat-menu-item (click)="toggleSuspend(org)">
             <mat-icon>{{ org.isActive ? 'block' : 'check_circle' }}</mat-icon>
             {{ org.isActive ? 'Suspend' : 'Reactivate' }}
@@ -392,11 +396,13 @@ export class OrganizationsComponent implements OnInit {
   }
 
   moduleIcon(m: string): string {
-    return m === 'conflict' ? 'warning_amber' : m === 'neuroinclusion' ? 'psychology' : 'trending_up';
+    const map: Record<string, string> = { conflict: 'warning_amber', neuroinclusion: 'psychology', succession: 'trending_up', coaching: 'psychology_alt' };
+    return map[m] ?? 'extension';
   }
 
   moduleLabel(m: string): string {
-    return m === 'conflict' ? 'Conflict' : m === 'neuroinclusion' ? 'Neuro-Inclusion' : 'Succession';
+    const map: Record<string, string> = { conflict: 'Conflict', neuroinclusion: 'Neuro-Inclusion', succession: 'Succession', coaching: 'Coaching' };
+    return map[m] ?? m;
   }
 
   openCreate(): void {
@@ -452,6 +458,19 @@ export class OrganizationsComponent implements OnInit {
         },
         error: () => this.snack.open('Action failed', 'Close', { duration: 2500 }),
       });
+    });
+  }
+
+  createAdminUser(org: OrgRow): void {
+    const ref = this.dialog.open(CreateUserDialogComponent, {
+      width: '520px',
+      data: { orgId: org._id, orgName: org.name },
+    });
+    ref.afterClosed().subscribe((result) => {
+      if (result) {
+        this.snack.open(`User ${result.email} created as ${result.role}`, 'OK', { duration: 3000 });
+        this.loadOrgs();
+      }
     });
   }
 }

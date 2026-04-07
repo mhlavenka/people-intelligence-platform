@@ -1,0 +1,258 @@
+import { Router, Response, NextFunction } from 'express';
+import { authenticateToken, requireRole, AuthRequest } from '../middleware/auth.middleware';
+import { tenantResolver } from '../middleware/tenant.middleware';
+import { CoachingEngagement } from '../models/CoachingEngagement.model';
+import { CoachingSession } from '../models/CoachingSession.model';
+
+const router = Router();
+router.use(authenticateToken, tenantResolver);
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ENGAGEMENTS
+// ═══════════════════════════════════════════════════════════════════════════
+
+/** List engagements — coaches see all, coachees see own only. */
+router.get('/engagements', async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const filter: Record<string, unknown> = { organizationId: req.user!.organizationId };
+    if (req.user!.role === 'coachee') {
+      filter['coacheeId'] = req.user!.userId;
+    }
+    const engagements = await CoachingEngagement.find(filter)
+      .populate('coacheeId', 'firstName lastName email department')
+      .populate('coachId', 'firstName lastName')
+      .sort({ createdAt: -1 });
+    res.json(engagements);
+  } catch (e) { next(e); }
+});
+
+/** Get single engagement. */
+router.get('/engagements/:id', async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const engagement = await CoachingEngagement.findOne({
+      _id: req.params['id'],
+      organizationId: req.user!.organizationId,
+    })
+      .populate('coacheeId', 'firstName lastName email department')
+      .populate('coachId', 'firstName lastName');
+    if (!engagement) { res.status(404).json({ error: 'Engagement not found' }); return; }
+    res.json(engagement);
+  } catch (e) { next(e); }
+});
+
+/** Create engagement. */
+router.post(
+  '/engagements',
+  requireRole('admin', 'hr_manager', 'coach'),
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const engagement = await CoachingEngagement.create({
+        ...req.body,
+        organizationId: req.user!.organizationId,
+        coachId: req.body.coachId || req.user!.userId,
+      });
+      const populated = await engagement.populate([
+        { path: 'coacheeId', select: 'firstName lastName email department' },
+        { path: 'coachId', select: 'firstName lastName' },
+      ]);
+      res.status(201).json(populated);
+    } catch (e) { next(e); }
+  }
+);
+
+/** Update engagement. */
+router.put(
+  '/engagements/:id',
+  requireRole('admin', 'hr_manager', 'coach'),
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const engagement = await CoachingEngagement.findOneAndUpdate(
+        { _id: req.params['id'], organizationId: req.user!.organizationId },
+        req.body,
+        { new: true, runValidators: true }
+      )
+        .populate('coacheeId', 'firstName lastName email department')
+        .populate('coachId', 'firstName lastName');
+      if (!engagement) { res.status(404).json({ error: 'Engagement not found' }); return; }
+      res.json(engagement);
+    } catch (e) { next(e); }
+  }
+);
+
+/** Delete engagement (admin only). */
+router.delete(
+  '/engagements/:id',
+  requireRole('admin'),
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const engagement = await CoachingEngagement.findOneAndDelete({
+        _id: req.params['id'],
+        organizationId: req.user!.organizationId,
+      });
+      if (!engagement) { res.status(404).json({ error: 'Engagement not found' }); return; }
+      // Also delete associated sessions
+      await CoachingSession.deleteMany({ engagementId: req.params['id'], organizationId: req.user!.organizationId });
+      res.json({ message: 'Engagement and sessions deleted' });
+    } catch (e) { next(e); }
+  }
+);
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SESSIONS
+// ═══════════════════════════════════════════════════════════════════════════
+
+/** List sessions — filterable by engagement. Coachees see shared notes only. */
+router.get('/sessions', async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const filter: Record<string, unknown> = { organizationId: req.user!.organizationId };
+    if (req.query['engagementId']) filter['engagementId'] = req.query['engagementId'];
+    if (req.user!.role === 'coachee') filter['coacheeId'] = req.user!.userId;
+
+    const selectFields = req.user!.role === 'coachee'
+      ? '-coachNotes'   // NEVER expose private coach notes to coachees
+      : undefined;
+
+    const sessions = await CoachingSession.find(filter)
+      .select(selectFields as string)
+      .populate('coacheeId', 'firstName lastName')
+      .populate('coachId', 'firstName lastName')
+      .sort({ date: -1 });
+    res.json(sessions);
+  } catch (e) { next(e); }
+});
+
+/** Get single session. */
+router.get('/sessions/:id', async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const selectFields = req.user!.role === 'coachee' ? '-coachNotes' : undefined;
+    const session = await CoachingSession.findOne({
+      _id: req.params['id'],
+      organizationId: req.user!.organizationId,
+    })
+      .select(selectFields as string)
+      .populate('coacheeId', 'firstName lastName')
+      .populate('coachId', 'firstName lastName');
+    if (!session) { res.status(404).json({ error: 'Session not found' }); return; }
+    res.json(session);
+  } catch (e) { next(e); }
+});
+
+/** Create session. */
+router.post(
+  '/sessions',
+  requireRole('admin', 'hr_manager', 'coach'),
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const session = await CoachingSession.create({
+        ...req.body,
+        organizationId: req.user!.organizationId,
+        coachId: req.body.coachId || req.user!.userId,
+      });
+
+      // Increment sessionsUsed on the engagement if session is completed
+      if (session.status === 'completed') {
+        await CoachingEngagement.findByIdAndUpdate(session.engagementId, { $inc: { sessionsUsed: 1 } });
+      }
+
+      const populated = await session.populate([
+        { path: 'coacheeId', select: 'firstName lastName' },
+        { path: 'coachId', select: 'firstName lastName' },
+      ]);
+      res.status(201).json(populated);
+    } catch (e) { next(e); }
+  }
+);
+
+/** Update session (notes, status, ratings). */
+router.put(
+  '/sessions/:id',
+  requireRole('admin', 'hr_manager', 'coach'),
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const existing = await CoachingSession.findOne({
+        _id: req.params['id'],
+        organizationId: req.user!.organizationId,
+      });
+      if (!existing) { res.status(404).json({ error: 'Session not found' }); return; }
+
+      const wasNotCompleted = existing.status !== 'completed';
+      Object.assign(existing, req.body);
+      await existing.save();
+
+      // If status changed to completed, increment engagement counter
+      if (wasNotCompleted && existing.status === 'completed') {
+        await CoachingEngagement.findByIdAndUpdate(existing.engagementId, { $inc: { sessionsUsed: 1 } });
+      }
+
+      await existing.populate([
+        { path: 'coacheeId', select: 'firstName lastName' },
+        { path: 'coachId', select: 'firstName lastName' },
+      ]);
+      res.json(existing);
+    } catch (e) { next(e); }
+  }
+);
+
+/** Delete session. */
+router.delete(
+  '/sessions/:id',
+  requireRole('admin', 'hr_manager', 'coach'),
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const session = await CoachingSession.findOneAndDelete({
+        _id: req.params['id'],
+        organizationId: req.user!.organizationId,
+      });
+      if (!session) { res.status(404).json({ error: 'Session not found' }); return; }
+      res.json({ message: 'Session deleted' });
+    } catch (e) { next(e); }
+  }
+);
+
+// ═══════════════════════════════════════════════════════════════════════════
+// DASHBOARD STATS
+// ═══════════════════════════════════════════════════════════════════════════
+
+router.get('/dashboard', async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const orgId = req.user!.organizationId;
+    const filter: Record<string, unknown> = { organizationId: orgId };
+    if (req.user!.role === 'coachee') filter['coacheeId'] = req.user!.userId;
+
+    const [engagements, sessions] = await Promise.all([
+      CoachingEngagement.find(filter).lean(),
+      CoachingSession.find(filter).lean(),
+    ]);
+
+    const activeEngagements = engagements.filter((e) => e.status === 'active').length;
+    const completedSessions = sessions.filter((s) => s.status === 'completed').length;
+    const totalHours = sessions
+      .filter((s) => s.status === 'completed')
+      .reduce((sum, s) => sum + (s.duration || 60) / 60, 0);
+
+    // Upcoming sessions (next 30 days)
+    const now = new Date();
+    const in30Days = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+    const upcoming = sessions.filter((s) =>
+      s.status === 'scheduled' && new Date(s.date) >= now && new Date(s.date) <= in30Days
+    ).length;
+
+    res.json({
+      activeEngagements,
+      totalEngagements: engagements.length,
+      completedSessions,
+      totalHours: Math.round(totalHours * 10) / 10,
+      upcomingSessions: upcoming,
+      byStatus: {
+        prospect: engagements.filter((e) => e.status === 'prospect').length,
+        contracted: engagements.filter((e) => e.status === 'contracted').length,
+        active: activeEngagements,
+        paused: engagements.filter((e) => e.status === 'paused').length,
+        completed: engagements.filter((e) => e.status === 'completed').length,
+        alumni: engagements.filter((e) => e.status === 'alumni').length,
+      },
+    });
+  } catch (e) { next(e); }
+});
+
+export default router;

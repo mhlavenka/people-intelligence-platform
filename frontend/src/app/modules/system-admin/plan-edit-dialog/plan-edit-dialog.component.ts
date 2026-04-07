@@ -38,6 +38,7 @@ const MODULE_DEFS = [
   { key: 'conflict',       label: 'Conflict Intelligence\u2122',      icon: 'warning_amber' },
   { key: 'neuroinclusion', label: 'Neuro-Inclusion Compass\u2122',    icon: 'psychology' },
   { key: 'succession',     label: 'Leadership & Succession Hub\u2122', icon: 'trending_up' },
+  { key: 'coaching',       label: 'Coaching',                          icon: 'psychology_alt' },
 ];
 
 @Component({
@@ -201,6 +202,7 @@ export class PlanEditDialogComponent implements OnInit {
           conflict: this.data.modules?.includes('conflict') ?? false,
           neuroinclusion: this.data.modules?.includes('neuroinclusion') ?? false,
           succession: this.data.modules?.includes('succession') ?? false,
+          coaching: this.data.modules?.includes('coaching') ?? false,
         },
         limits: { ...this.data.limits },
         featuresRaw: this.data.features.join('\n'), isActive: this.data.isActive,
@@ -216,6 +218,7 @@ export class PlanEditDialogComponent implements OnInit {
     if (f.modules['conflict']) modules.push('conflict');
     if (f.modules['neuroinclusion']) modules.push('neuroinclusion');
     if (f.modules['succession']) modules.push('succession');
+    if (f.modules['coaching']) modules.push('coaching');
 
     const payload = {
       key: f.key.trim().toLowerCase().replace(/\s+/g, '-'),
@@ -252,6 +255,6 @@ export class PlanEditDialogComponent implements OnInit {
   }
 
   moduleColor(key: string): string {
-    return ({ conflict: '#e86c3a', neuroinclusion: '#27C4A0', succession: '#3A9FD6' } as Record<string, string>)[key] ?? '#9aa5b4';
+    return ({ conflict: '#e86c3a', neuroinclusion: '#27C4A0', succession: '#3A9FD6', coaching: '#7c5cbf' } as Record<string, string>)[key] ?? '#9aa5b4';
   }
 }

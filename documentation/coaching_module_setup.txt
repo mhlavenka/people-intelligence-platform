@@ -1,0 +1,104 @@
+1. Create the Coach's Organization (System Admin)
+
+  Login as system admin, go to Organizations, click Create Organization:
+
+  - Name: e.g. "Helena Coaching Practice"
+  - Slug: helena-coaching
+  - Billing Email: the coach's email
+  - Plan: select a plan that includes coaching (or any plan)
+  - Max Users: enough for coach + coachees (e.g. 20)
+  - Enabled Modules: will auto-fill from the plan. If you need succession module (for IDPs), make sure the plan includes it.
+  - Save
+
+  2. Create the Coach User
+
+  Still as system admin, go to Organizations → click the new org → Users tab (or use the API).
+
+  Alternatively, login to the app as admin of the new org. The first user created during org registration becomes the admin. You have two options:
+
+  Option A — Register a new org at /auth/register:
+  - This creates the org + first admin user in one step
+  - Then change that user's role to coach or keep as admin (admins can do everything coaches can)
+
+  Option B — Via system admin, create the org first, then seed an admin user via the HTTP file or API:
+
+  POST /api/users
+  Authorization: Bearer <admin_token_for_that_org>
+
+  {
+    "firstName": "Helena",
+    "lastName": "Coach",
+    "email": "helena@helenacoaching.com",
+    "password": "SecurePass123!",
+    "role": "admin"
+  }
+
+  3. Create Coachee Users
+
+  Login as the org admin/coach, go to Administration → Users, click Add User:
+
+  For each coachee:
+  - First Name / Last Name
+  - Email: their email
+  - Role: Coachee / Employee
+  - Department: optional
+  - Password: set a temporary password (they can change it later)
+
+  Create as many coachees as needed.
+
+  4. Create Coaching Engagements
+
+  Go to Coaching in the sidebar, click New Engagement:
+
+  - Coachee: select from the dropdown
+  - Status: Active (or Contracted if not started yet)
+  - Sessions Purchased: e.g. 10
+  - Cadence: Biweekly
+  - Format: Video
+  - Start Date: today
+  - Goals: e.g. "Leadership development, Communication skills"
+  - Sponsor: optional (the HR person who commissioned the coaching)
+  - Save
+
+  5. Record Coaching Sessions
+
+  Click on an engagement card → click New Session:
+
+  Details tab:
+  - Date, duration, format
+  - GROW phases covered (check Goal, Reality, etc.)
+  - Frameworks used (GROW, Solution-Focused, etc.)
+  - Topics discussed
+  - Mood rating (from coachee)
+
+  Notes tab:
+  - Shared Notes: what the coachee can see (takeaways, action items)
+  - Private Notes: your observations, hypotheses — never visible to the coachee
+
+  Set status to Completed when done — this auto-increments the session counter.
+
+  6. What Coachees See
+
+  When coachees login, they can:
+  - View their engagement status and session count
+  - See shared notes from each session (never private notes)
+  - Access their IDPs (if any were generated from succession module)
+  - Write in their coaching journal (in the Leadership & Succession Hub)
+
+  Quick Setup Checklist
+
+  ┌────────────────────────────────┬─────────────────────────────────────┬──────────────┐
+  │              Step              │                Where                │     Who      │
+  ├────────────────────────────────┼─────────────────────────────────────┼──────────────┤
+  │ Create org                     │ System Admin → Organizations        │ System Admin │
+  ├────────────────────────────────┼─────────────────────────────────────┼──────────────┤
+  │ Set plan with modules          │ System Admin → Organizations → Edit │ System Admin │
+  ├────────────────────────────────┼─────────────────────────────────────┼──────────────┤
+  │ Create coach user (admin role) │ Register or System Admin            │ System Admin │
+  ├────────────────────────────────┼─────────────────────────────────────┼──────────────┤
+  │ Create coachee users           │ Administration → Users              │ Org Admin    │
+  ├────────────────────────────────┼─────────────────────────────────────┼──────────────┤
+  │ Create engagements             │ Coaching → New Engagement           │ Coach        │
+  ├────────────────────────────────┼─────────────────────────────────────┼──────────────┤
+  │ Record sessions                │ Coaching → Engagement → New Session │ Coach        │
+  └────────────────────────────────┴─────────────────────────────────────┴──────────────┘

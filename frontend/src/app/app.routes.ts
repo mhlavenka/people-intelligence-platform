@@ -156,6 +156,24 @@ export const routes: Routes = [
           ),
       },
 
+      // ── Coaching ────────────────────────────────────────────────────────────
+      {
+        path: 'coaching',
+        canActivate: [roleGuard([...ADMIN_HR, 'coach', 'coachee'])],
+        loadComponent: () =>
+          import('./modules/coaching/coaching-dashboard/coaching-dashboard.component').then(
+            (m) => m.CoachingDashboardComponent
+          ),
+      },
+      {
+        path: 'coaching/:id',
+        canActivate: [roleGuard([...ADMIN_HR, 'coach', 'coachee'])],
+        loadComponent: () =>
+          import('./modules/coaching/engagement-detail/engagement-detail.component').then(
+            (m) => m.EngagementDetailComponent
+          ),
+      },
+
       // ── EQi Import ─────────────────────────────────────────────────────────
       {
         path: 'eq-import',

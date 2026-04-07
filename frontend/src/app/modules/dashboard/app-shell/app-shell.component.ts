@@ -573,6 +573,7 @@ export class AppShellComponent implements OnInit, OnDestroy {
     },
     { label: 'Neuro-Inclusion',         icon: 'psychology',   route: '/neuroinclusion', roles: ['admin', 'hr_manager', 'manager'],               module: 'neuroinclusion' },
     { label: 'Leadership & Succession', icon: 'trending_up',  route: '/succession',  roles: ['admin', 'hr_manager', 'coach', 'coachee'],        module: 'succession' },
+    { label: 'Coaching',           icon: 'psychology_alt',  route: '/coaching',    roles: ['admin', 'hr_manager', 'coach', 'coachee'],  module: 'coaching' },
     { label: 'Org Chart',         icon: 'account_tree',        route: '/org-chart',            roles: ['admin', 'hr_manager'] },
     {
       label: 'Intakes',

@@ -369,6 +369,7 @@ export class OrgEditDialogComponent implements OnInit {
     { key: 'conflict',       label: 'Conflict',        icon: 'warning_amber' },
     { key: 'neuroinclusion', label: 'Neuro-Inclusion',  icon: 'psychology' },
     { key: 'succession',     label: 'Succession',       icon: 'trending_up' },
+    { key: 'coaching',       label: 'Coaching',          icon: 'psychology_alt' },
   ];
 
   canadianProvinces = [
