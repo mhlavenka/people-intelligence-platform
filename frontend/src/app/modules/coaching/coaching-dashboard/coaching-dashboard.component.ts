@@ -219,7 +219,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: string
     .coaching-page { padding: 32px; }
     .stats-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; margin-bottom: 24px; }
 
-    .main-layout { display: grid; grid-template-columns: 1fr 320px; gap: 24px; align-items: start; }
+    .main-layout { display: grid; grid-template-columns: 1fr 450px; gap: 24px; align-items: start; }
     .stat-card {
       background: white; border-radius: 12px; padding: 16px; text-align: center;
       box-shadow: 0 2px 8px rgba(0,0,0,0.06);
