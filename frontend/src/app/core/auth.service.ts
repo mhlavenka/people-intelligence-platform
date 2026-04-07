@@ -196,6 +196,11 @@ export class AuthService {
     this.scheduleTokenRefresh();
   }
 
+  /** Handle response from OAuth callback — stores tokens and user. */
+  handleOAuthResponse(res: AuthResponse): void {
+    this.storeAuth(res);
+  }
+
   private loadUser(): User | null {
     const stored = localStorage.getItem(this.USER_KEY);
     return stored ? JSON.parse(stored) : null;

@@ -174,7 +174,7 @@ Parse pattern: strip fences, slice `{...}`, `JSON.parse`, fallback on error.
 
 ```bash
 npm run seed:admin    # creates system_admin + first org + admin user
-npm run seed:surveys  # seeds default survey templates
+npm run seed:surveys  # seeds default intake templates
 npm run seed:plans    # seeds 12 subscription plans (drops existing)
 ```
 

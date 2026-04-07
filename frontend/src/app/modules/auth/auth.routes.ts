@@ -19,6 +19,11 @@ export const authRoutes: Routes = [
       ),
   },
   {
+    path: 'oauth/callback',
+    loadComponent: () =>
+      import('./oauth-callback/oauth-callback.component').then((m) => m.OAuthCallbackComponent),
+  },
+  {
     path: '',
     redirectTo: 'login',
     pathMatch: 'full',

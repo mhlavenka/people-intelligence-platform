@@ -1,5 +1,5 @@
 import { Component, OnInit, signal, computed, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -8,8 +8,27 @@ import { MatInputModule } from '@angular/material/input';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDialog } from '@angular/material/dialog';
 import { ApiService } from '../../core/api.service';
 import { AuthService } from '../../core/auth.service';
+import { ConfirmDialogComponent } from '../../shared/confirm-dialog/confirm-dialog.component';
+import { PasskeyLabelDialogComponent } from './passkey-label-dialog.component';
+import { environment } from '../../../environments/environment';
+
+interface PasskeyInfo {
+  credentialId: string;
+  label: string;
+  deviceType: string;
+  createdAt: string;
+}
+
+interface OAuthAccountInfo {
+  provider: string;
+  providerId: string;
+  email: string;
+  linkedAt: string;
+}
 
 interface UserProfile {
   _id: string;
@@ -20,6 +39,8 @@ interface UserProfile {
   isActive: boolean;
   lastLoginAt?: string;
   createdAt: string;
+  passkeys?: PasskeyInfo[];
+  oauthAccounts?: OAuthAccountInfo[];
 }
 
 const ROLE_LABELS: Record<string, string> = {
@@ -46,6 +67,8 @@ function passwordMatchValidator(control: AbstractControl): ValidationErrors | nu
     MatDividerModule,
     MatProgressSpinnerModule,
     MatSnackBarModule,
+    MatTooltipModule,
+    DatePipe,
   ],
   template: `
     <div class="profile-page">
@@ -196,6 +219,81 @@ function passwordMatchValidator(control: AbstractControl): ValidationErrors | nu
               </div>
             </div>
 
+            <!-- Sign-in Methods -->
+            <div class="card">
+              <div class="card-header">
+                <mat-icon>fingerprint</mat-icon>
+                <h2>Sign-in Methods</h2>
+              </div>
+              <mat-divider />
+              <div class="card-body">
+                <p class="section-desc">Manage passkeys and linked accounts for faster, more secure sign-in.</p>
+
+                <!-- Passkeys -->
+                <div class="signin-section">
+                  <div class="signin-section-header">
+                    <mat-icon>key</mat-icon>
+                    <span>Passkeys</span>
+                    <button mat-stroked-button class="add-passkey-btn" (click)="registerPasskey()"
+                            [disabled]="registeringPasskey()">
+                      @if (registeringPasskey()) { <mat-spinner diameter="16" /> }
+                      @else { <mat-icon>add</mat-icon> }
+                      Add Passkey
+                    </button>
+                  </div>
+                  @if (passkeys().length === 0) {
+                    <div class="signin-empty">
+                      No passkeys registered. Add one to sign in with Touch ID, Face ID, or a security key.
+                    </div>
+                  } @else {
+                    <div class="signin-list">
+                      @for (pk of passkeys(); track pk.credentialId) {
+                        <div class="signin-item">
+                          <mat-icon class="signin-item-icon">fingerprint</mat-icon>
+                          <div class="signin-item-info">
+                            <strong>{{ pk.label || 'Passkey' }}</strong>
+                            <span>{{ pk.deviceType === 'multiDevice' ? 'Synced passkey' : 'Device-bound' }} · Added {{ pk.createdAt | date:'MMM d, y' }}</span>
+                          </div>
+                          <button mat-icon-button class="signin-remove" matTooltip="Remove" (click)="removePasskey(pk)">
+                            <mat-icon>delete_outline</mat-icon>
+                          </button>
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+
+                <mat-divider style="margin: 16px 0" />
+
+                <!-- Linked accounts -->
+                <div class="signin-section">
+                  <div class="signin-section-header">
+                    <mat-icon>link</mat-icon>
+                    <span>Linked Accounts</span>
+                  </div>
+                  @if (oauthAccounts().length === 0) {
+                    <div class="signin-empty">
+                      No linked accounts. Sign in with Google or Microsoft once to link automatically.
+                    </div>
+                  } @else {
+                    <div class="signin-list">
+                      @for (acct of oauthAccounts(); track acct.provider + acct.providerId) {
+                        <div class="signin-item">
+                          <mat-icon class="signin-item-icon" [class]="acct.provider">
+                            {{ acct.provider === 'google' ? 'g_mobiledata' : 'window' }}
+                          </mat-icon>
+                          <div class="signin-item-info">
+                            <strong>{{ acct.provider === 'google' ? 'Google' : 'Microsoft' }}</strong>
+                            <span>{{ acct.email }} · Linked {{ acct.linkedAt | date:'MMM d, y' }}</span>
+                          </div>
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
       }
@@ -290,6 +388,39 @@ function passwordMatchValidator(control: AbstractControl): ValidationErrors | nu
       background: #fef2f2; border: 1px solid #fecaca; color: #dc2626;
       padding: 10px 14px; border-radius: 8px; margin-bottom: 16px; font-size: 14px;
     }
+
+    /* Sign-in methods */
+    .section-desc { font-size: 13px; color: #5a6a7e; margin: 0 0 16px; }
+
+    .signin-section-header {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+      font-size: 14px; font-weight: 600; color: #1B2A47;
+      mat-icon { font-size: 18px; color: #3A9FD6; }
+      .add-passkey-btn { margin-left: auto; font-size: 12px; }
+    }
+
+    .signin-empty { font-size: 13px; color: #9aa5b4; padding: 8px 0; }
+
+    .signin-list { display: flex; flex-direction: column; gap: 8px; }
+
+    .signin-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 14px; border: 1px solid #e8edf4; border-radius: 10px; background: #fafbfc;
+    }
+
+    .signin-item-icon {
+      font-size: 22px; width: 22px; height: 22px; color: #7c5cbf;
+      &.google { color: #4285F4; }
+      &.microsoft { color: #00a4ef; }
+    }
+
+    .signin-item-info {
+      flex: 1; min-width: 0;
+      strong { display: block; font-size: 13px; color: #1B2A47; }
+      span { font-size: 11px; color: #9aa5b4; }
+    }
+
+    .signin-remove { color: #c5d0db; &:hover { color: #e53e3e; } }
   `],
 })
 export class ProfileComponent implements OnInit {
@@ -297,6 +428,7 @@ export class ProfileComponent implements OnInit {
   private auth = inject(AuthService);
   private fb   = inject(FormBuilder);
   private snackBar = inject(MatSnackBar);
+  private dialog = inject(MatDialog);
 
   profile  = signal<UserProfile | null>(null);
   loading  = signal(true);
@@ -310,6 +442,10 @@ export class ProfileComponent implements OnInit {
 
   profileForm!: FormGroup;
   passwordForm!: FormGroup;
+
+  passkeys = signal<PasskeyInfo[]>([]);
+  oauthAccounts = signal<OAuthAccountInfo[]>([]);
+  registeringPasskey = signal(false);
 
   initials  = computed(() => {
     const p = this.profile();
@@ -327,6 +463,8 @@ export class ProfileComponent implements OnInit {
     this.api.get<UserProfile>('/users/me').subscribe({
       next: (p) => {
         this.profile.set(p);
+        this.passkeys.set(p.passkeys ?? []);
+        this.oauthAccounts.set(p.oauthAccounts ?? []);
         this.profileForm = this.fb.group({
           firstName: [p.firstName, Validators.required],
           lastName:  [p.lastName,  Validators.required],
@@ -335,6 +473,7 @@ export class ProfileComponent implements OnInit {
       },
       error: () => this.loading.set(false),
     });
+    this.loadPasskeys();
   }
 
   saveProfile(): void {
@@ -370,6 +509,121 @@ export class ProfileComponent implements OnInit {
         this.pwdError.set(err.error?.error || 'Password update failed.');
         this.savingPassword.set(false);
       },
+    });
+  }
+
+  // ── Passkeys ──────────────────────────────────────────────────
+  loadPasskeys(): void {
+    this.api.get<PasskeyInfo[]>('/auth/passkey/passkeys').subscribe({
+      next: (pks) => this.passkeys.set(pks),
+    });
+  }
+
+  async registerPasskey(): Promise<void> {
+    this.registeringPasskey.set(true);
+    try {
+      // 1. Get registration options from server
+      const optionsRes = await fetch(`${environment.apiUrl}/auth/passkey/register-options`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.auth.getToken()}`,
+        },
+      });
+      if (!optionsRes.ok) throw new Error('Failed to get registration options');
+      const options = await optionsRes.json();
+
+      // 2. Create credential via browser WebAuthn API
+      const publicKeyOptions: PublicKeyCredentialCreationOptions = {
+        challenge: Uint8Array.from(atob(options.challenge.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0)),
+        rp: { name: options.rp.name, id: options.rp.id },
+        user: {
+          id: Uint8Array.from(atob(options.user.id.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0)),
+          name: options.user.name,
+          displayName: options.user.displayName,
+        },
+        pubKeyCredParams: options.pubKeyCredParams,
+        timeout: options.timeout || 60000,
+        attestation: options.attestation || 'none',
+        authenticatorSelection: options.authenticatorSelection,
+        excludeCredentials: (options.excludeCredentials || []).map((c: any) => ({
+          id: Uint8Array.from(atob(c.id.replace(/-/g, '+').replace(/_/g, '/')), ch => ch.charCodeAt(0)),
+          type: c.type || 'public-key',
+          transports: c.transports,
+        })),
+      };
+
+      const credential = await navigator.credentials.create({ publicKey: publicKeyOptions }) as PublicKeyCredential;
+      if (!credential) throw new Error('No credential created');
+
+      const response = credential.response as AuthenticatorAttestationResponse;
+      const toBase64Url = (buf: ArrayBuffer) => btoa(String.fromCharCode(...new Uint8Array(buf)))
+        .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+
+      const credentialJSON = {
+        id: credential.id,
+        rawId: toBase64Url(credential.rawId),
+        type: credential.type,
+        response: {
+          attestationObject: toBase64Url(response.attestationObject),
+          clientDataJSON: toBase64Url(response.clientDataJSON),
+          transports: (response as any).getTransports?.() || [],
+        },
+        clientExtensionResults: credential.getClientExtensionResults(),
+      };
+
+      // 3. Ask for a label via dialog
+      const label = await new Promise<string>((resolve) => {
+        const ref = this.dialog.open(PasskeyLabelDialogComponent, { width: '440px' });
+        ref.afterClosed().subscribe((result) => resolve(result || 'Passkey'));
+      });
+
+      // 4. Verify with server
+      const verifyRes = await fetch(`${environment.apiUrl}/auth/passkey/register-verify`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.auth.getToken()}`,
+        },
+        body: JSON.stringify({ credential: credentialJSON, label }),
+      });
+
+      if (!verifyRes.ok) {
+        const err = await verifyRes.json();
+        throw new Error(err.error || 'Registration failed');
+      }
+
+      this.registeringPasskey.set(false);
+      this.loadPasskeys();
+      this.snackBar.open('Passkey registered successfully', 'OK', { duration: 3000 });
+    } catch (e: any) {
+      this.registeringPasskey.set(false);
+      const msg = e?.message === 'The operation either timed out or was not allowed.'
+        ? 'Passkey registration was cancelled.'
+        : (e?.message || 'Failed to register passkey.');
+      this.snackBar.open(msg, 'Dismiss', { duration: 4000 });
+    }
+  }
+
+  removePasskey(pk: PasskeyInfo): void {
+    const ref = this.dialog.open(ConfirmDialogComponent, {
+      width: '420px',
+      data: {
+        title: 'Remove Passkey',
+        message: `Remove "${pk.label}"? You won't be able to use it to sign in anymore.`,
+        confirmLabel: 'Remove',
+        confirmColor: 'warn',
+        icon: 'fingerprint',
+      },
+    });
+    ref.afterClosed().subscribe((confirmed) => {
+      if (!confirmed) return;
+      this.api.delete(`/auth/passkey/passkeys/${pk.credentialId}`).subscribe({
+        next: () => {
+          this.passkeys.update((list) => list.filter((p) => p.credentialId !== pk.credentialId));
+          this.snackBar.open('Passkey removed', 'OK', { duration: 3000 });
+        },
+      });
     });
   }
 }

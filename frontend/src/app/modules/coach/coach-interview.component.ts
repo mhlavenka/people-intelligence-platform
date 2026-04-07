@@ -278,7 +278,7 @@ const FORMAT_OPTIONS: { key: SessionFormat; label: string; icon: string; hint: s
                     <mat-form-field appearance="outline" class="full-width">
                       <mat-label>Response</mat-label>
                       <textarea matInput rows="4"
-                                [value]="answers()[q.id] ?? ''"
+                                [value]="answers()[q.id]"
                                 (input)="setAnswer(q.id, $any($event.target).value)">
                       </textarea>
                     </mat-form-field>

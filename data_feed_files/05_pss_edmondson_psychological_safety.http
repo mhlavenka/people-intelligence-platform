@@ -1,98 +1,56 @@
-### ============================================================
-### INSTRUMENT: Psychological Safety Scale (Edmondson, 1999)
-### Developer: Amy C. Edmondson, Harvard Business School
-### Published: Administrative Science Quarterly, 44(2), 350–383
-### Format: 7 Likert-scale items (1–7) | Normative scoring
-### Subscale: psychological_safety (single construct)
-### Level: TEAM (individual responses aggregated to team mean)
-### Admin time: 3–5 minutes
-### ============================================================
-###
-### ⚠ NEW SCHEMA REQUIREMENTS FOR THIS INSTRUMENT:
-###
-###   "scale_range": { "min": 1, "max": 7, "labels": {...} }
-###     Edmondson's original scale uses a 7-point Likert range, NOT
-###     the 5-point range used by ROCI-II or the 6-point used by CDP.
-###     The API must render the correct number of scale points and
-###     avoid collapsing to a different range.
-###
-###   "reverse_scored": true
-###     Items q1, q2, and q6 are reverse-scored in Edmondson's
-###     original instrument. The scoring engine must subtract the
-###     raw response from (max + 1) = 8 before averaging.
-###     Failure to reverse-score these items inverts the construct
-###     and produces meaningless or dangerously misleading results.
-###
-###   "reverse_score_formula": "max_plus_one_minus_raw"
-###     Explicit formula tag for the scoring engine to avoid ambiguity
-###     across instruments with different scale ranges. Formula:
-###     reversed = (scale_range.max + 1) - raw_response
-###
-###   "aggregation_method": "team_mean"
-###     Unlike rwg used in de Dreu, Edmondson validated aggregation
-###     using simple team mean with ICC verification. The API should
-###     compute team mean after individual reverse-scoring is applied.
-###
-###   "minimum_respondents_per_team": 3
-###     Same as de Dreu instrument — team aggregates require minimum
-###     respondent counts for statistical meaningfulness.
-###
-###   "single_construct": true
-###     Psychological Safety Scale measures one latent construct.
-###     No subscale routing is needed. A single team-level score
-###     is the primary output. Coaches receive percentile and
-###     raw mean with confidence interval.
-###
-###   "benchmarks": { "low": ..., "moderate": ..., "high": ... }
-###     Edmondson (1999) and subsequent replications (Google 2015)
-###     provide reference distributions. Score thresholds are
-###     used to generate interpretive text in coaching reports.
-###
-### ============================================================
+### Psychological Safety Scale (Edmondson, 1999)
+### instrumentId: PSS-Edmondson | instrumentVersion: 1999
+### level_of_analysis: team | scoring.method: normative | single_construct: true
+### Changes from v1:
+###   - single_construct moved to template level (now in model schema)
+###   - scoring.reverse_scored_items now in IScoringConfig (added to model)
+###   - scoring.benchmarks now in IScoringConfig as Record<string, IBenchmarkBand>
+###   - benchmarks.range changed from { range: [1.0, 3.5] } to [number, number] tuple
+###   - Dropped: scoring.unit (redundant with level_of_analysis: team)
+###   - Dropped: scoring.team_score_calculation (implementation detail, not schema)
+###   - scale_range.labels changed to keyed Record<string, string> format
+###   - scoring.reverse_score_formula moved to item level only (not duplicated on scoring root)
 
 POST http://localhost:3030/api/surveys/templates
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OWM5MzUyZmYxMmJjMjc3NzBiYTNlZTciLCJvcmdhbml6YXRpb25JZCI6IjY5YzkzNTJmZjEyYmMyNzc3MGJhM2VlNSIsInJvbGUiOiJhZG1pbiIsImVtYWlsIjoiYWRtaW5AaGVsZW5hY29hY2hpbmcuY29tIiwiaWF0IjoxNzc0Nzk2MjUyLCJleHAiOjE3NzQ3OTcxNTJ9.F9-q8VC-_1BLWQSV_liIpAFyaDKpP4DOz50EhI77U1U
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OWM5MzUyZmYxMmJjMjc3NzBiYTNlZTciLCJvcmdhbml6YXRpb25JZCI6IjY5YzkzNTJmZjEyYmMyNzc3MGJhM2VlNSIsInJvbGUiOiJhZG1pbiIsImVtYWlsIjoiYWRtaW5AaGVsZW5hY29hY2hpbmcuY29tIiwiaWF0IjoxNzc1NDc3MDcwLCJleHAiOjE3NzU0Nzc5NzB9.Bu65b7nGLE4u4bfc_dcx_VO2bryJsKDI_g5rcr_d4dU
 
 {
   "moduleType": "conflict",
   "instrumentId": "PSS-Edmondson",
   "instrumentVersion": "1999",
   "title": "Psychological Safety Scale (Edmondson, 1999)",
-  "description": "Measures the shared team belief that interpersonal risk-taking is safe — specifically, that members will not be punished or humiliated for speaking up, disagreeing, or making mistakes. Psychological safety is the single strongest predictor of productive conflict in teams (Google Project Aristotle, 2015). Psychometric alpha = .82 in original validation.",
+  "description": "Measures the shared team belief that interpersonal risk-taking is safe — that members will not be punished or humiliated for speaking up, disagreeing, or making mistakes. The single strongest predictor of productive conflict in teams (Google Project Aristotle, 2015). Psychometric alpha = .82.",
   "level_of_analysis": "team",
+  "rater_type": "self",
+  "single_construct": true,
   "aggregation_method": "team_mean",
   "minimum_respondents_per_team": 3,
-  "single_construct": true,
   "scoring": {
     "method": "normative",
-    "unit": "team_aggregate",
-    "reverse_score_formula": "max_plus_one_minus_raw",
-    "reverse_scored_items": ["q1", "q2", "q6"],
-    "score_range": { "min": 1, "max": 7 },
-    "team_score_calculation": "mean_of_all_7_items_after_reverse_scoring",
+    "subscales": ["psychological_safety"],
+    "score_range_per_subscale": { "min": 1, "max": 7 },
+    "reverse_scored_items": ["q1", "q3", "q5"],
     "benchmarks": {
-      "low":      { "range": [1.0, 3.5], "label": "Psychologically unsafe", "interpretation": "Members are unlikely to voice concerns, admit errors, or engage in productive task conflict. High risk of groupthink and suppressed conflict escalation." },
-      "moderate": { "range": [3.6, 5.2], "label": "Moderately safe", "interpretation": "Some members feel safe; others may not. Conflict is likely inconsistently productive. Leaders should actively model vulnerability and non-punitive responses to disagreement." },
-      "high":     { "range": [5.3, 7.0], "label": "Psychologically safe", "interpretation": "Team is well-positioned for productive task conflict and learning. Risk-taking and candid feedback are normalized. Monitor to ensure safety does not suppress necessary challenge." }
+      "low": {
+        "range": [1.0, 3.5],
+        "label": "Psychologically unsafe",
+        "interpretation": "Members are unlikely to voice concerns, admit errors, or engage in productive task conflict. High risk of groupthink and suppressed conflict escalation."
+      },
+      "moderate": {
+        "range": [3.6, 5.2],
+        "label": "Moderately safe",
+        "interpretation": "Some members feel safe; others may not. Conflict is likely inconsistently productive. Leaders should actively model vulnerability and non-punitive responses to disagreement."
+      },
+      "high": {
+        "range": [5.3, 7.0],
+        "label": "Psychologically safe",
+        "interpretation": "Team is well-positioned for productive task conflict and learning. Risk-taking and candid feedback are normalized. Monitor to ensure safety does not suppress necessary challenge."
+      }
     }
   },
-  "scale_range": {
-    "min": 1,
-    "max": 7,
-    "labels": {
-      "1": "Strongly Disagree",
-      "2": "Disagree",
-      "3": "Somewhat Disagree",
-      "4": "Neither Agree nor Disagree",
-      "5": "Somewhat Agree",
-      "6": "Agree",
-      "7": "Strongly Agree"
-    }
-  },
-  "instructions": "Please indicate the extent to which you agree or disagree with each of the following statements about your immediate work team.",
+  "instructions": "Please indicate the extent to which you agree or disagree with each of the following statements about your immediate work team. 1 = Strongly Disagree, 7 = Strongly Agree.",
   "questions": [
-
     {
       "id": "q1",
       "type": "scale",
@@ -101,33 +59,36 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OWM5M
       "reverse_scored": true,
       "reverse_score_formula": "max_plus_one_minus_raw",
       "text": "If you make a mistake on this team, it is often held against you.",
-      "scoring_note": "REVERSE SCORED: High agreement (7) indicates LOW safety. Raw 7 → scored 1.",
-      "scale_range": { "min": 1, "max": 7 }
+      "scale_range": {
+        "min": 1, "max": 7,
+        "labels": { "1": "Strongly Disagree", "2": "Disagree", "3": "Somewhat Disagree", "4": "Neither Agree nor Disagree", "5": "Somewhat Agree", "6": "Agree", "7": "Strongly Agree" }
+      }
     },
-
     {
       "id": "q2",
       "type": "scale",
       "subscale": "psychological_safety",
       "category": "psychological_safety",
-      "reverse_scored": true,
-      "reverse_score_formula": "max_plus_one_minus_raw",
+      "reverse_scored": false,
       "text": "Members of this team are able to bring up problems and tough issues.",
-      "scoring_note": "FORWARD SCORED — note: some published versions list this as reverse. Use original Edmondson (1999) coding where higher agreement = higher safety.",
-      "scale_range": { "min": 1, "max": 7 }
+      "scale_range": {
+        "min": 1, "max": 7,
+        "labels": { "1": "Strongly Disagree", "2": "Disagree", "3": "Somewhat Disagree", "4": "Neither Agree nor Disagree", "5": "Somewhat Agree", "6": "Agree", "7": "Strongly Agree" }
+      }
     },
-
     {
       "id": "q3",
       "type": "scale",
       "subscale": "psychological_safety",
       "category": "psychological_safety",
-      "reverse_scored": false,
+      "reverse_scored": true,
+      "reverse_score_formula": "max_plus_one_minus_raw",
       "text": "People on this team sometimes reject others for being different.",
-      "scoring_note": "REVERSE SCORED: High agreement = LOW safety.",
-      "scale_range": { "min": 1, "max": 7 }
+      "scale_range": {
+        "min": 1, "max": 7,
+        "labels": { "1": "Strongly Disagree", "2": "Disagree", "3": "Somewhat Disagree", "4": "Neither Agree nor Disagree", "5": "Somewhat Agree", "6": "Agree", "7": "Strongly Agree" }
+      }
     },
-
     {
       "id": "q4",
       "type": "scale",
@@ -135,33 +96,36 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OWM5M
       "category": "psychological_safety",
       "reverse_scored": false,
       "text": "It is safe to take a risk on this team.",
-      "scoring_note": "FORWARD SCORED: Higher agreement = higher safety.",
-      "scale_range": { "min": 1, "max": 7 }
+      "scale_range": {
+        "min": 1, "max": 7,
+        "labels": { "1": "Strongly Disagree", "2": "Disagree", "3": "Somewhat Disagree", "4": "Neither Agree nor Disagree", "5": "Somewhat Agree", "6": "Agree", "7": "Strongly Agree" }
+      }
     },
-
     {
       "id": "q5",
       "type": "scale",
       "subscale": "psychological_safety",
       "category": "psychological_safety",
-      "reverse_scored": false,
+      "reverse_scored": true,
+      "reverse_score_formula": "max_plus_one_minus_raw",
       "text": "It is difficult to ask other members of this team for help.",
-      "scoring_note": "REVERSE SCORED: High agreement = LOW safety.",
-      "scale_range": { "min": 1, "max": 7 }
+      "scale_range": {
+        "min": 1, "max": 7,
+        "labels": { "1": "Strongly Disagree", "2": "Disagree", "3": "Somewhat Disagree", "4": "Neither Agree nor Disagree", "5": "Somewhat Agree", "6": "Agree", "7": "Strongly Agree" }
+      }
     },
-
     {
       "id": "q6",
       "type": "scale",
       "subscale": "psychological_safety",
       "category": "psychological_safety",
-      "reverse_scored": true,
-      "reverse_score_formula": "max_plus_one_minus_raw",
+      "reverse_scored": false,
       "text": "No one on this team would deliberately act in a way that undermines my efforts.",
-      "scoring_note": "FORWARD SCORED: Higher agreement = higher safety.",
-      "scale_range": { "min": 1, "max": 7 }
+      "scale_range": {
+        "min": 1, "max": 7,
+        "labels": { "1": "Strongly Disagree", "2": "Disagree", "3": "Somewhat Disagree", "4": "Neither Agree nor Disagree", "5": "Somewhat Agree", "6": "Agree", "7": "Strongly Agree" }
+      }
     },
-
     {
       "id": "q7",
       "type": "scale",
@@ -169,8 +133,10 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OWM5M
       "category": "psychological_safety",
       "reverse_scored": false,
       "text": "Working with members of this team, my unique skills and talents are valued and utilized.",
-      "scoring_note": "FORWARD SCORED: Higher agreement = higher safety.",
-      "scale_range": { "min": 1, "max": 7 }
+      "scale_range": {
+        "min": 1, "max": 7,
+        "labels": { "1": "Strongly Disagree", "2": "Disagree", "3": "Somewhat Disagree", "4": "Neither Agree nor Disagree", "5": "Somewhat Agree", "6": "Agree", "7": "Strongly Agree" }
+      }
     }
   ]
 }

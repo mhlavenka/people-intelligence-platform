@@ -19,7 +19,7 @@ interface TokenPayload {
   customRoleName?: string;
 }
 
-function generateTokens(payload: TokenPayload): { accessToken: string; refreshToken: string } {
+export function generateTokens(payload: TokenPayload): { accessToken: string; refreshToken: string } {
   const accessToken = jwt.sign(payload, config.jwt.secret, {
     expiresIn: config.jwt.expiresIn,
   } as jwt.SignOptions);
@@ -30,7 +30,7 @@ function generateTokens(payload: TokenPayload): { accessToken: string; refreshTo
 }
 
 /** Build the JWT payload for a user, resolving custom role permissions if set. */
-async function buildPayload(user: IUser): Promise<TokenPayload> {
+export async function buildPayload(user: IUser): Promise<TokenPayload> {
   const base: TokenPayload = {
     userId:         user._id.toString(),
     organizationId: user.organizationId.toString(),

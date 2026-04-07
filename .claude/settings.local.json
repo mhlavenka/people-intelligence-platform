@@ -15,7 +15,12 @@
       "Bash(npm install:*)",
       "Bash(node generate.js)",
       "Bash(npm init:*)",
-      "Bash(bash deploy.sh frontend)"
+      "Bash(bash deploy.sh frontend)",
+      "Bash(bash deploy.sh backend)",
+      "Bash(npm run:*)",
+      "Bash(git push:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx ng:*)"
     ]
   }
 }

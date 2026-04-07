@@ -3,12 +3,29 @@ import { tenantFilterPlugin } from './plugins/tenantFilter.plugin';
 
 export type UserRole = 'admin' | 'hr_manager' | 'manager' | 'coachee' | 'coach' | 'system_admin';
 
+export interface IPasskeyCredential {
+  credentialId: string;           // base64url-encoded credential ID
+  publicKey: string;              // base64url-encoded public key
+  counter: number;                // signature counter for replay detection
+  deviceType: string;             // 'singleDevice' | 'multiDevice'
+  transports?: string[];          // e.g. ['usb', 'ble', 'nfc', 'internal']
+  createdAt: Date;
+  label?: string;                 // user-friendly name, e.g. "MacBook Touch ID"
+}
+
+export interface IOAuthAccount {
+  provider: 'google' | 'microsoft';
+  providerId: string;             // unique ID from provider
+  email: string;                  // email from OAuth profile
+  linkedAt: Date;
+}
+
 export interface IUser extends Document {
   organizationId: mongoose.Types.ObjectId;
   email: string;
   passwordHash: string;
   role: UserRole;
-  customRoleId?: mongoose.Types.ObjectId; // set when a custom role overrides the system role
+  customRoleId?: mongoose.Types.ObjectId;
   firstName: string;
   lastName: string;
   isActive: boolean;
@@ -17,9 +34,28 @@ export interface IUser extends Document {
   lastLoginAt?: Date;
   twoFactorSecret?: string;
   twoFactorEnabled: boolean;
+  passkeys: IPasskeyCredential[];
+  oauthAccounts: IOAuthAccount[];
   createdAt: Date;
   updatedAt: Date;
 }
+
+const PasskeyCredentialSchema = new Schema({
+  credentialId: { type: String, required: true },
+  publicKey:    { type: String, required: true },
+  counter:      { type: Number, default: 0 },
+  deviceType:   { type: String, default: 'multiDevice' },
+  transports:   [{ type: String }],
+  createdAt:    { type: Date, default: Date.now },
+  label:        { type: String },
+}, { _id: false });
+
+const OAuthAccountSchema = new Schema({
+  provider:   { type: String, required: true, enum: ['google', 'microsoft'] },
+  providerId: { type: String, required: true },
+  email:      { type: String, required: true },
+  linkedAt:   { type: Date, default: Date.now },
+}, { _id: false });
 
 const UserSchema = new Schema<IUser>(
   {
@@ -43,8 +79,10 @@ const UserSchema = new Schema<IUser>(
     department: { type: String, trim: true, default: null },
     managerId: { type: Schema.Types.ObjectId, ref: 'User', default: null },
     lastLoginAt: { type: Date },
-    twoFactorSecret:  { type: String, select: false }, // never returned in normal queries
+    twoFactorSecret:  { type: String, select: false },
     twoFactorEnabled: { type: Boolean, default: false },
+    passkeys:      [PasskeyCredentialSchema],
+    oauthAccounts: [OAuthAccountSchema],
   },
   { timestamps: true }
 );

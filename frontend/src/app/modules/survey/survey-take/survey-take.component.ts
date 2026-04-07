@@ -216,7 +216,7 @@ const DEPARTMENTS = [
                   <mat-form-field appearance="outline" class="full-width">
                     <mat-label>Your answer</mat-label>
                     <textarea matInput rows="4"
-                      [value]="answers()[q.id] ?? ''"
+                      [value]="answers()[q.id]"
                       (input)="setAnswer(q.id, $any($event.target).value)"
                       placeholder="Type your response here...">
                     </textarea>

@@ -26,4 +26,20 @@ export const config = {
     secretKey: process.env['STRIPE_SECRET_KEY'] || '',
     webhookSecret: process.env['STRIPE_WEBHOOK_SECRET'] || '',
   },
+  oauth: {
+    google: {
+      clientId: process.env['GOOGLE_CLIENT_ID'] || '',
+      clientSecret: process.env['GOOGLE_CLIENT_SECRET'] || '',
+    },
+    microsoft: {
+      clientId: process.env['MICROSOFT_CLIENT_ID'] || '',
+      clientSecret: process.env['MICROSOFT_CLIENT_SECRET'] || '',
+      tenantId: process.env['MICROSOFT_TENANT_ID'] || 'common',
+    },
+  },
+  webauthn: {
+    rpName: process.env['WEBAUTHN_RP_NAME'] || 'People Intelligence Platform',
+    rpId: process.env['WEBAUTHN_RP_ID'] || 'localhost',
+    origin: process.env['WEBAUTHN_ORIGIN'] || 'http://localhost:4200',
+  },
 };

@@ -123,16 +123,22 @@ import { AuthService } from '../../../core/auth.service';
       text-align: center;
       margin-bottom: 24px;
       .brand-logo {
-        width: 56px; height: 56px;
+        width: 350px; height: 120px;
         background: linear-gradient(135deg, #1B2A47, #3A9FD6);
         border-radius: 14px;
         display: flex; align-items: center; justify-content: center;
-        margin: 0 auto 12px;
         .logo-pip { color: white; font-size: 18px; font-weight: 700; }
       }
       h1 { font-size: 20px; color: #1B2A47; margin: 0 0 4px; }
       p  { font-size: 12px; color: #9aa5b4; margin: 0; }
     }
+    .auth-brand-footer {
+      text-align: center;
+      margin-top: 24px;
+      h1 { font-size: 20px; color: #1B2A47; margin: 0 0 4px; }
+      p  { font-size: 12px; color: #9aa5b4; margin: 0; }
+    }
+    
     .error-banner {
       background: #fef2f2; border: 1px solid #fecaca; color: #dc2626;
       padding: 12px 16px; border-radius: 8px; font-size: 14px; margin-bottom: 16px;

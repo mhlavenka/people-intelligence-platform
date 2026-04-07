@@ -219,16 +219,16 @@ export interface OrgRow {
           </div>
         </div>
 
-        <div class="modules-label">Enabled Modules</div>
+        <div class="modules-label">Included Modules <span class="modules-hint">(determined by plan)</span></div>
         <div class="modules-row">
           @for (m of availableModules; track m.key) {
-            <label class="module-check" [class.checked]="isModuleChecked(m.key)">
-              <input type="checkbox"
-                     [checked]="isModuleChecked(m.key)"
-                     (change)="toggleModule(m.key)" />
+            <div class="module-check" [class.checked]="isModuleChecked(m.key)">
               <mat-icon>{{ m.icon }}</mat-icon>
               {{ m.label }}
-            </label>
+              @if (isModuleChecked(m.key)) {
+                <mat-icon class="module-check-icon">check_circle</mat-icon>
+              }
+            </div>
           }
         </div>
 
@@ -298,6 +298,7 @@ export interface OrgRow {
       font-size: 12px; font-weight: 600; color: #5a6a7e;
       text-transform: uppercase; letter-spacing: 0.5px;
       margin-bottom: -4px;
+      .modules-hint { font-weight: 400; text-transform: none; letter-spacing: 0; color: #9aa5b4; }
     }
 
     .modules-row {
@@ -308,12 +309,11 @@ export interface OrgRow {
       display: flex; align-items: center; gap: 6px;
       padding: 8px 14px; border-radius: 8px;
       border: 1.5px solid #dce6f0;
-      font-size: 13px; cursor: pointer; color: #5a6a7e;
+      font-size: 13px; color: #9aa5b4;
       transition: all 0.15s;
-      input[type=checkbox] { display: none; }
       mat-icon { font-size: 16px; width: 16px; height: 16px; }
       &.checked { background: #e8f4fd; border-color: #3A9FD6; color: #1B2A47; }
-      &:hover { border-color: #3A9FD6; }
+      .module-check-icon { font-size: 14px; width: 14px; height: 14px; color: #27C4A0; margin-left: 4px; }
     }
 
     /* Logo row */
@@ -478,14 +478,6 @@ export class OrgEditDialogComponent implements OnInit {
 
   isModuleChecked(key: string): boolean {
     return this.selectedModules.includes(key);
-  }
-
-  toggleModule(key: string): void {
-    if (this.selectedModules.includes(key)) {
-      this.selectedModules = this.selectedModules.filter((m) => m !== key);
-    } else {
-      this.selectedModules = [...this.selectedModules, key];
-    }
   }
 
   save(): void {

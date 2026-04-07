@@ -1,55 +1,30 @@
-I. HIGH
--------
-- the auto-logout is triggered even if there is activity
-
-
+I. MODULES
+----------
 Conflict Intelligence
-    Analysis
-         - Conflict analysis - support intake (individual or team) via surveys / interview /
-         - Each analysis one liner with view details.
-         - Generate metric and chart per conflict type
-         - Allow to generate department analysis for a specific conflict type
-         - change rules for analysis based on intake type
-
-    Knowledge & Skill Building
-         - Education Path
-                - Recommend other modules and tools (ex. EQi2)
-         - Skill Developemnt - generate IDP for conflict based
-
-Surveys - Rename Survey to Intake or Situational Assessment
-        - Allow intake types (ex. survey / interview / assessment)
-        - missing a way for a coach to condact the intview based on a chosen template. Create a new menu item for coach
-
-Subscription Plans - include number of AI analysis allowed
-                    - number of users
-                    - Modules included
-                    - other options - analyze
-
 
 Coaching Module - subscription plans for individual coaches
-                -
 
-II MEDIUM
+IDPs - users need to have access to it and be able to print / follow thru with coach follow up - notifications, reminders, etc.
+
 ---------
 - Leadership & Succession IDP cards - how is the status changed from draft to active to completed?
-- Billing framework - will need to work more on taxation - prioritize canada and quebec/ontario
-                    - payment reminders
-                    - overdue / access suspensions
-- Reporting module  - ar aging report
-- Leadership Hub - Add coaching journal
 - Message hub - messages and alerts are joined together - what's the idea here?
-- Organization setup - put together users / departments / orgchart in more logical way
-- create general app settings for system admin that will include typical application generic settings (auto logout, password strength, etc.)
+- Organization setup - put together users / departments / orgchart in more logical way. Make me a proposed solution before implementing so I can approve
+
+
+II. SYSTEM
+----------
+Roles - allow to modify system roles.
+
 
 III. LOW
 --------
 - mobile optimization + do I want an app?
 - MHS EQi import
 
-
 IV. NICE TO HAVE
 ----------------
-- in all modules include some graphics. Curently it is all text, although very relevant, it feels crowded and hard to read
+- in all modules include some graphics. Currently, it is all text, although very relevant, it feels crowded and hard to read
 - user guide + how tos
 
 

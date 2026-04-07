@@ -321,7 +321,7 @@ interface IDP {
 
                     <div class="journal-form-actions">
                       <button mat-raised-button color="primary"
-                              [disabled]="!journalContent?.trim() || journalSaving()"
+                              [disabled]="!journalContent.trim() || journalSaving()"
                               (click)="saveJournalEntry(idp._id)">
                         @if (journalSaving()) { <mat-spinner diameter="16" /> }
                         @else { <mat-icon>save</mat-icon> }

@@ -69,6 +69,13 @@ import { AuthService } from '../../../core/auth.service';
             <mat-icon>sell</mat-icon>
             @if (!collapsed()) { <span>Plans</span> }
           </a>
+          <a routerLink="/system-admin/reports" routerLinkActive="active"
+             class="nav-item"
+             [matTooltip]="collapsed() ? 'Reports' : ''"
+             matTooltipPosition="right">
+            <mat-icon>assessment</mat-icon>
+            @if (!collapsed()) { <span>Reports</span> }
+          </a>
           <a routerLink="/system-admin/settings" routerLinkActive="active"
              class="nav-item"
              [matTooltip]="collapsed() ? 'Settings' : ''"
@@ -90,6 +97,9 @@ import { AuthService } from '../../../core/auth.service';
             }
           </button>
           <mat-menu #userMenu="matMenu">
+            <button mat-menu-item routerLink="/system-admin/profile">
+              <mat-icon>person</mat-icon> Profile
+            </button>
             <mat-divider />
             <button mat-menu-item (click)="logout()">
               <mat-icon>logout</mat-icon> Sign out

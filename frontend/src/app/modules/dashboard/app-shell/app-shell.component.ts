@@ -521,6 +521,7 @@ export class AppShellComponent implements OnInit, OnDestroy {
         { label: 'Users',             icon: 'group',               route: '/admin/users',          roles: ['admin', 'hr_manager'] },
         { label: 'Organization',      icon: 'business',            route: '/admin/organization',   roles: ['admin'] },
         { label: 'Role Permissions',  icon: 'policy',              route: '/admin/roles',          roles: ['admin', 'hr_manager'] },
+        { label: 'Reports',           icon: 'assessment',          route: '/admin/reports',        roles: ['admin', 'hr_manager'] },
         { label: 'Billing',           icon: 'receipt_long',        route: '/billing',              roles: ['admin'] },
       ],
     },

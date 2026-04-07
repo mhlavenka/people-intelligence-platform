@@ -1,261 +1,219 @@
-### ============================================================
-### INSTRUMENT: Conflict Dynamics Profile (CDP) — Individual Form
-### Developer: Capobianco, Davis & Whitman — Cloke Institute
-### Format: Likert-scale items | Self-report (CDP-I) and 360-rater (CDP-360)
-### Subscales: active_constructive, passive_constructive,
-###            active_destructive, passive_destructive
-### Level: Individual (self and rater perspectives)
-### Admin time: 20–25 minutes (self); 15 min (each rater)
-### ============================================================
-###
-### ⚠ NEW SCHEMA REQUIREMENTS FOR THIS INSTRUMENT:
-###
-###   "rater_type": "self" | "multi_rater"
-###     The CDP exists in two parallel forms. The self-report (CDP-I) uses
-###     first-person phrasing ("I..."). The 360 form (CDP-360) uses
-###     third-person phrasing ("This person...") and is completed by
-###     raters the subject nominates. Both forms use the same item IDs
-###     but rater_type determines which phrasing template is served.
-###
-###   "behavior_temperature": "hot" | "cool"
-###     CDP's unique structural feature. "Hot" behaviors are active and
-###     escalating (e.g., Displaying Anger, Winning at All Costs).
-###     "Cool" behaviors are passive or de-escalating (e.g., Avoiding,
-###     Reflective Thinking). Combined with constructive/destructive axis,
-###     this creates a 2x2 classification per item.
-###
-###   "behavior_cluster": string
-###     CDP organizes items into named behavioral clusters within each
-###     subscale. Clusters: "perspective_taking", "creating_solutions",
-###     "expressing_emotions", "reaching_out", "reflective_thinking",
-###     "delay_responding", "adapting", "winning_at_all_costs",
-###     "displaying_anger", "demeaning_others", "retaliating",
-###     "avoiding", "yielding", "hiding_emotions", "self_criticizing".
-###
-###   "rater_pool": { "min": 3, "max": 8, "role_types": [...] }
-###     For CDP-360, specifies minimum raters needed for anonymity and
-###     maximum raters accepted. Role types constrain which rater
-###     categories the subject can nominate (peer, manager, direct_report).
-###
-###   "scale_range": { "min": 1, "max": 6, "labels": { ... } }
-###     CDP uses a 6-point frequency scale (never → always),
-###     not the standard 5-point. Must not collapse to 5-point.
-###
-### ============================================================
+### Conflict Dynamics Profile — Individual (CDP-I)
+### instrumentId: CDP-I | instrumentVersion: 2003
+### level_of_analysis: individual | scoring.method: normative | rater_type: self
+### Changes from v1:
+###   - scoring.subscales normalized from nested object to string[]
+###   - Subscale detail (items, clusters, valence) moved to scoring.subscale_config
+###   - rater_pool: null kept (field now in model schema)
+###   - scale_range.labels changed to keyed Record<string, string> format
+###   - Dropped: scoring.unit (redundant with level_of_analysis)
 
 POST http://localhost:3030/api/surveys/templates
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OWM5MzUyZmYxMmJjMjc3NzBiYTNlZTciLCJvcmdhbml6YXRpb25JZCI6IjY5YzkzNTJmZjEyYmMyNzc3MGJhM2VlNSIsInJvbGUiOiJhZG1pbiIsImVtYWlsIjoiYWRtaW5AaGVsZW5hY29hY2hpbmcuY29tIiwiaWF0IjoxNzc0Nzk2MjUyLCJleHAiOjE3NzQ3OTcxNTJ9.F9-q8VC-_1BLWQSV_liIpAFyaDKpP4DOz50EhI77U1U
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OWM5MzUyZmYxMmJjMjc3NzBiYTNlZTciLCJvcmdhbml6YXRpb25JZCI6IjY5YzkzNTJmZjEyYmMyNzc3MGJhM2VlNSIsInJvbGUiOiJhZG1pbiIsImVtYWlsIjoiYWRtaW5AaGVsZW5hY29hY2hpbmcuY29tIiwiaWF0IjoxNzc1NDc3MDcwLCJleHAiOjE3NzU0Nzc5NzB9.Bu65b7nGLE4u4bfc_dcx_VO2bryJsKDI_g5rcr_d4dU
 
 {
   "moduleType": "conflict",
   "instrumentId": "CDP-I",
   "instrumentVersion": "2003",
   "title": "Conflict Dynamics Profile — Individual (CDP-I)",
-  "description": "Measures both constructive and destructive conflict behaviors across 'hot' (active/escalating) and 'cool' (passive/de-escalating) dimensions. The CDP is the only major validated instrument to directly assess destructive conflict behaviors such as demeaning others and retaliating.",
+  "description": "Measures both constructive and destructive conflict behaviors across hot (active/escalating) and cool (passive/de-escalating) dimensions. The CDP is the only major validated instrument to directly assess destructive behaviors such as demeaning others and retaliating.",
   "level_of_analysis": "individual",
   "rater_type": "self",
   "rater_pool": null,
   "scoring": {
     "method": "normative",
-    "subscales": {
+    "subscales": ["active_constructive", "passive_constructive", "active_destructive", "passive_destructive"],
+    "subscale_config": {
       "active_constructive": {
         "behavior_temperature": "hot",
         "valence": "constructive",
-        "clusters": ["perspective_taking", "creating_solutions", "expressing_emotions", "reaching_out"]
+        "clusters": ["perspective_taking", "creating_solutions", "expressing_emotions", "reaching_out"],
+        "description": "Active, escalation-aware behaviors that constructively engage the conflict."
       },
       "passive_constructive": {
         "behavior_temperature": "cool",
         "valence": "constructive",
-        "clusters": ["reflective_thinking", "delay_responding", "adapting"]
+        "clusters": ["reflective_thinking", "delay_responding", "adapting"],
+        "description": "Measured, de-escalating behaviors that constructively manage conflict tempo."
       },
       "active_destructive": {
         "behavior_temperature": "hot",
         "valence": "destructive",
-        "clusters": ["winning_at_all_costs", "displaying_anger", "demeaning_others", "retaliating"]
+        "clusters": ["winning_at_all_costs", "displaying_anger", "demeaning_others", "retaliating"],
+        "description": "Active, escalating behaviors that damage relationships and outcomes."
       },
       "passive_destructive": {
         "behavior_temperature": "cool",
         "valence": "destructive",
-        "clusters": ["avoiding_conflict", "yielding", "hiding_emotions", "self_criticizing"]
+        "clusters": ["avoiding_conflict", "yielding", "hiding_emotions", "self_criticizing"],
+        "description": "Passive behaviors that avoid engagement in ways that worsen conflict over time."
       }
     },
-    "score_range_per_cluster": { "min": 1, "max": 6 },
+    "score_range_per_subscale": { "min": 1, "max": 6 },
     "note": "Score each cluster separately as a mean. Do not collapse into a single conflict score."
   },
-  "scale_range": {
-    "min": 1,
-    "max": 6,
-    "labels": {
-      "1": "Never",
-      "2": "Rarely",
-      "3": "Seldom",
-      "4": "Often",
-      "5": "Frequently",
-      "6": "Always"
-    }
-  },
-  "instructions": "Think about how you behave when you are in conflict or experiencing disagreement at work. Using the scale below, indicate how often you engage in each of the following behaviors.",
+  "instructions": "Think about how you behave when you are in conflict or experiencing disagreement at work. Using the 1–6 scale, indicate how often you engage in each of the following behaviors. 1 = Never, 6 = Always.",
   "questions": [
 
-    { "id": "q1",  "type": "scale", "subscale": "active_constructive", "behavior_temperature": "hot",
-      "behavior_cluster": "perspective_taking", "category": "conflict_behavior",
+    { "id": "q1",  "type": "scale", "subscale": "active_constructive",
+      "behavior_temperature": "hot", "behavior_cluster": "perspective_taking", "category": "conflict_behavior",
       "text": "Try to look at the conflict from the other person's perspective.",
-      "scale_range": { "min": 1, "max": 6 } },
+      "scale_range": { "min": 1, "max": 6, "labels": { "1": "Never", "2": "Rarely", "3": "Seldom", "4": "Often", "5": "Frequently", "6": "Always" } } },
 
-    { "id": "q2",  "type": "scale", "subscale": "active_constructive", "behavior_temperature": "hot",
-      "behavior_cluster": "perspective_taking", "category": "conflict_behavior",
+    { "id": "q2",  "type": "scale", "subscale": "active_constructive",
+      "behavior_temperature": "hot", "behavior_cluster": "perspective_taking", "category": "conflict_behavior",
       "text": "Consider the other person's point of view before deciding what to do.",
-      "scale_range": { "min": 1, "max": 6 } },
+      "scale_range": { "min": 1, "max": 6, "labels": { "1": "Never", "2": "Rarely", "3": "Seldom", "4": "Often", "5": "Frequently", "6": "Always" } } },
 
-    { "id": "q3",  "type": "scale", "subscale": "active_constructive", "behavior_temperature": "hot",
-      "behavior_cluster": "perspective_taking", "category": "conflict_behavior",
+    { "id": "q3",  "type": "scale", "subscale": "active_constructive",
+      "behavior_temperature": "hot", "behavior_cluster": "perspective_taking", "category": "conflict_behavior",
       "text": "Put myself in the other person's position to understand how they see the situation.",
-      "scale_range": { "min": 1, "max": 6 } },
+      "scale_range": { "min": 1, "max": 6, "labels": { "1": "Never", "2": "Rarely", "3": "Seldom", "4": "Often", "5": "Frequently", "6": "Always" } } },
 
-    { "id": "q4",  "type": "scale", "subscale": "active_constructive", "behavior_temperature": "hot",
-      "behavior_cluster": "creating_solutions", "category": "conflict_behavior",
+    { "id": "q4",  "type": "scale", "subscale": "active_constructive",
+      "behavior_temperature": "hot", "behavior_cluster": "creating_solutions", "category": "conflict_behavior",
       "text": "Try to think of creative solutions to the conflict.",
-      "scale_range": { "min": 1, "max": 6 } },
+      "scale_range": { "min": 1, "max": 6, "labels": { "1": "Never", "2": "Rarely", "3": "Seldom", "4": "Often", "5": "Frequently", "6": "Always" } } },
 
-    { "id": "q5",  "type": "scale", "subscale": "active_constructive", "behavior_temperature": "hot",
-      "behavior_cluster": "creating_solutions", "category": "conflict_behavior",
+    { "id": "q5",  "type": "scale", "subscale": "active_constructive",
+      "behavior_temperature": "hot", "behavior_cluster": "creating_solutions", "category": "conflict_behavior",
       "text": "Generate a number of possible options before deciding what to do about the conflict.",
-      "scale_range": { "min": 1, "max": 6 } },
+      "scale_range": { "min": 1, "max": 6, "labels": { "1": "Never", "2": "Rarely", "3": "Seldom", "4": "Often", "5": "Frequently", "6": "Always" } } },
 
-    { "id": "q6",  "type": "scale", "subscale": "active_constructive", "behavior_temperature": "hot",
-      "behavior_cluster": "creating_solutions", "category": "conflict_behavior",
+    { "id": "q6",  "type": "scale", "subscale": "active_constructive",
+      "behavior_temperature": "hot", "behavior_cluster": "creating_solutions", "category": "conflict_behavior",
       "text": "Look for new solutions that meet the needs of everyone involved.",
-      "scale_range": { "min": 1, "max": 6 } },
+      "scale_range": { "min": 1, "max": 6, "labels": { "1": "Never", "2": "Rarely", "3": "Seldom", "4": "Often", "5": "Frequently", "6": "Always" } } },
 
-    { "id": "q7",  "type": "scale", "subscale": "active_constructive", "behavior_temperature": "hot",
-      "behavior_cluster": "expressing_emotions", "category": "conflict_behavior",
+    { "id": "q7",  "type": "scale", "subscale": "active_constructive",
+      "behavior_temperature": "hot", "behavior_cluster": "expressing_emotions", "category": "conflict_behavior",
       "text": "Tell the other person how I am feeling about the situation.",
-      "scale_range": { "min": 1, "max": 6 } },
+      "scale_range": { "min": 1, "max": 6, "labels": { "1": "Never", "2": "Rarely", "3": "Seldom", "4": "Often", "5": "Frequently", "6": "Always" } } },
 
-    { "id": "q8",  "type": "scale", "subscale": "active_constructive", "behavior_temperature": "hot",
-      "behavior_cluster": "expressing_emotions", "category": "conflict_behavior",
+    { "id": "q8",  "type": "scale", "subscale": "active_constructive",
+      "behavior_temperature": "hot", "behavior_cluster": "expressing_emotions", "category": "conflict_behavior",
       "text": "Express my feelings openly and directly.",
-      "scale_range": { "min": 1, "max": 6 } },
+      "scale_range": { "min": 1, "max": 6, "labels": { "1": "Never", "2": "Rarely", "3": "Seldom", "4": "Often", "5": "Frequently", "6": "Always" } } },
 
-    { "id": "q9",  "type": "scale", "subscale": "active_constructive", "behavior_temperature": "hot",
-      "behavior_cluster": "reaching_out", "category": "conflict_behavior",
+    { "id": "q9",  "type": "scale", "subscale": "active_constructive",
+      "behavior_temperature": "hot", "behavior_cluster": "reaching_out", "category": "conflict_behavior",
       "text": "Reach out to the other person even after a difficult exchange.",
-      "scale_range": { "min": 1, "max": 6 } },
+      "scale_range": { "min": 1, "max": 6, "labels": { "1": "Never", "2": "Rarely", "3": "Seldom", "4": "Often", "5": "Frequently", "6": "Always" } } },
 
-    { "id": "q10", "type": "scale", "subscale": "active_constructive", "behavior_temperature": "hot",
-      "behavior_cluster": "reaching_out", "category": "conflict_behavior",
+    { "id": "q10", "type": "scale", "subscale": "active_constructive",
+      "behavior_temperature": "hot", "behavior_cluster": "reaching_out", "category": "conflict_behavior",
       "text": "Initiate reconciliation after a disagreement.",
-      "scale_range": { "min": 1, "max": 6 } },
+      "scale_range": { "min": 1, "max": 6, "labels": { "1": "Never", "2": "Rarely", "3": "Seldom", "4": "Often", "5": "Frequently", "6": "Always" } } },
 
-    { "id": "q11", "type": "scale", "subscale": "passive_constructive", "behavior_temperature": "cool",
-      "behavior_cluster": "reflective_thinking", "category": "conflict_behavior",
+    { "id": "q11", "type": "scale", "subscale": "passive_constructive",
+      "behavior_temperature": "cool", "behavior_cluster": "reflective_thinking", "category": "conflict_behavior",
       "text": "Step back from the situation and think carefully before responding.",
-      "scale_range": { "min": 1, "max": 6 } },
+      "scale_range": { "min": 1, "max": 6, "labels": { "1": "Never", "2": "Rarely", "3": "Seldom", "4": "Often", "5": "Frequently", "6": "Always" } } },
 
-    { "id": "q12", "type": "scale", "subscale": "passive_constructive", "behavior_temperature": "cool",
-      "behavior_cluster": "reflective_thinking", "category": "conflict_behavior",
+    { "id": "q12", "type": "scale", "subscale": "passive_constructive",
+      "behavior_temperature": "cool", "behavior_cluster": "reflective_thinking", "category": "conflict_behavior",
       "text": "Pause and reflect before reacting to a conflict situation.",
-      "scale_range": { "min": 1, "max": 6 } },
+      "scale_range": { "min": 1, "max": 6, "labels": { "1": "Never", "2": "Rarely", "3": "Seldom", "4": "Often", "5": "Frequently", "6": "Always" } } },
 
-    { "id": "q13", "type": "scale", "subscale": "passive_constructive", "behavior_temperature": "cool",
-      "behavior_cluster": "delay_responding", "category": "conflict_behavior",
+    { "id": "q13", "type": "scale", "subscale": "passive_constructive",
+      "behavior_temperature": "cool", "behavior_cluster": "delay_responding", "category": "conflict_behavior",
       "text": "Wait for a better time before dealing with a conflict.",
-      "scale_range": { "min": 1, "max": 6 } },
+      "scale_range": { "min": 1, "max": 6, "labels": { "1": "Never", "2": "Rarely", "3": "Seldom", "4": "Often", "5": "Frequently", "6": "Always" } } },
 
-    { "id": "q14", "type": "scale", "subscale": "passive_constructive", "behavior_temperature": "cool",
-      "behavior_cluster": "delay_responding", "category": "conflict_behavior",
+    { "id": "q14", "type": "scale", "subscale": "passive_constructive",
+      "behavior_temperature": "cool", "behavior_cluster": "delay_responding", "category": "conflict_behavior",
       "text": "Allow time to pass before returning to a difficult issue.",
-      "scale_range": { "min": 1, "max": 6 } },
+      "scale_range": { "min": 1, "max": 6, "labels": { "1": "Never", "2": "Rarely", "3": "Seldom", "4": "Often", "5": "Frequently", "6": "Always" } } },
 
-    { "id": "q15", "type": "scale", "subscale": "passive_constructive", "behavior_temperature": "cool",
-      "behavior_cluster": "adapting", "category": "conflict_behavior",
+    { "id": "q15", "type": "scale", "subscale": "passive_constructive",
+      "behavior_temperature": "cool", "behavior_cluster": "adapting", "category": "conflict_behavior",
       "text": "Change my approach to the conflict based on how the situation evolves.",
-      "scale_range": { "min": 1, "max": 6 } },
+      "scale_range": { "min": 1, "max": 6, "labels": { "1": "Never", "2": "Rarely", "3": "Seldom", "4": "Often", "5": "Frequently", "6": "Always" } } },
 
-    { "id": "q16", "type": "scale", "subscale": "passive_constructive", "behavior_temperature": "cool",
-      "behavior_cluster": "adapting", "category": "conflict_behavior",
+    { "id": "q16", "type": "scale", "subscale": "passive_constructive",
+      "behavior_temperature": "cool", "behavior_cluster": "adapting", "category": "conflict_behavior",
       "text": "Adjust my strategy as I learn more about the other person's concerns.",
-      "scale_range": { "min": 1, "max": 6 } },
+      "scale_range": { "min": 1, "max": 6, "labels": { "1": "Never", "2": "Rarely", "3": "Seldom", "4": "Often", "5": "Frequently", "6": "Always" } } },
 
-    { "id": "q17", "type": "scale", "subscale": "active_destructive", "behavior_temperature": "hot",
-      "behavior_cluster": "winning_at_all_costs", "category": "conflict_behavior",
+    { "id": "q17", "type": "scale", "subscale": "active_destructive",
+      "behavior_temperature": "hot", "behavior_cluster": "winning_at_all_costs", "category": "conflict_behavior",
       "text": "Do whatever it takes to win in a conflict situation.",
-      "scale_range": { "min": 1, "max": 6 } },
+      "scale_range": { "min": 1, "max": 6, "labels": { "1": "Never", "2": "Rarely", "3": "Seldom", "4": "Often", "5": "Frequently", "6": "Always" } } },
 
-    { "id": "q18", "type": "scale", "subscale": "active_destructive", "behavior_temperature": "hot",
-      "behavior_cluster": "winning_at_all_costs", "category": "conflict_behavior",
+    { "id": "q18", "type": "scale", "subscale": "active_destructive",
+      "behavior_temperature": "hot", "behavior_cluster": "winning_at_all_costs", "category": "conflict_behavior",
       "text": "Try to outmaneuver the other person in a conflict.",
-      "scale_range": { "min": 1, "max": 6 } },
+      "scale_range": { "min": 1, "max": 6, "labels": { "1": "Never", "2": "Rarely", "3": "Seldom", "4": "Often", "5": "Frequently", "6": "Always" } } },
 
-    { "id": "q19", "type": "scale", "subscale": "active_destructive", "behavior_temperature": "hot",
-      "behavior_cluster": "displaying_anger", "category": "conflict_behavior",
+    { "id": "q19", "type": "scale", "subscale": "active_destructive",
+      "behavior_temperature": "hot", "behavior_cluster": "displaying_anger", "category": "conflict_behavior",
       "text": "Raise my voice or show visible frustration during a conflict.",
-      "scale_range": { "min": 1, "max": 6 } },
+      "scale_range": { "min": 1, "max": 6, "labels": { "1": "Never", "2": "Rarely", "3": "Seldom", "4": "Often", "5": "Frequently", "6": "Always" } } },
 
-    { "id": "q20", "type": "scale", "subscale": "active_destructive", "behavior_temperature": "hot",
-      "behavior_cluster": "displaying_anger", "category": "conflict_behavior",
+    { "id": "q20", "type": "scale", "subscale": "active_destructive",
+      "behavior_temperature": "hot", "behavior_cluster": "displaying_anger", "category": "conflict_behavior",
       "text": "Let my anger show when I am in a conflict.",
-      "scale_range": { "min": 1, "max": 6 } },
+      "scale_range": { "min": 1, "max": 6, "labels": { "1": "Never", "2": "Rarely", "3": "Seldom", "4": "Often", "5": "Frequently", "6": "Always" } } },
 
-    { "id": "q21", "type": "scale", "subscale": "active_destructive", "behavior_temperature": "hot",
-      "behavior_cluster": "demeaning_others", "category": "conflict_behavior",
+    { "id": "q21", "type": "scale", "subscale": "active_destructive",
+      "behavior_temperature": "hot", "behavior_cluster": "demeaning_others", "category": "conflict_behavior",
       "text": "Belittle the other person's ideas or positions.",
-      "scale_range": { "min": 1, "max": 6 } },
+      "scale_range": { "min": 1, "max": 6, "labels": { "1": "Never", "2": "Rarely", "3": "Seldom", "4": "Often", "5": "Frequently", "6": "Always" } } },
 
-    { "id": "q22", "type": "scale", "subscale": "active_destructive", "behavior_temperature": "hot",
-      "behavior_cluster": "demeaning_others", "category": "conflict_behavior",
+    { "id": "q22", "type": "scale", "subscale": "active_destructive",
+      "behavior_temperature": "hot", "behavior_cluster": "demeaning_others", "category": "conflict_behavior",
       "text": "Dismiss the other person's concerns as unimportant.",
-      "scale_range": { "min": 1, "max": 6 } },
+      "scale_range": { "min": 1, "max": 6, "labels": { "1": "Never", "2": "Rarely", "3": "Seldom", "4": "Often", "5": "Frequently", "6": "Always" } } },
 
-    { "id": "q23", "type": "scale", "subscale": "active_destructive", "behavior_temperature": "hot",
-      "behavior_cluster": "retaliating", "category": "conflict_behavior",
+    { "id": "q23", "type": "scale", "subscale": "active_destructive",
+      "behavior_temperature": "hot", "behavior_cluster": "retaliating", "category": "conflict_behavior",
       "text": "Get back at the other person when I feel wronged.",
-      "scale_range": { "min": 1, "max": 6 } },
+      "scale_range": { "min": 1, "max": 6, "labels": { "1": "Never", "2": "Rarely", "3": "Seldom", "4": "Often", "5": "Frequently", "6": "Always" } } },
 
-    { "id": "q24", "type": "scale", "subscale": "active_destructive", "behavior_temperature": "hot",
-      "behavior_cluster": "retaliating", "category": "conflict_behavior",
+    { "id": "q24", "type": "scale", "subscale": "active_destructive",
+      "behavior_temperature": "hot", "behavior_cluster": "retaliating", "category": "conflict_behavior",
       "text": "Deliberately make things difficult for someone who has frustrated me.",
-      "scale_range": { "min": 1, "max": 6 } },
+      "scale_range": { "min": 1, "max": 6, "labels": { "1": "Never", "2": "Rarely", "3": "Seldom", "4": "Often", "5": "Frequently", "6": "Always" } } },
 
-    { "id": "q25", "type": "scale", "subscale": "passive_destructive", "behavior_temperature": "cool",
-      "behavior_cluster": "avoiding_conflict", "category": "conflict_behavior",
+    { "id": "q25", "type": "scale", "subscale": "passive_destructive",
+      "behavior_temperature": "cool", "behavior_cluster": "avoiding_conflict", "category": "conflict_behavior",
       "text": "Walk away from a conflict rather than deal with it.",
-      "scale_range": { "min": 1, "max": 6 } },
+      "scale_range": { "min": 1, "max": 6, "labels": { "1": "Never", "2": "Rarely", "3": "Seldom", "4": "Often", "5": "Frequently", "6": "Always" } } },
 
-    { "id": "q26", "type": "scale", "subscale": "passive_destructive", "behavior_temperature": "cool",
-      "behavior_cluster": "avoiding_conflict", "category": "conflict_behavior",
+    { "id": "q26", "type": "scale", "subscale": "passive_destructive",
+      "behavior_temperature": "cool", "behavior_cluster": "avoiding_conflict", "category": "conflict_behavior",
       "text": "Put off dealing with a conflict as long as possible.",
-      "scale_range": { "min": 1, "max": 6 } },
+      "scale_range": { "min": 1, "max": 6, "labels": { "1": "Never", "2": "Rarely", "3": "Seldom", "4": "Often", "5": "Frequently", "6": "Always" } } },
 
-    { "id": "q27", "type": "scale", "subscale": "passive_destructive", "behavior_temperature": "cool",
-      "behavior_cluster": "yielding", "category": "conflict_behavior",
+    { "id": "q27", "type": "scale", "subscale": "passive_destructive",
+      "behavior_temperature": "cool", "behavior_cluster": "yielding", "category": "conflict_behavior",
       "text": "Give in to the other person's demands just to end the conflict.",
-      "scale_range": { "min": 1, "max": 6 } },
+      "scale_range": { "min": 1, "max": 6, "labels": { "1": "Never", "2": "Rarely", "3": "Seldom", "4": "Often", "5": "Frequently", "6": "Always" } } },
 
-    { "id": "q28", "type": "scale", "subscale": "passive_destructive", "behavior_temperature": "cool",
-      "behavior_cluster": "yielding", "category": "conflict_behavior",
+    { "id": "q28", "type": "scale", "subscale": "passive_destructive",
+      "behavior_temperature": "cool", "behavior_cluster": "yielding", "category": "conflict_behavior",
       "text": "Concede my position without really believing the other person is right.",
-      "scale_range": { "min": 1, "max": 6 } },
+      "scale_range": { "min": 1, "max": 6, "labels": { "1": "Never", "2": "Rarely", "3": "Seldom", "4": "Often", "5": "Frequently", "6": "Always" } } },
 
-    { "id": "q29", "type": "scale", "subscale": "passive_destructive", "behavior_temperature": "cool",
-      "behavior_cluster": "hiding_emotions", "category": "conflict_behavior",
+    { "id": "q29", "type": "scale", "subscale": "passive_destructive",
+      "behavior_temperature": "cool", "behavior_cluster": "hiding_emotions", "category": "conflict_behavior",
       "text": "Hide my true feelings about the conflict.",
-      "scale_range": { "min": 1, "max": 6 } },
+      "scale_range": { "min": 1, "max": 6, "labels": { "1": "Never", "2": "Rarely", "3": "Seldom", "4": "Often", "5": "Frequently", "6": "Always" } } },
 
-    { "id": "q30", "type": "scale", "subscale": "passive_destructive", "behavior_temperature": "cool",
-      "behavior_cluster": "hiding_emotions", "category": "conflict_behavior",
+    { "id": "q30", "type": "scale", "subscale": "passive_destructive",
+      "behavior_temperature": "cool", "behavior_cluster": "hiding_emotions", "category": "conflict_behavior",
       "text": "Conceal how the conflict is affecting me emotionally.",
-      "scale_range": { "min": 1, "max": 6 } },
+      "scale_range": { "min": 1, "max": 6, "labels": { "1": "Never", "2": "Rarely", "3": "Seldom", "4": "Often", "5": "Frequently", "6": "Always" } } },
 
-    { "id": "q31", "type": "scale", "subscale": "passive_destructive", "behavior_temperature": "cool",
-      "behavior_cluster": "self_criticizing", "category": "conflict_behavior",
+    { "id": "q31", "type": "scale", "subscale": "passive_destructive",
+      "behavior_temperature": "cool", "behavior_cluster": "self_criticizing", "category": "conflict_behavior",
       "text": "Blame myself when a conflict does not go well.",
-      "scale_range": { "min": 1, "max": 6 } },
+      "scale_range": { "min": 1, "max": 6, "labels": { "1": "Never", "2": "Rarely", "3": "Seldom", "4": "Often", "5": "Frequently", "6": "Always" } } },
 
-    { "id": "q32", "type": "scale", "subscale": "passive_destructive", "behavior_temperature": "cool",
-      "behavior_cluster": "self_criticizing", "category": "conflict_behavior",
+    { "id": "q32", "type": "scale", "subscale": "passive_destructive",
+      "behavior_temperature": "cool", "behavior_cluster": "self_criticizing", "category": "conflict_behavior",
       "text": "Dwell on my own mistakes in handling a conflict.",
-      "scale_range": { "min": 1, "max": 6 } }
+      "scale_range": { "min": 1, "max": 6, "labels": { "1": "Never", "2": "Rarely", "3": "Seldom", "4": "Often", "5": "Frequently", "6": "Always" } } }
   ]
 }

@@ -224,7 +224,7 @@ Create these Angular standalone components using Angular Material:
      escalation button
 
   5. SurveyLaunchComponent
-     Survey template selector, employee group selector, schedule/send
+     Intake template selector, employee group selector, schedule/send
 
   6. IDPViewComponent
      GROW model display with milestone tracker and progress timeline

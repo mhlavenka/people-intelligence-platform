@@ -166,6 +166,14 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'admin/reports',
+        canActivate: [roleGuard([...ADMIN_HR])],
+        loadComponent: () =>
+          import('./modules/admin/reports/reports.component').then(
+            (m) => m.OrgReportsComponent
+          ),
+      },
+      {
         path: 'billing',
         canActivate: [roleGuard([...ADMIN_ONLY])],
         loadComponent: () =>
@@ -206,10 +214,24 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'reports',
+        loadComponent: () =>
+          import('./modules/system-admin/reports/reports.component').then(
+            (m) => m.SaReportsComponent
+          ),
+      },
+      {
         path: 'settings',
         loadComponent: () =>
           import('./modules/system-admin/app-settings/app-settings.component').then(
             (m) => m.AppSettingsComponent
+          ),
+      },
+      {
+        path: 'profile',
+        loadComponent: () =>
+          import('./modules/profile/profile.component').then(
+            (m) => m.ProfileComponent
           ),
       },
     ],

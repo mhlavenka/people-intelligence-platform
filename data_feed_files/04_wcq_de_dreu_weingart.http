@@ -1,65 +1,31 @@
-### ============================================================
-### INSTRUMENT: Workplace Conflict Questionnaire (de Dreu & Weingart, 2003)
-### Developer: Carsten K.W. de Dreu & Laurie R. Weingart
-### Published: Journal of Applied Psychology, 88(4), 741–749
-### Format: Likert-scale items (1–5) | Normative scoring
-### Subscales: task_conflict, relationship_conflict, process_conflict
-### Level: TEAM (unit of analysis is the team, not the individual)
-### Admin time: 5–8 minutes
-### ============================================================
-###
-### ⚠ NEW SCHEMA REQUIREMENTS FOR THIS INSTRUMENT:
-###
-###   "level_of_analysis": "team"
-###     This is the critical distinction from all other instruments.
-###     Individual responses are collected but the scoring unit is the
-###     TEAM AGGREGATE (rwg inter-rater agreement statistic or ICC).
-###     The API must flag this instrument for team-level aggregation
-###     rather than individual-level report generation.
-###
-###   "aggregation_method": "rwg" | "icc1" | "mean"
-###     Specifies the statistical method used to aggregate individual
-###     responses to team-level scores. de Dreu & Weingart (2003)
-###     used rwg (within-group agreement index). Minimum acceptable
-###     rwg for aggregation is .70. If below threshold, flag as
-###     "low agreement — individual-level conflict patterns present."
-###
-###   "minimum_respondents_per_team": integer
-###     Team-level constructs require a minimum number of responses
-###     to be psychometrically meaningful. Recommended minimum: 3.
-###     Below this, the API should warn and not generate team scores.
-###
-###   "conflict_type_model": "jehn_1995" | "de_dreu_weingart_2003"
-###     Tags which three-type model (task/relationship/process) the
-###     instrument operationalizes. This affects norm table selection
-###     and how reports frame the results theoretically.
-###
-###   "reference_period": "past_month" | "past_quarter" | "ongoing"
-###     Conflict frequency instruments require temporal anchoring.
-###     Respondents interpret "how much conflict" differently without
-###     an explicit reference window.
-###
-### ============================================================
+### Workplace Conflict Questionnaire (de Dreu & Weingart, 2003)
+### instrumentId: WCQ-deDreu | instrumentVersion: 2003
+### level_of_analysis: team | scoring.method: normative | aggregation_method: rwg
+### Changes from v1:
+###   - scoring.subscales normalized from nested object to string[]
+###   - Subscale detail (items, descriptions) moved to scoring.subscale_config
+###   - Dropped: conflict_type_model (redundant with instrumentId)
+###   - Dropped: scoring.unit (redundant with level_of_analysis: team)
+###   - aggregation_threshold moved inside scoring object (matches IScoringConfig)
+###   - scale_range.labels changed to keyed Record<string, string> format
 
 POST http://localhost:3030/api/surveys/templates
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OWM5MzUyZmYxMmJjMjc3NzBiYTNlZTciLCJvcmdhbml6YXRpb25JZCI6IjY5YzkzNTJmZjEyYmMyNzc3MGJhM2VlNSIsInJvbGUiOiJhZG1pbiIsImVtYWlsIjoiYWRtaW5AaGVsZW5hY29hY2hpbmcuY29tIiwiaWF0IjoxNzc0Nzk2MjUyLCJleHAiOjE3NzQ3OTcxNTJ9.F9-q8VC-_1BLWQSV_liIpAFyaDKpP4DOz50EhI77U1U
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OWM5MzUyZmYxMmJjMjc3NzBiYTNlZTciLCJvcmdhbml6YXRpb25JZCI6IjY5YzkzNTJmZjEyYmMyNzc3MGJhM2VlNSIsInJvbGUiOiJhZG1pbiIsImVtYWlsIjoiYWRtaW5AaGVsZW5hY29hY2hpbmcuY29tIiwiaWF0IjoxNzc1NDc3MDcwLCJleHAiOjE3NzU0Nzc5NzB9.Bu65b7nGLE4u4bfc_dcx_VO2bryJsKDI_g5rcr_d4dU
 
 {
   "moduleType": "conflict",
   "instrumentId": "WCQ-deDreu",
   "instrumentVersion": "2003",
   "title": "Workplace Conflict Questionnaire (de Dreu & Weingart, 2003)",
-  "description": "Meta-analytically validated instrument distinguishing task conflict (disagreements about work content), relationship conflict (interpersonal friction and animosity), and process conflict (disagreements about how work is organized). Designed for team-level analysis — individual responses are aggregated to produce team conflict profiles.",
+  "description": "Meta-analytically validated instrument distinguishing task conflict, relationship conflict, and process conflict. Designed for team-level analysis — individual responses are aggregated to a team conflict profile using the rwg within-group agreement statistic.",
   "level_of_analysis": "team",
   "aggregation_method": "rwg",
   "minimum_respondents_per_team": 3,
-  "conflict_type_model": "de_dreu_weingart_2003",
-  "reference_period": "past_month",
   "scoring": {
     "method": "normative",
-    "unit": "team_aggregate",
-    "subscales": {
+    "subscales": ["task_conflict", "relationship_conflict", "process_conflict"],
+    "subscale_config": {
       "task_conflict": {
         "items": ["q1","q2","q3","q4"],
         "item_count": 4,
@@ -83,73 +49,62 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OWM5M
       "below_threshold_message": "Within-group agreement is insufficient for team-level aggregation. Individual conflict patterns may reflect subgroup dynamics. Recommend qualitative follow-up."
     }
   },
-  "scale_range": {
-    "min": 1,
-    "max": 5,
-    "labels": {
-      "1": "None",
-      "2": "Very little",
-      "3": "Some",
-      "4": "A lot",
-      "5": "A great deal"
-    }
-  },
-  "instructions": "The following questions ask about disagreements and tensions that occur in your immediate work team. Please think about the past month and indicate how much of each type of conflict has been present in your team.",
+  "instructions": "The following questions ask about disagreements and tensions in your immediate work team over the past month. Indicate how much of each type of conflict has been present. 1 = None, 5 = A great deal.",
   "questions": [
 
     { "id": "q1", "type": "scale", "subscale": "task_conflict", "category": "task_conflict",
       "reference_period": "past_month",
       "text": "How much conflict of ideas is there in your work team?",
-      "scale_range": { "min": 1, "max": 5 } },
+      "scale_range": { "min": 1, "max": 5, "labels": { "1": "None", "2": "Very little", "3": "Some", "4": "A lot", "5": "A great deal" } } },
 
     { "id": "q2", "type": "scale", "subscale": "task_conflict", "category": "task_conflict",
       "reference_period": "past_month",
       "text": "How often do people in your work team disagree about the work being done?",
-      "scale_range": { "min": 1, "max": 5 } },
+      "scale_range": { "min": 1, "max": 5, "labels": { "1": "None", "2": "Very little", "3": "Some", "4": "A lot", "5": "A great deal" } } },
 
     { "id": "q3", "type": "scale", "subscale": "task_conflict", "category": "task_conflict",
       "reference_period": "past_month",
       "text": "How much disagreement is there in your team about how tasks should be completed?",
-      "scale_range": { "min": 1, "max": 5 } },
+      "scale_range": { "min": 1, "max": 5, "labels": { "1": "None", "2": "Very little", "3": "Some", "4": "A lot", "5": "A great deal" } } },
 
     { "id": "q4", "type": "scale", "subscale": "task_conflict", "category": "task_conflict",
       "reference_period": "past_month",
       "text": "How much disagreement is there in your team about decisions about your work?",
-      "scale_range": { "min": 1, "max": 5 } },
+      "scale_range": { "min": 1, "max": 5, "labels": { "1": "None", "2": "Very little", "3": "Some", "4": "A lot", "5": "A great deal" } } },
 
     { "id": "q5", "type": "scale", "subscale": "relationship_conflict", "category": "relationship_conflict",
       "reference_period": "past_month",
       "text": "How much relationship tension is there in your work team?",
-      "scale_range": { "min": 1, "max": 5 } },
+      "scale_range": { "min": 1, "max": 5, "labels": { "1": "None", "2": "Very little", "3": "Some", "4": "A lot", "5": "A great deal" } } },
 
     { "id": "q6", "type": "scale", "subscale": "relationship_conflict", "category": "relationship_conflict",
       "reference_period": "past_month",
       "text": "How much interpersonal friction is there among members of your work team?",
-      "scale_range": { "min": 1, "max": 5 } },
+      "scale_range": { "min": 1, "max": 5, "labels": { "1": "None", "2": "Very little", "3": "Some", "4": "A lot", "5": "A great deal" } } },
 
     { "id": "q7", "type": "scale", "subscale": "relationship_conflict", "category": "relationship_conflict",
       "reference_period": "past_month",
       "text": "How much personal conflict is there in your work team?",
-      "scale_range": { "min": 1, "max": 5 } },
+      "scale_range": { "min": 1, "max": 5, "labels": { "1": "None", "2": "Very little", "3": "Some", "4": "A lot", "5": "A great deal" } } },
 
     { "id": "q8", "type": "scale", "subscale": "relationship_conflict", "category": "relationship_conflict",
       "reference_period": "past_month",
       "text": "How much tension exists between team members on a personal level?",
-      "scale_range": { "min": 1, "max": 5 } },
+      "scale_range": { "min": 1, "max": 5, "labels": { "1": "None", "2": "Very little", "3": "Some", "4": "A lot", "5": "A great deal" } } },
 
     { "id": "q9", "type": "scale", "subscale": "process_conflict", "category": "process_conflict",
       "reference_period": "past_month",
       "text": "How much disagreement is there about who should do what in your team?",
-      "scale_range": { "min": 1, "max": 5 } },
+      "scale_range": { "min": 1, "max": 5, "labels": { "1": "None", "2": "Very little", "3": "Some", "4": "A lot", "5": "A great deal" } } },
 
     { "id": "q10", "type": "scale", "subscale": "process_conflict", "category": "process_conflict",
       "reference_period": "past_month",
       "text": "How much conflict is there about how responsibilities are divided in your team?",
-      "scale_range": { "min": 1, "max": 5 } },
+      "scale_range": { "min": 1, "max": 5, "labels": { "1": "None", "2": "Very little", "3": "Some", "4": "A lot", "5": "A great deal" } } },
 
     { "id": "q11", "type": "scale", "subscale": "process_conflict", "category": "process_conflict",
       "reference_period": "past_month",
       "text": "How much disagreement exists in your team about how work should be scheduled and organized?",
-      "scale_range": { "min": 1, "max": 5 } }
+      "scale_range": { "min": 1, "max": 5, "labels": { "1": "None", "2": "Very little", "3": "Some", "4": "A lot", "5": "A great deal" } } }
   ]
 }

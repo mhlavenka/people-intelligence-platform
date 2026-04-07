@@ -43,7 +43,6 @@ export interface ConfirmDialogData {
       align-items: center;
       text-align: center;
       padding: 32px 28px 24px;
-      max-width: 380px;
     }
 
     .dialog-icon {

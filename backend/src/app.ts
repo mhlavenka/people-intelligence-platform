@@ -23,6 +23,9 @@ import orgChartRoutes from './routes/org-chart.routes';
 import dashboardRoutes from './routes/dashboard.routes';
 import plansRoutes from './routes/plans.routes';
 import rolesRoutes from './routes/roles.routes';
+import authPasskeyRoutes from './routes/auth-passkey.routes';
+import reportsRoutes from './routes/reports.routes';
+import authOAuthRoutes from './routes/auth-oauth.routes';
 import systemAdminSettingsRoutes from './routes/system-admin-settings.routes';
 
 const app = express();
@@ -51,6 +54,8 @@ app.get('/health', (_req, res) => res.json({ status: 'ok', env: config.nodeEnv }
 
 // API routes
 app.use('/api/auth', authRoutes);
+app.use('/api/auth/passkey', authPasskeyRoutes);
+app.use('/api/auth/oauth', authOAuthRoutes);
 app.use('/api/organizations', organizationRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/surveys', surveyRoutes);
@@ -67,6 +72,7 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/plans', plansRoutes);
 app.use('/api/roles', rolesRoutes);
 app.use('/api/system-admin/settings', systemAdminSettingsRoutes);
+app.use('/api/reports', reportsRoutes);
 
 // 404 and error handlers (must be last)
 app.use(notFound);

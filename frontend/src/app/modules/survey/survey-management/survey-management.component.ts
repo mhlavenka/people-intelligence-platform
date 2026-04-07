@@ -237,7 +237,7 @@ interface SurveyTemplate {
     </div>
   `,
   styles: [`
-    .surveys-page { padding: 32px; max-width: 1200px; }
+    .surveys-page { padding: 32px; }
 
     .page-header {
       display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24px;
