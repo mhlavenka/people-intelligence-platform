@@ -178,16 +178,17 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: string
                     <div class="cal-day-header">{{ d }}</div>
                   }
                   @for (day of calendarDays(); track day.date.toISOString()) {
-                    <div class="cal-cell" [class.other]="!day.isCurrentMonth" [class.today]="day.isToday"
-                         [class.has-sessions]="day.sessions.length > 0">
+                    <div class="cal-cell" [class.other]="!day.isCurrentMonth" [class.today]="day.isToday">
                       <span class="cal-num">{{ day.date.getDate() }}</span>
-                      @if (day.sessions.length > 0) {
-                        <div class="cal-dots">
-                          @for (s of day.sessions.slice(0, 3); track s._id) {
-                            <span class="cal-dot" [class]="s.status"
-                                  [matTooltip]="sessionTooltip(s)"></span>
-                          }
-                        </div>
+                      @for (s of day.sessions.slice(0, 2); track s._id) {
+                        <a class="cal-event" [class]="s.status"
+                           [matTooltip]="sessionTooltip(s)"
+                           [routerLink]="'/coaching/' + s.engagementId">
+                          <span class="cal-event-name">{{ coacheeName(s.coacheeId) }}</span>
+                        </a>
+                      }
+                      @if (day.sessions.length > 2) {
+                        <span class="cal-more">+{{ day.sessions.length - 2 }}</span>
                       }
                     </div>
                   }
@@ -276,31 +277,39 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: string
     /* Calendar sidebar */
     .cal-card {
       background: white; border-radius: 14px; box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-      padding: 16px; position: sticky; top: 24px;
+      padding: 12px; position: sticky; top: 24px;
     }
     .cal-header {
-      display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;
       .cal-month { font-size: 14px; font-weight: 600; color: #1B2A47; }
     }
-    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0; }
-    .cal-day-header { text-align: center; font-size: 10px; font-weight: 600; color: #9aa5b4; padding: 4px; }
+    .cal-grid {
+      display: grid; grid-template-columns: repeat(7, 1fr);
+      border: 1px solid #f0f4f8; border-radius: 8px; overflow: hidden;
+    }
+    .cal-day-header {
+      text-align: center; font-size: 9px; font-weight: 600; color: #9aa5b4;
+      padding: 4px 0; background: #f8fafc; border-bottom: 1px solid #f0f4f8;
+    }
     .cal-cell {
-      text-align: center; padding: 4px 2px; min-height: 36px;
-      display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
-      border-radius: 6px; cursor: default;
-      &.other { .cal-num { color: #d1d5db; } }
-      &.today { background: #EBF5FB; .cal-num { color: #3A9FD6; font-weight: 700; } }
-      &.has-sessions { background: #f0fdf4; }
+      min-height: 64px; padding: 2px; border-right: 1px solid #f0f4f8; border-bottom: 1px solid #f0f4f8;
+      display: flex; flex-direction: column; gap: 1px;
+      &:nth-child(7n) { border-right: none; }
+      &.other { background: #fafbfc; .cal-num { color: #d1d5db; } }
+      &.today { background: #f0f9ff; .cal-num { background: #3A9FD6; color: white; border-radius: 50%; width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; } }
     }
-    .cal-num { font-size: 12px; color: #374151; }
-    .cal-dots { display: flex; gap: 2px; margin-top: 2px; }
-    .cal-dot {
-      width: 6px; height: 6px; border-radius: 50%;
-      &.completed { background: #27C4A0; }
-      &.scheduled { background: #3A9FD6; }
-      &.cancelled { background: #c5d0db; }
-      &.no_show { background: #e53e3e; }
+    .cal-num { font-size: 10px; color: #5a6a7e; margin-bottom: 1px; }
+    .cal-event {
+      display: block; font-size: 9px; padding: 1px 3px; border-radius: 3px;
+      text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      border-left: 2px solid transparent;
+      &.completed { background: #e8faf4; color: #1a9678; border-left-color: #27C4A0; }
+      &.scheduled { background: #EBF5FB; color: #2080b0; border-left-color: #3A9FD6; }
+      &.cancelled { background: #f0f4f8; color: #9aa5b4; border-left-color: #c5d0db; }
+      &.no_show { background: #fef2f2; color: #c53030; border-left-color: #e53e3e; }
     }
+    .cal-event-name { }
+    .cal-more { font-size: 8px; color: #9aa5b4; }
 
     .cal-upcoming {
       margin-top: 12px; border-top: 1px solid #f0f4f8; padding-top: 12px;
