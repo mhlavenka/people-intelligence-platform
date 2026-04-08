@@ -28,9 +28,9 @@ import { AuthService } from '../../../core/auth.service';
     <div class="auth-page">
       <div class="auth-card">
         <div class="auth-brand">
-          <div class="brand-logo"><span class="logo-pip">PIP</span></div>
+          <div class="brand-logo"><span class="logo-pip">ARTES</span></div>
           <h1>Create Your Organization</h1>
-          <p>People Intelligence Platform</p>
+          <p>ARTES</p>
         </div>
 
         @if (error()) {

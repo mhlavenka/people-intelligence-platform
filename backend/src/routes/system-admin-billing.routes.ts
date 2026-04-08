@@ -533,7 +533,7 @@ router.post(
 
       await sendEmail({
         to: org.billingEmail,
-        subject: `Invoice ${invoice.invoiceNumber} from People Intelligence Platform — ${fmt(invoice.total)} due ${dueDateStr}`,
+        subject: `Invoice ${invoice.invoiceNumber} from ARTES — ${fmt(invoice.total)} due ${dueDateStr}`,
         html: emailHtml,
         text: `Invoice ${invoice.invoiceNumber}\n\nOrganization: ${org.name}\nPeriod: ${periodFrom} – ${periodTo}\nDue: ${dueDateStr}\nTotal: ${fmt(invoice.total)}\n\nPay at: ${billingUrl}`,
       });

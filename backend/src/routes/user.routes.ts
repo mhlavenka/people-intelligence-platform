@@ -72,7 +72,7 @@ router.post('/me/2fa/setup', async (req: AuthRequest, res: Response, next: NextF
     });
     if (!user) { res.status(404).json({ error: 'User not found' }); return; }
 
-    const otpAuthUrl = authenticator.keyuri(user.email, 'People Intelligence Platform', secret);
+    const otpAuthUrl = authenticator.keyuri(user.email, 'ARTES', secret);
     const qrCodeDataUrl = await QRCode.toDataURL(otpAuthUrl);
 
     // Store secret temporarily — will be confirmed on /enable
@@ -140,10 +140,10 @@ router.post('/me/test-email', async (req: AuthRequest, res: Response, next: Next
 
     await sendEmail({
       to,
-      subject: 'People Intelligence Platform — Test Email',
+      subject: 'ARTES — Test Email',
       html: `
         <p>Hi there,</p>
-        <p>This is a test email from <strong>People Intelligence Platform</strong>, sent by ${user.firstName}.</p>
+        <p>This is a test email from <strong>ARTES</strong>, sent by ${user.firstName}.</p>
         <p>If you received this message, AWS SES email notifications are configured correctly.</p>
         <p style="color:#9aa5b4;font-size:12px;">Sent from the Email Notifications settings page.</p>
       `,

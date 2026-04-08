@@ -720,7 +720,7 @@ ${d.managerScript ? `
 ${d.escalationRequested ? '<div class="escalation-banner">&#9888; Escalation has been requested — HR / Coach has been notified.</div>' : ''}
 
 <div class="footer">
-  People Intelligence Platform &nbsp;&middot;&nbsp; Conflict Intelligence&#8482; &nbsp;&middot;&nbsp; HeadSoft Tech &times; Helena Coaching
+  ARTES &nbsp;&middot;&nbsp; Conflict Intelligence&#8482; &nbsp;&middot;&nbsp; HeadSoft Tech &times; Helena Coaching
 </div>
 
 </div>

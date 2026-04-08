@@ -1572,7 +1572,7 @@ export class BillingComponent implements OnInit {
       <div class="party-label">From</div>
       <div class="party-name">HeadSoft Technology</div>
       <div class="party-addr">
-        People Intelligence Platform<br>
+        ARTES<br>
         billing@headsoft.io
       </div>
     </div>
@@ -1649,7 +1649,7 @@ export class BillingComponent implements OnInit {
   <!-- Footer -->
   <div class="footer">
     <div class="footer-left">
-      People Intelligence Platform — HeadSoft Technology<br>
+      ARTES — HeadSoft Technology<br>
       billing@headsoft.io
     </div>
     <div class="footer-right">

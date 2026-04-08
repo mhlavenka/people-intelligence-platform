@@ -39,9 +39,7 @@ function brandedHtml(title: string, body: string): string {
         <tr>
           <td style="background:#1B2A47;padding:28px 36px;text-align:left;">
             <span style="color:#ffffff;font-size:20px;font-weight:700;
-                         letter-spacing:-0.3px;">People Intelligence</span>
-            <span style="color:#3A9FD6;font-size:20px;font-weight:700;">
-              &nbsp;Platform</span>
+                         letter-spacing:-0.3px;">ARTES</span>
           </td>
         </tr>
 
@@ -59,7 +57,7 @@ function brandedHtml(title: string, body: string): string {
             <p style="margin:0;color:#9aa5b4;font-size:12px;line-height:1.5;">
               © ${new Date().getFullYear()} HeadSoft Tech × Helena Coaching.<br/>
               You received this email because you have an account on the
-              People Intelligence Platform.
+              ARTES.
             </p>
           </td>
         </tr>
@@ -109,7 +107,7 @@ export async function sendPasswordResetEmail(email: string, token: string): Prom
   const resetUrl = `${config.frontendUrl}/auth/reset-password?token=${token}`;
   await sendEmail({
     to: email,
-    subject: 'Reset your People Intelligence Platform password',
+    subject: 'Reset your ARTES password',
     html: brandedHtml('Reset Your Password', `
       <h2 style="color:#1B2A47;margin:0 0 12px;font-size:22px;">
         Reset Your Password
@@ -150,14 +148,14 @@ export async function sendWelcomeEmail(params: {
 
   await sendEmail({
     to: params.email,
-    subject: `Welcome to ${params.orgName} on People Intelligence Platform`,
+    subject: `Welcome to ${params.orgName} on ARTES`,
     html: brandedHtml('Welcome', `
       <h2 style="color:#1B2A47;margin:0 0 12px;font-size:22px;">
         Welcome, ${params.firstName}!
       </h2>
       <p style="color:#5a6a7e;margin:0 0 16px;line-height:1.6;">
-        You've been added to <strong>${params.orgName}</strong> on the People
-        Intelligence Platform. Log in to get started.
+        You've been added to <strong>${params.orgName}</strong> on ARTES.
+        Log in to get started.
       </p>
       <p style="color:#5a6a7e;margin:0 0 8px;line-height:1.6;">
         Email: <strong>${params.email}</strong>
@@ -268,7 +266,7 @@ export async function sendSuspensionEmail(params: {
         Account Suspended
       </h2>
       <p style="color:#5a6a7e;margin:0 0 8px;line-height:1.6;">
-        Access to <strong>${params.orgName}</strong> on the People Intelligence Platform
+        Access to <strong>${params.orgName}</strong> on ARTES
         has been suspended.
       </p>
       <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;
