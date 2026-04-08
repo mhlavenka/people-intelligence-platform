@@ -555,7 +555,7 @@ function isGroup(entry: NavEntry): entry is NavGroup {
 export class AppShellComponent implements OnInit, OnDestroy {
   sidebarCollapsed = signal(false);
   mobileMenuOpen = signal(false);
-  openGroups = signal<Set<string>>(new Set(['Administration']));
+  openGroups = signal<Set<string>>(new Set());
 
   isGroup = isGroup;
 

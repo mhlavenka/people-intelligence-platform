@@ -67,6 +67,7 @@ const ALL_MODULES = [
   { key: 'conflict',       label: 'Conflict Intelligence™',       icon: 'warning_amber', color: '#c04a14' },
   { key: 'neuroinclusion', label: 'Neuro-Inclusion Compass™',     icon: 'psychology',    color: '#1a9678' },
   { key: 'succession',     label: 'Leadership & Succession Hub™', icon: 'trending_up',   color: '#2080b0' },
+  { key: 'coaching',        label: 'Coaching',                      icon: 'psychology_alt', color: '#7c5cbf' },
 ];
 
 const PLAN_META: Record<string, { label: string; color: string }> = {
