@@ -32,18 +32,18 @@ export class ThemeService {
     const root = document.documentElement;
 
     // Brand colours
-    root.style.setProperty('--pip-primary',    t.primaryColor);
-    root.style.setProperty('--pip-accent',     t.accentColor);
-    root.style.setProperty('--pip-bg',         t.backgroundColor);
-    root.style.setProperty('--pip-surface',    t.surfaceColor);
+    root.style.setProperty('--artes-primary',    t.primaryColor);
+    root.style.setProperty('--artes-accent',     t.accentColor);
+    root.style.setProperty('--artes-bg',         t.backgroundColor);
+    root.style.setProperty('--artes-surface',    t.surfaceColor);
 
     // Border radius
-    root.style.setProperty('--pip-radius',     CARD_RADIUS[t.borderRadius] ?? '12px');
-    root.style.setProperty('--pip-btn-radius', BTN_RADIUS[t.borderRadius]  ?? '6px');
+    root.style.setProperty('--artes-radius',     CARD_RADIUS[t.borderRadius] ?? '12px');
+    root.style.setProperty('--artes-btn-radius', BTN_RADIUS[t.borderRadius]  ?? '6px');
 
     // Fonts
-    root.style.setProperty('--pip-heading-font', `'${t.headingFont}', sans-serif`);
-    root.style.setProperty('--pip-body-font',    `'${t.bodyFont}', sans-serif`);
+    root.style.setProperty('--artes-heading-font', `'${t.headingFont}', sans-serif`);
+    root.style.setProperty('--artes-body-font',    `'${t.bodyFont}', sans-serif`);
 
     // Override Angular Material MDC CSS custom properties
     root.style.setProperty('--mdc-theme-primary',                    t.primaryColor);

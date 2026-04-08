@@ -237,7 +237,7 @@ function isGroup(entry: NavEntry): entry is NavGroup {
 
     .sidebar {
       width: 260px;
-      background: var(--pip-primary);
+      background: var(--artes-primary);
       color: white;
       display: flex;
       flex-direction: column;
@@ -356,7 +356,7 @@ function isGroup(entry: NavEntry): entry is NavGroup {
       .nav-label { white-space: nowrap; flex: 1; }
 
       &:hover { background: rgba(255,255,255,0.08); color: white; }
-      &.active { background: color-mix(in srgb, var(--pip-accent) 20%, transparent); color: var(--pip-accent); }
+      &.active { background: color-mix(in srgb, var(--artes-accent) 20%, transparent); color: var(--artes-accent); }
     }
 
     .group-header {
@@ -378,7 +378,7 @@ function isGroup(entry: NavEntry): entry is NavGroup {
       gap: 1px;
       margin-left: 12px;
       padding-left: 8px;
-      border-left: 2px solid color-mix(in srgb, var(--pip-accent) 30%, transparent);
+      border-left: 2px solid color-mix(in srgb, var(--artes-accent) 30%, transparent);
       margin-bottom: 4px;
     }
 
@@ -509,7 +509,7 @@ function isGroup(entry: NavEntry): entry is NavGroup {
       .mobile-header {
         display: flex; align-items: center; gap: 10px;
         padding: 10px 16px;
-        background: var(--pip-primary);
+        background: var(--artes-primary);
         color: white;
         position: fixed; top: 0; left: 0; right: 0; z-index: 1001;
         height: 56px;

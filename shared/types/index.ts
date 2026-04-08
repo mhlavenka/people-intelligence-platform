@@ -1,6 +1,6 @@
 // ============================================================
 // Shared TypeScript interfaces — backend + frontend
-// People Intelligence Platform
+// ARTES
 // ============================================================
 
 export type UserRole = 'admin' | 'hr_manager' | 'manager' | 'coachee' | 'coach';

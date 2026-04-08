@@ -6,10 +6,10 @@
   4. Application type: Web application
   5. Add Authorized redirect URI: https://pip.helenacoaching.com/auth/oauth/callback
   6. Copy the Client ID and Client Secret
-  7. SSH into the server and add to /opt/apps/pip/backend/.env:
+  7. SSH into the server and add to /opt/apps/artes/backend/.env:
   GOOGLE_CLIENT_ID="xxxxx.apps.googleusercontent.com"
   GOOGLE_CLIENT_SECRET="GOCSPX-xxxxx"
-  8. pm2 restart pip-backend
+  8. pm2 restart artes-backend
 
   The Google button will appear on the login page automatically.
 
@@ -18,24 +18,24 @@
 
   1. Go to https://portal.azure.com/#blade/Microsoft_AAD_RegisteredApps/ApplicationsListBlade
   2. New registration
-    - Name: "People Intelligence Platform"
+    - Name: "ARTES"
     - Supported account types: Accounts in any organizational directory (multi-tenant) or single tenant
     - Redirect URI: Web > https://pip.helenacoaching.com/auth/oauth/callback
   3. From the app's Overview, copy the Application (client) ID
   4. Go to Certificates & secrets > New client secret — copy the Value
-  5. SSH into the server and add to /opt/apps/pip/backend/.env:
+  5. SSH into the server and add to /opt/apps/artes/backend/.env:
   MICROSOFT_CLIENT_ID="your-app-client-id"
   MICROSOFT_CLIENT_SECRET="your-client-secret-value"
   MICROSOFT_TENANT_ID="common"
      Use common for multi-tenant, or your specific tenant ID for single-org.
-  6. pm2 restart pip-backend
+  6. pm2 restart artes-backend
 
   The Microsoft button will appear on the login page automatically.
 
   ---
   How it works
 
-  - Users must already exist in PIP (created by admin). OAuth matches by email address.
+  - Users must already exist in ARTES (created by admin). OAuth matches by email address.
   - First OAuth sign-in auto-links the account. Future sign-ins skip the password entirely.
   - Linked accounts are visible in the user's Profile > Sign-in Methods section.
   - If neither provider is configured, only the Passkey button shows (no OAuth buttons).

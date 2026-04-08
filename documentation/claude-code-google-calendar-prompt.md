@@ -4,7 +4,7 @@
 
 ## Context
 
-You are working on the **People Intelligence Platform (PIP)** — a multi-tenant B2B SaaS application.
+You are working on **ARTES** — a multi-tenant B2B SaaS application.
 
 **Module in scope:** Coaching Module — specifically the **Session Management** feature where coaches schedule sessions with coachees.
 
@@ -166,7 +166,7 @@ Create a markdown file at the project root documenting these steps for Marek:
 6. Authorized redirect URIs: add `GOOGLE_REDIRECT_URI` from `.env`
 7. Copy Client ID and Client Secret into `.env`
 8. Configure OAuth Consent Screen:
-   - App name: People Intelligence Platform
+   - App name: ARTES
    - Scopes: `calendar.events`
    - Add test users during development; submit for verification before production
 

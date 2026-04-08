@@ -1,15 +1,15 @@
 ================================================================================
 CLAUDE CODE PROMPT — EQi PDF ASSESSMENT IMPORT FUNCTION
-People Intelligence Platform — EQ Companion Suite™ Add-On
+ARTES — EQ Companion Suite™ Add-On
 HeadSoft Tech × Helena Coaching
 ================================================================================
 Copy everything below this line and paste directly into Claude Code.
-Run this inside the existing people-intelligence-platform/ monorepo,
+Run this inside the existing artes-platform/ monorepo,
 within the backend/ and frontend/ directories.
 --------------------------------------------------------------------------------
 
 You are adding an EQi 2.0 PDF Assessment Import System to the EQ Companion
-Suite™ module of the People Intelligence Platform. This feature allows Helena
+Suite™ module of ARTES. This feature allows Helena
 Coaching to import up to 100 existing MHS EQi 2.0 assessment PDF reports into
 the platform with full privacy controls and anonymization options.
 

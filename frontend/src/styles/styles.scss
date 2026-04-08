@@ -2,7 +2,7 @@
 @import 'variables';
 
 // ============================================================
-// Global Styles — People Intelligence Platform
+// Global Styles — ARTES
 // ============================================================
 
 @include mat.core();
@@ -57,15 +57,15 @@ $accent-palette: (
   )
 );
 
-$pip-primary: mat.define-palette($primary-palette, 500, 300, 900);
-$pip-accent:  mat.define-palette($accent-palette, 500, 300, 900);
-$pip-warn:    mat.define-palette(mat.$red-palette);
+$artes-primary: mat.define-palette($primary-palette, 500, 300, 900);
+$artes-accent:  mat.define-palette($accent-palette, 500, 300, 900);
+$artes-warn:    mat.define-palette(mat.$red-palette);
 
-$pip-theme: mat.define-light-theme((
+$artes-theme: mat.define-light-theme((
   color: (
-    primary: $pip-primary,
-    accent:  $pip-accent,
-    warn:    $pip-warn,
+    primary: $artes-primary,
+    accent:  $artes-accent,
+    warn:    $artes-warn,
   ),
   typography: mat.define-typography-config(
     $font-family: $font-family-base,
@@ -73,21 +73,21 @@ $pip-theme: mat.define-light-theme((
   density: 0,
 ));
 
-@include mat.all-component-themes($pip-theme);
+@include mat.all-component-themes($artes-theme);
 
 // ============================================================
 // CSS Custom Properties — runtime theme (overridden by ThemeService)
 // ============================================================
 
 :root {
-  --pip-primary:      #1B2A47;
-  --pip-accent:       #3A9FD6;
-  --pip-bg:           #EBF5FB;
-  --pip-surface:      #ffffff;
-  --pip-radius:       12px;
-  --pip-btn-radius:   6px;
-  --pip-heading-font: 'Inter', sans-serif;
-  --pip-body-font:    'Inter', sans-serif;
+  --artes-primary:      #1B2A47;
+  --artes-accent:       #3A9FD6;
+  --artes-bg:           #EBF5FB;
+  --artes-surface:      #ffffff;
+  --artes-radius:       12px;
+  --artes-btn-radius:   6px;
+  --artes-heading-font: 'Inter', sans-serif;
+  --artes-body-font:    'Inter', sans-serif;
 }
 
 // ============================================================
@@ -102,10 +102,10 @@ html, body {
   height: 100%;
   margin: 0;
   padding: 0;
-  font-family: var(--pip-body-font);
+  font-family: var(--artes-body-font);
   font-size: $font-size-base;
   color: $text-primary;
-  background-color: var(--pip-bg);
+  background-color: var(--artes-bg);
   -webkit-font-smoothing: antialiased;
 }
 
@@ -113,7 +113,7 @@ h1, h2, h3, h4, h5, h6 {
   color: $navy;
   font-weight: 600;
   margin: 0 0 $spacing-md;
-  font-family: var(--pip-heading-font);
+  font-family: var(--artes-heading-font);
 }
 
 a {
@@ -415,8 +415,8 @@ a {
 }
 
 // Primary raised button brand colour — uses runtime theme variable
-.mat-mdc-raised-button.mat-primary { background-color: var(--pip-primary) !important; }
+.mat-mdc-raised-button.mat-primary { background-color: var(--artes-primary) !important; }
 
 // Card border radius follows theme
-.mat-mdc-card { border-radius: var(--pip-radius) !important; }
+.mat-mdc-card { border-radius: var(--artes-radius) !important; }
 

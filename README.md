@@ -1,4 +1,4 @@
-# People Intelligence Platform
+# ARTES
 
 **HeadSoft Tech × Helena Coaching**
 
@@ -99,7 +99,7 @@ PUT    /api/succession/idps/:id/milestone
 ## Project Structure
 
 ```
-people-intelligence-platform/
+artes-platform/
 ├── backend/src/
 │   ├── config/          env, database
 │   ├── middleware/       auth, tenant, error, rateLimiter

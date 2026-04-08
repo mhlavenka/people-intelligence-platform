@@ -1,4 +1,4 @@
-# People Intelligence Platform — Claude Code Instructions
+# ARTES — Claude Code Instructions
 
 Multi-tenant B2B SaaS built by HeadSoft Tech × Helena Coaching.
 Hosted at https://pip.helenacoaching.com — EC2 (13.218.6.173), served via Nginx + PM2.

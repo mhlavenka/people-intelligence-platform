@@ -21,7 +21,8 @@
       "Bash(git push:*)",
       "Bash(npx tsc:*)",
       "Bash(npx ng:*)",
-      "Bash(node -e ':*)"
+      "Bash(node -e ':*)",
+      "Bash(ssh:*)"
     ]
   }
 }

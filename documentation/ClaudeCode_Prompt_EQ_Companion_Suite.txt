@@ -1,10 +1,10 @@
 ================================================================================
 CLAUDE CODE PROMPT — EQ COMPANION SUITE™
 HeadSoft Tech × Helena Coaching
-Add-on Module to the People Intelligence Platform
+Add-on Module to ARTES
 ================================================================================
 Copy everything below this line and paste directly into Claude Code.
-Run this from inside the existing people-intelligence-platform/ monorepo,
+Run this from inside the existing artes-platform/ monorepo,
 or as a standalone repo if building independently.
 --------------------------------------------------------------------------------
 
@@ -12,7 +12,7 @@ You are helping build the "EQ Companion Suite™" — a coaching-integrated
 emotional intelligence platform that works alongside (and eventually replaces)
 the MHS EQi 2.0 assessment tool used by Helena Coaching (helenacoaching.com).
 
-This is built as a module within the People Intelligence Platform developed by
+This is built as a module within ARTES developed by
 HeadSoft Tech (headsoft.net), using the same stack: AWS / MongoDB / Node.js /
 Angular. Read this entire prompt before writing any code.
 

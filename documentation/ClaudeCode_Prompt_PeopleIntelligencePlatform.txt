@@ -1,11 +1,11 @@
 ================================================================================
-CLAUDE CODE PROMPT — PEOPLE INTELLIGENCE PLATFORM
+CLAUDE CODE PROMPT — ARTES (formerly People Intelligence Platform)
 HeadSoft Tech × Helena Coaching
 ================================================================================
 Copy everything below this line and paste directly into Claude Code
 --------------------------------------------------------------------------------
 
-You are helping build the "People Intelligence Platform" — an AI-powered SaaS
+You are helping build "ARTES" — an AI-powered SaaS
 application co-developed by HeadSoft Tech (headsoft.net) and Helena Coaching
 (helenacoaching.com).
 
@@ -57,7 +57,7 @@ BRAND COLORS
 PROJECT STRUCTURE TO SCAFFOLD
 ================================================================================
 
-people-intelligence-platform/
+artes-platform/
 ├── backend/
 │   ├── src/
 │   │   ├── config/          # env, db connection, AWS config
@@ -264,7 +264,7 @@ PORT=3000
 FRONTEND_URL=http://localhost:4200
 
 # MongoDB
-MONGODB_URI=mongodb+srv://<user>:<password>@cluster.mongodb.net/people-intelligence
+MONGODB_URI=mongodb+srv://<user>:<password>@cluster.mongodb.net/artes
 
 # JWT
 JWT_SECRET=your-secret-here
@@ -279,7 +279,7 @@ ANTHROPIC_API_KEY=your-key-here
 AWS_REGION=ca-central-1
 AWS_ACCESS_KEY_ID=
 AWS_SECRET_ACCESS_KEY=
-AWS_S3_BUCKET=people-intelligence-assets
+AWS_S3_BUCKET=artes-assets
 AWS_SES_FROM_EMAIL=noreply@yourdomain.com
 
 # Stripe

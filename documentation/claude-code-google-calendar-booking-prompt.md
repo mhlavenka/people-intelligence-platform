@@ -4,7 +4,7 @@
 
 ## Context
 
-You are working on the **People Intelligence Platform (PIP)** — a multi-tenant B2B SaaS.
+You are working on **ARTES** — a multi-tenant B2B SaaS.
 
 **Module in scope:** Coaching Module — **Appointment Scheduling & Booking flow.**
 
