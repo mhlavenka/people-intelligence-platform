@@ -171,7 +171,7 @@ import { ApiService } from '../../../core/api.service';
 
         <!-- Action bar -->
         <div class="action-bar">
-          <button mat-flat-button (click)="save('draft')" [disabled]="saving()">
+          <button mat-flat-button class="draft-btn" (click)="save('draft')" [disabled]="saving()">
             <mat-icon>save</mat-icon> Save Draft
           </button>
           <button mat-flat-button color="primary" (click)="save('complete')" [disabled]="saving()">
@@ -229,6 +229,7 @@ import { ApiService } from '../../../core/api.service';
       padding: 14px 20px; margin-top: 24px; display: flex; align-items: center; gap: 10px;
       box-shadow: 0 -2px 12px rgba(0,0,0,0.08);
     }
+    .draft-btn { background: #5a6a7e !important; color: white !important; }
 
     @media (max-width: 768px) {
       .meta-row { flex-direction: column; }
