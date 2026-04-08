@@ -7,6 +7,8 @@ export interface OrgContext {
   modules: string[];
   plan: string;
   departments: string[];
+  coachingRebill?: boolean;
+  defaultCoachRate?: number;
 }
 
 /**
@@ -21,12 +23,16 @@ export class OrgContextService {
   private _modules = signal<string[]>([]);
   private _orgName = signal('');
   private _plan = signal('');
+  private _coachingRebill = signal(false);
+  private _defaultCoachRate = signal<number | null>(null);
   private _loaded = signal(false);
 
   /** Enabled module keys for the current org subscription (e.g. 'conflict', 'neuroinclusion', 'succession'). */
   modules = this._modules.asReadonly();
   orgName = this._orgName.asReadonly();
   plan = this._plan.asReadonly();
+  coachingRebill = this._coachingRebill.asReadonly();
+  defaultCoachRate = this._defaultCoachRate.asReadonly();
   loaded = this._loaded.asReadonly();
 
   /** Load org context from API — call once from AppShell. */
@@ -36,6 +42,8 @@ export class OrgContextService {
         this._modules.set(org.modules ?? []);
         this._orgName.set(org.name);
         this._plan.set(org.plan);
+        this._coachingRebill.set(org.coachingRebill ?? false);
+        this._defaultCoachRate.set(org.defaultCoachRate ?? null);
         this._loaded.set(true);
       },
       error: () => this._loaded.set(true),

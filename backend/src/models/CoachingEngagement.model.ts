@@ -21,6 +21,8 @@ export interface ICoachingEngagement extends Document {
   goals: string[];
   contractUrl?: string;
   notes?: string;                   // coach's private engagement notes
+  rebillCoachee: boolean;           // bill the coachee for sessions
+  hourlyRate?: number;              // per-engagement rate (defaults from org)
   createdAt: Date;
   updatedAt: Date;
 }
@@ -48,6 +50,8 @@ const CoachingEngagementSchema = new Schema<ICoachingEngagement>(
     goals:             [{ type: String }],
     contractUrl:       { type: String },
     notes:             { type: String },
+    rebillCoachee:     { type: Boolean, default: false },
+    hourlyRate:        { type: Number, min: 0 },
   },
   { timestamps: true }
 );

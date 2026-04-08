@@ -1,5 +1,5 @@
 import { Component, OnInit, signal } from '@angular/core';
-import { CommonModule, DatePipe } from '@angular/common';
+import { CommonModule, DatePipe, CurrencyPipe } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -33,7 +33,7 @@ interface Session {
   selector: 'app-engagement-detail',
   standalone: true,
   imports: [
-    CommonModule, DatePipe, RouterLink, MatIconModule, MatButtonModule,
+    CommonModule, DatePipe, CurrencyPipe, RouterLink, MatIconModule, MatButtonModule,
     MatProgressSpinnerModule, MatDividerModule, MatSnackBarModule, MatTooltipModule,
   ],
   template: `
@@ -82,6 +82,31 @@ interface Session {
               <div class="notes-block">
                 <span class="info-label">Private Notes</span>
                 <p>{{ engagement()!.notes }}</p>
+              </div>
+            }
+            @if (engagement()!.rebillCoachee && canManage()) {
+              <mat-divider />
+              <div class="billing-block">
+                <span class="info-label">Billing</span>
+                <div class="billing-row">
+                  <mat-icon>receipt_long</mat-icon>
+                  <span>Rebill coachee</span>
+                  <span class="billing-badge">Active</span>
+                </div>
+                @if (engagementHourlyRate()) {
+                  <div class="billing-rate">{{ engagementHourlyRate() | currency:'CAD':'symbol':'1.2-2' }} / hr</div>
+                }
+                <a class="billing-link" [routerLink]="'/coaching/billing/' + coacheeId()" [queryParams]="{ engagementId: engagement()!._id }">
+                  <mat-icon>open_in_new</mat-icon> Coachee Billing
+                </a>
+              </div>
+            }
+            @if (canManage()) {
+              <mat-divider />
+              <div class="journal-block">
+                <a class="journal-link" [routerLink]="'/journal/engagement/' + engagement()!._id">
+                  <mat-icon>auto_stories</mat-icon> Session Journal
+                </a>
               </div>
             }
           </div>
@@ -171,11 +196,35 @@ interface Session {
     .coachee-block h2 { font-size: 18px; color: #1B2A47; margin: 0 0 8px; }
     .status-chip { display: inline-block; padding: 3px 12px; border-radius: 999px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
 
-    .info-list, .goals-block, .notes-block { padding: 16px 20px; }
+    .info-list, .goals-block, .notes-block, .billing-block { padding: 16px 20px; }
     .info-item { display: flex; justify-content: space-between; padding: 4px 0; font-size: 13px; color: #374151; }
     .info-label { font-size: 11px; color: #9aa5b4; text-transform: uppercase; letter-spacing: 0.4px; display: block; margin-bottom: 4px; }
     .goal-chip { display: inline-block; font-size: 11px; background: #EBF5FB; color: #3A9FD6; padding: 2px 8px; border-radius: 4px; margin: 2px; }
     .notes-block p { font-size: 13px; color: #5a6a7e; margin: 0; line-height: 1.5; }
+
+    .billing-row {
+      display: flex; align-items: center; gap: 6px; font-size: 13px; color: #374151;
+      mat-icon { font-size: 16px; width: 16px; height: 16px; color: #7c5cbf; }
+    }
+    .billing-badge {
+      font-size: 10px; font-weight: 700; text-transform: uppercase;
+      background: rgba(124,92,191,0.12); color: #7c5cbf; padding: 2px 8px; border-radius: 999px;
+    }
+    .billing-rate { font-size: 13px; color: #1B2A47; font-weight: 600; margin-top: 6px; }
+    .billing-link {
+      display: flex; align-items: center; gap: 4px; font-size: 12px; color: #3A9FD6;
+      cursor: pointer; margin-top: 8px; text-decoration: none;
+      mat-icon { font-size: 14px; width: 14px; height: 14px; }
+      &:hover { text-decoration: underline; }
+    }
+
+    .journal-block { padding: 16px; }
+    .journal-link {
+      display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: #7c5cbf;
+      text-decoration: none;
+      mat-icon { font-size: 18px; width: 18px; height: 18px; }
+      &:hover { text-decoration: underline; }
+    }
 
     .sessions-col h3 {
       font-size: 16px; color: #1B2A47; margin: 0 0 16px; display: flex; align-items: center; gap: 8px;
@@ -256,6 +305,15 @@ export class EngagementDetailComponent implements OnInit {
   coacheeName(): string {
     const c = this.engagement()?.coacheeId;
     return c && typeof c === 'object' ? `${c.firstName} ${c.lastName}` : 'Unknown';
+  }
+
+  coacheeId(): string {
+    const c = this.engagement()?.coacheeId;
+    return c && typeof c === 'object' ? c._id : c ?? '';
+  }
+
+  engagementHourlyRate(): number | null {
+    return this.engagement()?.hourlyRate ?? null;
   }
 
   statusColor(): string {

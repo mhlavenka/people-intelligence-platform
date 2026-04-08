@@ -1,6 +1,6 @@
 import { Component, OnInit, signal, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -10,6 +10,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { ApiService } from '../../../core/api.service';
 
 interface OrgTheme {
@@ -43,6 +44,8 @@ interface Organization {
   taxId?: string;
   employeeCount?: number;
   industry?: string;
+  coachingRebill?: boolean;
+  defaultCoachRate?: number;
   theme?: OrgTheme;
   logoUrl?: string;
   createdAt: string;
@@ -162,6 +165,7 @@ const RADIUS_OPTIONS = [
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    FormsModule,
     MatButtonModule,
     MatIconModule,
     MatFormFieldModule,
@@ -171,6 +175,7 @@ const RADIUS_OPTIONS = [
     MatSnackBarModule,
     MatDividerModule,
     MatChipsModule,
+    MatSlideToggleModule,
   ],
   template: `
     <div class="org-page">
@@ -577,10 +582,44 @@ const RADIUS_OPTIONS = [
                   </div>
                 }
               </div>
+
+              @if (isModuleEnabled('coaching')) {
+                <mat-divider />
+                <div class="coaching-rebill-section">
+                  <div class="toggle-row">
+                    <div class="module-icon" style="background: rgba(124,92,191,0.12); color: #7c5cbf;">
+                      <mat-icon>receipt_long</mat-icon>
+                    </div>
+                    <div class="module-info">
+                      <span class="module-name">Rebill Coachees</span>
+                      <span class="module-status">{{ org()?.coachingRebill ? 'Coachees will be billed for sessions' : 'Coachee billing is off' }}</span>
+                    </div>
+                    <mat-slide-toggle color="primary"
+                      [checked]="org()?.coachingRebill ?? false"
+                      (change)="toggleCoachingRebill($event.checked)"
+                      [disabled]="savingModules()" />
+                  </div>
+                  @if (org()?.coachingRebill) {
+                    <div class="default-rate-row">
+                      <mat-form-field appearance="outline" class="rate-field">
+                        <mat-label>Default Hourly Rate ($)</mat-label>
+                        <input matInput type="number" min="0" step="0.01"
+                               [ngModel]="org()?.defaultCoachRate ?? ''"
+                               (ngModelChange)="pendingRate = $event" />
+                        <mat-icon matPrefix>attach_money</mat-icon>
+                      </mat-form-field>
+                      <button mat-stroked-button color="primary"
+                              (click)="saveDefaultRate()" [disabled]="savingModules()">
+                        Save Rate
+                      </button>
+                    </div>
+                  }
+                </div>
+              }
             </div>
           </div>
 
-          
+
 
           </div><!-- /col-right -->
 
@@ -719,6 +758,12 @@ const RADIUS_OPTIONS = [
       flex: 1; display: flex; flex-direction: column; gap: 2px;
       .module-name   { font-size: 14px; font-weight: 500; color: #1B2A47; }
       .module-status { font-size: 12px; color: #9aa5b4; }
+    }
+
+    .coaching-rebill-section { padding: 0 16px 8px; }
+    .default-rate-row {
+      display: flex; align-items: center; gap: 12px; margin-top: 8px; padding-left: 56px;
+      .rate-field { width: 200px; margin-bottom: -1.25em; }
     }
 
     /* ── Theme card ──────────────────────────────────────────── */
@@ -1111,6 +1156,39 @@ export class OrganizationSettingsComponent implements OnInit {
           `${ALL_MODULES.find((m) => m.key === key)?.label} ${updated.includes(key) ? 'enabled' : 'disabled'}`,
           'Close', { duration: 2500 }
         );
+      },
+      error: () => {
+        this.savingModules.set(false);
+        this.snackBar.open('Update failed', 'Close', { duration: 2500 });
+      },
+    });
+  }
+
+  pendingRate: number | null = null;
+
+  saveDefaultRate(): void {
+    if (this.pendingRate == null) return;
+    this.savingModules.set(true);
+    this.api.put<any>('/organizations/me', { defaultCoachRate: this.pendingRate }).subscribe({
+      next: (org) => {
+        this.org.set(org);
+        this.savingModules.set(false);
+        this.snackBar.open('Default rate saved', 'Close', { duration: 2500 });
+      },
+      error: () => {
+        this.savingModules.set(false);
+        this.snackBar.open('Update failed', 'Close', { duration: 2500 });
+      },
+    });
+  }
+
+  toggleCoachingRebill(checked: boolean): void {
+    this.savingModules.set(true);
+    this.api.put<any>('/organizations/me', { coachingRebill: checked }).subscribe({
+      next: (org) => {
+        this.org.set(org);
+        this.savingModules.set(false);
+        this.snackBar.open(`Coachee rebilling ${checked ? 'enabled' : 'disabled'}`, 'Close', { duration: 2500 });
       },
       error: () => {
         this.savingModules.set(false);

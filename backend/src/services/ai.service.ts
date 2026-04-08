@@ -244,3 +244,115 @@ Please create a comprehensive IDP with:
 Respond with ONLY valid JSON — no explanation, no markdown, no code fences. Start your response with { and end with }.
 Required JSON shape: { "goal": string, "currentReality": string, "options": string[], "willDoActions": string[], "milestones": [{"title":string,"weeksFromNow":number,"successCriteria":string}], "resources": string[] }`;
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// COACHING JOURNAL AI PROMPTS
+// ═══════════════════════════════════════════════════════════════════════════
+
+export function buildSessionSummaryPrompt(note: {
+  preSession?: { agenda?: string; hypotheses?: string; coachIntention?: string };
+  inSession?: { openingState?: string; keyThemes?: string[]; observations?: string; notableQuotes?: string[]; coachInterventions?: string; energyShifts?: string };
+  postSession?: { coachReflection?: string; whatWorked?: string; whatToExplore?: string; clientGrowthEdge?: string };
+}): string {
+  return `You are an expert coaching supervisor analyzing a coaching session note. Use ICF core competencies (active listening, evoking awareness, facilitating growth) as your analytical lens.
+
+SESSION NOTE DATA:
+
+PRE-SESSION:
+- Agenda: ${note.preSession?.agenda || 'Not provided'}
+- Hypotheses: ${note.preSession?.hypotheses || 'Not provided'}
+- Coach Intention: ${note.preSession?.coachIntention || 'Not provided'}
+
+IN-SESSION:
+- Opening State: ${note.inSession?.openingState || 'Not provided'}
+- Key Themes: ${(note.inSession?.keyThemes || []).join(', ') || 'None'}
+- Observations: ${note.inSession?.observations || 'Not provided'}
+- Notable Quotes: ${(note.inSession?.notableQuotes || []).filter(Boolean).join(' | ') || 'None'}
+- Coach Interventions: ${note.inSession?.coachInterventions || 'Not provided'}
+- Energy Shifts: ${note.inSession?.energyShifts || 'Not provided'}
+
+POST-SESSION:
+- Coach Reflection: ${note.postSession?.coachReflection || 'Not provided'}
+- What Worked: ${note.postSession?.whatWorked || 'Not provided'}
+- What to Explore Next: ${note.postSession?.whatToExplore || 'Not provided'}
+- Client's Growth Edge: ${note.postSession?.clientGrowthEdge || 'Not provided'}
+
+Please synthesize this session into:
+1. A 3-5 sentence narrative summary capturing the arc and key moments
+2. 3-6 coaching-relevant thematic tags (e.g. "self-doubt", "boundary-setting", "leadership identity", "emotional regulation")
+3. The single most significant growth edge moment or insight from this session
+
+Respond with ONLY valid JSON — no markdown, no code fences.
+Required JSON shape: { "summary": string, "themes": string[], "growthEdgeMoment": string }`;
+}
+
+export function buildEngagementInsightPrompt(
+  sessionNotes: Array<{
+    sessionNumber: number;
+    sessionDate: string;
+    preSession?: { agenda?: string };
+    inSession?: { keyThemes?: string[]; observations?: string };
+    postSession?: { coachReflection?: string; whatToExplore?: string; clientGrowthEdge?: string };
+    aiSummary?: string;
+    aiThemes?: string[];
+  }>
+): string {
+  const sessionsText = sessionNotes
+    .map((n) => `Session #${n.sessionNumber} (${n.sessionDate}):
+  AI Summary: ${n.aiSummary || 'Not generated'}
+  Themes: ${(n.aiThemes || []).join(', ') || 'None'}
+  Observations: ${n.inSession?.observations?.slice(0, 300) || 'N/A'}
+  Growth Edge: ${n.postSession?.clientGrowthEdge || 'N/A'}
+  Coach Reflection: ${n.postSession?.coachReflection?.slice(0, 200) || 'N/A'}`)
+    .join('\n\n');
+
+  return `You are an expert coaching supervisor reviewing a full coaching engagement. Analyze the progression across all sessions using ICF core competencies as your lens.
+
+COMPLETED SESSION NOTES (${sessionNotes.length} sessions):
+
+${sessionsText}
+
+Provide a cross-session insight report with:
+1. **Recurring Themes**: Patterns that appear across multiple sessions
+2. **Growth Arc**: How the coachee has evolved from the first session to the most recent
+3. **Coach Observations**: Meta-observations about coaching approach effectiveness
+4. **Open Threads**: Unresolved topics or areas that need continued attention
+5. **Suggested Next Focus**: Recommended focus for upcoming sessions based on the trajectory
+
+Respond with ONLY valid JSON — no markdown, no code fences.
+Required JSON shape: { "recurringThemes": string[], "growthArc": string, "coachObservations": string, "openThreads": string[], "suggestedNextFocus": string }`;
+}
+
+export function buildSupervisionDigestPrompt(
+  reflectiveEntries: Array<{ title: string; body: string; mood: string; entryDate: string; tags?: string[] }>,
+  sessionNotes: Array<{ sessionNumber: number; sessionDate: string; postSession?: { coachReflection?: string }; aiThemes?: string[] }>
+): string {
+  const reflectionsText = reflectiveEntries
+    .map((e) => `[${e.entryDate}] "${e.title}" (Mood: ${e.mood})${e.tags?.length ? ` Tags: ${e.tags.join(', ')}` : ''}
+  ${e.body.slice(0, 400)}`)
+    .join('\n\n');
+
+  const sessionReflections = sessionNotes
+    .filter((n) => n.postSession?.coachReflection)
+    .map((n) => `Session #${n.sessionNumber} (${n.sessionDate}): ${n.postSession!.coachReflection!.slice(0, 300)}`)
+    .join('\n');
+
+  return `You are an experienced coaching supervisor preparing a supervision session. Analyze the coach's reflective journal entries and session reflections to identify patterns, development areas, and supervision discussion points.
+
+REFLECTIVE JOURNAL ENTRIES (${reflectiveEntries.length} entries flagged for supervision):
+
+${reflectionsText}
+
+SESSION REFLECTIONS (from ${sessionNotes.length} sessions):
+
+${sessionReflections}
+
+Provide a supervision preparation digest with:
+1. **Coach Themes**: Recurring themes in the coach's own reflective practice
+2. **Cross-Engagement Patterns**: Patterns the coach may be carrying across different coaching relationships
+3. **Questions for Supervisor**: 3-5 powerful questions to explore in supervision
+4. **Development Areas**: Specific ICF competency areas for the coach's own growth
+
+Respond with ONLY valid JSON — no markdown, no code fences.
+Required JSON shape: { "coachThemes": string[], "crossEngagementPatterns": string, "questionsForSupervisor": string[], "developmentAreas": string[] }`;
+}

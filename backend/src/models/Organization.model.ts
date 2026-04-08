@@ -38,6 +38,8 @@ export interface IOrganization extends Document {
   trialEndsAt?: Date;
   maxUsers: number;
   notes?: string;
+  coachingRebill: boolean;
+  defaultCoachRate?: number;
   suspendedAt?: Date;
   suspensionReason?: string;
   createdAt: Date;
@@ -73,6 +75,8 @@ const OrganizationSchema = new Schema<IOrganization>(
     trialEndsAt:      { type: Date },
     maxUsers:         { type: Number, default: 100 },
     notes:            { type: String, trim: true },
+    coachingRebill:   { type: Boolean, default: false },
+    defaultCoachRate: { type: Number, min: 0 },
     suspendedAt:      { type: Date },
     suspensionReason: { type: String, trim: true },
     logoUrl:     { type: String },

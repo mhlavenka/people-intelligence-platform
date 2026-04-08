@@ -316,4 +316,88 @@ router.get('/dashboard', async (req: AuthRequest, res: Response, next: NextFunct
   } catch (e) { next(e); }
 });
 
+// ═══════════════════════════════════════════════════════════════════════════
+// COACHEE BILLING
+// ═══════════════════════════════════════════════════════════════════════════
+
+/** Billing summary for a coachee across all rebillable engagements. */
+router.get(
+  '/billing/coachee/:coacheeId',
+  requireRole('admin', 'hr_manager', 'coach'),
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const orgId = req.user!.organizationId;
+      const coacheeId = req.params['coacheeId'];
+
+      const engagements = await CoachingEngagement.find({
+        organizationId: orgId,
+        coacheeId,
+        rebillCoachee: true,
+      })
+        .populate('coachId', 'firstName lastName')
+        .lean();
+
+      const engagementIds = engagements.map((e) => e._id);
+
+      const sessions = await CoachingSession.find({
+        organizationId: orgId,
+        engagementId: { $in: engagementIds },
+      })
+        .select('-coachNotes')
+        .sort({ date: -1 })
+        .lean();
+
+      // Build per-engagement billing summary
+      // Billing is based on the full engagement (sessionsPurchased), not just completed sessions.
+      const items = engagements.map((eng) => {
+        const engSessions = sessions.filter(
+          (s) => s.engagementId.toString() === eng._id.toString()
+        );
+        const completed = engSessions.filter((s) => s.status === 'completed');
+        const rate = eng.hourlyRate ?? 0;
+        const billedHours = eng.sessionsPurchased ?? 0;
+        const totalAmount = billedHours * rate;
+        const completedHours = completed.reduce((sum, s) => sum + (s.duration || 60), 0) / 60;
+
+        return {
+          engagementId: eng._id,
+          coach: eng.coachId,
+          status: eng.status,
+          hourlyRate: rate,
+          sessionsPurchased: eng.sessionsPurchased,
+          sessionsUsed: eng.sessionsUsed,
+          sessionsCompleted: completed.length,
+          sessionsTotal: engSessions.length,
+          billedHours,
+          completedHours: Math.round(completedHours * 100) / 100,
+          totalAmount: Math.round(totalAmount * 100) / 100,
+          sessions: engSessions.map((s) => ({
+            _id: s._id,
+            date: s.date,
+            duration: s.duration,
+            status: s.status,
+            format: s.format,
+          })),
+        };
+      });
+
+      const grandTotal = items.reduce((sum, i) => sum + i.totalAmount, 0);
+      const grandHours = items.reduce((sum, i) => sum + i.billedHours, 0);
+
+      // Get coachee info
+      const coachee = await User.findById(coacheeId).select('firstName lastName email department');
+
+      res.json({
+        coachee,
+        engagements: items,
+        summary: {
+          totalEngagements: items.length,
+          totalHours: Math.round(grandHours * 100) / 100,
+          totalAmount: Math.round(grandTotal * 100) / 100,
+        },
+      });
+    } catch (e) { next(e); }
+  }
+);
+
 export default router;

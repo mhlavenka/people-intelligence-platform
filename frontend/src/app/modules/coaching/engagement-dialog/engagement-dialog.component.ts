@@ -11,7 +11,9 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { ApiService } from '../../../core/api.service';
+import { OrgContextService } from '../../../core/org-context.service';
 
 interface Coachee { _id: string; firstName: string; lastName: string; email: string; department?: string; }
 
@@ -21,7 +23,7 @@ interface Coachee { _id: string; firstName: string; lastName: string; email: str
   imports: [
     CommonModule, FormsModule, MatDialogModule, MatFormFieldModule, MatInputModule,
     MatSelectModule, MatButtonModule, MatIconModule, MatProgressSpinnerModule,
-    MatDatepickerModule, MatNativeDateModule, MatChipsModule,
+    MatDatepickerModule, MatNativeDateModule, MatChipsModule, MatSlideToggleModule,
   ],
   template: `
     <h2 mat-dialog-title>
@@ -100,6 +102,24 @@ interface Coachee { _id: string; firstName: string; lastName: string; email: str
         <mat-label>Notes (private)</mat-label>
         <textarea matInput [(ngModel)]="form.notes" rows="3" placeholder="Coach-only notes about this engagement"></textarea>
       </mat-form-field>
+
+      @if (showRebill) {
+        <div class="rebill-row">
+          <mat-icon>receipt_long</mat-icon>
+          <div class="rebill-info">
+            <span class="rebill-label">Rebill Coachee</span>
+            <span class="rebill-desc">Bill the coachee for sessions in this engagement</span>
+          </div>
+          <mat-slide-toggle color="primary" [(ngModel)]="form.rebillCoachee" />
+        </div>
+        @if (form.rebillCoachee) {
+          <mat-form-field appearance="outline" class="rate-field">
+            <mat-label>Hourly Rate ($)</mat-label>
+            <input matInput type="number" [(ngModel)]="form.hourlyRate" min="0" step="0.01" />
+            <mat-icon matPrefix>attach_money</mat-icon>
+          </mat-form-field>
+        }
+      }
     </mat-dialog-content>
 
     <mat-dialog-actions align="end">
@@ -117,25 +137,44 @@ interface Coachee { _id: string; firstName: string; lastName: string; email: str
     .full-width { width: 100%; }
     .form-row { display: flex; gap: 12px; mat-form-field { flex: 1; } }
     .section-label { font-size: 12px; font-weight: 600; color: #5a6a7e; text-transform: uppercase; letter-spacing: 0.5px; margin: 8px 0 4px; }
+    .rebill-row {
+      display: flex; align-items: center; gap: 12px; padding: 12px 14px;
+      background: #f8f5ff; border-radius: 10px; margin-top: 4px;
+      > mat-icon { color: #7c5cbf; flex-shrink: 0; }
+    }
+    .rebill-info { flex: 1; }
+    .rate-field { width: 200px; margin-top: 8px; margin-left: 38px; }
+    .rebill-label { font-size: 13px; font-weight: 500; color: #1B2A47; display: block; }
+    .rebill-desc { font-size: 11px; color: #9aa5b4; }
   `],
 })
 export class EngagementDialogComponent implements OnInit {
   private api = inject(ApiService);
   private dialogRef = inject(MatDialogRef<EngagementDialogComponent>);
+  private orgCtx = inject(OrgContextService);
   data = inject<any>(MAT_DIALOG_DATA, { optional: true });
 
   coachees = signal<Coachee[]>([]);
   saving = signal(false);
   isEdit = false;
   goalsRaw = '';
+  showRebill = false;
 
   form = {
     coacheeId: '', status: 'prospect', sessionsPurchased: 6, sessionsUsed: 0,
     cadence: 'biweekly', sessionFormat: 'video', startDate: null as Date | null,
     sponsorName: '', sponsorEmail: '', sponsorOrg: '', notes: '', goals: [] as string[],
+    rebillCoachee: true,  // defaults to true when org rebill is on (showRebill gates visibility)
+    hourlyRate: null as number | null,
   };
 
   ngOnInit(): void {
+    // Default rebill and rate from org-level settings
+    this.showRebill = this.orgCtx.coachingRebill();
+    if (this.showRebill) {
+      this.form.hourlyRate = this.orgCtx.defaultCoachRate() ?? null;
+    }
+
     if (this.data?._id) {
       this.isEdit = true;
       Object.assign(this.form, this.data);

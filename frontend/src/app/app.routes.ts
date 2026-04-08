@@ -174,11 +174,101 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'coaching/billing/:coacheeId',
+        canActivate: [roleGuard([...ADMIN_HR, 'coach'])],
+        loadComponent: () =>
+          import('./modules/coaching/coachee-billing/coachee-billing.component').then(
+            (m) => m.CoacheeBillingComponent
+          ),
+      },
+      {
         path: 'coaching/:id',
         canActivate: [roleGuard([...ADMIN_HR, 'coach', 'coachee'])],
         loadComponent: () =>
           import('./modules/coaching/engagement-detail/engagement-detail.component').then(
             (m) => m.EngagementDetailComponent
+          ),
+      },
+
+      // ── Coaching Journal ──────────────────────────────────────────────────
+      {
+        path: 'journal',
+        canActivate: [roleGuard([...ADMIN_HR, 'coach'])],
+        loadComponent: () =>
+          import('./modules/journal/journal-dashboard/journal-dashboard.component').then(
+            (m) => m.JournalDashboardComponent
+          ),
+      },
+      {
+        path: 'journal/engagement/:engagementId',
+        canActivate: [roleGuard([...ADMIN_HR, 'coach'])],
+        loadComponent: () =>
+          import('./modules/journal/engagement-notes/engagement-notes.component').then(
+            (m) => m.EngagementNotesComponent
+          ),
+      },
+      {
+        path: 'journal/note/new/:engagementId',
+        canActivate: [roleGuard([...ADMIN_HR, 'coach'])],
+        loadComponent: () =>
+          import('./modules/journal/session-note-editor/session-note-editor.component').then(
+            (m) => m.SessionNoteEditorComponent
+          ),
+      },
+      {
+        path: 'journal/note/:noteId/edit',
+        canActivate: [roleGuard([...ADMIN_HR, 'coach'])],
+        loadComponent: () =>
+          import('./modules/journal/session-note-editor/session-note-editor.component').then(
+            (m) => m.SessionNoteEditorComponent
+          ),
+      },
+      {
+        path: 'journal/note/:noteId',
+        canActivate: [roleGuard([...ADMIN_HR, 'coach'])],
+        loadComponent: () =>
+          import('./modules/journal/session-note-view/session-note-view.component').then(
+            (m) => m.SessionNoteViewComponent
+          ),
+      },
+      {
+        path: 'journal/reflective',
+        canActivate: [roleGuard([...ADMIN_HR, 'coach'])],
+        loadComponent: () =>
+          import('./modules/journal/reflective-journal/reflective-journal.component').then(
+            (m) => m.ReflectiveJournalComponent
+          ),
+      },
+      {
+        path: 'journal/reflective/new',
+        canActivate: [roleGuard([...ADMIN_HR, 'coach'])],
+        loadComponent: () =>
+          import('./modules/journal/reflective-editor/reflective-editor.component').then(
+            (m) => m.ReflectiveEditorComponent
+          ),
+      },
+      {
+        path: 'journal/reflective/:entryId',
+        canActivate: [roleGuard([...ADMIN_HR, 'coach'])],
+        loadComponent: () =>
+          import('./modules/journal/reflective-editor/reflective-editor.component').then(
+            (m) => m.ReflectiveEditorComponent
+          ),
+      },
+      {
+        path: 'journal/insights/:engagementId',
+        canActivate: [roleGuard([...ADMIN_HR, 'coach'])],
+        loadComponent: () =>
+          import('./modules/journal/engagement-insights/engagement-insights.component').then(
+            (m) => m.EngagementInsightsComponent
+          ),
+      },
+      {
+        path: 'journal/supervision',
+        canActivate: [roleGuard([...ADMIN_HR, 'coach'])],
+        loadComponent: () =>
+          import('./modules/journal/supervision-digest/supervision-digest.component').then(
+            (m) => m.SupervisionDigestComponent
           ),
       },
 
