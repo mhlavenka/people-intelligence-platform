@@ -9,8 +9,8 @@ set -euo pipefail
 PEM="C:/Users/marek/OneDrive/Desktop/HeadSoft/headsoft-aws.pem"
 EC2_HOST="13.218.6.173"
 EC2_USER="ec2-user"
-REMOTE_FRONTEND="/opt/apps/pip/frontend/public"
-REMOTE_BACKEND="/opt/apps/pip/backend"
+REMOTE_FRONTEND="/opt/apps/artes/frontend/public"
+REMOTE_BACKEND="/opt/apps/artes/backend"
 
 TARGET="${1:-all}"   # frontend | backend | all
 
@@ -27,10 +27,10 @@ ok()   { echo "   ✓ $*"; }
 deploy_frontend() {
   step "Building frontend (production)…"
   (cd frontend && npx ng build --configuration production)
-  ok "Build complete → frontend/dist/people-intelligence-frontend/browser"
+  ok "Build complete → frontend/dist/artes-frontend/browser"
 
   step "Uploading frontend to ${EC2_USER}@${EC2_HOST}:${REMOTE_FRONTEND}…"
-  eval "scp $SCP_OPTS -r frontend/dist/people-intelligence-frontend/browser/. \"${EC2_USER}@${EC2_HOST}:${REMOTE_FRONTEND}/\""
+  eval "scp $SCP_OPTS -r frontend/dist/artes-frontend/browser/. \"${EC2_USER}@${EC2_HOST}:${REMOTE_FRONTEND}/\""
   ok "Frontend uploaded"
 }
 
@@ -56,7 +56,7 @@ deploy_backend() {
   ok "npm install done"
 
   step "Restarting PM2 process…"
-  eval "ssh $SCP_OPTS ${EC2_USER}@${EC2_HOST} \"pm2 restart pip-backend && pm2 save\""
+  eval "ssh $SCP_OPTS ${EC2_USER}@${EC2_HOST} \"pm2 restart artes-backend && pm2 save\""
   ok "PM2 restarted"
 }
 
@@ -64,7 +64,7 @@ deploy_backend() {
 # MAIN
 # ─────────────────────────────────────────────────────────────────────────────
 echo "═══════════════════════════════════════════════════════"
-echo "  PIP Deploy  —  target: $TARGET"
+echo "  ARTES Deploy  —  target: $TARGET"
 echo "═══════════════════════════════════════════════════════"
 
 case "$TARGET" in
@@ -83,5 +83,5 @@ esac
 echo ""
 echo "═══════════════════════════════════════════════════════"
 echo "  Deployment complete ✓"
-echo "  https://pip.helenacoaching.com"
+echo "  https://artes.helenacoaching.com"
 echo "═══════════════════════════════════════════════════════"

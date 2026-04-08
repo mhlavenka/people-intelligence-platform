@@ -36,6 +36,18 @@ IV. NICE TO HAVE
 
 
 
+IV. TO DISCUSS
+--------------
+- surveys in detail - intake types, standards, theories, how to take anonymize
+- conflict module - analysis, IDPs, knowledge and skill building - analyze in detail
+- coaching module presentation  
+    - admin / coach / coachee view and process flow. 
+    - Functionality for different phases
+    - calendar and appointment integration
+  - 
+
+
+
 
 
 

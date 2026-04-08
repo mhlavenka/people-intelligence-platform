@@ -82,14 +82,14 @@ function isGroup(entry: NavEntry): entry is NavGroup {
         <div class="sidebar-header" [class.collapsed]="sidebarCollapsed()">
           @if (sidebarCollapsed()) {
             <!-- Collapsed: logo centred, toggle below -->
-            <img src="assets/PIP_Icon_512.png" alt="PIP" class="brand-logo" />
+            <img src="assets/artes_icon_512.png" alt="PIP" class="brand-logo" />
             <button class="expand-btn" (click)="sidebarCollapsed.set(false)" title="Expand sidebar">
               <mat-icon>chevron_right</mat-icon>
             </button>
           } @else {
             <!-- Expanded: logo + text left, toggle right -->
             <div class="brand">
-              <img src="assets/PIP_Logo_Dark_Transparent.png" alt="PIP" class="brand-logo-wide" />
+              <img src="assets/artes_transparent_dark.png" alt="PIP" class="brand-logo-wide" />
             </div>
             <button mat-icon-button class="collapse-btn" (click)="sidebarCollapsed.set(true)">
               <mat-icon>chevron_left</mat-icon>

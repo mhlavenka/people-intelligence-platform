@@ -1,5 +1,5 @@
 {
-  "name": "people-intelligence-backend",
+  "name": "artes-backend",
   "version": "1.0.0",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/app.ts",

@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "people-intelligence-frontend": {
+    "artes-frontend": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -24,7 +24,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:application",
           "options": {
-            "outputPath": "dist/people-intelligence-frontend",
+            "outputPath": "dist/artes-frontend",
             "index": "src/index.html",
             "browser": "src/main.ts",
             "polyfills": ["zone.js"],
@@ -78,10 +78,10 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "people-intelligence-frontend:build:production"
+              "buildTarget": "artes-frontend:build:production"
             },
             "development": {
-              "buildTarget": "people-intelligence-frontend:build:development"
+              "buildTarget": "artes-frontend:build:development"
             }
           },
           "defaultConfiguration": "development",
@@ -94,7 +94,7 @@
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "buildTarget": "people-intelligence-frontend:build"
+            "buildTarget": "artes-frontend:build"
           }
         },
         "test": {

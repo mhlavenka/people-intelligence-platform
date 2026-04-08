@@ -40,7 +40,7 @@ interface OAuthProviders {
       <div class="auth-card">
         <div class="auth-brand">
           <div class="brand-logo">
-            <img src="assets/PIP_Logo_Light.png" alt="HeadSoft" class="logo-img" />
+            <img src="assets/artes_light.png" alt="HeadSoft" class="logo-img" />
           </div>
         </div>
 

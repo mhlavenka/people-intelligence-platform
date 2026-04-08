@@ -1,0 +1,168 @@
+Here's the full change plan organized by decision category. Each group needs your approval before I touch anything.
+
+  ---
+  Group 1 — User-Visible Branding (customers see this)
+
+  ┌─────┬─────────────────────────────────────────────────────────────────────────────────────────┬───────────────────────────────┬───────────────────────────────┬───────────────┐
+  │  #  │                                          File                                           │            Current            │           Proposed            │     Notes     │
+  ├─────┼─────────────────────────────────────────────────────────────────────────────────────────┼───────────────────────────────┼───────────────────────────────┼───────────────┤
+  │ 1.1 │ frontend/src/index.html:5                                                               │ <title>People Intelligence    │ <title>Artes Hub</title>      │ Browser tab   │
+  │     │                                                                                         │ Platform</title>              │                               │               │
+  ├─────┼─────────────────────────────────────────────────────────────────────────────────────────┼───────────────────────────────┼───────────────────────────────┼───────────────┤
+  │ 1.2 │ frontend/src/app/modules/auth/register/register.component.ts:33                         │ <p>People Intelligence        │ <p>ARTES</p>                  │ Registration  │
+  │     │                                                                                         │ Platform</p>                  │                               │ page          │
+  ├─────┼─────────────────────────────────────────────────────────────────────────────────────────┼───────────────────────────────┼───────────────────────────────┼───────────────┤
+  │ 1.3 │ frontend/src/app/modules/billing/billing.component.ts:1575                              │ People Intelligence           │ ARTES<br>                     │ Billing/invoi │
+  │     │                                                                                         │ Platform<br>                  │                               │ ce            │
+  ├─────┼─────────────────────────────────────────────────────────────────────────────────────────┼───────────────────────────────┼───────────────────────────────┼───────────────┤
+  │ 1.4 │ frontend/src/app/modules/billing/billing.component.ts:1652                              │ People Intelligence Platform  │ ARTES — HeadSoft              │ Billing       │
+  │     │                                                                                         │ — HeadSoft Technology<br>     │ Technology<br>                │ footer        │
+  ├─────┼─────────────────────────────────────────────────────────────────────────────────────────┼───────────────────────────────┼───────────────────────────────┼───────────────┤
+  │     │                                                                                         │ People Intelligence Platform  │ ARTES · Conflict              │               │
+  │ 1.5 │ frontend/src/app/modules/conflict/conflict-detail-dialog/conflict-detail-dialog.compone │ · Conflict Intelligence™ ·    │ Intelligence™ · HeadSoft      │ Dialog footer │
+  │     │ nt.ts:723                                                                               │ HeadSoft Tech × Helena        │ Tech × Helena Coaching        │               │
+  │     │                                                                                         │ Coaching                      │                               │               │
+  ├─────┼─────────────────────────────────────────────────────────────────────────────────────────┼───────────────────────────────┼───────────────────────────────┼───────────────┤
+  │ 1.6 │ backend/src/services/email.service.ts:62                                                │ People Intelligence Platform. │ ARTES.                        │ Email body    │
+  ├─────┼─────────────────────────────────────────────────────────────────────────────────────────┼───────────────────────────────┼───────────────────────────────┼───────────────┤
+  │     │                                                                                         │ Reset your People             │                               │               │
+  │ 1.7 │ backend/src/services/email.service.ts:112                                               │ Intelligence Platform         │ Reset your ARTES password     │ Email subject │
+  │     │                                                                                         │ password                      │                               │               │
+  ├─────┼─────────────────────────────────────────────────────────────────────────────────────────┼───────────────────────────────┼───────────────────────────────┼───────────────┤
+  │     │                                                                                         │ Welcome to ${params.orgName}  │ Welcome to ${params.orgName}  │               │
+  │ 1.8 │ backend/src/services/email.service.ts:153                                               │ on People Intelligence        │ on ARTES                      │ Email subject │
+  │     │                                                                                         │ Platform                      │                               │               │
+  ├─────┼─────────────────────────────────────────────────────────────────────────────────────────┼───────────────────────────────┼───────────────────────────────┼───────────────┤
+  │ 1.9 │ backend/src/services/email.service.ts:271                                               │ ...on the People Intelligence │ ...on ARTES                   │ Email body    │
+  │     │                                                                                         │  Platform                     │                               │               │
+  ├─────┼─────────────────────────────────────────────────────────────────────────────────────────┼───────────────────────────────┼───────────────────────────────┼───────────────┤
+  │ 1.1 │ backend/src/routes/system-admin-billing.routes.ts:536                                   │ ...from People Intelligence   │ ...from ARTES —...            │ Invoice email │
+  │ 0   │                                                                                         │ Platform —...                 │                               │  subject      │
+  ├─────┼─────────────────────────────────────────────────────────────────────────────────────────┼───────────────────────────────┼───────────────────────────────┼───────────────┤
+  │ 1.1 │ backend/src/routes/user.routes.ts:143                                                   │ People Intelligence Platform  │ ARTES — Test Email            │ Test email    │
+  │ 1   │                                                                                         │ — Test Email                  │                               │ subject       │
+  ├─────┼─────────────────────────────────────────────────────────────────────────────────────────┼───────────────────────────────┼───────────────────────────────┼───────────────┤
+  │ 1.1 │                                                                                         │ ...from <strong>People        │ ...from                       │ Test email    │
+  │ 2   │ backend/src/routes/user.routes.ts:146                                                   │ Intelligence                  │ <strong>ARTES</strong>...     │ body          │
+  │     │                                                                                         │ Platform</strong>...          │                               │               │
+  ├─────┼─────────────────────────────────────────────────────────────────────────────────────────┼───────────────────────────────┼───────────────────────────────┼───────────────┤
+  │ 1.1 │                                                                                         │ authenticator.keyuri(user.ema │ authenticator.keyuri(user.ema │ 2FA           │
+  │ 3   │ backend/src/routes/user.routes.ts:75                                                    │ il, 'People Intelligence      │ il, 'ARTES', secret)          │ authenticator │
+  │     │                                                                                         │ Platform', secret)            │                               │  app label    │
+  └─────┴─────────────────────────────────────────────────────────────────────────────────────────┴───────────────────────────────┴───────────────────────────────┴───────────────┘
+
+  ---
+  Group 2 — Config & Infrastructure
+
+  ┌─────┬──────────────────────────────┬──────────────────────────────────────────────────┬──────────────────┬───────────────────────────────┐
+  │  #  │             File             │                     Current                      │     Proposed     │             Notes             │
+  ├─────┼──────────────────────────────┼──────────────────────────────────────────────────┼──────────────────┼───────────────────────────────┤
+  │ 2.1 │ backend/src/config/env.ts:42 │ 'People Intelligence Platform' (WebAuthn rpName) │ 'ARTES'          │ Passkey display name          │
+  ├─────┼──────────────────────────────┼──────────────────────────────────────────────────┼──────────────────┼───────────────────────────────┤
+  │ 2.2 │ backend/package.json:2       │ "people-intelligence-backend"                    │ "artes-backend"  │ npm package name              │
+  ├─────┼──────────────────────────────┼──────────────────────────────────────────────────┼──────────────────┼───────────────────────────────┤
+  │ 2.3 │ frontend/package.json:2      │ "people-intelligence-frontend"                   │ "artes-frontend" │ npm package name              │
+  ├─────┼──────────────────────────────┼──────────────────────────────────────────────────┼──────────────────┼───────────────────────────────┤
+  │ 2.4 │ frontend/angular.json        │ "people-intelligence-frontend" (×5)              │ "artes-frontend" │ Angular project + build paths │
+  ├─────┼──────────────────────────────┼──────────────────────────────────────────────────┼──────────────────┼───────────────────────────────┤
+  │ 2.5 │ backend/.env.example:7       │ people-intelligence (DB name)                    │ artes            │ Example DB connection string  │
+  ├─────┼──────────────────────────────┼──────────────────────────────────────────────────┼──────────────────┼───────────────────────────────┤
+  │ 2.6 │ backend/.env.example:22      │ people-intelligence-assets                       │ artes-assets     │ Example S3 bucket             │
+  └─────┴──────────────────────────────┴──────────────────────────────────────────────────┴──────────────────┴───────────────────────────────┘
+
+  ---
+  Group 3 — Docker & PM2 (container/process names)
+
+  ┌─────┬───────────────────────────────┬────────────────────────────────────────┬──────────────────────────────────────────────┬──────────────────┐
+  │  #  │             File              │                Current                 │                   Proposed                   │      Notes       │
+  ├─────┼───────────────────────────────┼────────────────────────────────────────┼──────────────────────────────────────────────┼──────────────────┤
+  │ 3.1 │ docker-compose.yml            │ pip-mongodb, pip-backend, pip-frontend │ artes-mongodb, artes-backend, artes-frontend │ Container names  │
+  ├─────┼───────────────────────────────┼────────────────────────────────────────┼──────────────────────────────────────────────┼──────────────────┤
+  │ 3.2 │ docker-compose.yml            │ people-intelligence (DB name + URI)    │ artes                                        │ Docker DB name   │
+  ├─────┼───────────────────────────────┼────────────────────────────────────────┼──────────────────────────────────────────────┼──────────────────┤
+  │ 3.3 │ backend/ecosystem.config.js:4 │ 'pip-backend'                          │ 'artes-backend'                              │ PM2 process name │
+  ├─────┼───────────────────────────────┼────────────────────────────────────────┼──────────────────────────────────────────────┼──────────────────┤
+  │ 3.4 │ deploy.sh:59                  │ pm2 restart pip-backend                │ pm2 restart artes-backend                    │ Deploy command   │
+  └─────┴───────────────────────────────┴────────────────────────────────────────┴──────────────────────────────────────────────┴──────────────────┘
+
+  Warning: Changing the PM2 process name (3.3 + 3.4) requires stopping the old pip-backend process on the server and starting a new artes-backend one. I recommend doing this in a
+  coordinated deploy.
+
+  ---
+  Group 4 — CSS/SCSS Variables ($pip-* / --pip-*)
+
+  ┌─────┬─────────────────────────────────────────────────────────────────────┬───────────────────────────────────────────────┬─────────────────────────────────────────────────────┐
+  │  #  │                                File                                 │                Current prefix                 │                   Proposed prefix                   │
+  ├─────┼─────────────────────────────────────────────────────────────────────┼───────────────────────────────────────────────┼─────────────────────────────────────────────────────┤
+  │ 4.1 │ frontend/src/styles/styles.scss                                     │ $pip-primary, $pip-accent, $pip-warn,         │ $artes-primary, $artes-accent, $artes-warn,         │
+  │     │                                                                     │ $pip-theme                                    │ $artes-theme                                        │
+  ├─────┼─────────────────────────────────────────────────────────────────────┼───────────────────────────────────────────────┼─────────────────────────────────────────────────────┤
+  │     │                                                                     │ --pip-primary, --pip-accent, --pip-bg,        │ --artes-primary, --artes-accent, --artes-bg,        │
+  │ 4.2 │ frontend/src/styles/styles.scss                                     │ --pip-surface, --pip-radius,                  │ --artes-surface, --artes-radius,                    │
+  │     │                                                                     │ --pip-btn-radius, --pip-heading-font,         │ --artes-btn-radius, --artes-heading-font,           │
+  │     │                                                                     │ --pip-body-font                               │ --artes-body-font                                   │
+  ├─────┼─────────────────────────────────────────────────────────────────────┼───────────────────────────────────────────────┼─────────────────────────────────────────────────────┤
+  │ 4.3 │ frontend/src/app/core/theme.service.ts                              │ --pip-* references                            │ --artes-*                                           │
+  ├─────┼─────────────────────────────────────────────────────────────────────┼───────────────────────────────────────────────┼─────────────────────────────────────────────────────┤
+  │ 4.4 │ frontend/src/app/modules/dashboard/app-shell/app-shell.component.ts │ var(--pip-primary), var(--pip-accent)         │ var(--artes-primary), var(--artes-accent)           │
+  └─────┴─────────────────────────────────────────────────────────────────────┴───────────────────────────────────────────────┴─────────────────────────────────────────────────────┘
+
+  These are purely internal — no user-visible impact, but touching many files.
+
+  ---
+  Group 5 — Deploy Script & Build Paths
+
+  ┌─────┬───────────────────────┬────────────────────────────────────────────────────┬─────────────────────────────┬─────────────────────────────────────┐
+  │  #  │         File          │                      Current                       │          Proposed           │                Notes                │
+  ├─────┼───────────────────────┼────────────────────────────────────────────────────┼─────────────────────────────┼─────────────────────────────────────┤
+  │ 5.1 │ deploy.sh:3           │ Build & deploy People Intelligence Platform to EC2 │ Build & deploy ARTES to EC2 │ Comment                             │
+  ├─────┼───────────────────────┼────────────────────────────────────────────────────┼─────────────────────────────┼─────────────────────────────────────┤
+  │ 5.2 │ deploy.sh:30,33       │ people-intelligence-frontend (build output path)   │ artes-frontend              │ Must match angular.json output      │
+  ├─────┼───────────────────────┼────────────────────────────────────────────────────┼─────────────────────────────┼─────────────────────────────────────┤
+  │ 5.3 │ deploy.sh:86          │ pip.helenacoaching.com                             │ Keep as-is?                 │ Domain — needs DNS change to rename │
+  ├─────┼───────────────────────┼────────────────────────────────────────────────────┼─────────────────────────────┼─────────────────────────────────────┤
+  │ 5.4 │ frontend/Dockerfile:9 │ people-intelligence-frontend                       │ artes-frontend              │ Docker build path                   │
+  └─────┴───────────────────────┴────────────────────────────────────────────────────┴─────────────────────────────┴─────────────────────────────────────┘
+
+  ---
+  Group 6 — Documentation & Comments (KEEP descriptive text)
+
+  ┌─────┬────────────────────────────────────────────────┬───────────────────────────────────────────────────────────────────────────┬───────────────────────────┐
+  │  #  │                      File                      │                                  Action                                   │         Rationale         │
+  ├─────┼────────────────────────────────────────────────┼───────────────────────────────────────────────────────────────────────────┼───────────────────────────┤
+  │ 6.1 │ CLAUDE.md                                      │ Rename to ARTES but keep descriptive phrases like "Multi-tenant B2B SaaS" │ Dev instructions          │
+  ├─────┼────────────────────────────────────────────────┼───────────────────────────────────────────────────────────────────────────┼───────────────────────────┤
+  │ 6.2 │ README.md                                      │ Rename heading                                                            │ Repo docs                 │
+  ├─────┼────────────────────────────────────────────────┼───────────────────────────────────────────────────────────────────────────┼───────────────────────────┤
+  │ 6.3 │ shared/types/index.ts:3                        │ Update comment                                                            │ Code comment              │
+  ├─────┼────────────────────────────────────────────────┼───────────────────────────────────────────────────────────────────────────┼───────────────────────────┤
+  │ 6.4 │ frontend/src/styles/styles.scss:5              │ Update comment                                                            │ SCSS comment              │
+  ├─────┼────────────────────────────────────────────────┼───────────────────────────────────────────────────────────────────────────┼───────────────────────────┤
+  │ 6.5 │ frontend/src/styles/_variables.scss:2          │ Update comment                                                            │ SCSS comment              │
+  ├─────┼────────────────────────────────────────────────┼───────────────────────────────────────────────────────────────────────────┼───────────────────────────┤
+  │ 6.6 │ All documentation/*.md and documentation/*.txt │ Update product name references                                            │ Prompt docs, setup guides │
+  ├─────┼────────────────────────────────────────────────┼───────────────────────────────────────────────────────────────────────────┼───────────────────────────┤
+  │ 6.7 │ GOOGLE_CALENDAR_SETUP.md                       │ Update app name to ARTES                                                  │ Setup docs                │
+  └─────┴────────────────────────────────────────────────┴───────────────────────────────────────────────────────────────────────────┴───────────────────────────┘
+
+  ---
+  Group 7 — DO NOT CHANGE (recommended)
+
+  ┌───────────────────────────────────────┬───────────────────────────────────────────────────────┐
+  │                 Item                  │                        Reason                         │
+  ├───────────────────────────────────────┼───────────────────────────────────────────────────────┤
+  │ pip.helenacoaching.com domain         │ Requires DNS/Nginx change — separate effort           │
+  ├───────────────────────────────────────┼───────────────────────────────────────────────────────┤
+  │ pip_settings localStorage key         │ Would clear all existing users' settings              │
+  ├───────────────────────────────────────┼───────────────────────────────────────────────────────┤
+  │ Actual MongoDB database name on Atlas │ Requires migration — separate effort                  │
+  ├───────────────────────────────────────┼───────────────────────────────────────────────────────┤
+  │ Actual S3 bucket name on AWS          │ Requires new bucket creation — separate effort        │
+  ├───────────────────────────────────────┼───────────────────────────────────────────────────────┤
+  │ node_modules, package-lock.json       │ Auto-generated, will update when package.json changes │
+  ├───────────────────────────────────────┼───────────────────────────────────────────────────────┤
+  │ Server PM2 process name               │ Change during coordinated deploy only                 │
+  └───────────────────────────────────────┴───────────────────────────────────────────────────────┘
+
+  ---
+  Which groups do you approve? I'll implement them one group at a time so you can review each diff.

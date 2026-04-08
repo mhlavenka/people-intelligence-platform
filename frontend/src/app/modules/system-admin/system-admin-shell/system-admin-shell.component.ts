@@ -29,13 +29,13 @@ import { AuthService } from '../../../core/auth.service';
       <aside class="sa-sidebar">
         <div class="sa-header" [class.collapsed]="collapsed()">
           @if (collapsed()) {
-            <img src="assets/PIP_Icon_512.png" alt="PIP" class="brand-logo" />
+            <img src="assets/artes_icon_512.png" alt="PIP" class="brand-logo" />
             <button class="expand-btn" (click)="collapsed.set(false)" title="Expand">
               <mat-icon>chevron_right</mat-icon>
             </button>
           } @else {
             <div class="brand">
-              <img src="assets/PIP_Logo_Dark_Transparent.png" alt="PIP" class="brand-logo-wide" />
+              <img src="assets/artes_transparent_dark.png" alt="PIP" class="brand-logo-wide" />
               <div class="brand-text">
                 <span class="brand-name">HeadSoft</span>
                 <span class="brand-sub">System Administration</span>

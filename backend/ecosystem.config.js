@@ -1,7 +1,7 @@
 module.exports = {
   apps: [
     {
-      name: 'pip-backend',
+      name: 'artes-backend',
       script: 'dist/app.js',        // compiled JS — run `npm run build` first
       interpreter: 'node',
       instances: 1,

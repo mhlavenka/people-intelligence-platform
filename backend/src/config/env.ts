@@ -39,7 +39,7 @@ export const config = {
     },
   },
   webauthn: {
-    rpName: process.env['WEBAUTHN_RP_NAME'] || 'People Intelligence Platform',
+    rpName: process.env['WEBAUTHN_RP_NAME'] || 'Artes Hub',
     rpId: process.env['WEBAUTHN_RP_ID'] || new URL(process.env['FRONTEND_URL'] || 'http://localhost:4200').hostname,
     origin: process.env['WEBAUTHN_ORIGIN'] || process.env['FRONTEND_URL'] || 'http://localhost:4200',
   },

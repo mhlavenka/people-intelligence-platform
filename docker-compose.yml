@@ -3,13 +3,13 @@ version: '3.9'
 services:
   mongodb:
     image: mongo:7
-    container_name: pip-mongodb
+    container_name: artes-mongodb
     ports:
       - '27017:27017'
     environment:
       MONGO_INITDB_ROOT_USERNAME: admin
       MONGO_INITDB_ROOT_PASSWORD: password
-      MONGO_INITDB_DATABASE: people-intelligence
+      MONGO_INITDB_DATABASE: artes
     volumes:
       - mongodb-data:/data/db
     healthcheck:
@@ -22,13 +22,13 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: pip-backend
+    container_name: artes-backend
     ports:
       - '3030:3030'
     environment:
       NODE_ENV: development
       PORT: 3030
-      MONGODB_URI: mongodb://admin:password@mongodb:27017/people-intelligence?authSource=admin
+      MONGODB_URI: mongodb://admin:password@mongodb:27017/artes?authSource=admin
       FRONTEND_URL: http://localhost:4200
       JWT_SECRET: ${JWT_SECRET:-dev-secret-change-in-production}
       JWT_EXPIRES_IN: 15m
@@ -46,7 +46,7 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: pip-frontend
+    container_name: artes-frontend
     ports:
       - '4200:4200'
     environment:

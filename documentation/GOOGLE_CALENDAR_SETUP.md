@@ -14,6 +14,7 @@ Follow these steps to enable Google Calendar sync for coaches.
    - Production: `https://pip.helenacoaching.com/api/calendar/auth/google/callback`
    - Local dev: `http://localhost:3030/api/calendar/auth/google/callback`
 8. Copy the **Client ID** and **Client Secret**
+9. Enable Calndar API !!
 
 ## 2. OAuth Consent Screen
 
