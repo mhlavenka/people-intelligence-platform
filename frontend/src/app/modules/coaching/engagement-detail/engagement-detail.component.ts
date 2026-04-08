@@ -12,6 +12,7 @@ import { ApiService } from '../../../core/api.service';
 import { AuthService } from '../../../core/auth.service';
 import { SessionDialogComponent } from '../session-dialog/session-dialog.component';
 import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog.component';
+import { JournalService, SessionNote } from '../../journal/journal.service';
 
 interface Session {
   _id: string;
@@ -169,6 +170,28 @@ interface Session {
                   @if (s.preSessionRating) { <span class="rating">Mood: {{ s.preSessionRating }}/10</span> }
                   @if (s.postSessionRating) { <span class="rating">Rating: {{ s.postSessionRating }}/5</span> }
                 </div>
+
+                <!-- Journal note -->
+                @if (canManage()) {
+                  @if (noteFor(s._id); as note) {
+                    <div class="journal-summary">
+                      <mat-icon>auto_stories</mat-icon>
+                      <div class="journal-text">
+                        <span class="journal-label">Journal Note #{{ note.sessionNumber }}
+                          <span class="journal-status" [class]="note.status">{{ note.status }}</span>
+                        </span>
+                        <span class="journal-preview">{{ note.aiSummary || note.inSession?.observations?.slice(0, 100) || 'No observations yet' }}</span>
+                      </div>
+                      <a mat-icon-button [routerLink]="'/journal/note/' + note._id" matTooltip="View journal note">
+                        <mat-icon>open_in_new</mat-icon>
+                      </a>
+                    </div>
+                  } @else {
+                    <a class="add-journal-link" [routerLink]="'/journal/note/new/' + engId" [queryParams]="{ sessionId: s._id }">
+                      <mat-icon>auto_stories</mat-icon> Add Journal Note
+                    </a>
+                  }
+                }
               </div>
             }
           </div>
@@ -214,6 +237,30 @@ interface Session {
     .billing-link {
       display: flex; align-items: center; gap: 4px; font-size: 12px; color: #3A9FD6;
       cursor: pointer; margin-top: 8px; text-decoration: none;
+      mat-icon { font-size: 14px; width: 14px; height: 14px; }
+      &:hover { text-decoration: underline; }
+    }
+
+    .journal-summary {
+      display: flex; align-items: flex-start; gap: 8px; margin-top: 10px;
+      padding: 10px 12px; background: #faf8f2; border-radius: 8px; border-left: 3px solid #7c5cbf;
+      > mat-icon { color: #7c5cbf; font-size: 18px; width: 18px; height: 18px; margin-top: 2px; flex-shrink: 0; }
+    }
+    .journal-text { flex: 1; min-width: 0; }
+    .journal-label {
+      display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: #1B2A47;
+    }
+    .journal-status {
+      font-size: 9px; font-weight: 700; text-transform: uppercase; padding: 1px 6px; border-radius: 999px;
+      &.complete { background: #e8faf4; color: #1a9678; }
+      &.draft { background: #f0f4f8; color: #9aa5b4; }
+    }
+    .journal-preview { display: block; font-size: 12px; color: #5a6a7e; line-height: 1.4; margin-top: 2px;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .add-journal-link {
+      display: flex; align-items: center; gap: 4px; margin-top: 8px;
+      font-size: 12px; color: #7c5cbf; text-decoration: none; font-weight: 500;
       mat-icon { font-size: 14px; width: 14px; height: 14px; }
       &:hover { text-decoration: underline; }
     }
@@ -285,7 +332,8 @@ export class EngagementDetailComponent implements OnInit {
   engagement = signal<any>(null);
   sessions = signal<Session[]>([]);
   loading = signal(true);
-  private engId = '';
+  private notesBySession = new Map<string, SessionNote>();
+  engId = '';
 
   constructor(
     private route: ActivatedRoute,
@@ -293,6 +341,7 @@ export class EngagementDetailComponent implements OnInit {
     private auth: AuthService,
     private dialog: MatDialog,
     private snack: MatSnackBar,
+    private journal: JournalService,
   ) {}
 
   canManage = () => ['admin', 'hr_manager', 'coach'].includes(this.auth.currentUser()?.role ?? '');
@@ -316,6 +365,10 @@ export class EngagementDetailComponent implements OnInit {
     return this.engagement()?.hourlyRate ?? null;
   }
 
+  noteFor(sessionId: string): SessionNote | undefined {
+    return this.notesBySession.get(sessionId);
+  }
+
   statusColor(): string {
     const map: Record<string, string> = { prospect: '#9aa5b4', contracted: '#3A9FD6', active: '#27C4A0', paused: '#f0a500', completed: '#1a9678', alumni: '#7c5cbf' };
     return map[this.engagement()?.status] || '#9aa5b4';
@@ -331,9 +384,13 @@ export class EngagementDetailComponent implements OnInit {
     Promise.all([
       this.api.get(`/coaching/engagements/${this.engId}`).toPromise(),
       this.api.get<Session[]>(`/coaching/sessions?engagementId=${this.engId}`).toPromise(),
-    ]).then(([eng, sessions]) => {
+      this.journal.getEngagementNotes(this.engId).toPromise(),
+    ]).then(([eng, sessions, notes]) => {
       this.engagement.set(eng);
       this.sessions.set(sessions!);
+      // Index journal notes by sessionId
+      this.notesBySession.clear();
+      (notes || []).forEach((n) => { if (n.sessionId) this.notesBySession.set(n.sessionId, n); });
       this.loading.set(false);
     }).catch(() => this.loading.set(false));
   }

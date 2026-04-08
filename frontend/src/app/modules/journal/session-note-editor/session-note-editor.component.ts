@@ -15,6 +15,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { JournalService, SessionNote, AccountabilityItem } from '../journal.service';
+import { ApiService } from '../../../core/api.service';
 
 @Component({
   selector: 'app-session-note-editor',
@@ -238,6 +239,7 @@ export class SessionNoteEditorComponent implements OnInit {
   isEdit = false;
   noteId = '';
   engagementId = '';
+  sessionId = '';
   noteStatus: 'draft' | 'complete' = 'draft';
   backLink = '/journal';
 
@@ -257,6 +259,7 @@ export class SessionNoteEditorComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private journal: JournalService,
+    private api: ApiService,
     private snack: MatSnackBar,
   ) {}
 
@@ -270,6 +273,7 @@ export class SessionNoteEditorComponent implements OnInit {
       this.journal.getNote(this.noteId).subscribe({
         next: (note) => {
           this.engagementId = note.engagementId;
+          this.sessionId = note.sessionId || '';
           this.sessionDate = new Date(note.sessionDate);
           this.durationMinutes = note.durationMinutes;
           this.format = note.format;
@@ -296,8 +300,22 @@ export class SessionNoteEditorComponent implements OnInit {
         error: () => this.loading.set(false),
       });
     } else {
-      this.backLink = `/journal/engagement/${this.engagementId}`;
-      this.loading.set(false);
+      this.sessionId = this.route.snapshot.queryParams['sessionId'] || '';
+      this.backLink = `/coaching/${this.engagementId}`;
+      // Pre-fill from linked coaching session if provided
+      if (this.sessionId) {
+        this.api.get<any>(`/coaching/sessions/${this.sessionId}`).subscribe({
+          next: (s) => {
+            this.sessionDate = new Date(s.date);
+            this.durationMinutes = s.duration || 60;
+            this.format = s.format || 'video';
+            this.loading.set(false);
+          },
+          error: () => this.loading.set(false),
+        });
+      } else {
+        this.loading.set(false);
+      }
     }
   }
 
@@ -328,6 +346,7 @@ export class SessionNoteEditorComponent implements OnInit {
       inSession: { ...this.inSession, notableQuotes: this.inSession.notableQuotes.filter(Boolean) },
       postSession: { ...this.postSession, accountabilityItems: this.postSession.accountabilityItems.filter((a) => a.item) },
     };
+    if (this.sessionId) body.sessionId = this.sessionId;
 
     const obs = this.isEdit
       ? this.journal.updateNote(this.noteId, body)
