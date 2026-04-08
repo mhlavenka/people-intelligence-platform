@@ -2,7 +2,10 @@ import { google, calendar_v3 } from 'googleapis';
 import { config } from '../config/env';
 import { User } from '../models/User.model';
 
-const SCOPES = ['https://www.googleapis.com/auth/calendar.events'];
+const SCOPES = [
+  'https://www.googleapis.com/auth/calendar.events',
+  'https://www.googleapis.com/auth/calendar.readonly',  // needed for calendarList.list()
+];
 
 function createOAuth2Client() {
   return new google.auth.OAuth2(
