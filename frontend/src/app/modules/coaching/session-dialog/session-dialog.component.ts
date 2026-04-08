@@ -105,15 +105,42 @@ const FRAMEWORKS = [
               </mat-select>
             </mat-form-field>
 
-            <div class="form-row">
-              <mat-form-field appearance="outline">
-                <mat-label>Pre-session mood (1-10)</mat-label>
-                <input matInput type="number" [(ngModel)]="form.preSessionRating" min="1" max="10" />
-              </mat-form-field>
-              <mat-form-field appearance="outline">
-                <mat-label>Session rating (1-5)</mat-label>
-                <input matInput type="number" [(ngModel)]="form.postSessionRating" min="1" max="5" />
-              </mat-form-field>
+            <!-- Pre-session mood (1-10 stars) -->
+            <div class="star-section">
+              <div class="star-label">Pre-session Mood</div>
+              <div class="star-row ten">
+                @for (i of moodStars; track i) {
+                  <mat-icon
+                    class="star"
+                    [class.filled]="form.preSessionRating !== null && i <= form.preSessionRating!"
+                    (click)="form.preSessionRating = form.preSessionRating === i ? null : i"
+                    (mouseenter)="moodHover = i"
+                    (mouseleave)="moodHover = 0"
+                    [class.hovered]="moodHover >= i">
+                    {{ (form.preSessionRating !== null && i <= form.preSessionRating!) || moodHover >= i ? 'star' : 'star_border' }}
+                  </mat-icon>
+                }
+                <span class="star-value">{{ form.preSessionRating ?? '—' }}/10</span>
+              </div>
+            </div>
+
+            <!-- Session rating (1-5 stars) -->
+            <div class="star-section">
+              <div class="star-label">Session Rating</div>
+              <div class="star-row">
+                @for (i of ratingStars; track i) {
+                  <mat-icon
+                    class="star"
+                    [class.filled]="form.postSessionRating !== null && i <= form.postSessionRating!"
+                    (click)="form.postSessionRating = form.postSessionRating === i ? null : i"
+                    (mouseenter)="ratingHover = i"
+                    (mouseleave)="ratingHover = 0"
+                    [class.hovered]="ratingHover >= i">
+                    {{ (form.postSessionRating !== null && i <= form.postSessionRating!) || ratingHover >= i ? 'star' : 'star_border' }}
+                  </mat-icon>
+                }
+                <span class="star-value">{{ form.postSessionRating ?? '—' }}/5</span>
+              </div>
             </div>
           </div>
         </mat-tab>
@@ -171,6 +198,20 @@ const FRAMEWORKS = [
       &:hover { border-color: #3A9FD6; }
     }
 
+    .star-section { margin-bottom: 12px; }
+    .star-label { font-size: 12px; font-weight: 600; color: #5a6a7e; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+    .star-row {
+      display: flex; align-items: center; gap: 2px;
+      &.ten .star { font-size: 20px; width: 20px; height: 20px; }
+    }
+    .star {
+      font-size: 26px; width: 26px; height: 26px; cursor: pointer;
+      color: #d1d5db; transition: color 0.1s;
+      &.filled { color: #f59e0b; }
+      &.hovered { color: #fbbf24; }
+    }
+    .star-value { font-size: 13px; color: #5a6a7e; font-weight: 600; margin-left: 8px; }
+
     .notes-warning {
       display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 8px;
       background: #f0f9ff; border: 1px solid #bae6fd; margin-bottom: 8px;
@@ -196,6 +237,10 @@ export class SessionDialogComponent implements OnInit {
   startTime = '09:00';
   growPhases = GROW_PHASES;
   frameworks = FRAMEWORKS;
+  moodStars = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+  ratingStars = [1, 2, 3, 4, 5];
+  moodHover = 0;
+  ratingHover = 0;
 
   form = {
     date: new Date() as Date, duration: 60, format: 'video', status: 'scheduled',

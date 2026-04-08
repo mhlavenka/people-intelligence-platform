@@ -167,8 +167,22 @@ interface Session {
                 }
 
                 <div class="session-footer">
-                  @if (s.preSessionRating) { <span class="rating">Mood: {{ s.preSessionRating }}/10</span> }
-                  @if (s.postSessionRating) { <span class="rating">Rating: {{ s.postSessionRating }}/5</span> }
+                  @if (s.preSessionRating) {
+                    <span class="rating">
+                      <span class="rating-label">Mood</span>
+                      @for (i of [1,2,3,4,5,6,7,8,9,10]; track i) {
+                        <mat-icon class="star-sm" [class.filled]="i <= s.preSessionRating!">{{ i <= s.preSessionRating! ? 'star' : 'star_border' }}</mat-icon>
+                      }
+                    </span>
+                  }
+                  @if (s.postSessionRating) {
+                    <span class="rating">
+                      <span class="rating-label">Rating</span>
+                      @for (i of [1,2,3,4,5]; track i) {
+                        <mat-icon class="star-sm" [class.filled]="i <= s.postSessionRating!">{{ i <= s.postSessionRating! ? 'star' : 'star_border' }}</mat-icon>
+                      }
+                    </span>
+                  }
                 </div>
 
                 <!-- Journal note -->
@@ -323,7 +337,9 @@ interface Session {
     }
 
     .session-footer { display: flex; gap: 12px; }
-    .rating { font-size: 12px; color: #5a6a7e; }
+    .rating { font-size: 12px; color: #5a6a7e; display: flex; align-items: center; gap: 1px; }
+    .rating-label { font-size: 11px; font-weight: 600; color: #9aa5b4; margin-right: 4px; }
+    .star-sm { font-size: 14px; width: 14px; height: 14px; color: #d1d5db; &.filled { color: #f59e0b; } }
 
     @media (max-width: 768px) { .detail-layout { grid-template-columns: 1fr; } .info-card { position: static; } }
   `],
