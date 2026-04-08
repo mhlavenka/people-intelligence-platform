@@ -20,6 +20,15 @@ export interface IOAuthAccount {
   linkedAt: Date;
 }
 
+export interface IGoogleCalendar {
+  connected: boolean;
+  calendarId?: string;
+  calendarName?: string;
+  accessToken?: string;
+  refreshToken?: string;
+  tokenExpiry?: Date;
+}
+
 export interface IUser extends Document {
   organizationId: mongoose.Types.ObjectId;
   email: string;
@@ -36,6 +45,7 @@ export interface IUser extends Document {
   twoFactorEnabled: boolean;
   passkeys: IPasskeyCredential[];
   oauthAccounts: IOAuthAccount[];
+  googleCalendar?: IGoogleCalendar;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -83,6 +93,14 @@ const UserSchema = new Schema<IUser>(
     twoFactorEnabled: { type: Boolean, default: false },
     passkeys:      [PasskeyCredentialSchema],
     oauthAccounts: [OAuthAccountSchema],
+    googleCalendar: {
+      connected:    { type: Boolean, default: false },
+      calendarId:   { type: String },
+      calendarName: { type: String },
+      accessToken:  { type: String, select: false },
+      refreshToken: { type: String, select: false },
+      tokenExpiry:  { type: Date },
+    },
   },
   { timestamps: true }
 );

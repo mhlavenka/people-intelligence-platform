@@ -29,6 +29,7 @@ import eqiImportRoutes from './routes/eqi-import.routes';
 import coachingRoutes from './routes/coaching.routes';
 import authOAuthRoutes from './routes/auth-oauth.routes';
 import systemAdminSettingsRoutes from './routes/system-admin-settings.routes';
+import calendarRoutes, { calendarCallbackRouter } from './routes/calendar.routes';
 
 const app = express();
 
@@ -77,6 +78,8 @@ app.use('/api/system-admin/settings', systemAdminSettingsRoutes);
 app.use('/api/reports', reportsRoutes);
 app.use('/api/eq/import', eqiImportRoutes);
 app.use('/api/coaching', coachingRoutes);
+app.use('/api/calendar', calendarCallbackRouter);  // public — Google OAuth redirect (no auth)
+app.use('/api/calendar', calendarRoutes);
 
 // 404 and error handlers (must be last)
 app.use(notFound);

@@ -3,9 +3,25 @@ import { authenticateToken, requireRole, AuthRequest } from '../middleware/auth.
 import { tenantResolver } from '../middleware/tenant.middleware';
 import { CoachingEngagement } from '../models/CoachingEngagement.model';
 import { CoachingSession } from '../models/CoachingSession.model';
+import { User } from '../models/User.model';
+import * as gcal from '../services/googleCalendar.service';
 
 const router = Router();
 router.use(authenticateToken, tenantResolver);
+
+/** Resolve coachee name + email for calendar event details. */
+async function resolveCoachee(coacheeId: string): Promise<{ name: string; email?: string }> {
+  const coachee = await User.findById(coacheeId).select('firstName lastName email');
+  return coachee
+    ? { name: `${coachee.firstName} ${coachee.lastName}`, email: coachee.email }
+    : { name: 'Unknown' };
+}
+
+/** Check if a coach has Google Calendar connected. */
+async function isCalendarConnected(coachId: string): Promise<boolean> {
+  const coach = await User.findById(coachId).select('googleCalendar.connected');
+  return coach?.googleCalendar?.connected === true;
+}
 
 // ═══════════════════════════════════════════════════════════════════════════
 // ENGAGEMENTS
@@ -154,6 +170,24 @@ router.post(
         await CoachingEngagement.findByIdAndUpdate(session.engagementId, { $inc: { sessionsUsed: 1 } });
       }
 
+      // Google Calendar sync
+      try {
+        if (await isCalendarConnected(session.coachId.toString())) {
+          const coachee = await resolveCoachee(session.coacheeId.toString());
+          const googleEventId = await gcal.createCalendarEvent(session.coachId.toString(), {
+            date: session.date,
+            duration: session.duration,
+            coacheeName: coachee.name,
+            coacheeEmail: coachee.email,
+            sharedNotes: session.sharedNotes,
+          });
+          session.googleEventId = googleEventId;
+          await session.save();
+        }
+      } catch (calErr) {
+        console.warn('[GCal] Failed to create event:', calErr);
+      }
+
       const populated = await session.populate([
         { path: 'coacheeId', select: 'firstName lastName' },
         { path: 'coachId', select: 'firstName lastName' },
@@ -184,6 +218,23 @@ router.put(
         await CoachingEngagement.findByIdAndUpdate(existing.engagementId, { $inc: { sessionsUsed: 1 } });
       }
 
+      // Google Calendar sync
+      try {
+        if (existing.googleEventId && await isCalendarConnected(existing.coachId.toString())) {
+          const coachee = await resolveCoachee(existing.coacheeId.toString());
+          await gcal.updateCalendarEvent(existing.coachId.toString(), existing.googleEventId, {
+            date: existing.date,
+            duration: existing.duration,
+            coacheeName: coachee.name,
+            coacheeEmail: coachee.email,
+            sharedNotes: existing.sharedNotes,
+            status: existing.status,
+          });
+        }
+      } catch (calErr) {
+        console.warn('[GCal] Failed to update event:', calErr);
+      }
+
       await existing.populate([
         { path: 'coacheeId', select: 'firstName lastName' },
         { path: 'coachId', select: 'firstName lastName' },
@@ -204,6 +255,16 @@ router.delete(
         organizationId: req.user!.organizationId,
       });
       if (!session) { res.status(404).json({ error: 'Session not found' }); return; }
+
+      // Google Calendar sync
+      try {
+        if (session.googleEventId && await isCalendarConnected(session.coachId.toString())) {
+          await gcal.deleteCalendarEvent(session.coachId.toString(), session.googleEventId);
+        }
+      } catch (calErr) {
+        console.warn('[GCal] Failed to delete event:', calErr);
+      }
+
       res.json({ message: 'Session deleted' });
     } catch (e) { next(e); }
   }

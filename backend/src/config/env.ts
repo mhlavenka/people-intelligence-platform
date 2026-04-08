@@ -30,6 +30,7 @@ export const config = {
     google: {
       clientId: process.env['GOOGLE_CLIENT_ID'] || '',
       clientSecret: process.env['GOOGLE_CLIENT_SECRET'] || '',
+      calendarRedirectUri: process.env['GOOGLE_CALENDAR_REDIRECT_URI'] || '',
     },
     microsoft: {
       clientId: process.env['MICROSOFT_CLIENT_ID'] || '',

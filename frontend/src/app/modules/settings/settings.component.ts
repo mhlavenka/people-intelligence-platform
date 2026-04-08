@@ -11,6 +11,8 @@ import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ApiService } from '../../core/api.service';
+import { AuthService } from '../../core/auth.service';
+import { CalendarIntegrationComponent } from '../coaching/calendar-integration/calendar-integration.component';
 
 interface NotificationSetting {
   key: string;
@@ -63,6 +65,7 @@ const DEFAULT_SETTINGS: Settings = {
     MatProgressSpinnerModule,
     MatSnackBarModule,
     ReactiveFormsModule,
+    CalendarIntegrationComponent,
   ],
   template: `
     <div class="settings-page">
@@ -223,6 +226,11 @@ const DEFAULT_SETTINGS: Settings = {
             </div>
           </div>
         </div>
+
+        <!-- Google Calendar (coaches only) -->
+        @if (isCoach()) {
+          <app-calendar-integration />
+        }
 
         <!-- Security / 2FA -->
         <div class="card">
@@ -535,7 +543,11 @@ export class SettingsComponent implements OnInit {
     { value: 'UTC',                label: 'UTC' },
   ];
 
-  constructor(private snackBar: MatSnackBar, private api: ApiService) {}
+  constructor(private snackBar: MatSnackBar, private api: ApiService, private auth: AuthService) {}
+
+  isCoach(): boolean {
+    return this.auth.currentUser()?.role === 'coach';
+  }
 
   ngOnInit(): void {
     const stored = localStorage.getItem(STORAGE_KEY);

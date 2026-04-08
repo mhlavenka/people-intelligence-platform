@@ -19,6 +19,7 @@ export interface ICoachingSession extends Document {
   postSessionRating?: number;        // coachee session rating 1-5
   topics: string[];
   status: SessionStatus;
+  googleEventId?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -44,6 +45,7 @@ const CoachingSessionSchema = new Schema<ICoachingSession>(
       enum: ['scheduled', 'completed', 'cancelled', 'no_show'],
       default: 'scheduled',
     },
+    googleEventId: { type: String },
   },
   { timestamps: true }
 );
