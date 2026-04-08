@@ -27,6 +27,7 @@ interface Session {
   postSessionRating?: number;
   topics: string[];
   status: string;
+  googleMeetLink?: string;
   createdAt: string;
 }
 
@@ -137,6 +138,12 @@ interface Session {
                     <button mat-icon-button matTooltip="Delete" class="del-btn" (click)="deleteSession(s)"><mat-icon>delete_outline</mat-icon></button>
                   }
                 </div>
+
+                @if (s.googleMeetLink) {
+                  <a class="meet-link" [href]="s.googleMeetLink" target="_blank" rel="noopener">
+                    <mat-icon>videocam</mat-icon> Join Google Meet
+                  </a>
+                }
 
                 @if (s.topics?.length) {
                   <div class="session-topics">
@@ -340,6 +347,15 @@ interface Session {
     .rating { font-size: 12px; color: #5a6a7e; display: flex; align-items: center; gap: 1px; }
     .rating-label { font-size: 11px; font-weight: 600; color: #9aa5b4; margin-right: 4px; }
     .star-sm { font-size: 14px; width: 14px; height: 14px; color: #d1d5db; &.filled { color: #f59e0b; } }
+
+    .meet-link {
+      display: inline-flex; align-items: center; gap: 4px; margin: 6px 0;
+      font-size: 12px; font-weight: 600; color: white; text-decoration: none;
+      background: #1a73e8; padding: 4px 12px; border-radius: 6px;
+      transition: background 0.15s;
+      mat-icon { font-size: 16px; width: 16px; height: 16px; }
+      &:hover { background: #1557b0; }
+    }
 
     @media (max-width: 768px) { .detail-layout { grid-template-columns: 1fr; } .info-card { position: static; } }
   `],

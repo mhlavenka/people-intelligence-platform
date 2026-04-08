@@ -79,7 +79,7 @@ export async function listCoachCalendars(coachId: string): Promise<{ id: string;
   }));
 }
 
-/** Create a calendar event for a coaching session. Returns the Google event ID. */
+/** Create a calendar event for a coaching session. Returns the Google event ID and Meet link. */
 export async function createCalendarEvent(
   coachId: string,
   session: {
@@ -91,7 +91,7 @@ export async function createCalendarEvent(
     sharedNotes?: string;
     meetingLink?: string;
   },
-): Promise<string> {
+): Promise<{ eventId: string; meetLink?: string }> {
   const { client, coach } = await getAuthenticatedClient(coachId);
   const calendarId = coach.googleCalendar!.calendarId || 'primary';
   const calendar = google.calendar({ version: 'v3', auth: client });
@@ -107,6 +107,12 @@ export async function createCalendarEvent(
     ].filter(Boolean).join('\n'),
     start: { dateTime: start.toISOString() },
     end: { dateTime: end.toISOString() },
+    conferenceData: {
+      createRequest: {
+        requestId: `artes-${Date.now()}`,
+        conferenceSolutionKey: { type: 'hangoutsMeet' },
+      },
+    },
     reminders: {
       useDefault: false,
       overrides: [
@@ -123,8 +129,17 @@ export async function createCalendarEvent(
     event.location = session.meetingLink;
   }
 
-  const res = await calendar.events.insert({ calendarId, requestBody: event });
-  return res.data.id!;
+  const res = await calendar.events.insert({
+    calendarId,
+    requestBody: event,
+    conferenceDataVersion: 1,
+  });
+
+  const meetLink = res.data.conferenceData?.entryPoints?.find(
+    (ep) => ep.entryPointType === 'video'
+  )?.uri;
+
+  return { eventId: res.data.id!, meetLink: meetLink || undefined };
 }
 
 /** Update an existing Google Calendar event when a session changes. */

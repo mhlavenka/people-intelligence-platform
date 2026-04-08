@@ -170,18 +170,19 @@ router.post(
         await CoachingEngagement.findByIdAndUpdate(session.engagementId, { $inc: { sessionsUsed: 1 } });
       }
 
-      // Google Calendar sync
+      // Google Calendar sync (creates Google Meet link)
       try {
         if (await isCalendarConnected(session.coachId.toString())) {
           const coachee = await resolveCoachee(session.coacheeId.toString());
-          const googleEventId = await gcal.createCalendarEvent(session.coachId.toString(), {
+          const { eventId, meetLink } = await gcal.createCalendarEvent(session.coachId.toString(), {
             date: session.date,
             duration: session.duration,
             coacheeName: coachee.name,
             coacheeEmail: coachee.email,
             sharedNotes: session.sharedNotes,
           });
-          session.googleEventId = googleEventId;
+          session.googleEventId = eventId;
+          if (meetLink) session.googleMeetLink = meetLink;
           await session.save();
         }
       } catch (calErr) {

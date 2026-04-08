@@ -20,6 +20,7 @@ export interface ICoachingSession extends Document {
   topics: string[];
   status: SessionStatus;
   googleEventId?: string;
+  googleMeetLink?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -46,6 +47,7 @@ const CoachingSessionSchema = new Schema<ICoachingSession>(
       default: 'scheduled',
     },
     googleEventId: { type: String },
+    googleMeetLink: { type: String },
   },
   { timestamps: true }
 );
