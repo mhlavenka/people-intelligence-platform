@@ -17,6 +17,7 @@ export interface User {
   permissions?: string[];
   customRoleId?: string;
   customRoleName?: string;
+  profilePicture?: string;
 }
 
 export interface AuthResponse {

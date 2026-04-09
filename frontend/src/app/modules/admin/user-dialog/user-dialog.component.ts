@@ -247,7 +247,7 @@ export class UserDialogComponent implements OnInit {
 
   ngOnInit(): void {
     if (this.existingUser?.profilePicture) {
-      this.avatarPreview.set(`${environment.apiUrl.replace('/api', '')}${this.existingUser.profilePicture}`);
+      this.avatarPreview.set(this.existingUser.profilePicture);
     }
     this.form = this.fb.group({
       firstName:    [this.existingUser?.firstName  ?? '', Validators.required],
@@ -281,7 +281,7 @@ export class UserDialogComponent implements OnInit {
       .then((r) => r.json())
       .then((data) => {
         if (data.profilePicture) {
-          this.avatarPreview.set(`${environment.apiUrl.replace('/api', '')}${data.profilePicture}`);
+          this.avatarPreview.set(data.profilePicture);
         }
       })
       .catch(() => this.error.set('Failed to upload picture'));

@@ -2,26 +2,26 @@ import { Router, Response, NextFunction } from 'express';
 import bcrypt from 'bcryptjs';
 import multer from 'multer';
 import path from 'path';
-import fs from 'fs';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { authenticator } = require('otplib') as typeof import('otplib');
 import QRCode from 'qrcode';
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { authenticateToken, requireRole, AuthRequest } from '../middleware/auth.middleware';
 import { tenantResolver } from '../middleware/tenant.middleware';
 import { User } from '../models/User.model';
 import { sendEmail } from '../services/email.service';
+import { config } from '../config/env';
 
-const UPLOADS_DIR = path.join(__dirname, '..', '..', 'uploads', 'avatars');
-fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+const s3 = new S3Client({
+  region: config.aws.region,
+  credentials: {
+    accessKeyId: config.aws.accessKeyId,
+    secretAccessKey: config.aws.secretAccessKey,
+  },
+});
 
 const avatarUpload = multer({
-  storage: multer.diskStorage({
-    destination: (_req, _file, cb) => cb(null, UPLOADS_DIR),
-    filename: (req, file, cb) => {
-      const ext = path.extname(file.originalname).toLowerCase() || '.jpg';
-      cb(null, `${(req as AuthRequest).user!.userId}-${Date.now()}${ext}`);
-    },
-  }),
+  storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
   fileFilter: (_req, file, cb) => {
     const allowed = ['image/jpeg', 'image/png', 'image/webp'];
@@ -32,6 +32,18 @@ const avatarUpload = multer({
     cb(null, true);
   },
 });
+
+async function uploadAvatarToS3(file: Express.Multer.File, userId: string): Promise<string> {
+  const ext = path.extname(file.originalname).toLowerCase() || '.jpg';
+  const key = `avatars/${userId}-${Date.now()}${ext}`;
+  await s3.send(new PutObjectCommand({
+    Bucket: config.aws.s3Bucket,
+    Key: key,
+    Body: file.buffer,
+    ContentType: file.mimetype,
+  }));
+  return `https://${config.aws.s3Bucket}.s3.${config.aws.region}.amazonaws.com/${key}`;
+}
 
 const router = Router();
 router.use(authenticateToken, tenantResolver);
@@ -66,7 +78,7 @@ router.put('/me', async (req: AuthRequest, res: Response, next: NextFunction) =>
 router.post('/me/avatar', avatarUpload.single('avatar'), async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     if (!req.file) { res.status(400).json({ error: 'No image file provided' }); return; }
-    const profilePicture = `/uploads/avatars/${req.file.filename}`;
+    const profilePicture = await uploadAvatarToS3(req.file, req.user!.userId.toString());
     const user = await User.findOneAndUpdate(
       { _id: req.user!.userId, organizationId: req.user!.organizationId },
       { profilePicture },
@@ -85,7 +97,7 @@ router.post(
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       if (!req.file) { res.status(400).json({ error: 'No image file provided' }); return; }
-      const profilePicture = `/uploads/avatars/${req.file.filename}`;
+      const profilePicture = await uploadAvatarToS3(req.file, req.params['id']);
       const user = await User.findOneAndUpdate(
         { _id: req.params['id'], organizationId: req.user!.organizationId },
         { profilePicture },

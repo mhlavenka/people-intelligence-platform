@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import path from 'path';
+
 import { config } from './config/env';
 import { connectDatabase } from './config/database';
 import { errorHandler, notFound } from './middleware/error.middleware';
@@ -53,9 +53,6 @@ app.use(express.urlencoded({ extended: true }));
 
 // Rate limiting
 app.use('/api', generalLimiter);
-
-// Static files — uploaded avatars
-app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
 // Health check
 app.get('/health', (_req, res) => res.json({ status: 'ok', env: config.nodeEnv }));

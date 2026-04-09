@@ -179,7 +179,11 @@ function isGroup(entry: NavEntry): entry is NavGroup {
         <div class="sidebar-footer">
           <div class="footer-row">
             <button mat-button [matMenuTriggerFor]="userMenu" class="user-btn">
-              <div class="user-avatar">{{ userInitials() }}</div>
+              @if (userPicture()) {
+                <img class="user-avatar user-avatar-img" [src]="userPicture()" alt="" />
+              } @else {
+                <div class="user-avatar">{{ userInitials() }}</div>
+              }
               @if (!sidebarCollapsed()) {
                 <div class="user-info">
                   <span class="user-name">{{ userName() }}</span>
@@ -460,6 +464,10 @@ function isGroup(entry: NavEntry): entry is NavGroup {
         font-weight: 600;
         flex-shrink: 0;
       }
+      .user-avatar-img {
+        object-fit: cover;
+        background: none;
+      }
 
       .user-info {
         display: flex;
@@ -629,6 +637,7 @@ export class AppShellComponent implements OnInit, OnDestroy {
   user        = computed(() => this.authService.currentUser());
   userName    = computed(() => { const u = this.user(); return u ? `${u.firstName} ${u.lastName}` : ''; });
   userInitials= computed(() => { const u = this.user(); return u ? `${u.firstName[0]}${u.lastName[0]}`.toUpperCase() : '??'; });
+  userPicture = computed(() => this.user()?.profilePicture || '');
   userRole    = computed(() => this.user()?.role?.replace('_', ' ') || '');
   orgName     = signal('My Organization');
   unreadCount = signal(0);

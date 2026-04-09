@@ -108,6 +108,7 @@ export async function register(req: Request, res: Response, next: NextFunction):
         customRoleId: payload.customRoleId,
         customRoleName: payload.customRoleName,
         organizationId: org._id,
+        profilePicture: user.profilePicture,
       },
     });
   } catch (error) {
@@ -160,6 +161,7 @@ export async function login(req: Request, res: Response, next: NextFunction): Pr
         customRoleId: payload.customRoleId,
         customRoleName: payload.customRoleName,
         organizationId: user.organizationId,
+        profilePicture: user.profilePicture,
       },
     });
   } catch (error) {
@@ -239,6 +241,7 @@ export async function verify2fa(req: Request, res: Response, next: NextFunction)
         customRoleId: payload.customRoleId,
         customRoleName: payload.customRoleName,
         organizationId: user.organizationId,
+        profilePicture: user.profilePicture,
       },
     });
   } catch (error) {

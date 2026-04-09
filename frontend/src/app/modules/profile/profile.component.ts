@@ -472,10 +472,7 @@ export class ProfileComponent implements OnInit {
     return p ? `${p.firstName[0]}${p.lastName[0]}`.toUpperCase() : '?';
   });
   roleLabel = computed(() => ROLE_LABELS[this.profile()?.role ?? ''] ?? this.profile()?.role ?? '');
-  avatarUrl = computed(() => {
-    const pic = this.profile()?.profilePicture;
-    return pic ? `${environment.apiUrl.replace('/api', '')}${pic}` : '';
-  });
+  avatarUrl = computed(() => this.profile()?.profilePicture || '');
 
   ngOnInit(): void {
     this.passwordForm = this.fb.group({
@@ -642,6 +639,13 @@ export class ProfileComponent implements OnInit {
       .then((data) => {
         if (data.profilePicture) {
           this.profile.update((p) => p ? { ...p, profilePicture: data.profilePicture } : p);
+          // Update auth signal so sidebar avatar updates immediately
+          const cur = this.auth.currentUser();
+          if (cur) {
+            const updated = { ...cur, profilePicture: data.profilePicture };
+            this.auth.currentUser.set(updated);
+            localStorage.setItem('pip_user', JSON.stringify(updated));
+          }
           this.snackBar.open('Profile picture updated', '', { duration: 2000 });
         }
       })
