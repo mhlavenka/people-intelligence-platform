@@ -79,6 +79,9 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: string
           <p>Manage coaching engagements and sessions</p>
         </div>
         @if (canManage()) {
+          <a mat-stroked-button routerLink="/journal">
+            <mat-icon>auto_stories</mat-icon> Reflective Journal
+          </a>
           <button mat-raised-button color="primary" (click)="createEngagement()">
             <mat-icon>add</mat-icon> New Engagement
           </button>
