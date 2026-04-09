@@ -24,7 +24,7 @@ interface FeedItem {
   template: `
     <div class="journal-page">
       <div class="page-header">
-        <h1><mat-icon>auto_stories</mat-icon> Coaching Journal</h1>
+        <h1><mat-icon>auto_stories</mat-icon> My Journal</h1>
         <div class="header-actions">
           <a mat-stroked-button routerLink="/journal/reflective"><mat-icon>edit_note</mat-icon> Reflective Journal</a>
           <a mat-stroked-button routerLink="/journal/supervision"><mat-icon>supervisor_account</mat-icon> Supervision Digest</a>

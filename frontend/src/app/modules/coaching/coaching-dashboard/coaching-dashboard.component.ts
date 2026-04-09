@@ -80,7 +80,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: string
         </div>
         @if (canManage()) {
           <a mat-stroked-button routerLink="/journal">
-            <mat-icon>auto_stories</mat-icon> Reflective Journal
+            <mat-icon>auto_stories</mat-icon> My Journal
           </a>
           <button mat-raised-button color="primary" (click)="createEngagement()">
             <mat-icon>add</mat-icon> New Engagement
