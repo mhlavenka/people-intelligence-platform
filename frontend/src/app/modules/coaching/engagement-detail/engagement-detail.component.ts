@@ -57,7 +57,11 @@ interface Session {
           <!-- Sidebar info -->
           <div class="info-card">
             <div class="coachee-block">
-              <div class="avatar">{{ initials() }}</div>
+              @if (engagement()!.coacheeId?.profilePicture) {
+                <img class="avatar avatar-img" [src]="engagement()!.coacheeId.profilePicture" alt="" />
+              } @else {
+                <div class="avatar">{{ initials() }}</div>
+              }
               <h2>{{ coacheeName() }}</h2>
               <span class="status-chip" [style.background]="statusColor() + '18'" [style.color]="statusColor()">
                 {{ engagement()!.status | titlecase }}
@@ -237,6 +241,7 @@ interface Session {
       display: flex; align-items: center; justify-content: center;
       font-size: 22px; font-weight: 700; color: white;
     }
+    .avatar-img { object-fit: cover; background: none; }
     .coachee-block h2 { font-size: 18px; color: #1B2A47; margin: 0 0 8px; }
     .status-chip { display: inline-block; padding: 3px 12px; border-radius: 999px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
 

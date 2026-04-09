@@ -24,7 +24,7 @@ interface DashboardStats {
 
 interface Engagement {
   _id: string;
-  coacheeId: { _id: string; firstName: string; lastName: string; email: string; department?: string } | string;
+  coacheeId: { _id: string; firstName: string; lastName: string; email: string; department?: string; profilePicture?: string } | string;
   coachId: { _id: string; firstName: string; lastName: string } | string;
   status: string;
   sessionsPurchased: number;
@@ -131,7 +131,11 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: string
 
                     <div class="eng-coachee">
                       @if (isPopulated(eng.coacheeId)) {
-                        <div class="coachee-avatar">{{ eng.coacheeId.firstName[0] }}{{ eng.coacheeId.lastName[0] }}</div>
+                        @if (eng.coacheeId.profilePicture) {
+                          <img class="coachee-avatar coachee-avatar-img" [src]="eng.coacheeId.profilePicture" alt="" />
+                        } @else {
+                          <div class="coachee-avatar">{{ eng.coacheeId.firstName[0] }}{{ eng.coacheeId.lastName[0] }}</div>
+                        }
                         <div class="coachee-info">
                           <strong>{{ eng.coacheeId.firstName }} {{ eng.coacheeId.lastName }}</strong>
                           <span>{{ eng.coacheeId.email }}</span>
@@ -253,6 +257,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: string
       display: flex; align-items: center; justify-content: center;
       font-size: 14px; font-weight: 700; color: white; flex-shrink: 0;
     }
+    .coachee-avatar-img { object-fit: cover; background: none; }
     .coachee-info {
       display: flex; flex-direction: column; gap: 1px; min-width: 0;
       strong { font-size: 14px; color: #1B2A47; }
@@ -379,7 +384,7 @@ export class CoachingDashboardComponent implements OnInit {
 
   canManage = () => ['admin', 'hr_manager', 'coach'].includes(this.auth.currentUser()?.role ?? '');
 
-  isPopulated(c: Engagement['coacheeId']): c is { _id: string; firstName: string; lastName: string; email: string; department?: string } {
+  isPopulated(c: Engagement['coacheeId']): c is { _id: string; firstName: string; lastName: string; email: string; department?: string; profilePicture?: string } {
     return typeof c === 'object' && c !== null;
   }
 

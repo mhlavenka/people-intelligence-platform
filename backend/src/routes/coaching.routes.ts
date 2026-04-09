@@ -35,7 +35,7 @@ router.get('/engagements', async (req: AuthRequest, res: Response, next: NextFun
       filter['coacheeId'] = req.user!.userId;
     }
     const engagements = await CoachingEngagement.find(filter)
-      .populate('coacheeId', 'firstName lastName email department')
+      .populate('coacheeId', 'firstName lastName email department profilePicture')
       .populate('coachId', 'firstName lastName')
       .sort({ createdAt: -1 });
     res.json(engagements);
@@ -49,7 +49,7 @@ router.get('/engagements/:id', async (req: AuthRequest, res: Response, next: Nex
       _id: req.params['id'],
       organizationId: req.user!.organizationId,
     })
-      .populate('coacheeId', 'firstName lastName email department')
+      .populate('coacheeId', 'firstName lastName email department profilePicture')
       .populate('coachId', 'firstName lastName');
     if (!engagement) { res.status(404).json({ error: 'Engagement not found' }); return; }
     res.json(engagement);
@@ -68,7 +68,7 @@ router.post(
         coachId: req.body.coachId || req.user!.userId,
       });
       const populated = await engagement.populate([
-        { path: 'coacheeId', select: 'firstName lastName email department' },
+        { path: 'coacheeId', select: 'firstName lastName email department profilePicture' },
         { path: 'coachId', select: 'firstName lastName' },
       ]);
       res.status(201).json(populated);
@@ -87,7 +87,7 @@ router.put(
         req.body,
         { new: true, runValidators: true }
       )
-        .populate('coacheeId', 'firstName lastName email department')
+        .populate('coacheeId', 'firstName lastName email department profilePicture')
         .populate('coachId', 'firstName lastName');
       if (!engagement) { res.status(404).json({ error: 'Engagement not found' }); return; }
       res.json(engagement);
@@ -130,7 +130,7 @@ router.get('/sessions', async (req: AuthRequest, res: Response, next: NextFuncti
 
     const sessions = await CoachingSession.find(filter)
       .select(selectFields as string)
-      .populate('coacheeId', 'firstName lastName')
+      .populate('coacheeId', 'firstName lastName profilePicture')
       .populate('coachId', 'firstName lastName')
       .sort({ date: -1 });
     res.json(sessions);
@@ -146,7 +146,7 @@ router.get('/sessions/:id', async (req: AuthRequest, res: Response, next: NextFu
       organizationId: req.user!.organizationId,
     })
       .select(selectFields as string)
-      .populate('coacheeId', 'firstName lastName')
+      .populate('coacheeId', 'firstName lastName profilePicture')
       .populate('coachId', 'firstName lastName');
     if (!session) { res.status(404).json({ error: 'Session not found' }); return; }
     res.json(session);
@@ -190,7 +190,7 @@ router.post(
       }
 
       const populated = await session.populate([
-        { path: 'coacheeId', select: 'firstName lastName' },
+        { path: 'coacheeId', select: 'firstName lastName profilePicture' },
         { path: 'coachId', select: 'firstName lastName' },
       ]);
       res.status(201).json(populated);
@@ -237,7 +237,7 @@ router.put(
       }
 
       await existing.populate([
-        { path: 'coacheeId', select: 'firstName lastName' },
+        { path: 'coacheeId', select: 'firstName lastName profilePicture' },
         { path: 'coachId', select: 'firstName lastName' },
       ]);
       res.json(existing);
@@ -386,7 +386,7 @@ router.get(
       const grandHours = items.reduce((sum, i) => sum + i.billedHours, 0);
 
       // Get coachee info
-      const coachee = await User.findById(coacheeId).select('firstName lastName email department');
+      const coachee = await User.findById(coacheeId).select('firstName lastName email department profilePicture');
 
       res.json({
         coachee,

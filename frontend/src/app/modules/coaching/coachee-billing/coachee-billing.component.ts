@@ -32,7 +32,7 @@ interface BillingEngagement {
 }
 
 interface BillingData {
-  coachee: { _id: string; firstName: string; lastName: string; email: string; department?: string } | null;
+  coachee: { _id: string; firstName: string; lastName: string; email: string; department?: string; profilePicture?: string } | null;
   engagements: BillingEngagement[];
   summary: { totalEngagements: number; totalHours: number; totalAmount: number };
 }
@@ -56,7 +56,11 @@ interface BillingData {
 
         <!-- Coachee header -->
         <div class="coachee-header">
-          <div class="avatar">{{ initials() }}</div>
+          @if (data()!.coachee?.profilePicture) {
+            <img class="avatar avatar-img" [src]="data()!.coachee!.profilePicture" alt="" />
+          } @else {
+            <div class="avatar">{{ initials() }}</div>
+          }
           <div class="coachee-info">
             <h1>{{ data()!.coachee?.firstName }} {{ data()!.coachee?.lastName }}</h1>
             <span class="email">{{ data()!.coachee?.email }}</span>
@@ -172,6 +176,7 @@ interface BillingData {
       display: flex; align-items: center; justify-content: center;
       font-size: 20px; font-weight: 700; color: white; flex-shrink: 0;
     }
+    .avatar-img { object-fit: cover; background: none; }
     .coachee-info {
       flex: 1;
       h1 { font-size: 22px; color: #1B2A47; margin: 0 0 2px; }
