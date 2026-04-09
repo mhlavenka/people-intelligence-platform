@@ -1,5 +1,8 @@
 import { Router, Response, NextFunction } from 'express';
 import bcrypt from 'bcryptjs';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { authenticator } = require('otplib') as typeof import('otplib');
 import QRCode from 'qrcode';
@@ -7,6 +10,28 @@ import { authenticateToken, requireRole, AuthRequest } from '../middleware/auth.
 import { tenantResolver } from '../middleware/tenant.middleware';
 import { User } from '../models/User.model';
 import { sendEmail } from '../services/email.service';
+
+const UPLOADS_DIR = path.join(__dirname, '..', '..', 'uploads', 'avatars');
+fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+
+const avatarUpload = multer({
+  storage: multer.diskStorage({
+    destination: (_req, _file, cb) => cb(null, UPLOADS_DIR),
+    filename: (req, file, cb) => {
+      const ext = path.extname(file.originalname).toLowerCase() || '.jpg';
+      cb(null, `${(req as AuthRequest).user!.userId}-${Date.now()}${ext}`);
+    },
+  }),
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
+  fileFilter: (_req, file, cb) => {
+    const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowed.includes(file.mimetype)) {
+      cb(new Error('Only JPEG, PNG, and WebP images are accepted'));
+      return;
+    }
+    cb(null, true);
+  },
+});
 
 const router = Router();
 router.use(authenticateToken, tenantResolver);
@@ -36,6 +61,41 @@ router.put('/me', async (req: AuthRequest, res: Response, next: NextFunction) =>
     res.json(user);
   } catch (e) { next(e); }
 });
+
+/** Upload profile picture (own). */
+router.post('/me/avatar', avatarUpload.single('avatar'), async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    if (!req.file) { res.status(400).json({ error: 'No image file provided' }); return; }
+    const profilePicture = `/uploads/avatars/${req.file.filename}`;
+    const user = await User.findOneAndUpdate(
+      { _id: req.user!.userId, organizationId: req.user!.organizationId },
+      { profilePicture },
+      { new: true },
+    ).select('-passwordHash');
+    if (!user) { res.status(404).json({ error: 'User not found' }); return; }
+    res.json({ profilePicture: user.profilePicture });
+  } catch (e) { next(e); }
+});
+
+/** Upload profile picture for any user (admin/HR). */
+router.post(
+  '/:id/avatar',
+  requireRole('admin', 'hr_manager'),
+  avatarUpload.single('avatar'),
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      if (!req.file) { res.status(400).json({ error: 'No image file provided' }); return; }
+      const profilePicture = `/uploads/avatars/${req.file.filename}`;
+      const user = await User.findOneAndUpdate(
+        { _id: req.params['id'], organizationId: req.user!.organizationId },
+        { profilePicture },
+        { new: true },
+      ).select('-passwordHash');
+      if (!user) { res.status(404).json({ error: 'User not found' }); return; }
+      res.json({ profilePicture: user.profilePicture });
+    } catch (e) { next(e); }
+  }
+);
 
 router.put('/me/password', async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {

@@ -37,6 +37,7 @@ interface UserProfile {
   email: string;
   role: string;
   isActive: boolean;
+  profilePicture?: string;
   lastLoginAt?: string;
   createdAt: string;
   passkeys?: PasskeyInfo[];
@@ -85,7 +86,15 @@ function passwordMatchValidator(control: AbstractControl): ValidationErrors | nu
           <!-- Avatar + account info sidebar -->
           <div class="sidebar-card">
             <div class="avatar-block">
-              <div class="avatar-circle">{{ initials() }}</div>
+              <div class="avatar-wrapper" (click)="avatarInput.click()">
+                @if (avatarUrl()) {
+                  <img class="avatar-circle avatar-img" [src]="avatarUrl()" alt="Profile" />
+                } @else {
+                  <div class="avatar-circle">{{ initials() }}</div>
+                }
+                <div class="avatar-overlay"><mat-icon>photo_camera</mat-icon></div>
+                <input #avatarInput type="file" accept="image/jpeg,image/png,image/webp" hidden (change)="uploadAvatar($event)" />
+              </div>
               <div class="avatar-name">{{ profile()!.firstName }} {{ profile()!.lastName }}</div>
               <div class="avatar-email">{{ profile()!.email }}</div>
               <span class="role-badge">{{ roleLabel() }}</span>
@@ -329,11 +338,22 @@ function passwordMatchValidator(control: AbstractControl): ValidationErrors | nu
       padding: 28px 20px; gap: 8px; text-align: center;
     }
 
+    .avatar-wrapper {
+      position: relative; cursor: pointer; margin-bottom: 4px;
+      &:hover .avatar-overlay { opacity: 1; }
+    }
     .avatar-circle {
       width: 72px; height: 72px; border-radius: 50%;
       background: linear-gradient(135deg, #3A9FD6, #27C4A0);
       display: flex; align-items: center; justify-content: center;
-      font-size: 24px; font-weight: 700; color: white; margin-bottom: 4px;
+      font-size: 24px; font-weight: 700; color: white;
+    }
+    .avatar-img { object-fit: cover; }
+    .avatar-overlay {
+      position: absolute; inset: 0; border-radius: 50%;
+      background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center;
+      opacity: 0; transition: opacity 0.15s;
+      mat-icon { color: white; font-size: 24px; }
     }
 
     .avatar-name  { font-size: 16px; font-weight: 600; color: #1B2A47; }
@@ -452,6 +472,10 @@ export class ProfileComponent implements OnInit {
     return p ? `${p.firstName[0]}${p.lastName[0]}`.toUpperCase() : '?';
   });
   roleLabel = computed(() => ROLE_LABELS[this.profile()?.role ?? ''] ?? this.profile()?.role ?? '');
+  avatarUrl = computed(() => {
+    const pic = this.profile()?.profilePicture;
+    return pic ? `${environment.apiUrl.replace('/api', '')}${pic}` : '';
+  });
 
   ngOnInit(): void {
     this.passwordForm = this.fb.group({
@@ -603,6 +627,25 @@ export class ProfileComponent implements OnInit {
         : (e?.message || 'Failed to register passkey.');
       this.snackBar.open(msg, 'Dismiss', { duration: 4000 });
     }
+  }
+
+  uploadAvatar(event: Event): void {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    const formData = new FormData();
+    formData.append('avatar', file);
+    // Use raw HttpClient for multipart — ApiService wraps JSON only
+    const url = `${environment.apiUrl}/users/me/avatar`;
+    const headers = { Authorization: `Bearer ${this.auth.getToken()}` };
+    fetch(url, { method: 'POST', headers, body: formData })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.profilePicture) {
+          this.profile.update((p) => p ? { ...p, profilePicture: data.profilePicture } : p);
+          this.snackBar.open('Profile picture updated', '', { duration: 2000 });
+        }
+      })
+      .catch(() => this.snackBar.open('Failed to upload picture', '', { duration: 3000 }));
   }
 
   removePasskey(pk: PasskeyInfo): void {

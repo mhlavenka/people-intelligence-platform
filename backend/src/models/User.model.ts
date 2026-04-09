@@ -45,6 +45,7 @@ export interface IUser extends Document {
   twoFactorEnabled: boolean;
   passkeys: IPasskeyCredential[];
   oauthAccounts: IOAuthAccount[];
+  profilePicture?: string;
   googleCalendar?: IGoogleCalendar;
   createdAt: Date;
   updatedAt: Date;
@@ -89,6 +90,7 @@ const UserSchema = new Schema<IUser>(
     department: { type: String, trim: true, default: null },
     managerId: { type: Schema.Types.ObjectId, ref: 'User', default: null },
     lastLoginAt: { type: Date },
+    profilePicture:   { type: String },
     twoFactorSecret:  { type: String, select: false },
     twoFactorEnabled: { type: Boolean, default: false },
     passkeys:      [PasskeyCredentialSchema],

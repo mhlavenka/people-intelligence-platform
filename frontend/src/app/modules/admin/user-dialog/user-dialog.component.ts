@@ -9,6 +9,8 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ApiService } from '../../../core/api.service';
+import { AuthService } from '../../../core/auth.service';
+import { environment } from '../../../../environments/environment';
 
 export interface OrgUser {
   _id: string;
@@ -18,6 +20,7 @@ export interface OrgUser {
   role: string;
   department?: string;
   customRoleId?: string;
+  profilePicture?: string;
   isActive: boolean;
   lastLoginAt?: string;
   createdAt: string;
@@ -61,6 +64,21 @@ const ROLES = [
     <mat-dialog-content>
       @if (error()) {
         <div class="error-banner">{{ error() }}</div>
+      }
+
+      @if (isEdit()) {
+        <div class="avatar-upload-row">
+          <div class="avatar-edit-wrapper" (click)="avatarInput.click()">
+            @if (avatarPreview()) {
+              <img class="avatar-edit" [src]="avatarPreview()" alt="Avatar" />
+            } @else {
+              <div class="avatar-edit avatar-initials">{{ existingUser!.firstName[0] }}{{ existingUser!.lastName[0] }}</div>
+            }
+            <div class="avatar-edit-overlay"><mat-icon>photo_camera</mat-icon></div>
+            <input #avatarInput type="file" accept="image/jpeg,image/png,image/webp" hidden (change)="uploadAvatar($event)" />
+          </div>
+          <span class="avatar-hint">Click to change profile picture</span>
+        </div>
       }
 
       <form [formGroup]="form" class="dialog-form">
@@ -177,11 +195,35 @@ const ROLES = [
     .cr-base-label {
       font-size: 11px; color: #9aa5b4; margin-left: auto;
     }
+
+    .avatar-upload-row {
+      display: flex; align-items: center; gap: 12px; margin-bottom: 16px;
+    }
+    .avatar-edit-wrapper {
+      position: relative; cursor: pointer; flex-shrink: 0;
+      &:hover .avatar-edit-overlay { opacity: 1; }
+    }
+    .avatar-edit {
+      width: 56px; height: 56px; border-radius: 50%; object-fit: cover;
+    }
+    .avatar-initials {
+      background: linear-gradient(135deg, #3A9FD6, #27C4A0);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; font-weight: 700; color: white;
+    }
+    .avatar-edit-overlay {
+      position: absolute; inset: 0; border-radius: 50%;
+      background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center;
+      opacity: 0; transition: opacity 0.15s;
+      mat-icon { color: white; font-size: 20px; width: 20px; height: 20px; }
+    }
+    .avatar-hint { font-size: 12px; color: #9aa5b4; }
   `],
 })
 export class UserDialogComponent implements OnInit {
   private fb = inject(FormBuilder);
   private api = inject(ApiService);
+  private auth = inject(AuthService);
   private dialogRef = inject(MatDialogRef<UserDialogComponent>);
   existingUser = inject<OrgUser | null>(MAT_DIALOG_DATA, { optional: true });
 
@@ -190,6 +232,7 @@ export class UserDialogComponent implements OnInit {
   error = signal('');
   departments = signal<string[]>([]);
   customRolesAvailable = signal<CustomRoleOption[]>([]);
+  avatarPreview = signal('');
   showPwd = false;
   roles = ROLES;
 
@@ -203,6 +246,9 @@ export class UserDialogComponent implements OnInit {
   baseLabel = (key: string) => this.BASE_LABELS[key] ?? key;
 
   ngOnInit(): void {
+    if (this.existingUser?.profilePicture) {
+      this.avatarPreview.set(`${environment.apiUrl.replace('/api', '')}${this.existingUser.profilePicture}`);
+    }
     this.form = this.fb.group({
       firstName:    [this.existingUser?.firstName  ?? '', Validators.required],
       lastName:     [this.existingUser?.lastName   ?? '', Validators.required],
@@ -222,6 +268,23 @@ export class UserDialogComponent implements OnInit {
     this.api.get<CustomRoleOption[]>('/roles').subscribe({
       next: (roles) => this.customRolesAvailable.set(roles),
     });
+  }
+
+  uploadAvatar(event: Event): void {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file || !this.existingUser) return;
+    const formData = new FormData();
+    formData.append('avatar', file);
+    const url = `${environment.apiUrl}/users/${this.existingUser._id}/avatar`;
+    const headers = { Authorization: `Bearer ${this.auth.getToken()}` };
+    fetch(url, { method: 'POST', headers, body: formData })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.profilePicture) {
+          this.avatarPreview.set(`${environment.apiUrl.replace('/api', '')}${data.profilePicture}`);
+        }
+      })
+      .catch(() => this.error.set('Failed to upload picture'));
   }
 
   save(): void {
