@@ -18,7 +18,7 @@ interface DashboardStats {
 }
 
 interface ActivityItem {
-  type: 'survey_response' | 'conflict_analysis' | 'idp' | 'neuroinclusion';
+  type: string;
   label: string;
   detail: string;
   createdAt: string;
@@ -93,27 +93,34 @@ interface ModuleCard {
 
       <!-- Recent activity -->
       <div class="section-card">
-        <h2>Recent Activity</h2>
-        @if (activityLoading()) {
-          <div class="activity-loading"><mat-spinner diameter="28" /></div>
-        } @else if (filteredActivity().length === 0) {
-          <div class="activity-empty">
-            <mat-icon>history</mat-icon>
-            <span>No activity yet. Activity will appear here as your team uses the platform.</span>
-          </div>
-        } @else {
-          <div class="activity-list">
-            @for (item of filteredActivity(); track item.createdAt) {
-              <div class="activity-item">
-                <mat-icon class="activity-icon" [class]="activityIconClass(item.type)">{{ activityIcon(item.type) }}</mat-icon>
-                <div class="activity-content">
-                  <strong>{{ item.label }}</strong>
-                  <span>{{ item.detail }}</span>
+        <div class="section-header">
+          <h2>Recent Activity <span class="activity-count">{{ filteredActivity().length }}</span></h2>
+          <button mat-icon-button (click)="activityMinimized.set(!activityMinimized())">
+            <mat-icon>{{ activityMinimized() ? 'expand_more' : 'expand_less' }}</mat-icon>
+          </button>
+        </div>
+        @if (!activityMinimized()) {
+          @if (activityLoading()) {
+            <div class="activity-loading"><mat-spinner diameter="28" /></div>
+          } @else if (filteredActivity().length === 0) {
+            <div class="activity-empty">
+              <mat-icon>history</mat-icon>
+              <span>No activity yet. Activity will appear here as your team uses the platform.</span>
+            </div>
+          } @else {
+            <div class="activity-list">
+              @for (item of filteredActivity(); track $index) {
+                <div class="activity-item">
+                  <mat-icon class="activity-icon" [class]="activityIconClass(item.type)">{{ activityIcon(item.type) }}</mat-icon>
+                  <div class="activity-content">
+                    <strong>{{ item.label }}</strong>
+                    <span>{{ item.detail }}</span>
+                  </div>
+                  <span class="activity-time">{{ item.createdAt | date:'MMM d, h:mm a' }}</span>
                 </div>
-                <span class="activity-time">{{ item.createdAt | date:'MMM d, h:mm a' }}</span>
-              </div>
-            }
-          </div>
+              }
+            </div>
+          }
         }
       </div>
     </div>
@@ -133,7 +140,7 @@ interface ModuleCard {
 
     .module-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: 20px;
       margin-bottom: 28px;
     }
@@ -211,7 +218,14 @@ interface ModuleCard {
       border-radius: 16px;
       padding: 24px;
       box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-      h2 { font-size: 18px; color: #1B2A47; margin-bottom: 20px; }
+    }
+    .section-header {
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;
+      h2 { font-size: 18px; color: #1B2A47; margin: 0; display: flex; align-items: center; gap: 8px; }
+      .activity-count {
+        font-size: 12px; background: #f0f4f8; color: #5a6a7e;
+        padding: 2px 8px; border-radius: 999px; font-weight: 500;
+      }
     }
 
     .activity-loading { display: flex; justify-content: center; padding: 32px; }
@@ -222,39 +236,43 @@ interface ModuleCard {
       mat-icon { font-size: 20px; width: 20px; height: 20px; }
     }
 
-    .activity-list { display: flex; flex-direction: column; gap: 16px; }
+    .activity-list {
+      display: flex; flex-direction: column; gap: 8px;
+      max-height: 420px; overflow-y: auto;
+      scrollbar-width: thin; scrollbar-color: #d1d5db transparent;
+      &::-webkit-scrollbar { width: 6px; }
+      &::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+    }
 
     .activity-item {
       display: flex;
       align-items: center;
       gap: 12px;
-      padding: 12px;
+      padding: 10px 12px;
       border-radius: 8px;
       background: #f8fafc;
 
       .activity-icon {
-        width: 36px;
-        height: 36px;
+        width: 36px; height: 36px; min-width: 36px;
         border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        display: flex; align-items: center; justify-content: center;
         font-size: 20px;
+        &.survey        { color: #5a6a7e; background: rgba(90, 106, 126, 0.1); }
         &.conflict      { color: #e86c3a; background: rgba(232, 108, 58, 0.1); }
         &.succession    { color: #3A9FD6; background: rgba(58, 159, 214, 0.1); }
         &.neuroinclusion{ color: #27C4A0; background: rgba(39, 196, 160, 0.1); }
+        &.coaching      { color: #7c5cbf; background: rgba(124, 92, 191, 0.1); }
+        &.journal       { color: #b07800; background: rgba(176, 120, 0, 0.1); }
       }
 
       .activity-content {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-        strong { font-size: 14px; color: #1B2A47; }
-        span   { font-size: 12px; color: #5a6a7e; }
+        flex: 1; min-width: 0;
+        display: flex; flex-direction: column; gap: 2px;
+        strong { font-size: 13px; color: #1B2A47; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        span   { font-size: 12px; color: #5a6a7e; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
       }
 
-      .activity-time { font-size: 12px; color: #9aa5b4; white-space: nowrap; }
+      .activity-time { font-size: 11px; color: #9aa5b4; white-space: nowrap; flex-shrink: 0; }
     }
   `],
 })
@@ -266,6 +284,7 @@ export class DashboardComponent implements OnInit {
   firstName = signal('');
   activity = signal<ActivityItem[]>([]);
   activityLoading = signal(true);
+  activityMinimized = signal(false);
   moduleCards = signal<ModuleCard[]>(this.defaultCards());
 
   /** Module cards filtered by org subscription + user role. */
@@ -291,34 +310,45 @@ export class DashboardComponent implements OnInit {
       conflict_analysis: 'conflict',
       neuroinclusion: 'neuroinclusion',
       idp: 'succession',
+      coaching_engagement: 'coaching',
+      coaching_session: 'coaching',
+      journal_note: 'coaching',
+      journal_reflective: 'coaching',
     };
 
     return items.filter((item) => {
       const mod = typeModuleMap[item.type];
-      // survey_response has no specific module — always show
       if (!mod) return true;
       return modules.includes(mod);
     });
   });
 
-  activityIcon(type: ActivityItem['type']): string {
-    const map: Record<ActivityItem['type'], string> = {
-      survey_response:   'assignment_turned_in',
-      conflict_analysis: 'warning_amber',
-      idp:               'trending_up',
-      neuroinclusion:    'psychology',
+  activityIcon(type: string): string {
+    const map: Record<string, string> = {
+      survey_response:     'assignment_turned_in',
+      conflict_analysis:   'warning_amber',
+      idp:                 'trending_up',
+      neuroinclusion:      'psychology',
+      coaching_engagement: 'psychology_alt',
+      coaching_session:    'event_note',
+      journal_note:        'auto_stories',
+      journal_reflective:  'edit_note',
     };
-    return map[type];
+    return map[type] || 'circle';
   }
 
-  activityIconClass(type: ActivityItem['type']): string {
-    const map: Record<ActivityItem['type'], string> = {
-      survey_response:   'conflict',
-      conflict_analysis: 'conflict',
-      idp:               'succession',
-      neuroinclusion:    'neuroinclusion',
+  activityIconClass(type: string): string {
+    const map: Record<string, string> = {
+      survey_response:     'survey',
+      conflict_analysis:   'conflict',
+      idp:                 'succession',
+      neuroinclusion:      'neuroinclusion',
+      coaching_engagement: 'coaching',
+      coaching_session:    'coaching',
+      journal_note:        'journal',
+      journal_reflective:  'journal',
     };
-    return map[type];
+    return map[type] || 'survey';
   }
 
   private defaultCards(): ModuleCard[] {
