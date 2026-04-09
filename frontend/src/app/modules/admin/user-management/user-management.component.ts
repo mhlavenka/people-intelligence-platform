@@ -108,9 +108,13 @@ const ROLE_META: Record<string, { label: string; color: string }> = {
               <th mat-header-cell *matHeaderCellDef>User</th>
               <td mat-cell *matCellDef="let u">
                 <div class="user-cell">
-                  <div class="avatar" [class.inactive]="!u.isActive">
-                    {{ initials(u) }}
-                  </div>
+                  @if (u.profilePicture) {
+                    <img class="avatar avatar-img" [class.inactive]="!u.isActive" [src]="u.profilePicture" alt="" />
+                  } @else {
+                    <div class="avatar" [class.inactive]="!u.isActive">
+                      {{ initials(u) }}
+                    </div>
+                  }
                   <div class="user-info">
                     <span class="user-name">{{ u.firstName }} {{ u.lastName }}</span>
                     <span class="user-email">{{ u.email }}</span>
@@ -265,6 +269,7 @@ const ROLE_META: Record<string, { label: string; color: string }> = {
       font-size: 12px; font-weight: 700; color: white;
       &.inactive { background: #d1d5db; }
     }
+    .avatar-img { object-fit: cover; }
 
     .user-info { display: flex; flex-direction: column; }
     .user-name  { font-size: 14px; font-weight: 500; color: #1B2A47; }
