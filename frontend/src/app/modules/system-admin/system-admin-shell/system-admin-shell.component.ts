@@ -35,7 +35,7 @@ import { AuthService } from '../../../core/auth.service';
             </button>
           } @else {
             <div class="brand">
-              <img src="assets/artes_transparent_dark.png" alt="PIP" class="brand-logo-wide" />
+              <img src="assets/artes_v2_transparent_dark.png" alt="PIP" class="brand-logo-wide" />
               <div class="brand-text">
                 <span class="brand-name">HeadSoft</span>
                 <span class="brand-sub">System Administration</span>

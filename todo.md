@@ -32,8 +32,6 @@ IV. NICE TO HAVE
 - user guide + how tos
 
 
-
-
 IV. TO DISCUSS
 --------------
 - surveys in detail - intake types, standards, theories, how to take anonymize
