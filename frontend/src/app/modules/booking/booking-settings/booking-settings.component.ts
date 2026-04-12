@@ -12,6 +12,7 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { Clipboard } from '@angular/cdk/clipboard';
 import { Router } from '@angular/router';
 import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog.component';
+import { ApiService } from '../../../core/api.service';
 import {
   CalendarIntegrationService,
   CalendarStatus,
@@ -43,6 +44,23 @@ import {
           <mat-icon>add</mat-icon> New Event Type
         </button>
       </div>
+
+      <!-- Public coach landing page -->
+      @if (publicCoachUrl()) {
+        <div class="public-page-card">
+          <mat-icon>storefront</mat-icon>
+          <div class="ppc-body">
+            <div class="ppc-label">Your public booking page</div>
+            <code class="ppc-url">{{ publicCoachUrl() }}</code>
+          </div>
+          <button mat-icon-button (click)="copyPublicCoachUrl()" matTooltip="Copy link">
+            <mat-icon>content_copy</mat-icon>
+          </button>
+          <a mat-icon-button [href]="publicCoachUrl()" target="_blank" matTooltip="Open">
+            <mat-icon>open_in_new</mat-icon>
+          </a>
+        </div>
+      }
 
       <!-- Calendar connection status -->
       <div class="cal-status-bar" [class.connected]="calendarStatus()?.connected">
@@ -202,6 +220,24 @@ import {
     .edit-btn { font-size: 13px; min-width: 130px; white-space: nowrap; }
     .delete-item { color: #dc2626 !important; }
 
+    .public-page-card {
+      display: flex; align-items: center; gap: 12px;
+      background: linear-gradient(135deg, #EBF5FB, #f0fbf5);
+      border: 1px solid #d6ebf7;
+      border-radius: 10px; padding: 14px 16px;
+      margin-bottom: 12px;
+      > mat-icon { color: #3A9FD6; font-size: 26px; width: 26px; height: 26px; }
+    }
+    .ppc-body { flex: 1; min-width: 0; }
+    .ppc-label {
+      font-size: 12px; text-transform: uppercase; letter-spacing: 0.6px;
+      color: #6b7c93; font-weight: 600;
+    }
+    .ppc-url {
+      display: block; font-size: 14px; color: #1B2A47;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+
     @media (max-width: 600px) {
       .settings-container { padding: 16px; }
       .event-type-grid { grid-template-columns: 1fr; }
@@ -214,6 +250,7 @@ export class BookingSettingsComponent implements OnInit {
   creating = signal(false);
   eventTypes = signal<AvailabilityConfig[]>([]);
   calendarStatus = signal<CalendarStatus | null>(null);
+  publicCoachUrl = signal<string>('');
 
   constructor(
     private bookingSvc: BookingService,
@@ -222,6 +259,7 @@ export class BookingSettingsComponent implements OnInit {
     private clipboard: Clipboard,
     private router: Router,
     private dialog: MatDialog,
+    private api: ApiService,
   ) {}
 
   ngOnInit(): void {
@@ -243,6 +281,22 @@ export class BookingSettingsComponent implements OnInit {
       },
       error: () => this.loading.set(false),
     });
+
+    this.api.post<{ publicSlug: string }>('/users/me/public-slug', {}).subscribe({
+      next: ({ publicSlug }) => {
+        if (publicSlug) {
+          this.publicCoachUrl.set(`${window.location.origin}/c/${publicSlug}`);
+        }
+      },
+      error: () => {},
+    });
+  }
+
+  copyPublicCoachUrl(): void {
+    const url = this.publicCoachUrl();
+    if (!url) return;
+    this.clipboard.copy(url);
+    this.snackBar.open('Public page link copied!', 'OK', { duration: 2000 });
   }
 
   connectCalendar(): void {

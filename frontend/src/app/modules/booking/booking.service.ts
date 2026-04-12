@@ -204,4 +204,32 @@ export class PublicBookingService {
   cancelBooking(coachSlug: string, bookingId: string, token: string): Observable<{ message: string }> {
     return this.api.get<{ message: string }>(`/public/booking/${coachSlug}/cancel/${bookingId}/${token}`);
   }
+
+  getCoachLanding(slug: string): Observable<CoachLanding> {
+    return this.api.get<CoachLanding>(`/public/coach/${slug}`);
+  }
+}
+
+// ─── Coach landing page types ───────────────────────────────────────────────
+
+export interface CoachLanding {
+  coach: {
+    firstName: string;
+    lastName: string;
+    profilePicture: string | null;
+    bio: string;
+    slug: string;
+  };
+  eventTypes: CoachLandingEventType[];
+}
+
+export interface CoachLandingEventType {
+  _id: string;
+  name: string;
+  color: string;
+  coachSlug: string;
+  duration: number;
+  title: string;
+  description: string;
+  googleMeetEnabled: boolean;
 }

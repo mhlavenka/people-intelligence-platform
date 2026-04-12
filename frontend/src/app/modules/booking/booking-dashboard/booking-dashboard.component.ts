@@ -250,6 +250,11 @@ type DayBuckets = {
     }
     .calendar-card ::ng-deep .mat-calendar { width: 100%; }
 
+    /* Bold day number when the date has any booking */
+    .calendar-card ::ng-deep .mat-calendar-body-cell[class*="bk-"] .mat-calendar-body-cell-content {
+      font-weight: 700;
+    }
+
     /* Dots via ::after on the inner circle (which has real size and
        is position: absolute relative to the td). No padding on the
        content element so the day number stays centered. */

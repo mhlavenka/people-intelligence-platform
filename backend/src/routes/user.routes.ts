@@ -11,6 +11,7 @@ import { tenantResolver } from '../middleware/tenant.middleware';
 import { User } from '../models/User.model';
 import { sendEmail } from '../services/email.service';
 import { config } from '../config/env';
+import { ensureUserPublicSlug } from './booking.routes';
 
 const s3 = new S3Client({
   region: config.aws.region,
@@ -63,14 +64,35 @@ router.get('/me', async (req: AuthRequest, res: Response, next: NextFunction) =>
 
 router.put('/me', async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const { firstName, lastName } = req.body;
+    const { firstName, lastName, bio, publicSlug } = req.body;
+    const update: Record<string, unknown> = { firstName, lastName };
+    if (bio !== undefined) update['bio'] = String(bio).trim().slice(0, 2000);
+    if (publicSlug !== undefined) {
+      const cleaned = String(publicSlug).trim().toLowerCase()
+        .replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+      if (!cleaned) { res.status(400).json({ error: 'Invalid public slug' }); return; }
+      const clash = await User.findOne({ publicSlug: cleaned, _id: { $ne: req.user!.userId } })
+        .setOptions({ bypassTenantCheck: true });
+      if (clash) { res.status(409).json({ error: 'That slug is taken' }); return; }
+      update['publicSlug'] = cleaned;
+    }
     const user = await User.findOneAndUpdate(
       { _id: req.user!.userId, organizationId: req.user!.organizationId },
-      { firstName, lastName },
+      update,
       { new: true, runValidators: true }
     ).select('-passwordHash');
     if (!user) { res.status(404).json({ error: 'User not found' }); return; }
     res.json(user);
+  } catch (e) { next(e); }
+});
+
+// Ensure + return public slug (auto-generates from name on first call)
+router.post('/me/public-slug', async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const user = await User.findById(req.user!.userId).select('_id firstName lastName publicSlug');
+    if (!user) { res.status(404).json({ error: 'User not found' }); return; }
+    const slug = await ensureUserPublicSlug(user);
+    res.json({ publicSlug: slug });
   } catch (e) { next(e); }
 });
 

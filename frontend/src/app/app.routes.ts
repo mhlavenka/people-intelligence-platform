@@ -414,6 +414,13 @@ export const routes: Routes = [
   },
   // ── Public booking (no auth) ──────────────────────────────────────────────
   {
+    path: 'c/:slug',
+    loadComponent: () =>
+      import('./modules/booking/coach-landing/coach-landing.component').then(
+        (m) => m.CoachLandingComponent
+      ),
+  },
+  {
     path: 'book/:coachSlug',
     loadComponent: () =>
       import('./modules/booking/public-booking/public-booking.component').then(

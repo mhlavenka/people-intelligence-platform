@@ -143,6 +143,67 @@ publicBookingRouter.get('/:coachSlug/cancel/:bookingId/:token', async (req: Requ
   } catch (e) { next(e); }
 });
 
+// ─── Public coach landing page ──────────────────────────────────────────────
+
+export const publicCoachRouter = Router();
+publicCoachRouter.use(publicLimiter);
+
+async function ensureUserPublicSlug(user: {
+  _id: unknown; firstName: string; lastName: string; publicSlug?: string;
+}): Promise<string> {
+  if (user.publicSlug) return user.publicSlug;
+  const base = slugify(`${user.firstName} ${user.lastName}`) || String(user._id);
+  let suffix = 0;
+  while (true) {
+    const candidate = suffix === 0 ? base : `${base}-${suffix}`;
+    const existing = await User.findOne({ publicSlug: candidate })
+      .setOptions({ bypassTenantCheck: true });
+    if (!existing) {
+      await User.findByIdAndUpdate(user._id, { publicSlug: candidate })
+        .setOptions({ bypassTenantCheck: true });
+      return candidate;
+    }
+    suffix++;
+  }
+}
+
+publicCoachRouter.get('/:slug', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const slug = req.params['slug']?.toLowerCase();
+    const coach = await User.findOne({ publicSlug: slug, isActive: true })
+      .setOptions({ bypassTenantCheck: true })
+      .select('_id firstName lastName profilePicture bio publicSlug');
+    if (!coach) { res.status(404).json({ error: 'Coach page not found' }); return; }
+
+    const eventTypes = await AvailabilityConfig.find({ coachId: coach._id, isActive: true })
+      .setOptions({ bypassTenantCheck: true })
+      .select('name color coachSlug appointmentDuration bookingPageTitle bookingPageDesc googleMeetEnabled')
+      .sort({ createdAt: 1 });
+
+    res.json({
+      coach: {
+        firstName: coach.firstName,
+        lastName: coach.lastName,
+        profilePicture: coach.profilePicture ?? null,
+        bio: coach.bio ?? '',
+        slug: coach.publicSlug,
+      },
+      eventTypes: eventTypes.map((et) => ({
+        _id: et._id,
+        name: et.name,
+        color: et.color,
+        coachSlug: et.coachSlug,
+        duration: et.appointmentDuration,
+        title: et.bookingPageTitle || et.name,
+        description: et.bookingPageDesc || '',
+        googleMeetEnabled: et.googleMeetEnabled,
+      })),
+    });
+  } catch (e) { next(e); }
+});
+
+export { ensureUserPublicSlug };
+
 // ─── Admin routes (JWT protected) ───────────────────────────────────────────
 
 const router = Router();
