@@ -199,7 +199,7 @@ import {
       padding: 4px 8px; border-radius: 4px;
     }
     .copy-btn { transform: scale(0.8); }
-    .edit-btn { font-size: 13px; }
+    .edit-btn { font-size: 13px; min-width: 130px; white-space: nowrap; }
     .delete-item { color: #dc2626 !important; }
 
     @media (max-width: 600px) {
