@@ -515,8 +515,10 @@ export class BookingDashboardComponent implements OnInit, AfterViewInit, OnDestr
         this.upcomingEvents.set(sortedUpcoming.slice(0, 6));
         this.upcomingLoading.set(false);
 
-        // New function reference forces MatMonthView ngOnChanges → re-runs dateClass.
-        this.dateClass = this.buildDateClass();
+        // MatMonthView.ngOnChanges doesn't watch dateClass in Material 17,
+        // so we explicitly re-init the view via updateTodaysDate() which
+        // calls monthView._init() and re-runs dateClass for every cell.
+        this.calendar?.updateTodaysDate();
         setTimeout(() => this.applyCellTooltips(), 0);
         setTimeout(() => this.applyCellTooltips(), 80);
       },
