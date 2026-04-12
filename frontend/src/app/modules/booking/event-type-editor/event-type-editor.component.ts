@@ -357,6 +357,9 @@ export class EventTypeEditorComponent implements OnInit {
       return;
     }
 
+    const pageTitle = this.bookingPageTitle.trim() || this.eventTypeName.trim();
+    this.bookingPageTitle = pageTitle;
+
     this.saving.set(true);
     const payload: Partial<AvailabilityConfig> = {
       name: this.eventTypeName,
@@ -368,7 +371,7 @@ export class EventTypeEditorComponent implements OnInit {
       minNoticeHours: this.minNoticeHours,
       maxAdvanceDays: this.maxAdvanceDays,
       googleMeetEnabled: this.googleMeetEnabled,
-      bookingPageTitle: this.bookingPageTitle,
+      bookingPageTitle: pageTitle,
       bookingPageDesc: this.bookingPageDesc,
     };
 
@@ -376,6 +379,7 @@ export class EventTypeEditorComponent implements OnInit {
       next: () => {
         this.saving.set(false);
         this.snackBar.open('Event type saved', 'OK', { duration: 3000 });
+        this.router.navigate(['/booking/settings']);
       },
       error: () => {
         this.saving.set(false);
