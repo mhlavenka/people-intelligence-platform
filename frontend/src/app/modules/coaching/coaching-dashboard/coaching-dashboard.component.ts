@@ -1,6 +1,6 @@
 import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -383,6 +383,7 @@ export class CoachingDashboardComponent implements OnInit {
     private auth: AuthService,
     private dialog: MatDialog,
     private snack: MatSnackBar,
+    private router: Router,
   ) {}
 
   canManage = () => ['admin', 'hr_manager', 'coach'].includes(this.auth.currentUser()?.role ?? '');
@@ -408,6 +409,24 @@ export class CoachingDashboardComponent implements OnInit {
 
   load(): void {
     this.loading.set(true);
+
+    // Coachees: redirect straight to their engagement
+    if (this.auth.currentUser()?.role === 'coachee') {
+      this.api.get<Engagement[]>('/coaching/engagements').subscribe({
+        next: (engs) => {
+          if (engs.length === 1) {
+            this.router.navigate(['/coaching', engs[0]._id], { replaceUrl: true });
+          } else {
+            // Multiple engagements — show the list
+            this.engagements.set(engs);
+            this.loading.set(false);
+          }
+        },
+        error: () => this.loading.set(false),
+      });
+      return;
+    }
+
     Promise.all([
       this.api.get<DashboardStats>('/coaching/dashboard').toPromise(),
       this.api.get<Engagement[]>('/coaching/engagements').toPromise(),

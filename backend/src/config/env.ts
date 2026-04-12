@@ -38,6 +38,11 @@ export const config = {
       tenantId: process.env['MICROSOFT_TENANT_ID'] || 'common',
     },
   },
+  booking: {
+    cancelTokenSecret: process.env['CANCEL_TOKEN_JWT_SECRET'] || 'cancel-token-fallback',
+    webhookSecret: process.env['GOOGLE_WEBHOOK_SECRET'] || '',
+    apiBaseUrl: process.env['API_BASE_URL'] || 'http://localhost:3030',
+  },
   webauthn: {
     rpName: process.env['WEBAUTHN_RP_NAME'] || 'Artes Hub',
     rpId: process.env['WEBAUTHN_RP_ID'] || new URL(process.env['FRONTEND_URL'] || 'http://localhost:4200').hostname,

@@ -41,7 +41,7 @@ export async function exchangeCodeForTokens(code: string, userId: string): Promi
 
 /** Build an authenticated OAuth2 client for a coach, refreshing the token if needed. */
 async function getAuthenticatedClient(coachId: string) {
-  const coach = await User.findById(coachId).select('+googleCalendar.accessToken +googleCalendar.refreshToken');
+  const coach = await User.findById(coachId).select('+googleCalendar.accessToken +googleCalendar.refreshToken googleCalendar.connected googleCalendar.tokenExpiry googleCalendar.calendarId');
   if (!coach?.googleCalendar?.connected || !coach.googleCalendar.refreshToken) {
     throw new Error('Google Calendar not connected');
   }

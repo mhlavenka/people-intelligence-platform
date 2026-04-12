@@ -92,6 +92,7 @@ interface ModuleCard {
       }
 
       <!-- Recent activity -->
+      @if (showActivity()) {
       <div class="section-card">
         <div class="section-header">
           <h2>Recent Activity <span class="activity-count">{{ filteredActivity().length }}</span></h2>
@@ -123,10 +124,11 @@ interface ModuleCard {
           }
         }
       </div>
+      }
     </div>
   `,
   styles: [`
-    .dashboard-page { padding: 32px; }
+    .dashboard-page { padding: 32px; height: calc(100vh - 64px); display: flex; flex-direction: column; overflow: hidden; box-sizing: border-box; }
 
     .page-header {
       display: flex;
@@ -218,6 +220,7 @@ interface ModuleCard {
       border-radius: 16px;
       padding: 24px;
       box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden;
     }
     .section-header {
       display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;
@@ -238,7 +241,7 @@ interface ModuleCard {
 
     .activity-list {
       display: flex; flex-direction: column; gap: 8px;
-      max-height: 420px; overflow-y: auto;
+      flex: 1; min-height: 0; overflow-y: auto;
       scrollbar-width: thin; scrollbar-color: #d1d5db transparent;
       &::-webkit-scrollbar { width: 6px; }
       &::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
@@ -285,6 +288,10 @@ export class DashboardComponent implements OnInit {
   activity = signal<ActivityItem[]>([]);
   activityLoading = signal(true);
   activityMinimized = signal(false);
+  showActivity = computed(() => {
+    const role = this.authService.currentUser()?.role;
+    return !!role && role !== 'coachee';
+  });
   moduleCards = signal<ModuleCard[]>(this.defaultCards());
 
   /** Module cards filtered by org subscription + user role. */
@@ -441,10 +448,12 @@ export class DashboardComponent implements OnInit {
     const user = this.authService.currentUser();
     if (user) this.firstName.set(user.firstName);
 
-    this.api.get<ActivityItem[]>('/dashboard/activity').subscribe({
-      next: (items) => { this.activity.set(items); this.activityLoading.set(false); },
-      error: () => this.activityLoading.set(false),
-    });
+    if (this.showActivity()) {
+      this.api.get<ActivityItem[]>('/dashboard/activity').subscribe({
+        next: (items) => { this.activity.set(items); this.activityLoading.set(false); },
+        error: () => this.activityLoading.set(false),
+      });
+    }
 
     this.api.get<DashboardStats>('/dashboard/stats').subscribe({
       next: (stats) => this.applyStats(stats),

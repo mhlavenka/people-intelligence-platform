@@ -74,7 +74,7 @@ const MOOD_CONFIG: Record<JournalMood, { icon: string; color: string }> = {
               <div class="entry-title">{{ entry.title }}</div>
               <div class="entry-preview">{{ entry.body | slice:0:150 }}{{ entry.body.length > 150 ? '...' : '' }}</div>
               <div class="entry-footer">
-                @if (entry.tags?.length) {
+                @if (entry.tags.length) {
                   <div class="tag-row">
                     @for (t of entry.tags; track t) { <span class="tag">{{ t }}</span> }
                   </div>

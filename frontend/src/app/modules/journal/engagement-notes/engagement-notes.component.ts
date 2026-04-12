@@ -73,9 +73,9 @@ interface EngagementInfo {
                     <span class="tc-status" [class]="note.status">{{ note.status }}</span>
                   </div>
                   <div class="tc-body">
-                    {{ note.aiSummary || note.inSession?.observations?.slice(0, 120) || 'No observations yet' }}
+                    {{ note.aiSummary || note.inSession.observations?.slice(0, 120) || 'No observations yet' }}
                   </div>
-                  @if (note.aiThemes?.length) {
+                  @if (note.aiThemes.length) {
                     <div class="tc-themes">
                       @for (t of note.aiThemes; track t) {
                         <span class="theme-chip">{{ t }}</span>
@@ -111,7 +111,7 @@ interface EngagementInfo {
               <h4>Coach Observations</h4>
               <p>{{ insights()!.coachObservations }}</p>
             </div>
-            @if (insights()!.openThreads?.length) {
+            @if (insights()!.openThreads.length) {
               <div class="ai-section">
                 <h4>Open Threads</h4>
                 <ul>@for (t of insights()!.openThreads; track t) { <li>{{ t }}</li> }</ul>

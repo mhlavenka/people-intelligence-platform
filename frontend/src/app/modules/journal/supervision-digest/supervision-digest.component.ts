@@ -46,7 +46,7 @@ import { JournalService, SupervisionDigest } from '../journal.service';
             <button mat-stroked-button (click)="generate()" [disabled]="loading()"><mat-icon>refresh</mat-icon> Regenerate</button>
           </div>
 
-          @if (data()!.coachThemes?.length) {
+          @if (data()!.coachThemes.length) {
             <div class="report-section">
               <h3>Coach Themes</h3>
               <div class="theme-list">
@@ -60,14 +60,14 @@ import { JournalService, SupervisionDigest } from '../journal.service';
             <p>{{ data()!.crossEngagementPatterns }}</p>
           </div>
 
-          @if (data()!.questionsForSupervisor?.length) {
+          @if (data()!.questionsForSupervisor.length) {
             <div class="report-section highlight">
               <h3><mat-icon>help_outline</mat-icon> Questions for Supervisor</h3>
               <ol>@for (q of data()!.questionsForSupervisor; track q) { <li>{{ q }}</li> }</ol>
             </div>
           }
 
-          @if (data()!.developmentAreas?.length) {
+          @if (data()!.developmentAreas.length) {
             <div class="report-section">
               <h3>Development Areas</h3>
               <ul>@for (a of data()!.developmentAreas; track a) { <li>{{ a }}</li> }</ul>

@@ -44,16 +44,16 @@ import { JournalService, SessionNote } from '../journal.service';
             </div>
 
             <!-- Pre-session -->
-            @if (note()!.preSession?.agenda || note()!.preSession?.hypotheses || note()!.preSession?.coachIntention) {
+            @if (note()!.preSession.agenda || note()!.preSession.hypotheses || note()!.preSession.coachIntention) {
               <div class="section">
                 <h3><mat-icon>flag</mat-icon> Before Session</h3>
-                @if (note()!.preSession?.agenda) {
+                @if (note()!.preSession.agenda) {
                   <div class="field-block"><label>Agenda</label><p>{{ note()!.preSession!.agenda }}</p></div>
                 }
-                @if (note()!.preSession?.hypotheses) {
+                @if (note()!.preSession.hypotheses) {
                   <div class="field-block"><label>Hypotheses</label><p>{{ note()!.preSession!.hypotheses }}</p></div>
                 }
-                @if (note()!.preSession?.coachIntention) {
+                @if (note()!.preSession.coachIntention) {
                   <div class="field-block"><label>Coach Intention</label><p>{{ note()!.preSession!.coachIntention }}</p></div>
                 }
               </div>
@@ -62,30 +62,30 @@ import { JournalService, SessionNote } from '../journal.service';
             <!-- In-session -->
             <div class="section">
               <h3><mat-icon>record_voice_over</mat-icon> During Session</h3>
-              @if (note()!.inSession?.openingState) {
+              @if (note()!.inSession.openingState) {
                 <div class="field-block"><label>Opening State</label><p>{{ note()!.inSession!.openingState }}</p></div>
               }
-              @if (note()!.inSession?.keyThemes?.length) {
+              @if (note()!.inSession.keyThemes.length) {
                 <div class="field-block"><label>Key Themes</label>
                   <div class="theme-list">
                     @for (t of note()!.inSession!.keyThemes; track t) { <span class="theme-chip">{{ t }}</span> }
                   </div>
                 </div>
               }
-              @if (note()!.inSession?.observations) {
+              @if (note()!.inSession.observations) {
                 <div class="field-block"><label>Observations</label><p class="narrative">{{ note()!.inSession!.observations }}</p></div>
               }
-              @if (note()!.inSession?.notableQuotes?.length) {
+              @if (note()!.inSession.notableQuotes.length) {
                 <div class="field-block"><label>Notable Quotes</label>
                   @for (q of note()!.inSession!.notableQuotes; track q) {
                     <blockquote>"{{ q }}"</blockquote>
                   }
                 </div>
               }
-              @if (note()!.inSession?.coachInterventions) {
+              @if (note()!.inSession.coachInterventions) {
                 <div class="field-block"><label>Coach Interventions</label><p>{{ note()!.inSession!.coachInterventions }}</p></div>
               }
-              @if (note()!.inSession?.energyShifts) {
+              @if (note()!.inSession.energyShifts) {
                 <div class="field-block"><label>Energy Shifts</label><p>{{ note()!.inSession!.energyShifts }}</p></div>
               }
             </div>
@@ -93,19 +93,19 @@ import { JournalService, SessionNote } from '../journal.service';
             <!-- Post-session -->
             <div class="section">
               <h3><mat-icon>psychology</mat-icon> After Session</h3>
-              @if (note()!.postSession?.coachReflection) {
+              @if (note()!.postSession.coachReflection) {
                 <div class="field-block"><label>Coach Reflection</label><p class="narrative">{{ note()!.postSession!.coachReflection }}</p></div>
               }
-              @if (note()!.postSession?.whatWorked) {
+              @if (note()!.postSession.whatWorked) {
                 <div class="field-block"><label>What Worked</label><p>{{ note()!.postSession!.whatWorked }}</p></div>
               }
-              @if (note()!.postSession?.whatToExplore) {
+              @if (note()!.postSession.whatToExplore) {
                 <div class="field-block"><label>What to Explore Next</label><p>{{ note()!.postSession!.whatToExplore }}</p></div>
               }
-              @if (note()!.postSession?.clientGrowthEdge) {
+              @if (note()!.postSession.clientGrowthEdge) {
                 <div class="field-block"><label>Client's Growth Edge</label><p>{{ note()!.postSession!.clientGrowthEdge }}</p></div>
               }
-              @if (note()!.postSession?.accountabilityItems?.length) {
+              @if (note()!.postSession.accountabilityItems.length) {
                 <div class="field-block"><label>Accountability Items</label>
                   @for (a of note()!.postSession!.accountabilityItems; track a._id) {
                     <div class="acc-view-item" [class.done]="a.completed">
@@ -125,7 +125,7 @@ import { JournalService, SessionNote } from '../journal.service';
               <div class="ai-panel">
                 <div class="ai-header"><mat-icon>auto_awesome</mat-icon> AI Summary</div>
                 <p class="ai-body">{{ note()!.aiSummary }}</p>
-                @if (note()!.aiThemes?.length) {
+                @if (note()!.aiThemes.length) {
                   <div class="ai-themes">
                     @for (t of note()!.aiThemes; track t) {
                       <span class="theme-chip">{{ t }}</span>

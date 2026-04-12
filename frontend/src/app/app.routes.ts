@@ -272,6 +272,40 @@ export const routes: Routes = [
           ),
       },
 
+      // ── Booking (coach admin) ──────────────────────────────────────────────
+      {
+        path: 'booking',
+        canActivate: [roleGuard([...ADMIN_HR, 'coach'])],
+        loadComponent: () =>
+          import('./modules/booking/booking-dashboard/booking-dashboard.component').then(
+            (m) => m.BookingDashboardComponent
+          ),
+      },
+      {
+        path: 'booking/settings',
+        canActivate: [roleGuard([...ADMIN_HR, 'coach'])],
+        loadComponent: () =>
+          import('./modules/booking/booking-settings/booking-settings.component').then(
+            (m) => m.BookingSettingsComponent
+          ),
+      },
+      {
+        path: 'booking/global-settings',
+        canActivate: [roleGuard([...ADMIN_HR, 'coach'])],
+        loadComponent: () =>
+          import('./modules/booking/booking-global-settings/booking-global-settings.component').then(
+            (m) => m.BookingGlobalSettingsComponent
+          ),
+      },
+      {
+        path: 'booking/event-types/:id',
+        canActivate: [roleGuard([...ADMIN_HR, 'coach'])],
+        loadComponent: () =>
+          import('./modules/booking/event-type-editor/event-type-editor.component').then(
+            (m) => m.EventTypeEditorComponent
+          ),
+      },
+
       // ── EQi Import ─────────────────────────────────────────────────────────
       {
         path: 'eq-import',
@@ -377,6 +411,28 @@ export const routes: Routes = [
           ),
       },
     ],
+  },
+  // ── Public booking (no auth) ──────────────────────────────────────────────
+  {
+    path: 'book/:coachSlug',
+    loadComponent: () =>
+      import('./modules/booking/public-booking/public-booking.component').then(
+        (m) => m.PublicBookingComponent
+      ),
+  },
+  {
+    path: 'book/:coachSlug/confirmed/:bookingId',
+    loadComponent: () =>
+      import('./modules/booking/booking-confirm/booking-confirm.component').then(
+        (m) => m.BookingConfirmComponent
+      ),
+  },
+  {
+    path: 'book/:coachSlug/cancel/:bookingId/:token',
+    loadComponent: () =>
+      import('./modules/booking/public-booking/public-booking.component').then(
+        (m) => m.PublicBookingComponent
+      ),
   },
   { path: '**', redirectTo: 'dashboard' },
 ];

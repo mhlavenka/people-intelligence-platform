@@ -60,7 +60,7 @@ import { JournalService, EngagementInsight } from '../journal.service';
             <p>{{ data()!.coachObservations }}</p>
           </div>
 
-          @if (data()!.openThreads?.length) {
+          @if (data()!.openThreads.length) {
             <div class="report-section">
               <h3>Open Threads</h3>
               <ul>@for (t of data()!.openThreads; track t) { <li>{{ t }}</li> }</ul>

@@ -31,7 +31,9 @@ import coachingRoutes from './routes/coaching.routes';
 import authOAuthRoutes from './routes/auth-oauth.routes';
 import systemAdminSettingsRoutes from './routes/system-admin-settings.routes';
 import calendarRoutes, { calendarCallbackRouter } from './routes/calendar.routes';
+import bookingRoutes, { publicBookingRouter } from './routes/booking.routes';
 import journalRoutes from './routes/journal.routes';
+import { startReminderJob } from './jobs/reminder.job';
 
 const app = express();
 
@@ -83,6 +85,8 @@ app.use('/api/coaching', coachingRoutes);
 app.use('/api/calendar', calendarCallbackRouter);  // public — Google OAuth redirect (no auth)
 app.use('/api/calendar', calendarRoutes);
 app.use('/api/journal', journalRoutes);
+app.use('/api/public/booking', publicBookingRouter);
+app.use('/api/booking', bookingRoutes);
 
 // 404 and error handlers (must be last)
 app.use(notFound);
@@ -91,6 +95,7 @@ app.use(errorHandler);
 // Start server
 async function bootstrap(): Promise<void> {
   await connectDatabase();
+  startReminderJob();
   app.listen(config.port, () => {
     console.log(`[Server] Running on port ${config.port} [${config.nodeEnv}]`);
   });

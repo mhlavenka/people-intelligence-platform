@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule, DatePipe, CurrencyPipe } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
@@ -11,6 +11,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { ApiService } from '../../../core/api.service';
 import { AuthService } from '../../../core/auth.service';
 import { SessionDialogComponent } from '../session-dialog/session-dialog.component';
+import { BookSessionDialogComponent } from '../book-session-dialog/book-session-dialog.component';
 import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog.component';
 import { JournalService, SessionNote } from '../../journal/journal.service';
 
@@ -41,7 +42,9 @@ interface Session {
   template: `
     <div class="detail-page">
       <div class="page-header">
-        <a routerLink="/coaching" class="back-link"><mat-icon>arrow_back</mat-icon> Coaching</a>
+        @if (canManage()) {
+          <a routerLink="/coaching" class="back-link"><mat-icon>arrow_back</mat-icon> Coaching</a>
+        }
         @if (canManage()) {
           <button mat-raised-button color="primary" (click)="addSession()">
             <mat-icon>add</mat-icon> New Session
@@ -54,7 +57,8 @@ interface Session {
       } @else if (engagement()) {
         <div class="detail-layout">
 
-          <!-- Sidebar info -->
+          <!-- Sidebar -->
+          <div class="sidebar-col">
           <div class="info-card">
             <div class="coachee-block">
               @if (engagement()!.coacheeId?.profilePicture) {
@@ -115,6 +119,52 @@ interface Session {
                 </a>
               </div>
             }
+            @if (engagement()!.coachId && !canManage()) {
+              <mat-divider />
+              <div class="info-list">
+                <div class="info-item"><span class="info-label">Coach</span><span>{{ coachFullName() }}</span></div>
+              </div>
+            }
+          </div>
+
+          <!-- Coachee: book + mini calendar -->
+          @if (!canManage()) {
+            <div class="coachee-calendar">
+              <button mat-raised-button color="primary" class="book-btn" (click)="bookSession()">
+                <mat-icon>calendar_month</mat-icon> Book a Session
+              </button>
+              <div class="cal-card">
+                <div class="cal-header-row">
+                  <button mat-icon-button (click)="prevMonth()"><mat-icon>chevron_left</mat-icon></button>
+                  <span class="cal-month-label">{{ calMonthLabel() }}</span>
+                  <button mat-icon-button (click)="nextMonth()"><mat-icon>chevron_right</mat-icon></button>
+                </div>
+                <div class="cal-grid">
+                  @for (d of dayHeaders; track d) { <div class="cal-day-hdr">{{ d }}</div> }
+                  @for (day of calendarDays(); track day.date.toISOString()) {
+                    <div class="cal-cell" [class.other]="!day.isCurrentMonth" [class.today]="day.isToday">
+                      <span class="cal-num">{{ day.date.getDate() }}</span>
+                      @for (s of day.sessions; track s._id) {
+                        <span class="cal-dot" [class]="s.status" [matTooltip]="(s.date | date:'h:mm a') || ''"></span>
+                      }
+                    </div>
+                  }
+                </div>
+                @if (upcomingSessions().length > 0) {
+                  <div class="cal-upcoming">
+                    <h4>Upcoming</h4>
+                    @for (s of upcomingSessions(); track s._id) {
+                      <div class="upcoming-row">
+                        <span class="upcoming-date">{{ s.date | date:'MMM d' }}</span>
+                        <span class="upcoming-time">{{ s.date | date:'h:mm a' }}</span>
+                        <span class="upcoming-dur">{{ s.duration }}m · {{ s.format }}</span>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            </div>
+          }
           </div>
 
           <!-- Sessions timeline -->
@@ -152,13 +202,13 @@ interface Session {
                       </a>
                     }
 
-                    @if (s.topics?.length) {
+                    @if (s.topics.length) {
                       <div class="session-topics">
                         @for (t of s.topics; track t) { <span class="topic-chip">{{ t }}</span> }
                       </div>
                     }
 
-                    @if (s.growFocus?.length) {
+                    @if (s.growFocus.length) {
                       <div class="grow-tags">
                         @for (g of s.growFocus; track g) {
                           <span class="grow-tag" [class]="g">{{ g | titlecase }}</span>
@@ -213,25 +263,25 @@ interface Session {
                               <mat-icon>open_in_new</mat-icon>
                             </a>
                           </div>
-                          @if (note.preSession?.agenda) {
+                          @if (note.preSession.agenda) {
                             <div class="journal-field">
                               <span class="journal-field-label">Agenda</span>
                               <p>{{ note.preSession!.agenda! | slice:0:120 }}{{ note.preSession!.agenda!.length > 120 ? '...' : '' }}</p>
                             </div>
                           }
-                          @if (note.inSession?.observations) {
+                          @if (note.inSession.observations) {
                             <div class="journal-field">
                               <span class="journal-field-label">Observations</span>
                               <p>{{ note.inSession!.observations! | slice:0:150 }}{{ note.inSession!.observations!.length > 150 ? '...' : '' }}</p>
                             </div>
                           }
-                          @if (note.postSession?.coachReflection) {
+                          @if (note.postSession.coachReflection) {
                             <div class="journal-field">
                               <span class="journal-field-label">Reflection</span>
                               <p>{{ note.postSession!.coachReflection! | slice:0:120 }}{{ note.postSession!.coachReflection!.length > 120 ? '...' : '' }}</p>
                             </div>
                           }
-                          @if (!note.preSession?.agenda && !note.inSession?.observations && !note.postSession?.coachReflection) {
+                          @if (!note.preSession.agenda && !note.inSession.observations && !note.postSession.coachReflection) {
                             <p class="journal-empty-hint">No content yet — open to start writing.</p>
                           }
                         </div>
@@ -262,7 +312,7 @@ interface Session {
 
     .info-card {
       background: white; border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-      overflow: hidden; position: sticky; top: 24px;
+      overflow: hidden;
     }
     .coachee-block { padding: 24px; text-align: center; }
     .avatar {
@@ -405,15 +455,93 @@ interface Session {
       &:hover { background: #1557b0; }
     }
 
-    @media (max-width: 768px) { .detail-layout { grid-template-columns: 1fr; } .info-card { position: static; } }
+    .sidebar-col { display: flex; flex-direction: column; gap: 16px; position: sticky; top: 24px; }
+    .book-btn { width: 100%; margin-bottom: 4px; }
+
+    .coachee-calendar .cal-card {
+      background: white; border-radius: 14px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); padding: 12px;
+    }
+    .cal-header-row {
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;
+      .cal-month-label { font-size: 14px; font-weight: 600; color: #1B2A47; }
+    }
+    .cal-grid {
+      display: grid; grid-template-columns: repeat(7, 1fr);
+      border: 1px solid #f0f4f8; border-radius: 8px; overflow: hidden;
+    }
+    .cal-day-hdr {
+      text-align: center; font-size: 9px; font-weight: 600; color: #9aa5b4;
+      padding: 4px 0; background: #f8fafc; border-bottom: 1px solid #f0f4f8;
+    }
+    .cal-cell {
+      min-height: 36px; padding: 2px; border-right: 1px solid #f0f4f8; border-bottom: 1px solid #f0f4f8;
+      display: flex; flex-direction: column; align-items: center; gap: 1px;
+      &:nth-child(7n) { border-right: none; }
+      &.other { background: #fafbfc; .cal-num { color: #d1d5db; } }
+      &.today { background: #f0f9ff; .cal-num { background: #3A9FD6; color: white; border-radius: 50%; width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; } }
+    }
+    .cal-num { font-size: 10px; color: #5a6a7e; }
+    .cal-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      &.completed { background: #27C4A0; }
+      &.scheduled { background: #3A9FD6; }
+      &.cancelled { background: #9aa5b4; }
+      &.no_show { background: #e53e3e; }
+    }
+    .cal-upcoming {
+      margin-top: 10px; border-top: 1px solid #f0f4f8; padding-top: 10px;
+      h4 { font-size: 12px; font-weight: 600; color: #1B2A47; margin: 0 0 6px; }
+    }
+    .upcoming-row {
+      display: flex; align-items: center; gap: 6px; padding: 4px 0; font-size: 12px;
+      .upcoming-date { font-weight: 600; color: #1B2A47; min-width: 48px; }
+      .upcoming-time { color: #3A9FD6; min-width: 56px; }
+      .upcoming-dur { color: #9aa5b4; font-size: 11px; }
+    }
+
+    @media (max-width: 768px) { .detail-layout { grid-template-columns: 1fr; } .info-card { position: static; } .sidebar-col { position: static; } }
   `],
 })
 export class EngagementDetailComponent implements OnInit {
   engagement = signal<any>(null);
   sessions = signal<Session[]>([]);
   loading = signal(true);
+  currentMonth = signal(new Date());
   private notesBySession = new Map<string, SessionNote>();
   engId = '';
+
+  dayHeaders = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+
+  calMonthLabel = computed(() => this.currentMonth().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }));
+
+  calendarDays = computed(() => {
+    const month = this.currentMonth();
+    const y = month.getFullYear(), m = month.getMonth();
+    const today = new Date();
+    const firstDay = new Date(y, m, 1).getDay();
+    const daysInMonth = new Date(y, m + 1, 0).getDate();
+    const days: { date: Date; isCurrentMonth: boolean; isToday: boolean; sessions: Session[] }[] = [];
+    for (let i = firstDay - 1; i >= 0; i--) {
+      days.push({ date: new Date(y, m, -i), isCurrentMonth: false, isToday: false, sessions: [] });
+    }
+    for (let d = 1; d <= daysInMonth; d++) {
+      const date = new Date(y, m, d);
+      const daySessions = this.sessions().filter((s) => new Date(s.date).toDateString() === date.toDateString());
+      days.push({ date, isCurrentMonth: true, isToday: date.toDateString() === today.toDateString(), sessions: daySessions });
+    }
+    while (days.length < 42) {
+      days.push({ date: new Date(y, m + 1, days.length - daysInMonth - firstDay + 1), isCurrentMonth: false, isToday: false, sessions: [] });
+    }
+    return days;
+  });
+
+  upcomingSessions = computed(() => {
+    const now = new Date();
+    return this.sessions()
+      .filter((s) => s.status === 'scheduled' && new Date(s.date) >= now)
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+      .slice(0, 5);
+  });
 
   constructor(
     private route: ActivatedRoute,
@@ -426,6 +554,9 @@ export class EngagementDetailComponent implements OnInit {
 
   canManage = () => ['admin', 'hr_manager', 'coach'].includes(this.auth.currentUser()?.role ?? '');
 
+  prevMonth(): void { const d = new Date(this.currentMonth()); d.setMonth(d.getMonth() - 1); this.currentMonth.set(d); }
+  nextMonth(): void { const d = new Date(this.currentMonth()); d.setMonth(d.getMonth() + 1); this.currentMonth.set(d); }
+
   initials(): string {
     const c = this.engagement()?.coacheeId;
     return c && typeof c === 'object' ? `${c.firstName[0]}${c.lastName[0]}` : '?';
@@ -434,6 +565,11 @@ export class EngagementDetailComponent implements OnInit {
   coacheeName(): string {
     const c = this.engagement()?.coacheeId;
     return c && typeof c === 'object' ? `${c.firstName} ${c.lastName}` : 'Unknown';
+  }
+
+  coachFullName(): string {
+    const c = this.engagement()?.coachId;
+    return c && typeof c === 'object' ? `${c.firstName} ${c.lastName}` : '';
   }
 
   coacheeId(): string {
@@ -461,11 +597,14 @@ export class EngagementDetailComponent implements OnInit {
 
   load(): void {
     this.loading.set(true);
-    Promise.all([
+    const promises: [Promise<any>, Promise<Session[] | undefined>, Promise<SessionNote[] | undefined>] = [
       this.api.get(`/coaching/engagements/${this.engId}`).toPromise(),
       this.api.get<Session[]>(`/coaching/sessions?engagementId=${this.engId}`).toPromise(),
-      this.journal.getEngagementNotes(this.engId).toPromise(),
-    ]).then(([eng, sessions, notes]) => {
+      this.canManage()
+        ? this.journal.getEngagementNotes(this.engId).toPromise()
+        : Promise.resolve([]),
+    ];
+    Promise.all(promises).then(([eng, sessions, notes]) => {
       this.engagement.set(eng);
       this.sessions.set(sessions!);
       // Index journal notes by sessionId
@@ -473,6 +612,13 @@ export class EngagementDetailComponent implements OnInit {
       (notes || []).forEach((n) => { if (n.sessionId) this.notesBySession.set(n.sessionId, n); });
       this.loading.set(false);
     }).catch(() => this.loading.set(false));
+  }
+
+  bookSession(): void {
+    this.dialog.open(BookSessionDialogComponent, {
+      data: { coachName: this.coachFullName(), engagementId: this.engId },
+      width: '480px',
+    });
   }
 
   addSession(): void {

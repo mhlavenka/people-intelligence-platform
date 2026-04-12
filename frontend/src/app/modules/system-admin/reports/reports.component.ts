@@ -75,7 +75,7 @@ interface OrgSummaryItem { name: string; plan: string; isActive: boolean; userCo
                   @for (item of selectedBucketItems(); track item.invoiceNumber) {
                     <tr>
                       <td class="mono">{{ item.invoiceNumber }}</td>
-                      <td>{{ item.organization?.name || 'Unknown' }}</td>
+                      <td>{{ item.organization.name || 'Unknown' }}</td>
                       <td class="amount">{{ formatMoney(item.total) }}</td>
                       <td>{{ item.dueDate | date:'MMM d, y' }}</td>
                       <td><span class="overdue-badge" [class]="overdueSeverity(item.daysOverdue)">{{ item.daysOverdue }}d</span></td>

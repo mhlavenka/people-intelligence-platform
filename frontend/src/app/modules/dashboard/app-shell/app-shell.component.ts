@@ -568,7 +568,7 @@ export class AppShellComponent implements OnInit, OnDestroy {
   isGroup = isGroup;
 
   private readonly ALL_NAV: NavEntry[] = [
-    { label: 'Dashboard',               icon: 'dashboard',    route: '/dashboard' },
+    { label: 'Dashboard',               icon: 'dashboard',    route: '/dashboard', roles: ['admin', 'hr_manager', 'manager', 'coach'] as AppRole[] },
     {
       label: 'Conflict Intelligence',
       icon: 'warning_amber',
@@ -582,6 +582,7 @@ export class AppShellComponent implements OnInit, OnDestroy {
     { label: 'Neuro-Inclusion',         icon: 'psychology',   route: '/neuroinclusion', roles: ['admin', 'hr_manager', 'manager'],               module: 'neuroinclusion' },
     { label: 'Leadership & Succession', icon: 'trending_up',  route: '/succession',  roles: ['admin', 'hr_manager', 'coach', 'coachee'],        module: 'succession' },
     { label: 'Coaching',           icon: 'psychology_alt',  route: '/coaching',    roles: ['admin', 'hr_manager', 'coach', 'coachee'],  module: 'coaching' },
+    { label: 'Booking',            icon: 'event_available', route: '/booking',     roles: ['admin', 'hr_manager', 'coach'],              module: 'coaching' },
     {
       label: 'Intakes',
       icon: 'record_voice_over',
@@ -653,6 +654,11 @@ export class AppShellComponent implements OnInit, OnDestroy {
   inactivityWarning = computed(() => this.authService.inactivityWarning());
 
   ngOnInit(): void {
+    // Coachees land on coaching (not dashboard)
+    if (this.authService.currentUser()?.role === 'coachee' && this.router.url === '/dashboard') {
+      this.router.navigate(['/coaching'], { replaceUrl: true });
+    }
+
     this.orgCtx.load();
     this.api.get<OrgInfo>('/organizations/me').subscribe({
       next: (org) => {
