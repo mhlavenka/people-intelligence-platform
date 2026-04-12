@@ -16,12 +16,14 @@ import { Clipboard } from '@angular/cdk/clipboard';
 import {
   BookingService,
   AvailabilityConfig,
+  BookingSettingsData,
   WeeklySlot,
   EVENT_TYPE_COLORS,
 } from '../booking.service';
 
 const DURATION_OPTIONS = [30, 45, 60, 90, 120];
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const DAY_SHORTS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 @Component({
   selector: 'app-event-type-editor',
@@ -38,202 +40,226 @@ const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Frid
         <a mat-icon-button routerLink="/booking/settings" matTooltip="Back to event types">
           <mat-icon>arrow_back</mat-icon>
         </a>
-        <div>
+        <div class="header-text">
           <h1>{{ eventTypeName || 'Edit Event Type' }}</h1>
           <p>Configure this booking page's settings, schedule, and appearance.</p>
         </div>
+        @if (!loading()) {
+          <div class="header-actions">
+            <a mat-stroked-button routerLink="/booking/settings">Cancel</a>
+            <button mat-flat-button color="primary" (click)="save()" [disabled]="saving()">
+              @if (saving()) { <mat-spinner diameter="20" /> }
+              Save Changes
+            </button>
+          </div>
+        }
       </div>
 
       @if (loading()) {
         <div class="loading"><mat-spinner diameter="40" /></div>
       } @else {
 
-      <!-- Name & Color -->
-      <section class="card">
-        <div class="card-header">
-          <mat-icon>label</mat-icon>
-          <div>
-            <h2>Event Type</h2>
-            <p>Name and visual identity for this booking page</p>
-          </div>
-        </div>
-        <mat-divider />
-        <div class="card-body">
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Name</mat-label>
-            <input matInput [(ngModel)]="eventTypeName"
-                   placeholder="e.g. 60-Minute Coaching, Quick Check-in" />
-          </mat-form-field>
-          <div class="color-picker">
-            <span class="color-label">Color</span>
-            <div class="color-swatches">
-              @for (c of colors; track c) {
-                <button class="swatch" [style.background]="c"
-                        [class.selected]="c === color"
-                        (click)="color = c"></button>
-              }
+      <div class="editor-grid">
+        <div class="editor-main">
+          <!-- Name & Color -->
+          <section class="card">
+            <div class="card-header">
+              <mat-icon>label</mat-icon>
+              <div>
+                <h2>Event Type</h2>
+                <p>Name and visual identity for this booking page</p>
+              </div>
             </div>
-          </div>
-          <div class="toggle-row">
-            <mat-slide-toggle [(ngModel)]="isActive">Active</mat-slide-toggle>
-            <span class="toggle-hint">Inactive event types won't accept new bookings</span>
-          </div>
-        </div>
-      </section>
+            <mat-divider />
+            <div class="card-body">
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Name</mat-label>
+                <input matInput [(ngModel)]="eventTypeName"
+                       placeholder="e.g. 60-Minute Coaching, Quick Check-in" />
+              </mat-form-field>
+              <div class="color-picker">
+                <span class="color-label">Color</span>
+                <div class="color-swatches">
+                  @for (c of colors; track c) {
+                    <button class="swatch" [style.background]="c"
+                            [class.selected]="c === color"
+                            (click)="color = c"></button>
+                  }
+                </div>
+              </div>
+              <div class="toggle-row">
+                <mat-slide-toggle [(ngModel)]="isActive">Active</mat-slide-toggle>
+                <span class="toggle-hint">Inactive event types won't accept new bookings</span>
+              </div>
+            </div>
+          </section>
 
-      <!-- Availability Schedule -->
-      <section class="card">
-        <div class="card-header">
-          <mat-icon>schedule</mat-icon>
-          <div>
-            <h2>Availability Schedule</h2>
-            <p>Use the shared schedule, or define a custom one for this event type only</p>
-          </div>
-        </div>
-        <mat-divider />
-        <div class="card-body">
-          <div class="toggle-row">
-            <mat-slide-toggle [(ngModel)]="useCustomSchedule" (change)="onScheduleModeChange()">
-              Override default availability schedule
-            </mat-slide-toggle>
-            <span class="toggle-hint">
-              When off, this event type uses the shared schedule from
-              <a routerLink="/booking/global-settings">Booking Settings</a>.
-            </span>
-          </div>
+          <!-- Session Settings -->
+          <section class="card">
+            <div class="card-header">
+              <mat-icon>tune</mat-icon>
+              <div>
+                <h2>Session Settings</h2>
+                <p>Configure duration, buffer, and booking limits</p>
+              </div>
+            </div>
+            <mat-divider />
+            <div class="card-body settings-grid">
+              <mat-form-field appearance="outline">
+                <mat-label>Session duration (minutes)</mat-label>
+                <mat-select [(ngModel)]="appointmentDuration">
+                  @for (d of durationOptions; track d) {
+                    <mat-option [value]="d">{{ d }} min</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Buffer between sessions (min)</mat-label>
+                <input matInput type="number" [(ngModel)]="bufferTime" min="0" max="120" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Max bookings per day (0 = unlimited)</mat-label>
+                <input matInput type="number" [(ngModel)]="maxBookingsPerDay" min="0" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Minimum notice (hours)</mat-label>
+                <input matInput type="number" [(ngModel)]="minNoticeHours" min="0" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Max advance booking (days)</mat-label>
+                <input matInput type="number" [(ngModel)]="maxAdvanceDays" min="1" max="365" />
+              </mat-form-field>
+              <div class="toggle-row">
+                <mat-slide-toggle [(ngModel)]="googleMeetEnabled">
+                  Auto-create Google Meet link
+                </mat-slide-toggle>
+              </div>
+            </div>
+          </section>
 
-          @if (useCustomSchedule) {
-            <div class="schedule-grid">
-              @for (slot of customSchedule; track slot.dayOfWeek) {
-                <div class="schedule-row" [class.disabled]="!slot.enabled">
-                  <mat-slide-toggle [(ngModel)]="slot.enabled" class="day-toggle">
-                    {{ dayName(slot.dayOfWeek) }}
-                  </mat-slide-toggle>
-                  @if (slot.enabled) {
-                    <div class="time-inputs">
-                      <mat-form-field appearance="outline" class="time-field">
-                        <mat-label>From</mat-label>
-                        <input matInput type="time" [(ngModel)]="slot.startTime" />
-                      </mat-form-field>
-                      <span class="time-sep">&ndash;</span>
-                      <mat-form-field appearance="outline" class="time-field">
-                        <mat-label>To</mat-label>
-                        <input matInput type="time" [(ngModel)]="slot.endTime" />
-                      </mat-form-field>
+          <!-- Booking Page Info -->
+          <section class="card">
+            <div class="card-header">
+              <mat-icon>article</mat-icon>
+              <div>
+                <h2>Booking Page</h2>
+                <p>Customize what clients see when they visit this booking link</p>
+              </div>
+            </div>
+            <mat-divider />
+            <div class="card-body">
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Page title</mat-label>
+                <input matInput [(ngModel)]="bookingPageTitle"
+                       placeholder="e.g. Book a Coaching Session" />
+              </mat-form-field>
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Description</mat-label>
+                <textarea matInput [(ngModel)]="bookingPageDesc" rows="3"
+                          placeholder="Brief description shown on your booking page..."></textarea>
+              </mat-form-field>
+            </div>
+          </section>
+        </div>
+
+        <aside class="editor-side">
+          <!-- Availability Schedule -->
+          <section class="card">
+            <div class="card-header">
+              <mat-icon>schedule</mat-icon>
+              <div>
+                <h2>Availability</h2>
+                <p>Shared with all event types, or override here</p>
+              </div>
+            </div>
+            <mat-divider />
+            <div class="card-body">
+              <div class="toggle-row">
+                <mat-slide-toggle [(ngModel)]="useCustomSchedule" (change)="onScheduleModeChange()">
+                  Override default schedule
+                </mat-slide-toggle>
+              </div>
+
+              @if (useCustomSchedule) {
+                <div class="schedule-grid">
+                  @for (slot of customSchedule; track slot.dayOfWeek) {
+                    <div class="schedule-row" [class.disabled]="!slot.enabled">
+                      <mat-slide-toggle [(ngModel)]="slot.enabled" class="day-toggle">
+                        {{ dayName(slot.dayOfWeek) }}
+                      </mat-slide-toggle>
+                      @if (slot.enabled) {
+                        <div class="time-inputs">
+                          <mat-form-field appearance="outline" class="time-field">
+                            <mat-label>From</mat-label>
+                            <input matInput type="time" [(ngModel)]="slot.startTime" />
+                          </mat-form-field>
+                          <span class="time-sep">&ndash;</span>
+                          <mat-form-field appearance="outline" class="time-field">
+                            <mat-label>To</mat-label>
+                            <input matInput type="time" [(ngModel)]="slot.endTime" />
+                          </mat-form-field>
+                        </div>
+                      } @else {
+                        <span class="unavailable-label">Unavailable</span>
+                      }
                     </div>
+                  }
+                </div>
+              } @else {
+                <div class="shared-schedule">
+                  <div class="shared-label">
+                    Using shared schedule
+                    <a routerLink="/booking/global-settings" class="edit-link">Edit</a>
+                  </div>
+                  @if (sharedSchedule().length) {
+                    <ul class="shared-list">
+                      @for (slot of sharedSchedule(); track slot.dayOfWeek) {
+                        <li class="shared-row" [class.off]="!slot.enabled">
+                          <span class="shared-day">{{ dayShort(slot.dayOfWeek) }}</span>
+                          @if (slot.enabled) {
+                            <span class="shared-time">{{ slot.startTime }} – {{ slot.endTime }}</span>
+                          } @else {
+                            <span class="shared-off">Unavailable</span>
+                          }
+                        </li>
+                      }
+                    </ul>
                   } @else {
-                    <span class="unavailable-label">Unavailable</span>
+                    <p class="shared-empty">No shared schedule set yet.</p>
                   }
                 </div>
               }
             </div>
+          </section>
+
+          <!-- Booking Link -->
+          @if (coachSlug) {
+            <section class="card">
+              <div class="card-header">
+                <mat-icon>link</mat-icon>
+                <div>
+                  <h2>Booking Link</h2>
+                  <p>Share this link with clients</p>
+                </div>
+              </div>
+              <mat-divider />
+              <div class="card-body">
+                <div class="link-row">
+                  <code class="booking-url">{{ bookingUrl() }}</code>
+                  <button mat-icon-button (click)="copyLink()" matTooltip="Copy link">
+                    <mat-icon>content_copy</mat-icon>
+                  </button>
+                </div>
+              </div>
+            </section>
           }
-        </div>
-      </section>
 
-      <!-- Inherited settings note -->
-      <div class="inherited-note">
-        <mat-icon>info_outline</mat-icon>
-        <span>Calendar connection and timezone are shared across all event types.</span>
-        <a routerLink="/booking/global-settings">Edit in Booking Settings</a>
-      </div>
-
-      <!-- Session Settings -->
-      <section class="card">
-        <div class="card-header">
-          <mat-icon>tune</mat-icon>
-          <div>
-            <h2>Session Settings</h2>
-            <p>Configure duration, buffer, and booking limits</p>
+          <div class="inherited-note">
+            <mat-icon>info_outline</mat-icon>
+            <span>Calendar connection and timezone are shared across all event types.</span>
+            <a routerLink="/booking/global-settings">Edit</a>
           </div>
-        </div>
-        <mat-divider />
-        <div class="card-body settings-grid">
-          <mat-form-field appearance="outline">
-            <mat-label>Session duration (minutes)</mat-label>
-            <mat-select [(ngModel)]="appointmentDuration">
-              @for (d of durationOptions; track d) {
-                <mat-option [value]="d">{{ d }} min</mat-option>
-              }
-            </mat-select>
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>Buffer between sessions (min)</mat-label>
-            <input matInput type="number" [(ngModel)]="bufferTime" min="0" max="120" />
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>Max bookings per day (0 = unlimited)</mat-label>
-            <input matInput type="number" [(ngModel)]="maxBookingsPerDay" min="0" />
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>Minimum notice (hours)</mat-label>
-            <input matInput type="number" [(ngModel)]="minNoticeHours" min="0" />
-          </mat-form-field>
-          <mat-form-field appearance="outline">
-            <mat-label>Max advance booking (days)</mat-label>
-            <input matInput type="number" [(ngModel)]="maxAdvanceDays" min="1" max="365" />
-          </mat-form-field>
-          <div class="toggle-row">
-            <mat-slide-toggle [(ngModel)]="googleMeetEnabled">
-              Auto-create Google Meet link
-            </mat-slide-toggle>
-          </div>
-        </div>
-      </section>
-
-      <!-- Booking Page Info -->
-      <section class="card">
-        <div class="card-header">
-          <mat-icon>article</mat-icon>
-          <div>
-            <h2>Booking Page</h2>
-            <p>Customize what clients see when they visit this booking link</p>
-          </div>
-        </div>
-        <mat-divider />
-        <div class="card-body">
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Page title</mat-label>
-            <input matInput [(ngModel)]="bookingPageTitle"
-                   placeholder="e.g. Book a Coaching Session" />
-          </mat-form-field>
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Description</mat-label>
-            <textarea matInput [(ngModel)]="bookingPageDesc" rows="3"
-                      placeholder="Brief description shown on your booking page..."></textarea>
-          </mat-form-field>
-        </div>
-      </section>
-
-      <!-- Booking Link -->
-      @if (coachSlug) {
-      <section class="card">
-        <div class="card-header">
-          <mat-icon>link</mat-icon>
-          <div>
-            <h2>Booking Link</h2>
-            <p>Share this link with clients</p>
-          </div>
-        </div>
-        <mat-divider />
-        <div class="card-body">
-          <div class="link-row">
-            <code class="booking-url">{{ bookingUrl() }}</code>
-            <button mat-icon-button (click)="copyLink()" matTooltip="Copy link">
-              <mat-icon>content_copy</mat-icon>
-            </button>
-          </div>
-        </div>
-      </section>
-      }
-
-      <!-- Actions -->
-      <div class="actions">
-        <a mat-stroked-button routerLink="/booking/settings">Cancel</a>
-        <button mat-flat-button color="primary" (click)="save()" [disabled]="saving()">
-          @if (saving()) { <mat-spinner diameter="20" /> }
-          Save Changes
-        </button>
+        </aside>
       </div>
 
       }
@@ -241,12 +267,65 @@ const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Frid
   `,
   styles: [`
     .editor-container {
-      max-width: 800px; margin: 0 auto; padding: 24px;
+      max-width: 1600px; width: 100%; margin: 0 auto; padding: 0 24px 24px;
+      box-sizing: border-box;
     }
+    .editor-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 2fr) minmax(320px, 1fr);
+      gap: 24px;
+      align-items: start;
+    }
+    .editor-main { min-width: 0; }
+    .editor-side {
+      display: flex; flex-direction: column; gap: 0;
+    }
+    @media (max-width: 960px) {
+      .editor-grid { grid-template-columns: 1fr; }
+    }
+
+    .shared-schedule { margin-top: 4px; }
+    .shared-label {
+      display: flex; align-items: center;
+      font-size: 12px; color: #6b7c93;
+      text-transform: uppercase; letter-spacing: 0.6px;
+      font-weight: 600; padding: 12px 2px 8px;
+      .edit-link {
+        margin-left: auto; text-transform: none; letter-spacing: 0;
+        color: #3A9FD6; font-weight: 600; text-decoration: none; font-size: 13px;
+        &:hover { text-decoration: underline; }
+      }
+    }
+    .shared-list {
+      list-style: none; padding: 0; margin: 0;
+      border-top: 1px solid #f0f3f7;
+    }
+    .shared-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 6px 2px; font-size: 13px; color: #1B2A47;
+      border-bottom: 1px solid #f5f7fa;
+      &.off { color: #9aa5b4; }
+      &:last-child { border-bottom: none; }
+    }
+    .shared-day { font-weight: 600; min-width: 40px; }
+    .shared-time { font-variant-numeric: tabular-nums; }
+    .shared-off { font-style: italic; font-size: 12px; }
+    .shared-empty { font-size: 13px; color: #9aa5b4; margin: 8px 0 0; }
     .page-header {
-      display: flex; align-items: center; gap: 8px; margin-bottom: 24px;
+      display: flex; align-items: center; gap: 12px;
+      padding: 16px 0; margin-bottom: 16px;
+      position: sticky; top: 0; z-index: 5;
+      background: #fafbfd;
+      border-bottom: 1px solid #e8eef4;
       h1 { margin: 0 0 4px; font-size: 24px; color: #1B2A47; }
-      p { margin: 0; color: #6b7c93; }
+      p { margin: 0; color: #6b7c93; font-size: 13px; }
+    }
+    .header-text { flex: 1; min-width: 0;
+      h1 { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    }
+    .header-actions {
+      display: flex; gap: 10px; align-items: center;
+      mat-spinner { display: inline-block; margin-right: 8px; }
     }
     .loading {
       display: flex; justify-content: center; padding: 60px 0;
@@ -353,11 +432,13 @@ export class EventTypeEditorComponent implements OnInit {
 
   useCustomSchedule = false;
   customSchedule: WeeklySlot[] = this.defaultSchedule();
+  sharedSchedule = signal<WeeklySlot[]>([]);
 
   readonly colors = EVENT_TYPE_COLORS;
   readonly durationOptions = DURATION_OPTIONS;
 
   dayName(i: number): string { return DAY_NAMES[i]; }
+  dayShort(i: number): string { return DAY_SHORTS[i]; }
 
   private defaultSchedule(): WeeklySlot[] {
     return Array.from({ length: 7 }, (_, i) => ({
@@ -393,6 +474,15 @@ export class EventTypeEditorComponent implements OnInit {
 
   private loadAll(): void {
     this.loading.set(true);
+
+    this.bookingSvc.getSettings().subscribe({
+      next: (s: BookingSettingsData | null) => {
+        this.sharedSchedule.set(
+          s?.weeklySchedule?.length ? s.weeklySchedule : this.defaultSchedule(),
+        );
+      },
+      error: () => this.sharedSchedule.set(this.defaultSchedule()),
+    });
 
     this.bookingSvc.getEventType(this.eventTypeId).subscribe({
       next: (cfg: AvailabilityConfig) => {
