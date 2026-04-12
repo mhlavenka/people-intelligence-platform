@@ -29,6 +29,7 @@ export interface IAvailabilityConfig extends Document {
   maxAdvanceDays: number;
   weeklySchedule: IWeeklySlot[];
   dateOverrides: IDateOverride[];
+  scheduleMode: 'shared' | 'custom';
   targetCalendarId: string;
   conflictCalendarIds: string[];
   googleMeetEnabled: boolean;
@@ -92,6 +93,7 @@ const AvailabilityConfigSchema = new Schema<IAvailabilityConfig>(
     maxAdvanceDays:       { type: Number, default: 60 },
     weeklySchedule:      [WeeklySlotSchema],
     dateOverrides:       [DateOverrideSchema],
+    scheduleMode:        { type: String, enum: ['shared', 'custom'], default: 'shared' },
     targetCalendarId:    { type: String, default: '' },
     conflictCalendarIds: [{ type: String }],
     googleMeetEnabled:   { type: Boolean, default: true },

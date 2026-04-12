@@ -16,10 +16,12 @@ import { Clipboard } from '@angular/cdk/clipboard';
 import {
   BookingService,
   AvailabilityConfig,
+  WeeklySlot,
   EVENT_TYPE_COLORS,
 } from '../booking.service';
 
 const DURATION_OPTIONS = [30, 45, 60, 90, 120];
+const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 @Component({
   selector: 'app-event-type-editor',
@@ -79,10 +81,60 @@ const DURATION_OPTIONS = [30, 45, 60, 90, 120];
         </div>
       </section>
 
+      <!-- Availability Schedule -->
+      <section class="card">
+        <div class="card-header">
+          <mat-icon>schedule</mat-icon>
+          <div>
+            <h2>Availability Schedule</h2>
+            <p>Use the shared schedule, or define a custom one for this event type only</p>
+          </div>
+        </div>
+        <mat-divider />
+        <div class="card-body">
+          <div class="toggle-row">
+            <mat-slide-toggle [(ngModel)]="useCustomSchedule" (change)="onScheduleModeChange()">
+              Override default availability schedule
+            </mat-slide-toggle>
+            <span class="toggle-hint">
+              When off, this event type uses the shared schedule from
+              <a routerLink="/booking/global-settings">Booking Settings</a>.
+            </span>
+          </div>
+
+          @if (useCustomSchedule) {
+            <div class="schedule-grid">
+              @for (slot of customSchedule; track slot.dayOfWeek) {
+                <div class="schedule-row" [class.disabled]="!slot.enabled">
+                  <mat-slide-toggle [(ngModel)]="slot.enabled" class="day-toggle">
+                    {{ dayName(slot.dayOfWeek) }}
+                  </mat-slide-toggle>
+                  @if (slot.enabled) {
+                    <div class="time-inputs">
+                      <mat-form-field appearance="outline" class="time-field">
+                        <mat-label>From</mat-label>
+                        <input matInput type="time" [(ngModel)]="slot.startTime" />
+                      </mat-form-field>
+                      <span class="time-sep">&ndash;</span>
+                      <mat-form-field appearance="outline" class="time-field">
+                        <mat-label>To</mat-label>
+                        <input matInput type="time" [(ngModel)]="slot.endTime" />
+                      </mat-form-field>
+                    </div>
+                  } @else {
+                    <span class="unavailable-label">Unavailable</span>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </section>
+
       <!-- Inherited settings note -->
       <div class="inherited-note">
         <mat-icon>info_outline</mat-icon>
-        <span>Calendar, availability schedule, and timezone are shared across all event types.</span>
+        <span>Calendar connection and timezone are shared across all event types.</span>
         <a routerLink="/booking/global-settings">Edit in Booking Settings</a>
       </div>
 
@@ -299,8 +351,28 @@ export class EventTypeEditorComponent implements OnInit {
   bookingPageDesc = '';
   coachSlug = '';
 
+  useCustomSchedule = false;
+  customSchedule: WeeklySlot[] = this.defaultSchedule();
+
   readonly colors = EVENT_TYPE_COLORS;
   readonly durationOptions = DURATION_OPTIONS;
+
+  dayName(i: number): string { return DAY_NAMES[i]; }
+
+  private defaultSchedule(): WeeklySlot[] {
+    return Array.from({ length: 7 }, (_, i) => ({
+      dayOfWeek: i,
+      startTime: '09:00',
+      endTime: '17:00',
+      enabled: i >= 1 && i <= 5,
+    }));
+  }
+
+  onScheduleModeChange(): void {
+    if (this.useCustomSchedule && !this.customSchedule.some((s) => s.enabled)) {
+      this.customSchedule = this.defaultSchedule();
+    }
+  }
 
   bookingUrl = computed(() =>
     this.coachSlug ? `${window.location.origin}/book/${this.coachSlug}` : ''
@@ -336,6 +408,10 @@ export class EventTypeEditorComponent implements OnInit {
         this.bookingPageTitle = cfg.bookingPageTitle || '';
         this.bookingPageDesc = cfg.bookingPageDesc || '';
         this.coachSlug = cfg.coachSlug || '';
+        this.useCustomSchedule = cfg.scheduleMode === 'custom';
+        this.customSchedule = cfg.weeklySchedule?.length
+          ? cfg.weeklySchedule.map((s) => ({ ...s }))
+          : this.defaultSchedule();
         this.loading.set(false);
       },
       error: () => {
@@ -373,6 +449,8 @@ export class EventTypeEditorComponent implements OnInit {
       googleMeetEnabled: this.googleMeetEnabled,
       bookingPageTitle: pageTitle,
       bookingPageDesc: this.bookingPageDesc,
+      scheduleMode: this.useCustomSchedule ? 'custom' : 'shared',
+      weeklySchedule: this.useCustomSchedule ? this.customSchedule : [],
     };
 
     this.bookingSvc.updateEventType(this.eventTypeId, payload).subscribe({

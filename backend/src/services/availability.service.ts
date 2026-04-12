@@ -142,14 +142,24 @@ function overlaps(slotStart: DateTime, slotEnd: DateTime, busyPeriods: BusyPerio
 
 // ─── Public API ─────────────────────────────────────────────────────────────
 
-/** Load the shared BookingSettings for a coach, falling back to AvailabilityConfig fields. */
+/** Load the shared BookingSettings for a coach, falling back to AvailabilityConfig fields.
+ *  If the event type opts into a custom schedule (scheduleMode === 'custom' and
+ *  weeklySchedule has entries), that per-event-type schedule is used instead
+ *  of the shared one. Calendars + timezone stay shared. */
 async function loadScheduleAndCalendars(cfg: IAvailabilityConfig) {
   const shared = await BookingSettings.findOne({ coachId: cfg.coachId })
     .setOptions({ bypassTenantCheck: true });
 
+  const usesCustomSchedule =
+    cfg.scheduleMode === 'custom' && cfg.weeklySchedule?.length > 0;
+
+  const weeklySchedule = usesCustomSchedule
+    ? cfg.weeklySchedule
+    : (shared?.weeklySchedule?.length ? shared.weeklySchedule : cfg.weeklySchedule);
+
   return {
     timezone: shared?.timezone || cfg.timezone,
-    weeklySchedule: shared?.weeklySchedule?.length ? shared.weeklySchedule : cfg.weeklySchedule,
+    weeklySchedule,
     dateOverrides: shared?.dateOverrides?.length ? shared.dateOverrides : cfg.dateOverrides,
     targetCalendarId: shared?.targetCalendarId || cfg.targetCalendarId,
     conflictCalendarIds: shared?.conflictCalendarIds?.length

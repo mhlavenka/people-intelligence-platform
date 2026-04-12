@@ -32,6 +32,7 @@ export interface AvailabilityConfig {
   maxAdvanceDays: number;
   weeklySchedule: WeeklySlot[];
   dateOverrides: DateOverride[];
+  scheduleMode: 'shared' | 'custom';
   targetCalendarId: string;
   conflictCalendarIds: string[];
   googleMeetEnabled: boolean;
