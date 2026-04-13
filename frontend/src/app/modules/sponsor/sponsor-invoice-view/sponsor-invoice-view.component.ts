@@ -11,6 +11,9 @@ interface FullInvoice extends SponsorInvoice {
   period: { from: string; to: string };
   taxRate: number;
   tax: number;
+  taxBreakdown?: { gst: number; hst: number; pst: number; qst: number };
+  taxId?: string;
+  billingAddress?: { line1?: string; line2?: string; city?: string; state?: string; postalCode?: string; country?: string };
   notes?: string;
 }
 
@@ -55,8 +58,16 @@ interface FullInvoice extends SponsorInvoice {
             <strong>{{ sponsor()!.name }}</strong>
             <div>{{ sponsor()!.email }}</div>
             @if (sponsor()!.organization) { <div>{{ sponsor()!.organization }}</div> }
-            @if (sponsor()!.billingAddress) {
-              <div class="addr">{{ sponsor()!.billingAddress }}</div>
+            @if (invoice()!.billingAddress; as a) {
+              @if (a.line1) { <div>{{ a.line1 }}</div> }
+              @if (a.line2) { <div>{{ a.line2 }}</div> }
+              @if (a.city || a.state || a.postalCode) {
+                <div>{{ a.city }}{{ a.city && (a.state || a.postalCode) ? ', ' : '' }}{{ a.state }} {{ a.postalCode }}</div>
+              }
+              @if (a.country) { <div>{{ a.country }}</div> }
+            }
+            @if (invoice()!.taxId) {
+              <div class="muted">Tax ID: {{ invoice()!.taxId }}</div>
             }
           </div>
           <div class="meta-block right">
@@ -92,7 +103,20 @@ interface FullInvoice extends SponsorInvoice {
               <td colspan="3" class="totals-label">Subtotal</td>
               <td class="num">{{ (invoice()!.subtotal / 100) | currency:invoice()!.currency }}</td>
             </tr>
-            @if (invoice()!.tax > 0) {
+            @if (invoice()!.taxBreakdown; as tb) {
+              @if (tb.gst > 0) {
+                <tr><td colspan="3" class="totals-label">GST</td><td class="num">{{ (tb.gst / 100) | currency:invoice()!.currency }}</td></tr>
+              }
+              @if (tb.hst > 0) {
+                <tr><td colspan="3" class="totals-label">HST</td><td class="num">{{ (tb.hst / 100) | currency:invoice()!.currency }}</td></tr>
+              }
+              @if (tb.pst > 0) {
+                <tr><td colspan="3" class="totals-label">PST</td><td class="num">{{ (tb.pst / 100) | currency:invoice()!.currency }}</td></tr>
+              }
+              @if (tb.qst > 0) {
+                <tr><td colspan="3" class="totals-label">QST</td><td class="num">{{ (tb.qst / 100) | currency:invoice()!.currency }}</td></tr>
+              }
+            } @else if (invoice()!.tax > 0) {
               <tr>
                 <td colspan="3" class="totals-label">Tax ({{ (invoice()!.taxRate * 100) | number:'1.0-2' }}%)</td>
                 <td class="num">{{ (invoice()!.tax / 100) | currency:invoice()!.currency }}</td>
@@ -159,7 +183,7 @@ interface FullInvoice extends SponsorInvoice {
     .meta-block {
       strong { display: block; margin-top: 4px; font-size: 15px; }
       div { color: #46546b; }
-      .addr { white-space: pre-line; margin-top: 4px; }
+      .muted { color: #9aa5b4; font-size: 12px; margin-top: 4px; }
       &.right { text-align: right;
         div { margin-bottom: 4px; }
       }

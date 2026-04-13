@@ -11,6 +11,7 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { HttpErrorResponse } from '@angular/common/http';
 import { SponsorBilling, SponsorService } from '../sponsor.service';
 import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog.component';
+import { SponsorInvoiceEditDialogComponent } from '../sponsor-invoice-edit-dialog/sponsor-invoice-edit-dialog.component';
 
 @Component({
   selector: 'app-sponsor-billing',
@@ -125,6 +126,19 @@ import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-d
                       <mat-icon>more_vert</mat-icon>
                     </button>
                     <mat-menu #invMenu="matMenu">
+                      @if (inv.status === 'draft') {
+                        <button mat-menu-item (click)="editInvoice(inv)">
+                          <mat-icon>edit</mat-icon> Edit invoice
+                        </button>
+                        <button mat-menu-item (click)="sendInvoice(inv)">
+                          <mat-icon>send</mat-icon> Send to sponsor
+                        </button>
+                      }
+                      @if (inv.status === 'overdue') {
+                        <button mat-menu-item (click)="sendInvoice(inv)">
+                          <mat-icon>send</mat-icon> Resend
+                        </button>
+                      }
                       @if (inv.status !== 'void' && inv.status !== 'paid') {
                         <button mat-menu-item (click)="voidInvoice(inv)">
                           <mat-icon>block</mat-icon> Void invoice
@@ -309,6 +323,45 @@ export class SponsorBillingComponent implements OnInit {
       if (!ok) return;
       this.sponsorSvc.voidInvoice(this.sponsorId, inv._id).subscribe({
         next: () => { this.snack.open('Invoice voided', 'OK', { duration: 2500 }); this.load(); },
+        error: (err: HttpErrorResponse) => this.snack.open(err?.error?.error || 'Failed', 'OK', { duration: 4000 }),
+      });
+    });
+  }
+
+  editInvoice(inv: { _id: string }): void {
+    this.sponsorSvc.getInvoice(this.sponsorId, inv._id).subscribe({
+      next: ({ invoice }) => {
+        const ref = this.dialog.open(SponsorInvoiceEditDialogComponent, {
+          width: '780px',
+          maxHeight: '92vh',
+          data: {
+            sponsorId: this.sponsorId,
+            invoiceId: inv._id,
+            lineItems: invoice.lineItems,
+            dueDate: invoice.dueDate,
+            notes: (invoice as { notes?: string }).notes,
+            taxRatePercent: ((invoice as { taxRate?: number }).taxRate || 0) * 100,
+            currency: invoice.currency,
+          },
+        });
+        ref.afterClosed().subscribe((updated) => { if (updated) this.load(); });
+      },
+      error: () => this.snack.open('Failed to load invoice', 'OK', { duration: 3000 }),
+    });
+  }
+
+  sendInvoice(inv: { _id: string; invoiceNumber: string }): void {
+    const ref = this.dialog.open(ConfirmDialogComponent, {
+      data: {
+        title: 'Send invoice',
+        message: `Email ${inv.invoiceNumber} to the sponsor and mark it as sent?`,
+        confirmLabel: 'Send',
+      },
+    });
+    ref.afterClosed().subscribe((ok) => {
+      if (!ok) return;
+      this.sponsorSvc.sendInvoice(this.sponsorId, inv._id).subscribe({
+        next: () => { this.snack.open('Invoice sent', 'OK', { duration: 2500 }); this.load(); },
         error: (err: HttpErrorResponse) => this.snack.open(err?.error?.error || 'Failed', 'OK', { duration: 4000 }),
       });
     });

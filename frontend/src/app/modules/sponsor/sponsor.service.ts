@@ -2,6 +2,15 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from '../../core/api.service';
 
+export interface SponsorBillingAddress {
+  line1?: string;
+  line2?: string;
+  city?: string;
+  state?: string;
+  postalCode?: string;
+  country?: string;
+}
+
 export interface Sponsor {
   _id: string;
   organizationId: string;
@@ -9,7 +18,9 @@ export interface Sponsor {
   email: string;
   organization?: string;
   phone?: string;
-  billingAddress?: string;
+  billingAddress?: SponsorBillingAddress;
+  taxId?: string;
+  taxExempt?: boolean;
   defaultHourlyRate?: number;
   notes?: string;
   coacheeId?: { _id: string; firstName: string; lastName: string; email: string } | string | null;
@@ -18,6 +29,27 @@ export interface Sponsor {
   activeEngagements?: number;
   createdAt?: string;
   updatedAt?: string;
+}
+
+export interface ProvinceTaxInfo {
+  code: string;
+  name: string;
+  gst: number; hst: number; pst: number; qst: number;
+  combined: number;
+  label: string;
+}
+
+export interface SponsorInvoicePreview {
+  preview: true;
+  sponsor: { name: string; email: string; taxExempt: boolean };
+  billingAddress?: SponsorBillingAddress;
+  lineItems: Array<{ description: string; quantity: number; unitPrice: number; amount: number }>;
+  subtotal: number; taxRate: number; tax: number; total: number;
+  taxBreakdown?: { gst: number; hst: number; pst: number; qst: number };
+  taxLabel: string;
+  currency: string;
+  dueDate: string;
+  engagementCount: number;
 }
 
 export interface SponsorBillingEngagement {
@@ -99,6 +131,29 @@ export class SponsorService {
 
   generateInvoice(id: string): Observable<SponsorInvoice> {
     return this.api.post<SponsorInvoice>(`/sponsors/${id}/invoice`, {});
+  }
+
+  previewInvoice(id: string): Observable<SponsorInvoicePreview> {
+    return this.api.post<SponsorInvoicePreview>(`/sponsors/${id}/invoice`, { preview: true });
+  }
+
+  updateInvoice(sponsorId: string, invoiceId: string, body: {
+    lineItems?: Array<{ description: string; quantity: number; unitPrice: number; amount: number }>;
+    dueDate?: string;
+    notes?: string;
+    taxRate?: number;  // percentage
+  }): Observable<SponsorInvoice> {
+    return this.api.put<SponsorInvoice>(`/sponsors/${sponsorId}/invoices/${invoiceId}`, body);
+  }
+
+  sendInvoice(sponsorId: string, invoiceId: string): Observable<SponsorInvoice> {
+    return this.api.post<SponsorInvoice>(
+      `/sponsors/${sponsorId}/invoices/${invoiceId}/send`, {},
+    );
+  }
+
+  taxRates(): Observable<{ provinces: ProvinceTaxInfo[] }> {
+    return this.api.get<{ provinces: ProvinceTaxInfo[] }>('/sponsors/tax-rates');
   }
 
   getInvoice(sponsorId: string, invoiceId: string): Observable<{

@@ -6,7 +6,12 @@ import { Sponsor } from '../models/Sponsor.model';
 import { CoachingEngagement } from '../models/CoachingEngagement.model';
 import { CoachingSession } from '../models/CoachingSession.model';
 import { User } from '../models/User.model';
-import { Invoice } from '../models/Invoice.model';
+import { Invoice, ILineItem } from '../models/Invoice.model';
+import {
+  calculateTax,
+  getTaxRates,
+  CANADIAN_PROVINCES,
+} from '../config/tax-rates';
 
 const router = Router();
 router.use(authenticateToken, tenantResolver);
@@ -364,7 +369,7 @@ router.post(
         return;
       }
 
-      const lineItems = engagements.map((eng) => {
+      const lineItems: ILineItem[] = engagements.map((eng) => {
         const coachee = eng.coacheeId as unknown as { firstName: string; lastName: string };
         const coacheeName = coachee
           ? `${coachee.firstName} ${coachee.lastName}`
@@ -390,8 +395,49 @@ router.post(
 
       const subtotal = lineItems.reduce((s, li) => s + li.amount, 0);
 
+      // Snapshot billing address + apply Canadian tax rules.
+      const billingAddress = sponsor.billingAddress
+        ? {
+            line1:      sponsor.billingAddress.line1,
+            line2:      sponsor.billingAddress.line2,
+            city:       sponsor.billingAddress.city,
+            state:      sponsor.billingAddress.state,
+            postalCode: sponsor.billingAddress.postalCode,
+            country:    sponsor.billingAddress.country,
+          }
+        : undefined;
+      const country = billingAddress?.country?.toUpperCase();
+      const province = billingAddress?.state?.toUpperCase();
+
+      let tax = 0, taxRate = 0;
+      let taxBreakdown: { gst: number; hst: number; pst: number; qst: number } | undefined;
+      if (!sponsor.taxExempt && country === 'CA') {
+        const calc = calculateTax(subtotal, country, province);
+        tax = calc.totalTax;
+        taxRate = calc.rates.combined;
+        taxBreakdown = { gst: calc.gst, hst: calc.hst, pst: calc.pst, qst: calc.qst };
+      }
+      const total = subtotal + tax;
+
       const dueDate = new Date();
       dueDate.setDate(dueDate.getDate() + 30);
+
+      // Preview mode: return the calculated invoice without persisting.
+      if (req.body?.preview === true) {
+        res.json({
+          preview: true,
+          sponsor: { name: sponsor.name, email: sponsor.email, taxExempt: !!sponsor.taxExempt },
+          billingAddress,
+          lineItems,
+          subtotal, taxRate, tax, taxBreakdown, total,
+          taxLabel: country === 'CA' ? getTaxRates(country, province).label : 'No tax',
+          currency: 'CAD',
+          dueDate,
+          engagementCount: engagements.length,
+        });
+        return;
+      }
+
       const year = new Date().getFullYear();
       const prefix = `SPN-${year}-`;
 
@@ -417,12 +463,15 @@ router.post(
             },
             lineItems,
             subtotal,
-            taxRate: 0,
-            tax: 0,
-            total: subtotal,
+            taxRate,
+            tax,
+            taxBreakdown,
+            total,
             currency: 'CAD',
             status: 'draft',
             dueDate,
+            billingAddress,
+            taxId: sponsor.taxId,
           });
         } catch (err) {
           if ((err as { code?: number })?.code === 11000) continue; // try next number
@@ -457,6 +506,145 @@ router.get(
       if (!invoice) { res.status(404).json({ error: 'Invoice not found' }); return; }
 
       res.json({ invoice, sponsor });
+    } catch (e) { next(e); }
+  },
+);
+
+// ─── Tax-rates lookup (UI dropdown) ─────────────────────────────────────────
+// Same payload shape system-admin billing already exposes. Available to
+// any signed-in coach/admin/HR so the sponsor dialog can render the
+// province dropdown without needing system-admin access.
+router.get(
+  '/tax-rates',
+  requireRole('admin', 'hr_manager', 'coach'),
+  async (_req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const provinces = CANADIAN_PROVINCES.map((p) => ({
+        ...p, ...getTaxRates('CA', p.code),
+      }));
+      res.json({ provinces });
+    } catch (e) { next(e); }
+  },
+);
+
+// ─── Edit a sponsor invoice (only while draft) ──────────────────────────────
+router.put(
+  '/:id/invoices/:invoiceId',
+  requireRole('admin', 'hr_manager'),
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const orgId = req.user!.organizationId;
+      const invoice = await Invoice.findOne({
+        _id: req.params['invoiceId'],
+        organizationId: orgId,
+        sponsorId: req.params['id'],
+      });
+      if (!invoice) { res.status(404).json({ error: 'Invoice not found' }); return; }
+      if (invoice.status !== 'draft') {
+        res.status(400).json({ error: `Cannot edit invoice in status "${invoice.status}". Void it first.` });
+        return;
+      }
+
+      const { lineItems, dueDate, notes, taxRate } = req.body as {
+        lineItems?: ILineItem[];
+        dueDate?: string;
+        notes?: string;
+        taxRate?: number;  // percentage
+      };
+
+      if (Array.isArray(lineItems)) invoice.lineItems = lineItems;
+      if (dueDate) invoice.dueDate = new Date(dueDate);
+      if (notes !== undefined) invoice.notes = notes;
+      if (taxRate !== undefined) invoice.taxRate = taxRate / 100;
+
+      // Recalc subtotal/tax/total whenever lineItems or taxRate changed.
+      if (Array.isArray(lineItems) || taxRate !== undefined) {
+        const subtotal = invoice.lineItems.reduce((s, li) => s + li.amount, 0);
+        const tax = Math.round(subtotal * (invoice.taxRate || 0));
+        invoice.subtotal = subtotal;
+        invoice.tax = tax;
+        invoice.total = subtotal + tax;
+        // Manual taxRate override clears the per-province breakdown.
+        if (taxRate !== undefined) invoice.taxBreakdown = undefined;
+      }
+
+      await invoice.save();
+      res.json(invoice);
+    } catch (e) { next(e); }
+  },
+);
+
+// ─── Send a sponsor invoice (status draft -> sent + email) ──────────────────
+router.post(
+  '/:id/invoices/:invoiceId/send',
+  requireRole('admin', 'hr_manager'),
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const orgId = req.user!.organizationId;
+      const sponsor = await Sponsor.findOne({ _id: req.params['id'], organizationId: orgId });
+      if (!sponsor) { res.status(404).json({ error: 'Sponsor not found' }); return; }
+
+      const invoice = await Invoice.findOne({
+        _id: req.params['invoiceId'],
+        organizationId: orgId,
+        sponsorId: sponsor._id,
+      });
+      if (!invoice) { res.status(404).json({ error: 'Invoice not found' }); return; }
+      if (invoice.status !== 'draft' && invoice.status !== 'overdue') {
+        res.status(400).json({ error: `Cannot send invoice in status "${invoice.status}".` });
+        return;
+      }
+
+      invoice.status = 'sent';
+      invoice.sentAt = new Date();
+      await invoice.save();
+
+      // Best-effort sponsor email (uses the existing email service).
+      // Not blocking — even if email fails the status change persists.
+      try {
+        const { sendEmail } = await import('../services/email.service');
+        const fmt = (cents: number) => `$${(cents / 100).toFixed(2)} CAD`;
+        const lines = invoice.lineItems.map((li) =>
+          `<tr>
+            <td style="padding:8px 12px;border-bottom:1px solid #eef2f7;">${li.description}</td>
+            <td style="padding:8px 12px;border-bottom:1px solid #eef2f7;text-align:center;">${li.quantity}</td>
+            <td style="padding:8px 12px;border-bottom:1px solid #eef2f7;text-align:right;">${fmt(li.unitPrice)}</td>
+            <td style="padding:8px 12px;border-bottom:1px solid #eef2f7;text-align:right;font-weight:600;">${fmt(li.amount)}</td>
+          </tr>`).join('');
+        const dueStr = invoice.dueDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+        const html = `
+          <div style="font-family:Arial,sans-serif;color:#1B2A47;max-width:640px;margin:0 auto;">
+            <h2 style="margin:0 0 12px;">Invoice ${invoice.invoiceNumber}</h2>
+            <p>Hello ${sponsor.name},</p>
+            <p>A new coaching invoice is ready for your review. Total <strong>${fmt(invoice.total)}</strong> due ${dueStr}.</p>
+            <table style="width:100%;border-collapse:collapse;margin:16px 0;font-size:14px;">
+              <thead>
+                <tr style="background:#f7f9fc;">
+                  <th style="padding:10px 12px;text-align:left;color:#6b7c93;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;">Description</th>
+                  <th style="padding:10px 12px;color:#6b7c93;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;">Qty</th>
+                  <th style="padding:10px 12px;text-align:right;color:#6b7c93;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;">Unit price</th>
+                  <th style="padding:10px 12px;text-align:right;color:#6b7c93;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;">Amount</th>
+                </tr>
+              </thead>
+              <tbody>${lines}</tbody>
+              <tfoot>
+                <tr><td colspan="3" style="text-align:right;padding:6px 12px;color:#6b7c93;">Subtotal</td><td style="text-align:right;padding:6px 12px;">${fmt(invoice.subtotal)}</td></tr>
+                ${invoice.tax > 0 ? `<tr><td colspan="3" style="text-align:right;padding:6px 12px;color:#6b7c93;">Tax</td><td style="text-align:right;padding:6px 12px;">${fmt(invoice.tax)}</td></tr>` : ''}
+                <tr><td colspan="3" style="text-align:right;padding:10px 12px;font-weight:700;border-top:2px solid #1B2A47;">Total due</td><td style="text-align:right;padding:10px 12px;font-weight:700;border-top:2px solid #1B2A47;">${fmt(invoice.total)}</td></tr>
+              </tfoot>
+            </table>
+            <p style="color:#6b7c93;font-size:12px;">Sent by ARTES on behalf of your coach.</p>
+          </div>`;
+        await sendEmail({
+          to: sponsor.email,
+          subject: `Invoice ${invoice.invoiceNumber} — ${fmt(invoice.total)} due ${dueStr}`,
+          html,
+        });
+      } catch (err) {
+        console.error('[Sponsor] Failed to email invoice:', err);
+      }
+
+      res.json(invoice);
     } catch (e) { next(e); }
   },
 );
