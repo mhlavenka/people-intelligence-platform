@@ -33,12 +33,13 @@ async function isCalendarConnected(coachId: string): Promise<boolean> {
 // ═══════════════════════════════════════════════════════════════════════════
 
 /** Per-role scoping for coaching reads.
- *  - admin / hr_manager / coach: see every engagement/session in the org
- *    (coaching is org-wide; coaches collaborate on each other's clients)
- *  - coachee: see only engagements/sessions where they are the coachee
+ *  - admin / hr_manager: see every engagement/session in the org
+ *  - coach:              see only engagements/sessions they own (coachId = self)
+ *  - coachee:            see only engagements/sessions where they are the coachee
  */
 function scopeCoachingFilter(req: AuthRequest, base: Record<string, unknown> = {}): Record<string, unknown> {
   const filter: Record<string, unknown> = { ...base, organizationId: req.user!.organizationId };
+  if (req.user!.role === 'coach') filter['coachId'] = req.user!.userId;
   if (req.user!.role === 'coachee') filter['coacheeId'] = req.user!.userId;
   return filter;
 }
@@ -178,7 +179,6 @@ router.get('/sessions', async (req: AuthRequest, res: Response, next: NextFuncti
       .select(selectFields as string)
       .populate('coacheeId', 'firstName lastName profilePicture')
       .populate('coachId', 'firstName lastName email profilePicture')
-      .populate('sponsorId', 'name email organization')
       .sort({ date: -1 });
     res.json(sessions);
   } catch (e) { next(e); }
@@ -193,8 +193,7 @@ router.get('/sessions/:id', async (req: AuthRequest, res: Response, next: NextFu
     )
       .select(selectFields as string)
       .populate('coacheeId', 'firstName lastName profilePicture')
-      .populate('coachId', 'firstName lastName email profilePicture')
-      .populate('sponsorId', 'name email organization');
+      .populate('coachId', 'firstName lastName email profilePicture');
     if (!session) { res.status(404).json({ error: 'Session not found' }); return; }
     res.json(session);
   } catch (e) { next(e); }
