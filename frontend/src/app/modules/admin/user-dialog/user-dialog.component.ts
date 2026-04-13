@@ -11,6 +11,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ApiService } from '../../../core/api.service';
 import { AuthService } from '../../../core/auth.service';
 import { environment } from '../../../../environments/environment';
+import { Sponsor, SponsorService } from '../../sponsor/sponsor.service';
 
 export interface OrgUser {
   _id: string;
@@ -19,6 +20,7 @@ export interface OrgUser {
   lastName: string;
   role: string;
   department?: string;
+  sponsorId?: string | { _id: string; name?: string; email?: string };
   customRoleId?: string;
   profilePicture?: string;
   isActive: boolean;
@@ -139,6 +141,18 @@ const ROLES = [
           </mat-select>
         </mat-form-field>
 
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Sponsor (optional)</mat-label>
+          <mat-select formControlName="sponsorId">
+            <mat-option value="">— None —</mat-option>
+            @for (s of sponsors(); track s._id) {
+              <mat-option [value]="s._id">
+                {{ s.name }} <span class="muted">— {{ s.email }}</span>
+              </mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
         @if (!isEdit()) {
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>Password</mat-label>
@@ -224,6 +238,7 @@ export class UserDialogComponent implements OnInit {
   private fb = inject(FormBuilder);
   private api = inject(ApiService);
   private auth = inject(AuthService);
+  private sponsorSvc = inject(SponsorService);
   private dialogRef = inject(MatDialogRef<UserDialogComponent>);
   existingUser = inject<OrgUser | null>(MAT_DIALOG_DATA, { optional: true });
 
@@ -231,6 +246,7 @@ export class UserDialogComponent implements OnInit {
   saving = signal(false);
   error = signal('');
   departments = signal<string[]>([]);
+  sponsors = signal<Sponsor[]>([]);
   customRolesAvailable = signal<CustomRoleOption[]>([]);
   avatarPreview = signal('');
   showPwd = false;
@@ -245,6 +261,16 @@ export class UserDialogComponent implements OnInit {
 
   baseLabel = (key: string) => this.BASE_LABELS[key] ?? key;
 
+  /** sponsorId may come back populated as { _id, ... } or as a raw id string. */
+  private normalizeSponsorId(s: unknown): string | undefined {
+    if (!s) return undefined;
+    if (typeof s === 'string') return s;
+    if (typeof s === 'object' && s !== null && '_id' in s) {
+      return String((s as { _id: unknown })._id);
+    }
+    return undefined;
+  }
+
   ngOnInit(): void {
     if (this.existingUser?.profilePicture) {
       this.avatarPreview.set(this.existingUser.profilePicture);
@@ -256,6 +282,7 @@ export class UserDialogComponent implements OnInit {
       role:         [this.existingUser?.role        ?? 'coachee', Validators.required],
       customRoleId: [this.existingUser?.customRoleId ?? ''],
       department:   [this.existingUser?.department ?? ''],
+      sponsorId:    [this.normalizeSponsorId(this.existingUser?.sponsorId) ?? ''],
       ...(this.isEdit() ? {} : {
         password: ['', [Validators.required, Validators.minLength(8)]],
       }),
@@ -267,6 +294,11 @@ export class UserDialogComponent implements OnInit {
 
     this.api.get<CustomRoleOption[]>('/roles').subscribe({
       next: (roles) => this.customRolesAvailable.set(roles),
+    });
+
+    this.sponsorSvc.list().subscribe({
+      next: (s) => this.sponsors.set(s),
+      error: () => {},
     });
   }
 
@@ -293,8 +325,9 @@ export class UserDialogComponent implements OnInit {
     this.error.set('');
 
     const payload = { ...this.form.value };
-    // Send null to clear custom role when empty string selected
+    // Send null to clear custom role / sponsor when empty string selected
     if (!payload.customRoleId) { payload.customRoleId = null; }
+    if (!payload.sponsorId)    { payload.sponsorId = null; }
 
     const request = this.isEdit()
       ? this.api.put(`/users/${this.existingUser!._id}`, payload)

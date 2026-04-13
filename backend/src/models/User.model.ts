@@ -48,6 +48,7 @@ export interface IUser extends Document {
   profilePicture?: string;
   bio?: string;
   publicSlug?: string;
+  sponsorId?: mongoose.Types.ObjectId;     // who pays for this user's coaching
   googleCalendar?: IGoogleCalendar;
   createdAt: Date;
   updatedAt: Date;
@@ -95,6 +96,7 @@ const UserSchema = new Schema<IUser>(
     profilePicture:   { type: String },
     bio:              { type: String, trim: true },
     publicSlug:       { type: String, trim: true, lowercase: true, index: true, sparse: true, unique: true },
+    sponsorId:        { type: Schema.Types.ObjectId, ref: 'Sponsor', index: true },
     twoFactorSecret:  { type: String, select: false },
     twoFactorEnabled: { type: Boolean, default: false },
     passkeys:      [PasskeyCredentialSchema],
