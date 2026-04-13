@@ -31,6 +31,7 @@ interface Session {
   status: string;
   googleMeetLink?: string;
   createdAt: string;
+  createdVia?: 'coach' | 'coachee_booking';
 }
 
 @Component({
@@ -191,6 +192,17 @@ interface Session {
                       </div>
                       <span class="session-duration">{{ s.duration }} min · {{ s.format }}</span>
                       <span class="session-status" [class]="s.status">{{ s.status }}</span>
+                      @if (s.createdVia === 'coachee_booking') {
+                        <span class="source-chip booked"
+                              matTooltip="Created when the coachee booked via the public link">
+                          <mat-icon>person</mat-icon> Coachee booked
+                        </span>
+                      } @else {
+                        <span class="source-chip scheduled"
+                              matTooltip="Scheduled by the coach">
+                          <mat-icon>edit_calendar</mat-icon> Coach scheduled
+                        </span>
+                      }
                       @if (canManage()) {
                         <button mat-icon-button matTooltip="Edit" (click)="editSession(s)"><mat-icon>edit</mat-icon></button>
                         <button mat-icon-button matTooltip="Delete" class="del-btn" (click)="deleteSession(s)"><mat-icon>delete_outline</mat-icon></button>
@@ -421,6 +433,15 @@ interface Session {
       &.no_show { background: #fef2f2; color: #e53e3e; }
     }
     .del-btn { color: #c5d0db; &:hover { color: #e53e3e; } }
+
+    .source-chip {
+      display: inline-flex; align-items: center; gap: 3px;
+      font-size: 10px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.4px; padding: 2px 8px 2px 6px; border-radius: 999px;
+      mat-icon { font-size: 12px; width: 12px; height: 12px; }
+      &.booked   { background: #f3eafc; color: #6b3aa0; }
+      &.scheduled { background: #fef6e6; color: #b87e08; }
+    }
 
     .session-topics { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 8px; }
     .topic-chip { font-size: 11px; background: #f0f4f8; color: #5a6a7e; padding: 2px 8px; border-radius: 4px; }

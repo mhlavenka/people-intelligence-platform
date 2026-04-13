@@ -22,6 +22,7 @@ export interface ICoachingSession extends Document {
   googleEventId?: string;
   googleMeetLink?: string;
   bookingId?: mongoose.Types.ObjectId;  // paired Booking row, if any
+  createdVia: 'coach' | 'coachee_booking';
   createdAt: Date;
   updatedAt: Date;
 }
@@ -50,6 +51,11 @@ const CoachingSessionSchema = new Schema<ICoachingSession>(
     googleEventId: { type: String },
     googleMeetLink: { type: String },
     bookingId: { type: Schema.Types.ObjectId, ref: 'Booking', index: true },
+    createdVia: {
+      type: String,
+      enum: ['coach', 'coachee_booking'],
+      default: 'coach',
+    },
   },
   { timestamps: true }
 );

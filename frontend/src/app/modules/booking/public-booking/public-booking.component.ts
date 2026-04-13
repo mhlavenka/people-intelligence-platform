@@ -499,9 +499,16 @@ export class PublicBookingComponent implements OnInit {
       error: (err: HttpErrorResponse) => {
         this.submitting.set(false);
         if (err.status === 409) {
-          this.snackBar.open('That time was just booked — please choose another.', 'OK', { duration: 5000 });
-          this.selectedSlot.set(null);
-          this.loadSlots();
+          // Could be a slot race OR an engagement quota block. The server
+          // message is meaningful for the latter; fall back to the slot
+          // copy when no explicit reason was returned.
+          const serverMsg = err.error?.error as string | undefined;
+          const msg = serverMsg || 'That time was just booked — please choose another.';
+          this.snackBar.open(msg, 'OK', { duration: 6000 });
+          if (!serverMsg) {
+            this.selectedSlot.set(null);
+            this.loadSlots();
+          }
         } else {
           this.snackBar.open('Something went wrong. Please try again.', 'Retry', { duration: 5000 });
         }

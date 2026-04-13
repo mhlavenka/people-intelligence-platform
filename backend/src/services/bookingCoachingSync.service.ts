@@ -17,6 +17,70 @@ import { Booking, IBooking } from '../models/Booking.model';
 import { CoachingSession, ICoachingSession } from '../models/CoachingSession.model';
 import { CoachingEngagement } from '../models/CoachingEngagement.model';
 import { User } from '../models/User.model';
+import { AvailabilityConfig } from '../models/AvailabilityConfig.model';
+
+// ─── Quota check (called before createBooking) ──────────────────────────────
+
+export interface QuotaCheckResult {
+  /** false → block the booking; the route should respond 409 with `reason`. */
+  allowed: boolean;
+  /** Human-readable reason when allowed is false. */
+  reason?: string;
+  /** When a finite quota applies, how many sessions remain after this booking. */
+  remaining?: number;
+}
+
+/**
+ * Check whether an authenticated coachee can create a new booking with a
+ * given coach (identified by their event-type slug). Returns allowed=true
+ * when:
+ *   - no engagement exists yet (will be auto-created), or
+ *   - engagement.sessionsPurchased is 0 (treated as unlimited), or
+ *   - active+scheduled+completed sessions < sessionsPurchased.
+ */
+export async function precheckBookingQuota(
+  coachSlug: string,
+  coacheeId: string,
+): Promise<QuotaCheckResult> {
+  const cfg = await AvailabilityConfig.findOne({ coachSlug, isActive: true })
+    .setOptions({ bypassTenantCheck: true });
+  if (!cfg) return { allowed: true }; // route will 404 anyway
+
+  const coachee = await User.findById(coacheeId).select('_id organizationId role');
+  if (!coachee || coachee.role !== 'coachee') return { allowed: true };
+  if (coachee.organizationId.toString() !== cfg.organizationId.toString()) return { allowed: true };
+
+  const engagement = await CoachingEngagement.findOne({
+    organizationId: cfg.organizationId,
+    coacheeId: coachee._id,
+    coachId: cfg.coachId,
+  });
+
+  // No engagement yet → the auto-created one will start at 0/0 (unlimited).
+  if (!engagement) return { allowed: true };
+
+  // 0 means unlimited — same semantics as the engagement editor's hint.
+  if (!engagement.sessionsPurchased) return { allowed: true };
+
+  // Count sessions that count against quota: scheduled + completed.
+  const used = await CoachingSession.countDocuments({
+    engagementId: engagement._id,
+    status: { $in: ['scheduled', 'completed'] },
+  }).setOptions({ bypassTenantCheck: true });
+
+  if (used >= engagement.sessionsPurchased) {
+    return {
+      allowed: false,
+      reason: `This engagement has used all ${engagement.sessionsPurchased} purchased sessions.`,
+      remaining: 0,
+    };
+  }
+
+  return {
+    allowed: true,
+    remaining: engagement.sessionsPurchased - used - 1,
+  };
+}
 
 // ─── Booking → Coaching ─────────────────────────────────────────────────────
 
@@ -34,14 +98,23 @@ export async function linkBookingToCoaching(
   if (coachee.role !== 'coachee') return;
   if (coachee.organizationId.toString() !== booking.organizationId.toString()) return;
 
-  // Find or create the engagement
-  let engagement = await CoachingEngagement.findOne({
+  // Find or create the engagement.
+  // setOptions(bypassTenantCheck) silences the tenant-filter warning;
+  // the filter itself is explicit in the query.
+  const engagementFilter = {
     organizationId: booking.organizationId,
     coacheeId: coachee._id,
     coachId: booking.coachId,
-  });
+  };
+  let engagement = await CoachingEngagement
+    .findOne(engagementFilter)
+    .setOptions({ bypassTenantCheck: true });
 
   if (!engagement) {
+    console.info(
+      `[BookingSync] No engagement for coachee=${coachee._id} coach=${booking.coachId} ` +
+      `org=${booking.organizationId} — creating new`,
+    );
     engagement = await CoachingEngagement.create({
       organizationId: booking.organizationId,
       coacheeId: coachee._id,
@@ -52,6 +125,8 @@ export async function linkBookingToCoaching(
       goals: [],
       rebillCoachee: false,
     });
+  } else {
+    console.info(`[BookingSync] Linking booking to existing engagement ${engagement._id}`);
   }
 
   // Create the paired CoachingSession
@@ -72,6 +147,7 @@ export async function linkBookingToCoaching(
     googleEventId: booking.googleEventId,
     googleMeetLink: booking.googleMeetLink,
     bookingId: booking._id,
+    createdVia: 'coachee_booking',
   });
 
   booking.coacheeId = coachee._id as mongoose.Types.ObjectId;

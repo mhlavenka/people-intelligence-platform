@@ -25,14 +25,14 @@ import { BookingResult, PublicBookingService } from '../booking.service';
             <div class="detail-row">
               <span class="material-icons detail-icon">calendar_today</span>
               <span class="detail-text">
-                <strong>{{ booking()!.startTime | date:'fullDate':'':clientTimezone() }}</strong>
+                <strong>{{ booking()!.startTime | date:'fullDate':clientTimezone() }}</strong>
               </span>
             </div>
             <div class="detail-row">
               <span class="material-icons detail-icon">schedule</span>
               <span class="detail-text">
-                {{ booking()!.startTime | date:'shortTime':'':clientTimezone() }} –
-                {{ booking()!.endTime | date:'shortTime':'':clientTimezone() }}
+                {{ booking()!.startTime | date:'shortTime':clientTimezone() }} –
+                {{ booking()!.endTime | date:'shortTime':clientTimezone() }}
                 <span class="tz-label">({{ clientTimezone() }})</span>
               </span>
             </div>

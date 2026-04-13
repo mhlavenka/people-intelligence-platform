@@ -17,7 +17,10 @@ import {
   createBooking, cancelBooking, clientCancelBooking, rescheduleBooking,
 } from '../services/booking.service';
 import { registerGoogleWebhook } from '../services/calendarWebhook.service';
-import { linkBookingToCoaching } from '../services/bookingCoachingSync.service';
+import {
+  linkBookingToCoaching,
+  precheckBookingQuota,
+} from '../services/bookingCoachingSync.service';
 
 // ─── Slug helper ────────────────────────────────────────────────────────────
 
@@ -95,6 +98,17 @@ publicBookingRouter.post(
       if (!startTime || !endTime || !clientName || !clientEmail) {
         res.status(400).json({ error: 'startTime, endTime, clientName, and clientEmail are required' });
         return;
+      }
+
+      // Engagement quota check (only meaningful for authenticated coachees).
+      // Runs BEFORE createBooking so a quota-exhausted booking never produces
+      // a Booking row or a GCal event.
+      if (req.user && req.user.role === 'coachee') {
+        const quota = await precheckBookingQuota(coachSlug, req.user.userId);
+        if (!quota.allowed) {
+          res.status(409).json({ error: quota.reason ?? 'Booking quota exhausted' });
+          return;
+        }
       }
 
       const booking = await createBooking(coachSlug, {
