@@ -17,8 +17,6 @@ IMPROVEMENTS
 - review the app to extract components that should be shared between modules
 - plans - upgrade to higher plan under trial conditions then revert
 - intake view results - requires minimum 5 responses even for assessment and interview
-- dashboard intakes is not a module, have only "open" link
-- organization - do not show modules I have no plan for to enable / disable
 - add mentoring to coaching module
   - add lumina spark to 2.4
 - coaching

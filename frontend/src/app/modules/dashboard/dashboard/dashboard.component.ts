@@ -77,7 +77,7 @@ interface ModuleCard {
               }
             </div>
             <div class="card-footer">
-              <button mat-button color="primary">Open Module →</button>
+              <button mat-button color="primary">Open →</button>
             </div>
           </div>
         }

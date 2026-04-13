@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, signal, computed, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -563,7 +563,7 @@ const RADIUS_OPTIONS = [
             <div class="card-body">
               <p class="modules-hint">Toggle which modules are active for your organization.</p>
               <div class="modules-list">
-                @for (mod of allModules; track mod.key) {
+                @for (mod of allModules(); track mod.key) {
                   <div class="module-row" [class.enabled]="isModuleEnabled(mod.key)">
                     <div class="module-icon" [style.background]="mod.color + '18'"
                                              [style.color]="mod.color">
@@ -966,7 +966,16 @@ export class OrganizationSettingsComponent implements OnInit {
   billingForm!: FormGroup;
 
   industries    = INDUSTRIES;
-  allModules    = ALL_MODULES;
+  /** Modules included in the org's current plan (auto-populated from /api/plans). */
+  planModules   = signal<string[] | null>(null);
+  /** Filtered to only the modules available in the org's plan.
+   *  Falls back to every module when the plan lookup hasn't run yet or
+   *  the plan record has an empty modules list (e.g. legacy plans). */
+  allModules    = computed(() => {
+    const allowed = this.planModules();
+    if (!allowed || allowed.length === 0) return ALL_MODULES;
+    return ALL_MODULES.filter((m) => allowed.includes(m.key));
+  });
   presets       = PRESETS;
   fonts         = FONTS;
   colorFields   = COLOR_FIELDS;
@@ -1019,6 +1028,16 @@ export class OrganizationSettingsComponent implements OnInit {
         this.org.set(org);
         this.departments.set(org.departments ?? []);
         this.logoPreview.set(org.logoUrl ?? null);
+
+        // Look up the org's plan so the module list below only shows
+        // modules the plan actually includes.
+        this.api.get<Array<{ key: string; modules?: string[] }>>('/plans').subscribe({
+          next: (plans) => {
+            const p = plans.find((pl) => pl.key === org.plan);
+            this.planModules.set(p?.modules ?? null);
+          },
+          error: () => this.planModules.set(null),
+        });
         this.form = this.fb.group({
           name:          [org.name,          Validators.required],
           billingEmail:  [org.billingEmail,   [Validators.required, Validators.email]],
