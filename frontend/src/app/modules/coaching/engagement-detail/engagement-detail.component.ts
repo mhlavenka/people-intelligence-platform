@@ -131,17 +131,10 @@ interface Session {
                 </a>
               </div>
             }
-            @if (!canManage()) {
+            @if (!canManage() && engagement()!.coachId) {
               <mat-divider />
-              @if (engagement()!.coachId) {
-                <div class="info-list">
-                  <div class="info-item"><span class="info-label">Coach</span><span>{{ coachFullName() }}</span></div>
-                </div>
-              }
-              <div class="journal-block">
-                <a class="journal-link" [routerLink]="'/my-journal/engagement/' + engagement()!._id">
-                  <mat-icon>menu_book</mat-icon> My session journal
-                </a>
+              <div class="info-list">
+                <div class="info-item"><span class="info-label">Coach</span><span>{{ coachFullName() }}</span></div>
               </div>
             }
           </div>
@@ -280,19 +273,26 @@ interface Session {
                     </div>
                   </div>
 
-                  <!-- Right: journal note -->
-                  @if (canManage()) {
-                    <div class="session-right">
-                      @if (noteFor(s._id); as note) {
-                        <div class="journal-panel">
-                          <div class="journal-header">
-                            <mat-icon>auto_stories</mat-icon>
-                            <span class="journal-label">Note #{{ note.sessionNumber }}</span>
-                            <span class="journal-status" [class]="note.status">{{ note.status }}</span>
+                  <!-- Right: journal note (coach + coachee variants) -->
+                  <div class="session-right">
+                    @if (noteFor(s._id); as note) {
+                      <div class="journal-panel">
+                        <div class="journal-header">
+                          <mat-icon>auto_stories</mat-icon>
+                          <span class="journal-label">Note #{{ note.sessionNumber }}</span>
+                          <span class="journal-status" [class]="note.status">{{ note.status }}</span>
+                          @if (canManage()) {
                             <a mat-icon-button [routerLink]="'/journal/note/' + note._id" matTooltip="Open journal note" class="journal-open-btn">
                               <mat-icon>open_in_new</mat-icon>
                             </a>
-                          </div>
+                          } @else {
+                            <a mat-icon-button [routerLink]="'/my-journal/engagement/' + engId" matTooltip="Open my journal" class="journal-open-btn">
+                              <mat-icon>open_in_new</mat-icon>
+                            </a>
+                          }
+                        </div>
+
+                        @if (canManage()) {
                           @if (note.preSession.agenda) {
                             <div class="journal-field">
                               <span class="journal-field-label">Agenda</span>
@@ -314,18 +314,46 @@ interface Session {
                           @if (!note.preSession.agenda && !note.inSession.observations && !note.postSession.coachReflection) {
                             <p class="journal-empty-hint">No content yet — open to start writing.</p>
                           }
-                        </div>
-                      } @else {
-                        <div class="journal-panel journal-empty">
-                          <mat-icon>auto_stories</mat-icon>
-                          <span>No journal note</span>
+                        } @else {
+                          @if (note.coacheePre?.mainTopic) {
+                            <div class="journal-field">
+                              <span class="journal-field-label">Main topic</span>
+                              <p>{{ note.coacheePre!.mainTopic! | slice:0:120 }}{{ note.coacheePre!.mainTopic!.length > 120 ? '...' : '' }}</p>
+                            </div>
+                          }
+                          @if (note.inSession?.observations) {
+                            <div class="journal-field">
+                              <span class="journal-field-label">From your coach</span>
+                              <p>{{ note.inSession!.observations! | slice:0:150 }}{{ note.inSession!.observations!.length > 150 ? '...' : '' }}</p>
+                            </div>
+                          }
+                          @if (note.coacheePost?.takeaways) {
+                            <div class="journal-field">
+                              <span class="journal-field-label">My takeaways</span>
+                              <p>{{ note.coacheePost!.takeaways! | slice:0:120 }}{{ note.coacheePost!.takeaways!.length > 120 ? '...' : '' }}</p>
+                            </div>
+                          }
+                          @if (!note.coacheePre?.mainTopic && !note.inSession?.observations && !note.coacheePost?.takeaways) {
+                            <p class="journal-empty-hint">No content yet — open to add your pre/post notes.</p>
+                          }
+                        }
+                      </div>
+                    } @else {
+                      <div class="journal-panel journal-empty">
+                        <mat-icon>auto_stories</mat-icon>
+                        <span>No journal note</span>
+                        @if (canManage()) {
                           <a class="add-journal-link" [routerLink]="'/journal/note/new/' + engId" [queryParams]="{ sessionId: s._id }">
                             <mat-icon>add</mat-icon> Add Note
                           </a>
-                        </div>
-                      }
-                    </div>
-                  }
+                        } @else {
+                          <a class="add-journal-link" [routerLink]="'/my-journal/engagement/' + engId">
+                            <mat-icon>add</mat-icon> Open journal
+                          </a>
+                        }
+                      </div>
+                    }
+                  </div>
                 </div>
               </div>
             }
@@ -654,9 +682,10 @@ export class EngagementDetailComponent implements OnInit {
     const promises: [Promise<any>, Promise<Session[] | undefined>, Promise<SessionNote[] | undefined>] = [
       this.api.get(`/coaching/engagements/${this.engId}`).toPromise(),
       this.api.get<Session[]>(`/coaching/sessions?engagementId=${this.engId}`).toPromise(),
-      this.canManage()
-        ? this.journal.getEngagementNotes(this.engId).toPromise()
-        : Promise.resolve([]),
+      // Both coaches and coachees load journal notes — coachees use them
+      // to render their pre/post snippets in the per-session right panel.
+      this.journal.getEngagementNotes(this.engId).toPromise()
+        .catch(() => [] as SessionNote[]),
     ];
     Promise.all(promises).then(([eng, sessions, notes]) => {
       this.engagement.set(eng);
