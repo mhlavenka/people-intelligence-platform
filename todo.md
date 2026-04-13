@@ -21,11 +21,10 @@ IMPROVEMENTS
 - add mentoring to coaching module
   - add lumina spark to 2.4
 - coaching
-  - coachee - send message to coach
   - lead, initial chemistry call
   - intake - attach to session, create different session types
   - coachees send pre and post session forms
-  - coachee journal, pre and post forms, book session
+  - coachee journal, pre and post forms
   
 I. MODULES
 ----------

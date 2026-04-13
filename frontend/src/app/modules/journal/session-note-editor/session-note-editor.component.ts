@@ -75,6 +75,42 @@ import { ApiService } from '../../../core/api.service';
                 <mat-label>Coach Intention</mat-label>
                 <textarea matInput rows="4" [(ngModel)]="preSession.coachIntention" placeholder="What is your coaching intention for this session?"></textarea>
               </mat-form-field>
+
+              <!-- What the coachee shared (read-only) -->
+              @if (hasCoacheePre()) {
+                <div class="coachee-panel">
+                  <div class="coachee-panel-head">
+                    <mat-icon>person_outline</mat-icon>
+                    <span>Coachee's pre-session input</span>
+                  </div>
+                  @if (note.coacheePre?.moodRating) {
+                    <div class="ro-field">
+                      <label>Energy / mood</label>
+                      <p class="stars-ro">
+                        @for (i of [1,2,3,4,5]; track i) {
+                          <mat-icon>{{ (note.coacheePre!.moodRating || 0) >= i ? 'star' : 'star_border' }}</mat-icon>
+                        }
+                        <span class="rating-num">({{ note.coacheePre!.moodRating }}/5)</span>
+                      </p>
+                    </div>
+                  }
+                  @if (note.coacheePre?.topOfMind) {
+                    <div class="ro-field"><label>Top of mind</label><p>{{ note.coacheePre!.topOfMind }}</p></div>
+                  }
+                  @if (note.coacheePre?.mainTopic) {
+                    <div class="ro-field"><label>Main topic to explore</label><p>{{ note.coacheePre!.mainTopic }}</p></div>
+                  }
+                  @if (note.coacheePre?.valueDefinition) {
+                    <div class="ro-field"><label>What would feel valuable</label><p>{{ note.coacheePre!.valueDefinition }}</p></div>
+                  }
+                  @if (note.coacheePre?.recentShifts) {
+                    <div class="ro-field"><label>Since last session</label><p>{{ note.coacheePre!.recentShifts }}</p></div>
+                  }
+                  @if (note.coacheePre?.contextForCoach) {
+                    <div class="ro-field"><label>Context for coach</label><p>{{ note.coacheePre!.contextForCoach }}</p></div>
+                  }
+                </div>
+              }
             </div>
           </mat-tab>
 
@@ -165,6 +201,25 @@ import { ApiService } from '../../../core/api.service';
                 </div>
               }
               <button mat-button (click)="addAccountabilityItem()"><mat-icon>add</mat-icon> Add Item</button>
+
+              <!-- What the coachee shared after the session (read-only) -->
+              @if (hasCoacheePost()) {
+                <div class="coachee-panel">
+                  <div class="coachee-panel-head">
+                    <mat-icon>person_outline</mat-icon>
+                    <span>Coachee's post-session reflection</span>
+                  </div>
+                  @if (note.coacheePost?.takeaways) {
+                    <div class="ro-field"><label>Takeaways</label><p>{{ note.coacheePost!.takeaways }}</p></div>
+                  }
+                  @if (note.coacheePost?.reflection) {
+                    <div class="ro-field"><label>Reflection</label><p>{{ note.coacheePost!.reflection }}</p></div>
+                  }
+                  @if (note.coacheePost?.commitments) {
+                    <div class="ro-field"><label>Commitments</label><p>{{ note.coacheePost!.commitments }}</p></div>
+                  }
+                </div>
+              }
             </div>
           </mat-tab>
         </mat-tab-group>
@@ -202,6 +257,27 @@ import { ApiService } from '../../../core/api.service';
     }
 
     .tab-content { padding: 20px 0; }
+    .coachee-panel {
+      margin-top: 20px;
+      background: #f3eafc; border: 1px solid #e0d0f0; border-radius: 10px;
+      padding: 14px 16px;
+    }
+    .coachee-panel-head {
+      display: flex; align-items: center; gap: 6px;
+      color: #6b3aa0; font-size: 12px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.6px;
+      margin-bottom: 8px;
+      mat-icon { font-size: 16px; width: 16px; height: 16px; }
+    }
+    .ro-field {
+      margin-bottom: 8px;
+      label { display: block; font-size: 11px; color: #9aa5b4; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
+      p { margin: 0; color: #1B2A47; font-size: 14px; white-space: pre-line; }
+      .stars-ro { display: flex; align-items: center; gap: 2px;
+        mat-icon { color: #f5b042; font-size: 18px; width: 18px; height: 18px; }
+        .rating-num { color: #6b7c93; font-size: 12px; margin-left: 6px; }
+      }
+    }
     .full-width { width: 100%; }
     .flex-grow { flex: 1; }
     .field-label { font-size: 13px; font-weight: 600; color: #5a6a7e; display: block; margin: 8px 0 6px; }
@@ -256,6 +332,21 @@ export class SessionNoteEditorComponent implements OnInit {
   inSession = { openingState: '', keyThemes: [] as string[], observations: '', notableQuotes: [] as string[], coachInterventions: '', energyShifts: '' };
   postSession = { coachReflection: '', whatWorked: '', whatToExplore: '', clientGrowthEdge: '', accountabilityItems: [] as AccountabilityItem[] };
 
+  // Read-only mirror of what the coachee wrote (rendered in the Before / After tabs).
+  note: {
+    coacheePre?: { moodRating?: number; topOfMind?: string; mainTopic?: string; valueDefinition?: string; recentShifts?: string; contextForCoach?: string };
+    coacheePost?: { takeaways?: string; reflection?: string; commitments?: string };
+  } = {};
+
+  hasCoacheePre(): boolean {
+    const p = this.note.coacheePre;
+    return !!(p && (p.moodRating || p.topOfMind || p.mainTopic || p.valueDefinition || p.recentShifts || p.contextForCoach));
+  }
+  hasCoacheePost(): boolean {
+    const p = this.note.coacheePost;
+    return !!(p && (p.takeaways || p.reflection || p.commitments));
+  }
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -294,6 +385,10 @@ export class SessionNoteEditorComponent implements OnInit {
             whatToExplore: note.postSession?.whatToExplore || '',
             clientGrowthEdge: note.postSession?.clientGrowthEdge || '',
             accountabilityItems: (note.postSession?.accountabilityItems || []).map((a) => ({ ...a })),
+          };
+          this.note = {
+            coacheePre: note.coacheePre ? { ...note.coacheePre } : undefined,
+            coacheePost: note.coacheePost ? { ...note.coacheePost } : undefined,
           };
           this.backLink = `/journal/engagement/${this.engagementId}`;
           this.loading.set(false);

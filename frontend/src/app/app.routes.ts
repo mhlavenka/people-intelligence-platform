@@ -225,6 +225,15 @@ export const routes: Routes = [
             (m) => m.JournalDashboardComponent
           ),
       },
+      // Coachee-facing journal — pre + post notes per session
+      {
+        path: 'my-journal/engagement/:engagementId',
+        canActivate: [roleGuard(['coachee'])],
+        loadComponent: () =>
+          import('./modules/journal/coachee-journal/coachee-journal.component').then(
+            (m) => m.CoacheeJournalComponent
+          ),
+      },
       {
         path: 'journal/engagement/:engagementId',
         canActivate: [roleGuard([...ADMIN_HR, 'coach'])],

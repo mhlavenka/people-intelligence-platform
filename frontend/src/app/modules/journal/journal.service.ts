@@ -41,6 +41,19 @@ export interface SessionNote {
     clientGrowthEdge?: string;
     accountabilityItems: AccountabilityItem[];
   };
+  coacheePre?: {
+    moodRating?: number;
+    topOfMind?: string;
+    mainTopic?: string;
+    valueDefinition?: string;
+    recentShifts?: string;
+    contextForCoach?: string;
+  };
+  coacheePost?: {
+    takeaways?: string;
+    reflection?: string;
+    commitments?: string;
+  };
   aiSummary?: string;
   aiThemes: string[];
   aiGeneratedAt?: string;

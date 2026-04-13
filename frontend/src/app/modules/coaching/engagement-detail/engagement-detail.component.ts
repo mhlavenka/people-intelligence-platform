@@ -131,10 +131,17 @@ interface Session {
                 </a>
               </div>
             }
-            @if (engagement()!.coachId && !canManage()) {
+            @if (!canManage()) {
               <mat-divider />
-              <div class="info-list">
-                <div class="info-item"><span class="info-label">Coach</span><span>{{ coachFullName() }}</span></div>
+              @if (engagement()!.coachId) {
+                <div class="info-list">
+                  <div class="info-item"><span class="info-label">Coach</span><span>{{ coachFullName() }}</span></div>
+                </div>
+              }
+              <div class="journal-block">
+                <a class="journal-link" [routerLink]="'/my-journal/engagement/' + engagement()!._id">
+                  <mat-icon>menu_book</mat-icon> My session journal
+                </a>
               </div>
             }
           </div>

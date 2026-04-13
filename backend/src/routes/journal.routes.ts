@@ -15,8 +15,18 @@ import {
 const router = Router();
 router.use(authenticateToken, tenantResolver);
 
-// All journal routes: admin, hr_manager, coach
+// Read access: coach, admin, hr_manager, AND coachee (filtered to their own).
+const journalReadAccess = requireRole('admin', 'hr_manager', 'coach', 'coachee');
+// Coach-only operations (create / delete / AI / coach-side fields).
 const journalAccess = requireRole('admin', 'hr_manager', 'coach');
+
+/** Build a per-role engagement filter for journal queries. */
+function journalScope(req: AuthRequest): Record<string, unknown> {
+  const filter: Record<string, unknown> = { organizationId: req.user!.organizationId };
+  if (req.user!.role === 'coach') filter['coachId'] = req.user!.userId;
+  else if (req.user!.role === 'coachee') filter['coacheeId'] = req.user!.userId;
+  return filter;
+}
 
 // ═══════════════════════════════════════════════════════════════════════════
 // SESSION NOTES
@@ -25,13 +35,12 @@ const journalAccess = requireRole('admin', 'hr_manager', 'coach');
 /** List notes for an engagement. */
 router.get(
   '/engagements/:engagementId/notes',
-  journalAccess,
+  journalReadAccess,
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const notes = await JournalSessionNote.find({
-        organizationId: req.user!.organizationId,
+        ...journalScope(req),
         engagementId: req.params['engagementId'],
-        coachId: req.user!.userId,
       })
         .sort({ sessionNumber: -1 })
         .lean();
@@ -40,37 +49,64 @@ router.get(
   }
 );
 
-/** Create a session note. Auto-increments sessionNumber per engagement. */
+/** Create a session note. Auto-increments sessionNumber per engagement.
+ *  Coachees can also create — useful for pre-filling pre-session notes
+ *  before the coach has opened the journal. Coachees may only set
+ *  coacheePre / coacheePost on creation; coach-side fields are stripped.
+ */
 router.post(
   '/engagements/:engagementId/notes',
-  journalAccess,
+  journalReadAccess,
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const engagementId = req.params['engagementId'];
       const orgId = req.user!.organizationId;
-      const coachId = req.user!.userId;
 
-      // Verify engagement exists and belongs to this org
       const engagement = await CoachingEngagement.findOne({
         _id: engagementId,
         organizationId: orgId,
       });
-      if (!engagement) {
-        res.status(404).json({ error: 'Engagement not found' });
-        return;
+      if (!engagement) { res.status(404).json({ error: 'Engagement not found' }); return; }
+
+      // Role-scope: coachees can only create on engagements they're part of;
+      // coaches only on engagements they own.
+      if (req.user!.role === 'coachee' && engagement.coacheeId.toString() !== req.user!.userId) {
+        res.status(403).json({ error: 'Forbidden' }); return;
+      }
+      if (req.user!.role === 'coach' && engagement.coachId.toString() !== req.user!.userId) {
+        res.status(403).json({ error: 'Forbidden' }); return;
       }
 
-      // Auto-increment sessionNumber
+      // If a note already exists for the same sessionId, return it (idempotent).
+      if (req.body.sessionId) {
+        const existing = await JournalSessionNote.findOne({
+          organizationId: orgId,
+          engagementId,
+          sessionId: req.body.sessionId,
+        });
+        if (existing) { res.status(200).json(existing); return; }
+      }
+
       const lastNote = await JournalSessionNote.findOne({ engagementId })
         .sort({ sessionNumber: -1 })
         .select('sessionNumber')
         .lean();
       const sessionNumber = (lastNote?.sessionNumber ?? 0) + 1;
 
+      // For coachees, strip out any coach-side fields they may have sent.
+      const body = { ...req.body };
+      if (req.user!.role === 'coachee') {
+        delete body.preSession;
+        delete body.inSession;
+        delete body.postSession;
+        delete body.aiSummary;
+        delete body.aiThemes;
+      }
+
       const note = await JournalSessionNote.create({
-        ...req.body,
+        ...body,
         organizationId: orgId,
-        coachId,
+        coachId: engagement.coachId,
         engagementId,
         coacheeId: engagement.coacheeId,
         sessionNumber,
@@ -84,13 +120,12 @@ router.post(
 /** Get a single note. */
 router.get(
   '/notes/:noteId',
-  journalAccess,
+  journalReadAccess,
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const note = await JournalSessionNote.findOne({
+        ...journalScope(req),
         _id: req.params['noteId'],
-        organizationId: req.user!.organizationId,
-        coachId: req.user!.userId,
       }).lean();
       if (!note) { res.status(404).json({ error: 'Note not found' }); return; }
       res.json(note);
@@ -98,22 +133,34 @@ router.get(
   }
 );
 
-/** Update a note. */
+/** Update a note.
+ *  Write rules:
+ *    coach / admin / hr_manager → may write preSession, inSession, postSession,
+ *      durationMinutes, format, status, sessionDate
+ *    coachee → may ONLY write coacheePre and coacheePost
+ */
 router.put(
   '/notes/:noteId',
-  journalAccess,
+  journalReadAccess,
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
-      const note = await JournalSessionNote.findOneAndUpdate(
-        {
-          _id: req.params['noteId'],
-          organizationId: req.user!.organizationId,
-          coachId: req.user!.userId,
-        },
-        req.body,
-        { new: true, runValidators: true }
-      );
+      const note = await JournalSessionNote.findOne({
+        ...journalScope(req),
+        _id: req.params['noteId'],
+      });
       if (!note) { res.status(404).json({ error: 'Note not found' }); return; }
+
+      if (req.user!.role === 'coachee') {
+        if (req.body.coacheePre !== undefined) note.coacheePre = req.body.coacheePre;
+        if (req.body.coacheePost !== undefined) note.coacheePost = req.body.coacheePost;
+      } else {
+        // Coach side: prevent overwriting coachee fields by accident.
+        const update = { ...req.body };
+        delete update.coacheePre;
+        delete update.coacheePost;
+        Object.assign(note, update);
+      }
+      await note.save();
       res.json(note);
     } catch (e) { next(e); }
   }

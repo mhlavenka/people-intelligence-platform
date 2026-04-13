@@ -42,6 +42,22 @@ export interface IJournalSessionNote extends Document {
     accountabilityItems: IAccountabilityItem[];
   };
 
+  // Coachee-owned sections. Coachee writes pre/post; coach reads.
+  coacheePre: {
+    moodRating?: number;          // 1–5 (star rating) — current energy/mood
+    topOfMind?: string;           // What's most present / top of mind today
+    mainTopic?: string;           // Main topic or challenge to explore
+    valueDefinition?: string;     // What would make this session valuable
+    recentShifts?: string;        // What changed since last session
+    contextForCoach?: string;     // Anything to share before starting
+  };
+
+  coacheePost: {
+    takeaways?: string;      // What I learned
+    reflection?: string;     // How the session felt
+    commitments?: string;    // What I'll do before next session
+  };
+
   aiSummary?: string;
   aiThemes: string[];
   aiGeneratedAt?: Date;
@@ -93,6 +109,21 @@ const JournalSessionNoteSchema = new Schema<IJournalSessionNote>(
       whatToExplore:      { type: String },
       clientGrowthEdge:  { type: String },
       accountabilityItems: [AccountabilityItemSchema],
+    },
+
+    coacheePre: {
+      moodRating:      { type: Number, min: 1, max: 5 },
+      topOfMind:       { type: String },
+      mainTopic:       { type: String },
+      valueDefinition: { type: String },
+      recentShifts:    { type: String },
+      contextForCoach: { type: String },
+    },
+
+    coacheePost: {
+      takeaways:    { type: String },
+      reflection:   { type: String },
+      commitments:  { type: String },
     },
 
     aiSummary:     { type: String },
