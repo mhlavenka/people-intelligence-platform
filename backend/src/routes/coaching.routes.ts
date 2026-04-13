@@ -100,19 +100,39 @@ router.put(
   }
 );
 
-/** Delete engagement (admin only). */
+/** Delete engagement (admin/hr_manager any; coach only their own). */
 router.delete(
   '/engagements/:id',
-  requireRole('admin'),
+  requireRole('admin', 'hr_manager', 'coach'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
-      const engagement = await CoachingEngagement.findOneAndDelete({
+      const filter: Record<string, unknown> = {
         _id: req.params['id'],
         organizationId: req.user!.organizationId,
-      });
+      };
+      // Coaches can only delete engagements they own.
+      if (req.user!.role === 'coach') filter['coachId'] = req.user!.userId;
+
+      const engagement = await CoachingEngagement.findOneAndDelete(filter);
       if (!engagement) { res.status(404).json({ error: 'Engagement not found' }); return; }
-      // Also delete associated sessions
-      await CoachingSession.deleteMany({ engagementId: req.params['id'], organizationId: req.user!.organizationId });
+
+      // Cascade: delete every session under this engagement and cancel the
+      // paired Booking (if any) so the booking dashboard / GCal sync stays
+      // consistent. Per-session cleanup so propagateSessionDelete fires.
+      const sessions = await CoachingSession.find({
+        engagementId: req.params['id'],
+        organizationId: req.user!.organizationId,
+      });
+      for (const session of sessions) {
+        await propagateSessionDelete(session).catch((err) =>
+          console.error('[BookingSync] cascade session delete failed:', err),
+        );
+      }
+      await CoachingSession.deleteMany({
+        engagementId: req.params['id'],
+        organizationId: req.user!.organizationId,
+      });
+
       res.json({ message: 'Engagement and sessions deleted' });
     } catch (e) { next(e); }
   }
