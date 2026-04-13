@@ -14,6 +14,7 @@ import {
 import {
   createBooking, cancelBooking, clientCancelBooking, rescheduleBooking,
 } from '../services/booking.service';
+import { registerGoogleWebhook } from '../services/calendarWebhook.service';
 
 // ─── Slug helper ────────────────────────────────────────────────────────────
 
@@ -248,6 +249,7 @@ router.put(
       }
 
       const existing = await BookingSettings.findOne({ coachId, organizationId });
+      const prevTarget = existing?.targetCalendarId;
       if (existing) {
         const updateData = { ...body };
         delete updateData.coachId;
@@ -259,6 +261,13 @@ router.put(
         const eventTypes = await AvailabilityConfig.find({ coachId, organizationId });
         for (const et of eventTypes) invalidateSlotCache(et.coachSlug);
 
+        // If the watched calendar changed, re-register the push channel.
+        if (body.targetCalendarId && body.targetCalendarId !== prevTarget) {
+          registerGoogleWebhook(coachId).catch((err) =>
+            console.error('[Webhook] re-register after settings save failed:', err),
+          );
+        }
+
         res.json(existing);
       } else {
         const settings = await BookingSettings.create({
@@ -266,6 +275,11 @@ router.put(
           coachId,
           organizationId,
         });
+        if (body.targetCalendarId) {
+          registerGoogleWebhook(coachId).catch((err) =>
+            console.error('[Webhook] register after first settings save failed:', err),
+          );
+        }
         res.status(201).json(settings);
       }
     } catch (e) { next(e); }

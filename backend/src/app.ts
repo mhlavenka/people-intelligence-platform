@@ -33,7 +33,9 @@ import systemAdminSettingsRoutes from './routes/system-admin-settings.routes';
 import calendarRoutes, { calendarCallbackRouter } from './routes/calendar.routes';
 import bookingRoutes, { publicBookingRouter, publicCoachRouter } from './routes/booking.routes';
 import journalRoutes from './routes/journal.routes';
+import { webhookRouter } from './routes/webhook.routes';
 import { startReminderJob } from './jobs/reminder.job';
+import { startWebhookRenewalJob } from './jobs/webhookRenewal.job';
 
 const app = express();
 
@@ -88,6 +90,7 @@ app.use('/api/journal', journalRoutes);
 app.use('/api/public/booking', publicBookingRouter);
 app.use('/api/public/coach', publicCoachRouter);
 app.use('/api/booking', bookingRoutes);
+app.use('/api/webhooks', webhookRouter); // public — Google push notifications (no auth)
 
 // 404 and error handlers (must be last)
 app.use(notFound);
@@ -97,6 +100,7 @@ app.use(errorHandler);
 async function bootstrap(): Promise<void> {
   await connectDatabase();
   startReminderJob();
+  startWebhookRenewalJob();
   app.listen(config.port, () => {
     console.log(`[Server] Running on port ${config.port} [${config.nodeEnv}]`);
   });

@@ -8,6 +8,10 @@ import {
   exchangeCodeForTokens,
   listCoachCalendars,
 } from '../services/googleCalendar.service';
+import {
+  registerGoogleWebhook,
+  stopGoogleWebhook,
+} from '../services/calendarWebhook.service';
 
 // ── Public callback (no auth required — Google redirects here) ──────────────
 export const calendarCallbackRouter = Router();
@@ -71,6 +75,13 @@ router.post(
         'googleCalendar.calendarId': calendarId,
         'googleCalendar.calendarName': calendarName || calendarId,
       });
+
+      // (Re-)register the push-notification channel for the new target calendar.
+      // No-op when webhooks are disabled by config.
+      registerGoogleWebhook(req.user!.userId).catch((err) =>
+        console.error('[Webhook] post-select registration failed:', err),
+      );
+
       res.json({ message: 'Calendar selected', calendarId, calendarName });
     } catch (e) { next(e); }
   },
@@ -82,6 +93,11 @@ router.delete(
   requireRole('coach'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
+      // Stop the push-notification channel before we lose the tokens.
+      await stopGoogleWebhook(req.user!.userId).catch((err) =>
+        console.error('[Webhook] stop on disconnect failed:', err),
+      );
+
       await User.findByIdAndUpdate(req.user!.userId, {
         'googleCalendar.connected': false,
         'googleCalendar.accessToken': null,

@@ -189,3 +189,32 @@ Outstanding (deferred to B.2 / B.3):
 - G9 — Jest + `mongodb-memory-server` harness and all 8 behavior tests.
 
 ---
+
+## Implementation Log — B.2 (2026-04-12)
+
+Webhook infrastructure has been built end-to-end but remains dormant behind the
+`BOOKING_WEBHOOKS_ENABLED` environment flag. Flip the flag **after** the Apache
+vhost has been configured to proxy `POST /api/webhooks/gcal` to PM2 `artes-backend`.
+
+| # | Task | Status | Files |
+|---|------|--------|-------|
+| 9 | `WebhookState` model + `events.watch()` + channel-renewal cron | IMPLEMENTED (gated) | `backend/src/models/WebhookState.model.ts`, `backend/src/services/calendarWebhook.service.ts`, `backend/src/jobs/webhookRenewal.job.ts`, `backend/src/app.ts` |
+| 10 | `/api/webhooks/gcal` receiver + diff logic via `events.list(updatedMin, showDeleted)` | IMPLEMENTED (gated) | `backend/src/routes/webhook.routes.ts`, `backend/src/services/calendarWebhook.service.ts` |
+
+Integration points that call `registerGoogleWebhook` when webhooks are enabled:
+- `POST /api/calendar/select` — after coach picks the target calendar
+- `PUT /api/booking/settings` — if `targetCalendarId` changed
+- `DELETE /api/calendar/disconnect` — calls `stopGoogleWebhook` before clearing tokens
+- `startWebhookRenewalJob` — hourly cron; re-registers any channel expiring within 2 days
+
+Deployment checklist (when the vhost is ready):
+1. Point `https://pip.helenacoaching.com/api/webhooks/gcal` (or whichever public host maps to the artes backend) at PM2 `artes-backend:3030`.
+2. Set `BOOKING_WEBHOOKS_ENABLED=true` in the backend env.
+3. Set `PUBLIC_API_BASE_URL=https://<public-host>` so `webhookAddress()` registers the correct HTTPS URL with Google.
+4. Set `GOOGLE_WEBHOOK_SECRET` to any random string; this is echoed back by Google as `X-Goog-Channel-Token` and the handler verifies it.
+5. Coaches must re-save their booking settings (or re-select their target calendar) to trigger channel registration. Alternatively, call `registerGoogleWebhook(coachId)` for each connected coach in a one-off script.
+
+Outstanding (deferred to B.3):
+- G9 — Jest + `mongodb-memory-server` harness and all 8 behavior tests.
+
+---

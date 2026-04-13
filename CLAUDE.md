@@ -201,8 +201,8 @@ Our sync model mirrors Calendly's verified behavior:
 
 | Direction | Trigger | Effect | Implemented |
 |-----------|---------|--------|-------------|
-| GCal → System | Coach deletes/declines event | Booking cancelled, client emailed | **Not yet** (needs webhook infra — see audit doc) |
-| GCal → System | Coach reschedules event | Booking time updated, client emailed | **Not yet** (same dependency) |
+| GCal → System | Coach deletes/declines event | Booking cancelled, client emailed | ✓ (gated by `BOOKING_WEBHOOKS_ENABLED`) |
+| GCal → System | Coach reschedules event | Booking time updated, client emailed | ✓ (same gate) |
 | GCal → System | Client deletes event | No effect (we watch coach calendar only) | ✓ by design |
 | GCal → System | FREE event added | No effect (freebusy API excludes FREE) | ✓ |
 | System → GCal | Booking created | GCal event created in `targetCalendarId` | ✓ |
@@ -214,4 +214,5 @@ Key implementation notes:
 - `cancelBooking()` is idempotent: handles missing `googleEventId`, swallows GCal 404/410 with an INFO log, logs other failures at ERROR. MongoDB state is always updated regardless of GCal outcome.
 - `rescheduleBooking(id, newStart, newEnd, triggeredBy)` supports `'admin'` (update GCal, email both) and `'coach_gcal'` (skip GCal update, email client only). `Booking.rescheduleHistory` records every change.
 - Reminder cron filters `startTime >= now` at the Mongo layer and has a per-loop defensive guard.
-- Full gap audit and outstanding items (webhook receiver, test harness) are in `docs/booking-sync-audit.md`.
+- Google push-notification channels are registered via `registerGoogleWebhook(coachId)` after calendar select / settings save, stopped on disconnect, and renewed hourly when within 2 days of expiry. Notifications land on `POST /api/webhooks/gcal`; the handler validates `X-Goog-Channel-ID` / `X-Goog-Resource-ID` + the optional `X-Goog-Channel-Token` against `GOOGLE_WEBHOOK_SECRET`, then uses `calendar.events.list(updatedMin, showDeleted)` to diff changes. Activate with `BOOKING_WEBHOOKS_ENABLED=true` after the Apache vhost proxies `/api/webhooks/gcal` to PM2.
+- Full gap audit and outstanding items (test harness) are in `docs/booking-sync-audit.md`.

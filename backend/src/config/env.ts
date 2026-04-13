@@ -42,6 +42,11 @@ export const config = {
     cancelTokenSecret: process.env['CANCEL_TOKEN_JWT_SECRET'] || 'cancel-token-fallback',
     webhookSecret: process.env['GOOGLE_WEBHOOK_SECRET'] || '',
     apiBaseUrl: process.env['API_BASE_URL'] || 'http://localhost:3030',
+    // Gate Google Calendar push-notification subscriptions. Keep OFF until
+    // the public HTTPS path /api/webhooks/gcal is reachable from Google
+    // (Apache vhost must proxy it to the PM2 artes-backend).
+    webhooksEnabled: process.env['BOOKING_WEBHOOKS_ENABLED'] === 'true',
+    publicApiBaseUrl: process.env['PUBLIC_API_BASE_URL'] || process.env['API_BASE_URL'] || '',
   },
   webauthn: {
     rpName: process.env['WEBAUTHN_RP_NAME'] || 'Artes Hub',
