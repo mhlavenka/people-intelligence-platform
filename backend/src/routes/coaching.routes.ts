@@ -32,14 +32,22 @@ async function isCalendarConnected(coachId: string): Promise<boolean> {
 // ENGAGEMENTS
 // ═══════════════════════════════════════════════════════════════════════════
 
-/** List engagements — coaches see all, coachees see own only. */
+/** Per-role scoping for coaching reads.
+ *  - admin / hr_manager: see everything in the org
+ *  - coach:              see only engagements/sessions where they are the coach
+ *  - coachee:            see only engagements/sessions where they are the coachee
+ */
+function scopeCoachingFilter(req: AuthRequest, base: Record<string, unknown> = {}): Record<string, unknown> {
+  const filter: Record<string, unknown> = { ...base, organizationId: req.user!.organizationId };
+  if (req.user!.role === 'coach') filter['coachId'] = req.user!.userId;
+  if (req.user!.role === 'coachee') filter['coacheeId'] = req.user!.userId;
+  return filter;
+}
+
+/** List engagements — scoped per role. */
 router.get('/engagements', async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const filter: Record<string, unknown> = { organizationId: req.user!.organizationId };
-    if (req.user!.role === 'coachee') {
-      filter['coacheeId'] = req.user!.userId;
-    }
-    const engagements = await CoachingEngagement.find(filter)
+    const engagements = await CoachingEngagement.find(scopeCoachingFilter(req))
       .populate('coacheeId', 'firstName lastName email department profilePicture')
       .populate('coachId', 'firstName lastName')
       .sort({ createdAt: -1 });
@@ -47,13 +55,12 @@ router.get('/engagements', async (req: AuthRequest, res: Response, next: NextFun
   } catch (e) { next(e); }
 });
 
-/** Get single engagement. */
+/** Get single engagement (scoped per role). */
 router.get('/engagements/:id', async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const engagement = await CoachingEngagement.findOne({
-      _id: req.params['id'],
-      organizationId: req.user!.organizationId,
-    })
+    const engagement = await CoachingEngagement.findOne(
+      scopeCoachingFilter(req, { _id: req.params['id'] }),
+    )
       .populate('coacheeId', 'firstName lastName email department profilePicture')
       .populate('coachId', 'firstName lastName');
     if (!engagement) { res.status(404).json({ error: 'Engagement not found' }); return; }
@@ -149,12 +156,12 @@ router.delete(
 // SESSIONS
 // ═══════════════════════════════════════════════════════════════════════════
 
-/** List sessions — filterable by engagement. Coachees see shared notes only. */
+/** List sessions — scoped per role. Coachees see shared notes only. */
 router.get('/sessions', async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const filter: Record<string, unknown> = { organizationId: req.user!.organizationId };
-    if (req.query['engagementId']) filter['engagementId'] = req.query['engagementId'];
-    if (req.user!.role === 'coachee') filter['coacheeId'] = req.user!.userId;
+    const base: Record<string, unknown> = {};
+    if (req.query['engagementId']) base['engagementId'] = req.query['engagementId'];
+    const filter = scopeCoachingFilter(req, base);
 
     const selectFields = req.user!.role === 'coachee'
       ? '-coachNotes'   // NEVER expose private coach notes to coachees
@@ -169,14 +176,13 @@ router.get('/sessions', async (req: AuthRequest, res: Response, next: NextFuncti
   } catch (e) { next(e); }
 });
 
-/** Get single session. */
+/** Get single session (scoped per role). */
 router.get('/sessions/:id', async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const selectFields = req.user!.role === 'coachee' ? '-coachNotes' : undefined;
-    const session = await CoachingSession.findOne({
-      _id: req.params['id'],
-      organizationId: req.user!.organizationId,
-    })
+    const session = await CoachingSession.findOne(
+      scopeCoachingFilter(req, { _id: req.params['id'] }),
+    )
       .select(selectFields as string)
       .populate('coacheeId', 'firstName lastName profilePicture')
       .populate('coachId', 'firstName lastName');
@@ -338,9 +344,7 @@ router.delete(
 
 router.get('/dashboard', async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const orgId = req.user!.organizationId;
-    const filter: Record<string, unknown> = { organizationId: orgId };
-    if (req.user!.role === 'coachee') filter['coacheeId'] = req.user!.userId;
+    const filter = scopeCoachingFilter(req);
 
     const [engagements, sessions] = await Promise.all([
       CoachingEngagement.find(filter).lean(),
@@ -391,11 +395,15 @@ router.get(
       const orgId = req.user!.organizationId;
       const coacheeId = req.params['coacheeId'];
 
-      const engagements = await CoachingEngagement.find({
+      const billingFilter: Record<string, unknown> = {
         organizationId: orgId,
         coacheeId,
         rebillCoachee: true,
-      })
+      };
+      // Coaches can only see billing for engagements they own.
+      if (req.user!.role === 'coach') billingFilter['coachId'] = req.user!.userId;
+
+      const engagements = await CoachingEngagement.find(billingFilter)
         .populate('coachId', 'firstName lastName')
         .lean();
 
