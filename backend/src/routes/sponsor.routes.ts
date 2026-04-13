@@ -31,6 +31,22 @@ async function sponsorIdsForCoach(coachId: string, orgId: string): Promise<mongo
   return engagements.map((e) => e.sponsorId).filter(Boolean) as mongoose.Types.ObjectId[];
 }
 
+// ─── Tax-rates lookup (UI dropdown) ─────────────────────────────────────────
+// MUST be declared BEFORE GET /:id otherwise Express matches "tax-rates"
+// against the :id parameter and never reaches this handler.
+router.get(
+  '/tax-rates',
+  requireRole('admin', 'hr_manager', 'coach'),
+  async (_req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const provinces = CANADIAN_PROVINCES.map((p) => ({
+        ...p, ...getTaxRates('CA', p.code),
+      }));
+      res.json({ provinces });
+    } catch (e) { next(e); }
+  },
+);
+
 // ─── List ───────────────────────────────────────────────────────────────────
 // Sponsors are an organization-wide resource: every coach/admin/HR sees
 // every sponsor in their org.
@@ -506,23 +522,6 @@ router.get(
       if (!invoice) { res.status(404).json({ error: 'Invoice not found' }); return; }
 
       res.json({ invoice, sponsor });
-    } catch (e) { next(e); }
-  },
-);
-
-// ─── Tax-rates lookup (UI dropdown) ─────────────────────────────────────────
-// Same payload shape system-admin billing already exposes. Available to
-// any signed-in coach/admin/HR so the sponsor dialog can render the
-// province dropdown without needing system-admin access.
-router.get(
-  '/tax-rates',
-  requireRole('admin', 'hr_manager', 'coach'),
-  async (_req: AuthRequest, res: Response, next: NextFunction) => {
-    try {
-      const provinces = CANADIAN_PROVINCES.map((p) => ({
-        ...p, ...getTaxRates('CA', p.code),
-      }));
-      res.json({ provinces });
     } catch (e) { next(e); }
   },
 );
