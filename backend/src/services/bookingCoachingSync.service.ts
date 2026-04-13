@@ -92,28 +92,42 @@ export async function linkBookingToCoaching(
   coacheeId: string,
 ): Promise<void> {
   const coachee = await User.findById(coacheeId).select(
-    '_id organizationId role firstName lastName',
+    '_id organizationId role firstName lastName email',
   );
   if (!coachee) return;
   if (coachee.role !== 'coachee') return;
   if (coachee.organizationId.toString() !== booking.organizationId.toString()) return;
 
   // Find or create the engagement.
-  // setOptions(bypassTenantCheck) silences the tenant-filter warning;
-  // the filter itself is explicit in the query.
-  const engagementFilter = {
-    organizationId: booking.organizationId,
-    coacheeId: coachee._id,
-    coachId: booking.coachId,
-  };
-  let engagement = await CoachingEngagement
-    .findOne(engagementFilter)
+  // Match on (coachId, orgId, status='active') AND (coacheeId === me OR
+  // the linked coachee's email matches mine). This handles cases where
+  // the engagement was originally created for a coachee record that has
+  // since been replaced by a new User document with the same email.
+  // Cancelled / completed engagements are deliberately ignored — they
+  // would be misleading to attach a new session to.
+  const candidates = await CoachingEngagement
+    .find({
+      organizationId: booking.organizationId,
+      coachId: booking.coachId,
+      status: 'active',
+    })
+    .populate('coacheeId', 'email')
     .setOptions({ bypassTenantCheck: true });
+
+  const myId = coachee._id.toString();
+  const myEmail = coachee.email?.toLowerCase();
+  let engagement = candidates.find((e) => {
+    // After populate, coacheeId is a User document with _id + email.
+    const populated = e.coacheeId as unknown as { _id?: unknown; email?: string } | null;
+    if (populated?._id && String(populated._id) === myId) return true;
+    if (myEmail && populated?.email && populated.email.toLowerCase() === myEmail) return true;
+    return false;
+  }) || null;
 
   if (!engagement) {
     console.info(
-      `[BookingSync] No engagement for coachee=${coachee._id} coach=${booking.coachId} ` +
-      `org=${booking.organizationId} — creating new`,
+      `[BookingSync] No active engagement for coachee=${coachee._id} (${coachee.email}) ` +
+      `coach=${booking.coachId} org=${booking.organizationId} — creating new`,
     );
     engagement = await CoachingEngagement.create({
       organizationId: booking.organizationId,

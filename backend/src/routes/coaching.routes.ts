@@ -8,8 +8,8 @@ import * as gcal from '../services/googleCalendar.service';
 import {
   mirrorSessionToBooking,
   propagateSessionUpdate,
-  propagateSessionDelete,
 } from '../services/bookingCoachingSync.service';
+import { cancelBooking } from '../services/booking.service';
 
 const router = Router();
 router.use(authenticateToken, tenantResolver);
@@ -117,16 +117,23 @@ router.delete(
       if (!engagement) { res.status(404).json({ error: 'Engagement not found' }); return; }
 
       // Cascade: delete every session under this engagement and cancel the
-      // paired Booking (if any) so the booking dashboard / GCal sync stays
-      // consistent. Per-session cleanup so propagateSessionDelete fires.
+      // paired Booking + GCal event for each one. cancelBooking handles
+      // GCal delete + email + cache invalidation for booking-paired
+      // sessions; standalone sessions get a direct GCal delete fallback.
       const sessions = await CoachingSession.find({
         engagementId: req.params['id'],
         organizationId: req.user!.organizationId,
       });
       for (const session of sessions) {
-        await propagateSessionDelete(session).catch((err) =>
-          console.error('[BookingSync] cascade session delete failed:', err),
-        );
+        if (session.bookingId) {
+          await cancelBooking(session.bookingId.toString(), 'coach', 'Engagement deleted')
+            .catch((err) => console.error('[BookingSync] cascade cancelBooking failed:', err));
+        } else if (session.googleEventId) {
+          if (await isCalendarConnected(session.coachId.toString())) {
+            await gcal.deleteCalendarEvent(session.coachId.toString(), session.googleEventId)
+              .catch((calErr) => console.warn('[GCal] cascade delete failed:', calErr));
+          }
+        }
       }
       await CoachingSession.deleteMany({
         engagementId: req.params['id'],
@@ -295,19 +302,29 @@ router.delete(
       });
       if (!session) { res.status(404).json({ error: 'Session not found' }); return; }
 
-      // Cancel the linked Booking (if any). Done before GCal delete so the
-      // Booking row is in a consistent state regardless of GCal outcome.
-      await propagateSessionDelete(session).catch((err) =>
-        console.error('[BookingSync] Failed to propagate session delete:', err),
-      );
-
-      // Google Calendar sync
-      try {
-        if (session.googleEventId && await isCalendarConnected(session.coachId.toString())) {
-          await gcal.deleteCalendarEvent(session.coachId.toString(), session.googleEventId);
+      // If the session has a paired Booking, cancel through cancelBooking()
+      // so GCal delete + cancellation email + cache invalidation all run.
+      // For sessions without a paired Booking (manually created, no public
+      // flow), fall back to deleting the GCal event directly.
+      if (session.bookingId) {
+        try {
+          await cancelBooking(session.bookingId.toString(), 'coach', 'Session deleted');
+        } catch (err) {
+          console.error('[BookingSync] cancelBooking on session delete failed:', err);
+          // Best-effort fallback: at least attempt the GCal delete.
+          if (session.googleEventId && await isCalendarConnected(session.coachId.toString())) {
+            await gcal.deleteCalendarEvent(session.coachId.toString(), session.googleEventId)
+              .catch((calErr) => console.warn('[GCal] fallback delete failed:', calErr));
+          }
         }
-      } catch (calErr) {
-        console.warn('[GCal] Failed to delete event:', calErr);
+      } else {
+        try {
+          if (session.googleEventId && await isCalendarConnected(session.coachId.toString())) {
+            await gcal.deleteCalendarEvent(session.coachId.toString(), session.googleEventId);
+          }
+        } catch (calErr) {
+          console.warn('[GCal] Failed to delete event:', calErr);
+        }
       }
 
       res.json({ message: 'Session deleted' });
