@@ -50,9 +50,15 @@ export interface SessionNote {
     contextForCoach?: string;
   };
   coacheePost?: {
-    takeaways?: string;
-    reflection?: string;
-    commitments?: string;
+    biggestInsight?: string;
+    whatShifted?: string;
+    commitment1?: string;
+    commitment2?: string;
+    commitment3?: string;
+    followThroughConfidence?: number;
+    sessionRating?: number;
+    exploreNext?: string;
+    feedbackForCoach?: string;
   };
   aiSummary?: string;
   aiThemes: string[];

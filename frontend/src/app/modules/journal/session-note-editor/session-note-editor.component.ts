@@ -209,14 +209,40 @@ import { ApiService } from '../../../core/api.service';
                     <mat-icon>person_outline</mat-icon>
                     <span>Coachee's post-session reflection</span>
                   </div>
-                  @if (note.coacheePost?.takeaways) {
-                    <div class="ro-field"><label>Takeaways</label><p>{{ note.coacheePost!.takeaways }}</p></div>
+                  @if (note.coacheePost?.biggestInsight) {
+                    <div class="ro-field"><label>Biggest insight</label><p>{{ note.coacheePost!.biggestInsight }}</p></div>
                   }
-                  @if (note.coacheePost?.reflection) {
-                    <div class="ro-field"><label>Reflection</label><p>{{ note.coacheePost!.reflection }}</p></div>
+                  @if (note.coacheePost?.whatShifted) {
+                    <div class="ro-field"><label>What shifted</label><p>{{ note.coacheePost!.whatShifted }}</p></div>
                   }
-                  @if (note.coacheePost?.commitments) {
-                    <div class="ro-field"><label>Commitments</label><p>{{ note.coacheePost!.commitments }}</p></div>
+                  @if (coacheeCommitments().length) {
+                    <div class="ro-field"><label>Commitments</label>
+                      <ul class="commitment-list">
+                        @for (c of coacheeCommitments(); track $index) { <li>{{ c }}</li> }
+                      </ul>
+                    </div>
+                  }
+                  @if (note.coacheePost?.followThroughConfidence) {
+                    <div class="ro-field"><label>Follow-through confidence</label>
+                      <p>{{ note.coacheePost!.followThroughConfidence }} / 10</p>
+                    </div>
+                  }
+                  @if (note.coacheePost?.sessionRating) {
+                    <div class="ro-field">
+                      <label>Session rating</label>
+                      <p class="stars-ro">
+                        @for (i of [1,2,3,4,5]; track i) {
+                          <mat-icon>{{ (note.coacheePost!.sessionRating || 0) >= i ? 'star' : 'star_border' }}</mat-icon>
+                        }
+                        <span class="rating-num">({{ note.coacheePost!.sessionRating }}/5)</span>
+                      </p>
+                    </div>
+                  }
+                  @if (note.coacheePost?.exploreNext) {
+                    <div class="ro-field"><label>Explore next</label><p>{{ note.coacheePost!.exploreNext }}</p></div>
+                  }
+                  @if (note.coacheePost?.feedbackForCoach) {
+                    <div class="ro-field"><label>Feedback for coach</label><p>{{ note.coacheePost!.feedbackForCoach }}</p></div>
                   }
                 </div>
               }
@@ -277,6 +303,9 @@ import { ApiService } from '../../../core/api.service';
         mat-icon { color: #f5b042; font-size: 18px; width: 18px; height: 18px; }
         .rating-num { color: #6b7c93; font-size: 12px; margin-left: 6px; }
       }
+      .commitment-list { margin: 4px 0 0; padding-left: 20px; color: #1B2A47;
+        li { font-size: 14px; margin-bottom: 2px; }
+      }
     }
     .full-width { width: 100%; }
     .flex-grow { flex: 1; }
@@ -335,7 +364,12 @@ export class SessionNoteEditorComponent implements OnInit {
   // Read-only mirror of what the coachee wrote (rendered in the Before / After tabs).
   note: {
     coacheePre?: { moodRating?: number; topOfMind?: string; mainTopic?: string; valueDefinition?: string; recentShifts?: string; contextForCoach?: string };
-    coacheePost?: { takeaways?: string; reflection?: string; commitments?: string };
+    coacheePost?: {
+      biggestInsight?: string; whatShifted?: string;
+      commitment1?: string; commitment2?: string; commitment3?: string;
+      followThroughConfidence?: number; sessionRating?: number;
+      exploreNext?: string; feedbackForCoach?: string;
+    };
   } = {};
 
   hasCoacheePre(): boolean {
@@ -344,7 +378,17 @@ export class SessionNoteEditorComponent implements OnInit {
   }
   hasCoacheePost(): boolean {
     const p = this.note.coacheePost;
-    return !!(p && (p.takeaways || p.reflection || p.commitments));
+    return !!(p && (
+      p.biggestInsight || p.whatShifted ||
+      p.commitment1 || p.commitment2 || p.commitment3 ||
+      p.followThroughConfidence || p.sessionRating ||
+      p.exploreNext || p.feedbackForCoach
+    ));
+  }
+  coacheeCommitments(): string[] {
+    const p = this.note.coacheePost;
+    if (!p) return [];
+    return [p.commitment1, p.commitment2, p.commitment3].filter(Boolean) as string[];
   }
 
   constructor(

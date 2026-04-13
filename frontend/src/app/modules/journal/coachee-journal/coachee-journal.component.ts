@@ -157,24 +157,106 @@ interface CoachingSession {
 
                 <mat-tab label="Post">
                   <div class="tab-body">
-                    <p class="hint">Filled by you after the session. Your coach can read this.</p>
-                    <mat-form-field appearance="outline" class="full">
-                      <mat-label>Takeaways — what I learned</mat-label>
-                      <textarea matInput rows="3" [(ngModel)]="forms[s._id].post.takeaways"></textarea>
-                    </mat-form-field>
-                    <mat-form-field appearance="outline" class="full">
-                      <mat-label>Reflection — how the session felt</mat-label>
-                      <textarea matInput rows="3" [(ngModel)]="forms[s._id].post.reflection"></textarea>
-                    </mat-form-field>
-                    <mat-form-field appearance="outline" class="full">
-                      <mat-label>Commitments — what I'll do before next session</mat-label>
-                      <textarea matInput rows="3" [(ngModel)]="forms[s._id].post.commitments"></textarea>
-                    </mat-form-field>
-                    <button mat-flat-button color="primary"
-                            (click)="save(s, 'post')" [disabled]="forms[s._id].saving">
-                      @if (forms[s._id].saving) { <mat-spinner diameter="16" /> }
-                      Save post-session
-                    </button>
+                    @if (s.status !== 'completed') {
+                      <div class="locked-state">
+                        <mat-icon>lock</mat-icon>
+                        <p>Available after the session is completed.</p>
+                      </div>
+                    } @else {
+                      <p class="hint">Filled by you after the session. Your coach can read this.</p>
+
+                      <p class="section-label"><span class="pip-accent"></span>Reflections</p>
+                      <div class="field">
+                        <label>What was your biggest insight or "aha" moment from this session?</label>
+                        <mat-form-field appearance="outline" class="full">
+                          <textarea matInput rows="3"
+                                    placeholder="What landed most powerfully for you?"
+                                    [(ngModel)]="forms[s._id].post.biggestInsight"></textarea>
+                        </mat-form-field>
+                      </div>
+                      <div class="field">
+                        <label>What feels different, clearer, or shifted after today's conversation?</label>
+                        <mat-form-field appearance="outline" class="full">
+                          <textarea matInput rows="3"
+                                    placeholder="A new perspective, a decision made, something released…"
+                                    [(ngModel)]="forms[s._id].post.whatShifted"></textarea>
+                        </mat-form-field>
+                      </div>
+
+                      <p class="section-label"><span class="pip-accent"></span>Commitments &amp; next steps</p>
+                      <div class="action-grid">
+                        <div class="action-item">
+                          <div class="action-num">1</div>
+                          <input type="text" class="action-input"
+                                 placeholder="Action or commitment…"
+                                 [(ngModel)]="forms[s._id].post.commitment1" />
+                        </div>
+                        <div class="action-item">
+                          <div class="action-num">2</div>
+                          <input type="text" class="action-input"
+                                 placeholder="Action or commitment…"
+                                 [(ngModel)]="forms[s._id].post.commitment2" />
+                        </div>
+                        <div class="action-item">
+                          <div class="action-num">3</div>
+                          <input type="text" class="action-input"
+                                 placeholder="Action or commitment…"
+                                 [(ngModel)]="forms[s._id].post.commitment3" />
+                        </div>
+                      </div>
+
+                      <div class="field" style="margin-top: 1rem">
+                        <label>How confident are you that you will follow through on these commitments?</label>
+                        <div class="slider-row">
+                          <input type="range" min="1" max="10"
+                                 [(ngModel)]="forms[s._id].post.followThroughConfidence" />
+                          <span class="slider-val">{{ forms[s._id].post.followThroughConfidence || 1 }}</span>
+                        </div>
+                        <div class="scale-labels"><span>1 — not confident</span><span>10 — fully committed</span></div>
+                      </div>
+
+                      <p class="section-label"><span class="pip-accent"></span>Session feedback</p>
+                      <div class="field">
+                        <label>How would you rate the overall value of this session?</label>
+                        <div class="stars">
+                          @for (i of [1,2,3,4,5]; track i) {
+                            <button type="button" class="star-btn"
+                                    [class.filled]="(forms[s._id].post.sessionRating || 0) >= i"
+                                    (click)="forms[s._id].post.sessionRating = i">
+                              <mat-icon>{{ (forms[s._id].post.sessionRating || 0) >= i ? 'star' : 'star_border' }}</mat-icon>
+                            </button>
+                          }
+                          @if (forms[s._id].post.sessionRating) {
+                            <button type="button" class="clear-btn"
+                                    (click)="forms[s._id].post.sessionRating = undefined">Clear</button>
+                          }
+                        </div>
+                      </div>
+
+                      <div class="field">
+                        <label>Is there anything you'd like to explore further in your next session?</label>
+                        <mat-form-field appearance="outline" class="full">
+                          <textarea matInput rows="3"
+                                    placeholder="Themes to continue, questions that came up, topics to deepen…"
+                                    [(ngModel)]="forms[s._id].post.exploreNext"></textarea>
+                        </mat-form-field>
+                      </div>
+
+                      <div class="field">
+                        <label>Any other feedback or reflections for your coach?</label>
+                        <mat-form-field appearance="outline" class="full">
+                          <textarea matInput rows="3"
+                                    placeholder="What worked well? What could be different?"
+                                    [(ngModel)]="forms[s._id].post.feedbackForCoach"></textarea>
+                        </mat-form-field>
+                      </div>
+
+                      <button mat-flat-button color="primary"
+                              (click)="save(s, 'post')" [disabled]="forms[s._id].saving">
+                        @if (forms[s._id].saving) { <mat-spinner diameter="16" /> }
+                        Save post-session
+                      </button>
+                    }
                   </div>
                 </mat-tab>
               </mat-tab-group>
@@ -255,7 +337,42 @@ interface CoachingSession {
     }
     .scale-labels {
       display: flex; justify-content: space-between;
-      font-size: 11px; color: #9aa5b4; margin-top: 4px; max-width: 200px;
+      font-size: 11px; color: #9aa5b4; margin-top: 4px; max-width: 320px;
+    }
+
+    .locked-state {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 36px 16px; gap: 8px; color: #9aa5b4;
+      mat-icon { font-size: 36px; width: 36px; height: 36px; color: #c8d3df; }
+      p { margin: 0; font-size: 14px; }
+    }
+
+    .action-grid {
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .action-item {
+      display: flex; align-items: center; gap: 10px;
+      background: #f7f9fc; border-radius: 8px; padding: 8px 12px;
+    }
+    .action-num {
+      width: 24px; height: 24px; border-radius: 50%;
+      background: #3A9FD6; color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 12px; flex-shrink: 0;
+    }
+    .action-input {
+      flex: 1; border: none; background: transparent;
+      font: inherit; padding: 6px 4px; min-width: 0;
+      &:focus { outline: none; }
+    }
+
+    .slider-row {
+      display: flex; align-items: center; gap: 12px; max-width: 320px;
+      input[type="range"] { flex: 1; }
+      .slider-val {
+        font-weight: 700; color: #1B2A47; min-width: 22px;
+        text-align: center;
+      }
     }
   `],
 })
@@ -274,7 +391,17 @@ export class CoacheeJournalComponent implements OnInit {
       recentShifts: string;
       contextForCoach: string;
     };
-    post: { takeaways: string; reflection: string; commitments: string };
+    post: {
+      biggestInsight: string;
+      whatShifted: string;
+      commitment1: string;
+      commitment2: string;
+      commitment3: string;
+      followThroughConfidence?: number;
+      sessionRating?: number;
+      exploreNext: string;
+      feedbackForCoach: string;
+    };
     saving: boolean;
   }> = {};
 
@@ -319,9 +446,15 @@ export class CoacheeJournalComponent implements OnInit {
             contextForCoach: n?.coacheePre?.contextForCoach || '',
           },
           post: {
-            takeaways: n?.coacheePost?.takeaways || '',
-            reflection: n?.coacheePost?.reflection || '',
-            commitments: n?.coacheePost?.commitments || '',
+            biggestInsight: n?.coacheePost?.biggestInsight || '',
+            whatShifted: n?.coacheePost?.whatShifted || '',
+            commitment1: n?.coacheePost?.commitment1 || '',
+            commitment2: n?.coacheePost?.commitment2 || '',
+            commitment3: n?.coacheePost?.commitment3 || '',
+            followThroughConfidence: n?.coacheePost?.followThroughConfidence,
+            sessionRating: n?.coacheePost?.sessionRating,
+            exploreNext: n?.coacheePost?.exploreNext || '',
+            feedbackForCoach: n?.coacheePost?.feedbackForCoach || '',
           },
           saving: false,
         };

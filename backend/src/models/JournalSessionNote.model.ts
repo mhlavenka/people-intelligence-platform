@@ -53,9 +53,18 @@ export interface IJournalSessionNote extends Document {
   };
 
   coacheePost: {
-    takeaways?: string;      // What I learned
-    reflection?: string;     // How the session felt
-    commitments?: string;    // What I'll do before next session
+    // Reflections
+    biggestInsight?: string;          // Biggest insight or 'aha' moment
+    whatShifted?: string;             // What feels different / shifted
+    // Commitments & next steps
+    commitment1?: string;
+    commitment2?: string;
+    commitment3?: string;
+    followThroughConfidence?: number; // 1–10
+    // Session feedback
+    sessionRating?: number;           // 1–5 stars
+    exploreNext?: string;             // What to explore next session
+    feedbackForCoach?: string;        // Feedback for the coach
   };
 
   aiSummary?: string;
@@ -121,9 +130,15 @@ const JournalSessionNoteSchema = new Schema<IJournalSessionNote>(
     },
 
     coacheePost: {
-      takeaways:    { type: String },
-      reflection:   { type: String },
-      commitments:  { type: String },
+      biggestInsight:          { type: String },
+      whatShifted:             { type: String },
+      commitment1:             { type: String },
+      commitment2:             { type: String },
+      commitment3:             { type: String },
+      followThroughConfidence: { type: Number, min: 1, max: 10 },
+      sessionRating:           { type: Number, min: 1, max: 5 },
+      exploreNext:             { type: String },
+      feedbackForCoach:        { type: String },
     },
 
     aiSummary:     { type: String },

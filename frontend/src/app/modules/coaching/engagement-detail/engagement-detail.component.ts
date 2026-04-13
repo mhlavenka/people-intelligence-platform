@@ -139,12 +139,9 @@ interface Session {
             }
           </div>
 
-          <!-- Coachee: book + mini calendar -->
+          <!-- Coachee: mini calendar (Book a Session moved into the session list as a + tile) -->
           @if (!canManage()) {
             <div class="coachee-calendar">
-              <button mat-raised-button color="primary" class="book-btn" (click)="bookSession()">
-                <mat-icon>calendar_month</mat-icon> Book a Session
-              </button>
               <div class="cal-card">
                 <div class="cal-header-row">
                   <button mat-icon-button (click)="prevMonth()"><mat-icon>chevron_left</mat-icon></button>
@@ -327,13 +324,13 @@ interface Session {
                               <p>{{ note.inSession!.observations! | slice:0:150 }}{{ note.inSession!.observations!.length > 150 ? '...' : '' }}</p>
                             </div>
                           }
-                          @if (note.coacheePost?.takeaways) {
+                          @if (note.coacheePost?.biggestInsight) {
                             <div class="journal-field">
-                              <span class="journal-field-label">My takeaways</span>
-                              <p>{{ note.coacheePost!.takeaways! | slice:0:120 }}{{ note.coacheePost!.takeaways!.length > 120 ? '...' : '' }}</p>
+                              <span class="journal-field-label">My biggest insight</span>
+                              <p>{{ note.coacheePost!.biggestInsight! | slice:0:120 }}{{ note.coacheePost!.biggestInsight!.length > 120 ? '...' : '' }}</p>
                             </div>
                           }
-                          @if (!note.coacheePre?.mainTopic && !note.inSession?.observations && !note.coacheePost?.takeaways) {
+                          @if (!note.coacheePre?.mainTopic && !note.inSession?.observations && !note.coacheePost?.biggestInsight) {
                             <p class="journal-empty-hint">No content yet — open to add your pre/post notes.</p>
                           }
                         }
@@ -356,6 +353,14 @@ interface Session {
                   </div>
                 </div>
               </div>
+            }
+
+            <!-- Coachee: 'Book a Session' as an empty + tile after the list -->
+            @if (!canManage()) {
+              <button class="session-card add-session-card" type="button" (click)="bookSession()">
+                <mat-icon class="add-icon">add</mat-icon>
+                <span class="add-label">Book a session</span>
+              </button>
             }
           </div>
         </div>
@@ -465,6 +470,20 @@ interface Session {
       &.status-scheduled { border-left-color: #3A9FD6; }
       &.status-cancelled { border-left-color: #9aa5b4; opacity: 0.7; }
       &.status-no_show { border-left-color: #e53e3e; opacity: 0.7; }
+    }
+    .add-session-card {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      width: 100%; min-height: 96px;
+      background: transparent; border: 2px dashed #c8d3df; border-left: 2px dashed #c8d3df;
+      color: #6b7c93; cursor: pointer; padding: 16px;
+      transition: border-color 0.15s, color 0.15s, background 0.15s;
+      box-shadow: none;
+      &:hover {
+        border-color: #3A9FD6; color: #3A9FD6;
+        background: rgba(58,159,214,0.04);
+      }
+      .add-icon { font-size: 28px; width: 28px; height: 28px; }
+      .add-label { font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
     }
 
     .session-header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
