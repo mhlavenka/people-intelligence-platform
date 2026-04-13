@@ -614,11 +614,25 @@ export class EngagementDetailComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.engId = this.route.snapshot.params['id'];
-    this.load();
+    // Subscribe to params (not snapshot) so navigating between engagements
+    // via router-link reuses the same component instance but still reloads
+    // for the new id. Otherwise the page keeps the prior engagement's
+    // sessions while the URL changes underneath.
+    this.route.params.subscribe((params) => {
+      const id = params['id'];
+      if (!id || id === this.engId) return;
+      this.engId = id;
+      this.load();
+    });
   }
 
   load(): void {
+    // Clear stale data so the calendar / list don't briefly show the
+    // previous engagement's sessions while the new fetch is in-flight.
+    this.sessions.set([]);
+    this.engagement.set(null);
+    this.notesBySession.clear();
+
     this.loading.set(true);
     const promises: [Promise<any>, Promise<Session[] | undefined>, Promise<SessionNote[] | undefined>] = [
       this.api.get(`/coaching/engagements/${this.engId}`).toPromise(),
