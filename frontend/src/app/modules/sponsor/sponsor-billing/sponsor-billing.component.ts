@@ -6,8 +6,11 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { HttpErrorResponse } from '@angular/common/http';
 import { SponsorBilling, SponsorService } from '../sponsor.service';
+import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog.component';
 
 @Component({
   selector: 'app-sponsor-billing',
@@ -15,6 +18,7 @@ import { SponsorBilling, SponsorService } from '../sponsor.service';
   imports: [
     CommonModule, CurrencyPipe, DatePipe, RouterLink,
     MatButtonModule, MatIconModule, MatProgressSpinnerModule, MatTooltipModule,
+    MatMenuModule, MatDialogModule,
   ],
   template: `
     <div class="page">
@@ -44,10 +48,18 @@ import { SponsorBilling, SponsorService } from '../sponsor.service';
             <p>No billable engagements for this sponsor yet.</p>
           </div>
         } @else {
-          <!-- Grand total -->
-          <div class="totals">
-            <span class="totals-label">Total billable</span>
-            <span class="totals-value">{{ data()!.grandTotal | currency }}</span>
+          <!-- Estimate + total -->
+          <div class="totals-row">
+            <div class="totals estimate">
+              <span class="totals-label">Pending invoicing</span>
+              <span class="totals-value">{{ data()!.unbilledEstimate | currency }}</span>
+              <span class="totals-hint">Engagements not yet on a non-void invoice</span>
+            </div>
+            <div class="totals">
+              <span class="totals-label">Total billable</span>
+              <span class="totals-value">{{ data()!.grandTotal | currency }}</span>
+              <span class="totals-hint">All sponsor-mode engagements combined</span>
+            </div>
           </div>
 
           <!-- Coachee groups -->
@@ -65,7 +77,15 @@ import { SponsorBilling, SponsorService } from '../sponsor.service';
                 @for (e of group.engagements; track e.engagementId) {
                   <a class="eng-row" [routerLink]="['/coaching', e.engagementId]">
                     <div class="eng-row-left">
-                      <span class="eng-status" [class]="'st-' + e.status">{{ e.status }}</span>
+                      <div class="eng-row-status-line">
+                        <span class="eng-status" [class]="'st-' + e.status">{{ e.status }}</span>
+                        @if (e.billed) {
+                          <span class="billed-flag"
+                                [matTooltip]="'On invoice ' + e.billedInvoiceNumber + ' (' + e.billedInvoiceStatus + ')'">
+                            <mat-icon>check_circle</mat-icon> Billed · {{ e.billedInvoiceNumber }}
+                          </span>
+                        }
+                      </div>
                       <span class="eng-meta">
                         Coach {{ e.coach.firstName }} {{ e.coach.lastName }} ·
                         {{ e.sessionsCompleted }}/{{ e.sessionsPurchased }} sessions
@@ -89,13 +109,34 @@ import { SponsorBilling, SponsorService } from '../sponsor.service';
             <div class="invoice-list">
               @for (inv of data()!.invoices; track inv._id) {
                 <div class="invoice-row">
-                  <div>
+                  <div class="inv-id">
                     <strong>{{ inv.invoiceNumber }}</strong>
                     <span class="muted">created {{ inv.createdAt | date:'mediumDate' }}</span>
                   </div>
                   <span class="inv-status" [class]="'is-' + inv.status">{{ inv.status }}</span>
                   <span class="inv-total">{{ (inv.total / 100) | currency:inv.currency }}</span>
                   <span class="muted">due {{ inv.dueDate | date:'mediumDate' }}</span>
+                  <div class="inv-actions">
+                    <a mat-icon-button matTooltip="View / Print"
+                       [routerLink]="['/billing/sponsors', sponsorId, 'invoices', inv._id]">
+                      <mat-icon>visibility</mat-icon>
+                    </a>
+                    <button mat-icon-button [matMenuTriggerFor]="invMenu">
+                      <mat-icon>more_vert</mat-icon>
+                    </button>
+                    <mat-menu #invMenu="matMenu">
+                      @if (inv.status !== 'void' && inv.status !== 'paid') {
+                        <button mat-menu-item (click)="voidInvoice(inv)">
+                          <mat-icon>block</mat-icon> Void invoice
+                        </button>
+                      }
+                      @if (inv.status === 'draft' || inv.status === 'void') {
+                        <button mat-menu-item class="delete-item" (click)="deleteInvoice(inv)">
+                          <mat-icon>delete</mat-icon> Delete invoice
+                        </button>
+                      }
+                    </mat-menu>
+                  </div>
                 </div>
               }
             </div>
@@ -118,12 +159,25 @@ import { SponsorBilling, SponsorService } from '../sponsor.service';
       text-align: center; color: #6b7c93; padding: 40px 24px;
       mat-icon { font-size: 40px; width: 40px; height: 40px; color: #c8d3df; }
     }
+    .totals-row {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;
+    }
     .totals {
-      display: flex; align-items: center; justify-content: space-between;
-      background: linear-gradient(135deg, #1B2A47, #3A9FD6); color: #fff;
-      border-radius: 12px; padding: 18px 22px; margin-bottom: 20px;
-      .totals-label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.6px; opacity: 0.85; }
+      display: flex; flex-direction: column; gap: 4px;
+      background: #fff; color: #1B2A47;
+      border: 1px solid #eef2f7; border-radius: 12px; padding: 18px 22px;
+      .totals-label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.6px; color: #6b7c93; }
       .totals-value { font-size: 26px; font-weight: 700; }
+      .totals-hint  { font-size: 11px; color: #9aa5b4; }
+      &.estimate {
+        background: linear-gradient(135deg, #1B2A47, #3A9FD6); color: #fff;
+        border: none;
+        .totals-label { color: rgba(255,255,255,0.85); }
+        .totals-hint  { color: rgba(255,255,255,0.7); }
+      }
+    }
+    @media (max-width: 600px) {
+      .totals-row { grid-template-columns: 1fr; }
     }
 
     .section-h {
@@ -171,11 +225,22 @@ import { SponsorBilling, SponsorService } from '../sponsor.service';
       background: #fff; border: 1px solid #eef2f7; border-radius: 12px; overflow: hidden;
     }
     .invoice-row {
-      display: grid; grid-template-columns: 2fr 100px 100px 1fr;
+      display: grid; grid-template-columns: 2fr 100px 110px 1fr 100px;
       gap: 12px; align-items: center;
-      padding: 12px 18px; border-bottom: 1px solid #f5f7fa;
+      padding: 8px 18px; border-bottom: 1px solid #f5f7fa;
       font-size: 14px; color: #1B2A47;
       &:last-child { border-bottom: none; }
+    }
+    .inv-id strong { display: block; }
+    .inv-actions { display: flex; gap: 4px; justify-content: flex-end; }
+    .delete-item { color: #dc2626 !important; }
+
+    .eng-row-status-line { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .billed-flag {
+      display: inline-flex; align-items: center; gap: 3px;
+      font-size: 11px; font-weight: 600; color: #0f8a5f;
+      background: #e8f9f2; padding: 2px 8px; border-radius: 999px;
+      mat-icon { font-size: 12px; width: 12px; height: 12px; }
     }
     .inv-status {
       text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;
@@ -194,28 +259,31 @@ export class SponsorBillingComponent implements OnInit {
   loading = signal(true);
   generating = signal(false);
   data = signal<SponsorBilling | null>(null);
+  sponsorId = '';
 
   constructor(
     private route: ActivatedRoute,
     private sponsorSvc: SponsorService,
     private snack: MatSnackBar,
+    private dialog: MatDialog,
   ) {}
 
-  ngOnInit(): void { this.load(); }
+  ngOnInit(): void {
+    this.sponsorId = this.route.snapshot.params['id'];
+    this.load();
+  }
 
   load(): void {
-    const id = this.route.snapshot.params['id'];
     this.loading.set(true);
-    this.sponsorSvc.billing(id).subscribe({
+    this.sponsorSvc.billing(this.sponsorId).subscribe({
       next: (d) => { this.data.set(d); this.loading.set(false); },
       error: () => this.loading.set(false),
     });
   }
 
   generate(): void {
-    const id = this.route.snapshot.params['id'];
     this.generating.set(true);
-    this.sponsorSvc.generateInvoice(id).subscribe({
+    this.sponsorSvc.generateInvoice(this.sponsorId).subscribe({
       next: () => {
         this.generating.set(false);
         this.snack.open('Invoice generated as draft', 'OK', { duration: 3000 });
@@ -225,6 +293,42 @@ export class SponsorBillingComponent implements OnInit {
         this.generating.set(false);
         this.snack.open(err?.error?.error || 'Failed to generate invoice', 'OK', { duration: 4000 });
       },
+    });
+  }
+
+  voidInvoice(inv: { _id: string; invoiceNumber: string }): void {
+    const ref = this.dialog.open(ConfirmDialogComponent, {
+      data: {
+        title: 'Void invoice',
+        message: `Void ${inv.invoiceNumber}? Its engagements become billable again on the next invoice.`,
+        confirmLabel: 'Void',
+        confirmColor: 'warn',
+      },
+    });
+    ref.afterClosed().subscribe((ok) => {
+      if (!ok) return;
+      this.sponsorSvc.voidInvoice(this.sponsorId, inv._id).subscribe({
+        next: () => { this.snack.open('Invoice voided', 'OK', { duration: 2500 }); this.load(); },
+        error: (err: HttpErrorResponse) => this.snack.open(err?.error?.error || 'Failed', 'OK', { duration: 4000 }),
+      });
+    });
+  }
+
+  deleteInvoice(inv: { _id: string; invoiceNumber: string }): void {
+    const ref = this.dialog.open(ConfirmDialogComponent, {
+      data: {
+        title: 'Delete invoice',
+        message: `Permanently delete ${inv.invoiceNumber}? This cannot be undone.`,
+        confirmLabel: 'Delete',
+        confirmColor: 'warn',
+      },
+    });
+    ref.afterClosed().subscribe((ok) => {
+      if (!ok) return;
+      this.sponsorSvc.deleteInvoice(this.sponsorId, inv._id).subscribe({
+        next: () => { this.snack.open('Invoice deleted', 'OK', { duration: 2500 }); this.load(); },
+        error: (err: HttpErrorResponse) => this.snack.open(err?.error?.error || 'Failed', 'OK', { duration: 4000 }),
+      });
     });
   }
 }

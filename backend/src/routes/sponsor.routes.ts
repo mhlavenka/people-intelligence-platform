@@ -27,34 +27,24 @@ async function sponsorIdsForCoach(coachId: string, orgId: string): Promise<mongo
 }
 
 // ─── List ───────────────────────────────────────────────────────────────────
+// Sponsors are an organization-wide resource: every coach/admin/HR sees
+// every sponsor in their org.
 router.get(
   '/',
   requireRole('admin', 'hr_manager', 'coach'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const orgId = req.user!.organizationId;
-      const filter: Record<string, unknown> = { organizationId: orgId };
-
-      if (req.user!.role === 'coach') {
-        const ids = await sponsorIdsForCoach(req.user!.userId, orgId);
-        filter['_id'] = { $in: ids };
-      }
-
-      const sponsors = await Sponsor.find(filter)
+      const sponsors = await Sponsor.find({ organizationId: orgId })
         .populate('coacheeId', 'firstName lastName email')
         .sort({ createdAt: -1 })
         .lean();
 
-      // Lightweight per-sponsor counts so the list page can render badges
-      // without a per-row request.
       const counts = await CoachingEngagement.aggregate([
         {
           $match: {
             organizationId: new mongoose.Types.ObjectId(orgId),
             sponsorId: { $in: sponsors.map((s) => s._id) },
-            ...(req.user!.role === 'coach'
-              ? { coachId: new mongoose.Types.ObjectId(req.user!.userId) }
-              : {}),
           },
         },
         {
@@ -92,17 +82,6 @@ router.get(
         organizationId: req.user!.organizationId,
       }).populate('coacheeId', 'firstName lastName email');
       if (!sponsor) { res.status(404).json({ error: 'Sponsor not found' }); return; }
-
-      // Coaches: only if they own at least one engagement with this sponsor
-      if (req.user!.role === 'coach') {
-        const has = await CoachingEngagement.exists({
-          coachId: req.user!.userId,
-          organizationId: req.user!.organizationId,
-          sponsorId: sponsor._id,
-        });
-        if (!has) { res.status(403).json({ error: 'Forbidden' }); return; }
-      }
-
       res.json(sponsor);
     } catch (e) { next(e); }
   },
@@ -255,6 +234,20 @@ router.get(
         engagementId: { $in: engagementIds },
       }).select('-coachNotes').sort({ date: -1 }).lean();
 
+      // Build a set of engagement IDs already in any non-void invoice
+      // (so the UI can show a "Billed" flag).
+      const priorInvoices = await Invoice.find({
+        organizationId: orgId,
+        sponsorId: sponsor._id,
+        status: { $ne: 'void' },
+      }).select('engagementIds invoiceNumber status').lean();
+      const billedMap = new Map<string, { invoiceNumber: string; status: string }>();
+      for (const inv of priorInvoices) {
+        for (const id of inv.engagementIds || []) {
+          billedMap.set(String(id), { invoiceNumber: inv.invoiceNumber, status: inv.status });
+        }
+      }
+
       const items = engagements.map((eng) => {
         const engSessions = sessions.filter(
           (s) => s.engagementId.toString() === eng._id.toString(),
@@ -264,6 +257,7 @@ router.get(
         const billedHours = eng.sessionsPurchased ?? 0;
         const totalAmount = billedHours * rate;
         const completedHours = completed.reduce((sum, s) => sum + (s.duration || 60), 0) / 60;
+        const billedRef = billedMap.get(String(eng._id));
         return {
           engagementId: eng._id,
           coach: eng.coachId,
@@ -277,10 +271,17 @@ router.get(
           billedHours,
           completedHours: Math.round(completedHours * 100) / 100,
           totalAmount: Math.round(totalAmount * 100) / 100,
+          billed: !!billedRef,
+          billedInvoiceNumber: billedRef?.invoiceNumber,
+          billedInvoiceStatus: billedRef?.status,
         };
       });
 
       const grandTotal = items.reduce((sum, i) => sum + i.totalAmount, 0);
+      // "Estimate" = total of every engagement that's not yet on a non-void invoice.
+      const unbilledEstimate = items
+        .filter((i) => !i.billed)
+        .reduce((sum, i) => sum + i.totalAmount, 0);
 
       // Group engagements by coachee for the UI
       const byCoachee = new Map<string, typeof items>();
@@ -307,6 +308,7 @@ router.get(
         coacheeGroups,
         invoices,
         grandTotal: Math.round(grandTotal * 100) / 100,
+        unbilledEstimate: Math.round(unbilledEstimate * 100) / 100,
       });
     } catch (e) { next(e); }
   },
@@ -327,7 +329,19 @@ router.post(
       const sponsor = await Sponsor.findOne({ _id: req.params['id'], organizationId: orgId });
       if (!sponsor) { res.status(404).json({ error: 'Sponsor not found' }); return; }
 
-      const engagements = await CoachingEngagement.find({
+      // Skip engagements that already appear in any non-void invoice for
+      // this sponsor (drafts count too — re-generating shouldn't double-bill).
+      const priorInvoices = await Invoice.find({
+        organizationId: orgId,
+        sponsorId: sponsor._id,
+        status: { $ne: 'void' },
+      }).select('engagementIds').lean();
+      const billedEngagementIds = new Set<string>();
+      for (const inv of priorInvoices) {
+        for (const id of inv.engagementIds || []) billedEngagementIds.add(String(id));
+      }
+
+      const allEngagements = await CoachingEngagement.find({
         organizationId: orgId,
         sponsorId: sponsor._id,
         billingMode: 'sponsor',
@@ -335,8 +349,16 @@ router.post(
         .populate('coacheeId', 'firstName lastName')
         .lean();
 
-      if (!engagements.length) {
+      const engagements = allEngagements.filter(
+        (e) => !billedEngagementIds.has(String(e._id)),
+      );
+
+      if (!allEngagements.length) {
         res.status(400).json({ error: 'This sponsor has no billable engagements yet.' });
+        return;
+      }
+      if (!engagements.length) {
+        res.status(400).json({ error: 'All engagements for this sponsor have already been invoiced.' });
         return;
       }
 
@@ -385,6 +407,7 @@ router.post(
           invoice = await Invoice.create({
             organizationId: orgId,
             sponsorId: sponsor._id,
+            engagementIds: engagements.map((e) => e._id),
             invoiceNumber,
             period: {
               from: new Date(Math.min(...engagements.map((e) => new Date(e.startDate || e.createdAt).getTime()))),
@@ -410,6 +433,72 @@ router.post(
         return;
       }
       res.status(201).json(invoice);
+    } catch (e) { next(e); }
+  },
+);
+
+// ─── View one sponsor invoice (full details, used by print/view page) ───────
+router.get(
+  '/:id/invoices/:invoiceId',
+  requireRole('admin', 'hr_manager', 'coach'),
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const orgId = req.user!.organizationId;
+      const sponsor = await Sponsor.findOne({ _id: req.params['id'], organizationId: orgId });
+      if (!sponsor) { res.status(404).json({ error: 'Sponsor not found' }); return; }
+
+      const invoice = await Invoice.findOne({
+        _id: req.params['invoiceId'],
+        organizationId: orgId,
+        sponsorId: sponsor._id,
+      }).lean();
+      if (!invoice) { res.status(404).json({ error: 'Invoice not found' }); return; }
+
+      res.json({ invoice, sponsor });
+    } catch (e) { next(e); }
+  },
+);
+
+// ─── Cancel (void) a sponsor invoice ────────────────────────────────────────
+// Voiding releases its engagements so they become billable again.
+router.patch(
+  '/:id/invoices/:invoiceId/void',
+  requireRole('admin', 'hr_manager'),
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const orgId = req.user!.organizationId;
+      const invoice = await Invoice.findOneAndUpdate(
+        { _id: req.params['invoiceId'], organizationId: orgId, sponsorId: req.params['id'] },
+        { status: 'void' },
+        { new: true },
+      );
+      if (!invoice) { res.status(404).json({ error: 'Invoice not found' }); return; }
+      res.json(invoice);
+    } catch (e) { next(e); }
+  },
+);
+
+// ─── Delete a sponsor invoice (only when draft or void) ─────────────────────
+router.delete(
+  '/:id/invoices/:invoiceId',
+  requireRole('admin', 'hr_manager'),
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const orgId = req.user!.organizationId;
+      const invoice = await Invoice.findOne({
+        _id: req.params['invoiceId'],
+        organizationId: orgId,
+        sponsorId: req.params['id'],
+      });
+      if (!invoice) { res.status(404).json({ error: 'Invoice not found' }); return; }
+      if (invoice.status !== 'draft' && invoice.status !== 'void') {
+        res.status(400).json({
+          error: `Cannot delete an invoice in status "${invoice.status}". Void it first.`,
+        });
+        return;
+      }
+      await invoice.deleteOne();
+      res.json({ message: 'Invoice deleted' });
     } catch (e) { next(e); }
   },
 );

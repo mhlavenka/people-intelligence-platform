@@ -33,6 +33,9 @@ export interface SponsorBillingEngagement {
   billedHours: number;
   completedHours: number;
   totalAmount: number;
+  billed?: boolean;
+  billedInvoiceNumber?: string;
+  billedInvoiceStatus?: string;
 }
 
 export interface SponsorBillingCoacheeGroup {
@@ -59,6 +62,7 @@ export interface SponsorBilling {
   coacheeGroups: SponsorBillingCoacheeGroup[];
   invoices: SponsorInvoice[];
   grandTotal: number;
+  unbilledEstimate: number;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -95,5 +99,28 @@ export class SponsorService {
 
   generateInvoice(id: string): Observable<SponsorInvoice> {
     return this.api.post<SponsorInvoice>(`/sponsors/${id}/invoice`, {});
+  }
+
+  getInvoice(sponsorId: string, invoiceId: string): Observable<{
+    invoice: SponsorInvoice & {
+      lineItems: Array<{ description: string; quantity: number; unitPrice: number; amount: number }>;
+      period: { from: string; to: string };
+      taxRate: number; tax: number; notes?: string;
+    };
+    sponsor: Sponsor;
+  }> {
+    return this.api.get(`/sponsors/${sponsorId}/invoices/${invoiceId}`);
+  }
+
+  voidInvoice(sponsorId: string, invoiceId: string): Observable<SponsorInvoice> {
+    return this.api.patch<SponsorInvoice>(
+      `/sponsors/${sponsorId}/invoices/${invoiceId}/void`, {},
+    );
+  }
+
+  deleteInvoice(sponsorId: string, invoiceId: string): Observable<{ message: string }> {
+    return this.api.delete<{ message: string }>(
+      `/sponsors/${sponsorId}/invoices/${invoiceId}`,
+    );
   }
 }

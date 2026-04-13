@@ -68,14 +68,21 @@ router.post(
 
 router.use(authenticateToken, tenantResolver);
 
-// GET /api/billing/invoices — list own org's invoices, sorted by createdAt desc
+// GET /api/billing/invoices — list own org's SUBSCRIPTION invoices.
+// Sponsor (coaching) invoices live in the same collection but are
+// filtered out here so the org billing page only shows what the org is
+// being charged for its own subscription plan. Sponsor invoices are
+// reachable via /api/sponsors/:id/billing.
 router.get(
   '/invoices',
   async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
       const organizationId = req.user!.organizationId;
 
-      const invoices = await Invoice.find({ organizationId })
+      const invoices = await Invoice.find({
+        organizationId,
+        $or: [{ sponsorId: { $exists: false } }, { sponsorId: null }],
+      })
         .sort({ createdAt: -1 })
         .lean();
 
@@ -86,7 +93,7 @@ router.get(
   }
 );
 
-// GET /api/billing/invoices/:id — get single invoice
+// GET /api/billing/invoices/:id — get single subscription invoice
 router.get(
   '/invoices/:id',
   async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
@@ -96,6 +103,7 @@ router.get(
       const invoice = await Invoice.findOne({
         _id: req.params['id'],
         organizationId,
+        $or: [{ sponsorId: { $exists: false } }, { sponsorId: null }],
       }).lean();
 
       if (!invoice) {

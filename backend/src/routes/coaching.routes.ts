@@ -33,13 +33,12 @@ async function isCalendarConnected(coachId: string): Promise<boolean> {
 // ═══════════════════════════════════════════════════════════════════════════
 
 /** Per-role scoping for coaching reads.
- *  - admin / hr_manager: see everything in the org
- *  - coach:              see only engagements/sessions where they are the coach
- *  - coachee:            see only engagements/sessions where they are the coachee
+ *  - admin / hr_manager / coach: see every engagement/session in the org
+ *    (coaching is org-wide; coaches collaborate on each other's clients)
+ *  - coachee: see only engagements/sessions where they are the coachee
  */
 function scopeCoachingFilter(req: AuthRequest, base: Record<string, unknown> = {}): Record<string, unknown> {
   const filter: Record<string, unknown> = { ...base, organizationId: req.user!.organizationId };
-  if (req.user!.role === 'coach') filter['coachId'] = req.user!.userId;
   if (req.user!.role === 'coachee') filter['coacheeId'] = req.user!.userId;
   return filter;
 }

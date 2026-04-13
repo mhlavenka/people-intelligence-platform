@@ -207,6 +207,14 @@ export const routes: Routes = [
             (m) => m.SponsorBillingComponent
           ),
       },
+      {
+        path: 'billing/sponsors/:sponsorId/invoices/:invoiceId',
+        canActivate: [roleGuard([...ADMIN_HR, 'coach'])],
+        loadComponent: () =>
+          import('./modules/sponsor/sponsor-invoice-view/sponsor-invoice-view.component').then(
+            (m) => m.SponsorInvoiceViewComponent
+          ),
+      },
 
       // ── Coaching Journal ──────────────────────────────────────────────────
       {
