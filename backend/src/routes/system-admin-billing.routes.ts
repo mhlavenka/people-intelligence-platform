@@ -51,7 +51,12 @@ router.get(
   '/invoices',
   async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const filter: Record<string, unknown> = {};
+      // System-admin billing only manages org-subscription invoices.
+      // Sponsor (coaching) invoices are scoped to a sponsor and live
+      // under /api/sponsors/:id/billing — exclude them here.
+      const filter: Record<string, unknown> = {
+        $or: [{ sponsorId: { $exists: false } }, { sponsorId: null }],
+      };
 
       if (req.query['orgId']) {
         filter['organizationId'] = new mongoose.Types.ObjectId(req.query['orgId'] as string);
@@ -640,10 +645,11 @@ router.post(
       const { sendReminders = false } = req.body as { sendReminders?: boolean };
       const now = new Date();
 
-      // Find sent invoices past due
+      // Find sent (subscription) invoices past due — exclude sponsor invoices
       const overdueInvoices = await Invoice.find({
         status: 'sent',
         dueDate: { $lt: now },
+        $or: [{ sponsorId: { $exists: false } }, { sponsorId: null }],
       }).setOptions({ bypassTenantCheck: true });
 
       const results: { invoiceNumber: string; orgId: string; daysOverdue: number; reminderSent: boolean }[] = [];
@@ -710,10 +716,11 @@ router.post(
       const cutoff = new Date();
       cutoff.setDate(cutoff.getDate() - daysThreshold);
 
-      // Find overdue invoices past the threshold
+      // Find overdue (subscription) invoices past the threshold — exclude sponsor
       const overdueInvoices = await Invoice.find({
         status: 'overdue',
         dueDate: { $lt: cutoff },
+        $or: [{ sponsorId: { $exists: false } }, { sponsorId: null }],
       }).setOptions({ bypassTenantCheck: true });
 
       // Group by org — only suspend once per org

@@ -216,12 +216,14 @@ router.get(
         .populate('coacheeId', 'firstName lastName email');
       if (!sponsor) { res.status(404).json({ error: 'Sponsor not found' }); return; }
 
+      // Sponsor billing is org-wide: show every engagement billed to this
+      // sponsor regardless of coach. A coach viewing the page sees all
+      // coachees + coaches under this sponsor so they can see total owed.
       const engagementFilter: Record<string, unknown> = {
         organizationId: orgId,
         sponsorId: sponsor._id,
         billingMode: 'sponsor',
       };
-      if (req.user!.role === 'coach') engagementFilter['coachId'] = req.user!.userId;
 
       const engagements = await CoachingEngagement.find(engagementFilter)
         .populate('coachId', 'firstName lastName email profilePicture')
