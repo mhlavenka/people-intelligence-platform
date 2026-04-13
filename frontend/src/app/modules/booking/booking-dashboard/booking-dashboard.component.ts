@@ -378,13 +378,13 @@ type DayBuckets = {
 
     .booking-table { margin-top: 16px; }
     .table-header {
-      display: grid; grid-template-columns: 180px 140px 180px 1fr 100px 80px;
+      display: grid; grid-template-columns: 180px 140px 180px 1fr 100px 140px;
       padding: 12px 16px; background: #f7f9fc; border-radius: 8px 8px 0 0;
       font-size: 13px; font-weight: 600; color: #6b7c93; text-transform: uppercase;
       letter-spacing: 0.5px;
     }
     .table-row {
-      display: grid; grid-template-columns: 180px 140px 180px 1fr 100px 80px;
+      display: grid; grid-template-columns: 180px 140px 180px 1fr 100px 140px;
       padding: 14px 16px; border-bottom: 1px solid #f0f3f7;
       align-items: center; font-size: 14px;
       &:hover { background: #fafbfd; }

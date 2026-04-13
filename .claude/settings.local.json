@@ -22,7 +22,8 @@
       "Bash(npx tsc:*)",
       "Bash(npx ng:*)",
       "Bash(node -e ':*)",
-      "Bash(ssh:*)"
+      "Bash(ssh:*)",
+      "Bash(npx jest:*)"
     ]
   }
 }

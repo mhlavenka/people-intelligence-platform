@@ -218,3 +218,35 @@ Outstanding (deferred to B.3):
 - G9 — Jest + `mongodb-memory-server` harness and all 8 behavior tests.
 
 ---
+
+## Implementation Log — B.3 (2026-04-12)
+
+Jest test harness bootstrapped with `ts-jest` + `mongodb-memory-server` +
+`supertest`. External boundaries (googleapis, AWS SES, node-cron) mocked at
+the module level via `jest.mock('x', () => require('./mocks/x.mock'))`.
+
+| # | File | Behavior | Tests |
+|---|------|----------|-------|
+| 13.0 | `tests/helpers.ts` | DB lifecycle + fixture seeders (coach, event type, booking, settings) | — |
+| 13.1 | `tests/mocks/googleapis.mock.ts` | `calendar.events.insert/delete/patch/list/watch`, `channels.stop`, `freebusy.query`, `OAuth2.refreshAccessToken` | — |
+| 13.2 | `tests/mocks/ses.mock.ts` | `SESClient.send` capture | — |
+| 13.3 | `tests/mocks/node-cron.mock.ts` | Cron schedule no-op | — |
+| 13.4 | `tests/behavior-1-create-booking.test.ts` | B1 | 3 |
+| 13.5 | `tests/behavior-2-coach-deletes.test.ts` | B2 | 3 |
+| 13.6 | `tests/behavior-3-coach-reschedules.test.ts` | B3 | 2 |
+| 13.7 | `tests/behavior-4-client-deletes.test.ts` | B4 | 1 |
+| 13.8 | `tests/behavior-5-free-events.test.ts` | B5 | 2 |
+| 13.9 | `tests/behavior-6-system-cancel.test.ts` | B6 | 4 |
+| 13.10 | `tests/behavior-7-past-events.test.ts` | B7 | 2 |
+| 13.11 | `tests/behavior-8-multi-calendars.test.ts` | B8 | 3 |
+
+**Run:** `npm test` from `/backend`. Current result: **20/20 passing**, ~40s wall time.
+
+Gap closure summary:
+- G1 / G2 — webhook infrastructure: covered by behavior-2 and behavior-3 integration tests driving `handleGoogleNotification` against the mocked Google client.
+- G3 — cancelBooking 404 handling: covered by behavior-6 ("proceeds when calendar.events.delete returns 404" and "proceeds when googleEventId is null").
+- G4 — freebusy contract: covered by behavior-5 ("freebusy call does not pass any flag that would include FREE periods").
+- G5 / G7 — timeMin anchor: covered by behavior-7 ("freebusy timeMin is never earlier than now + minNoticeHours" + "does not generate slots in the past").
+- G8 — multi-calendar with target inclusion + dedup: covered by behavior-8 (3 tests).
+
+---
