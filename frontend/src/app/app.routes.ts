@@ -190,6 +190,24 @@ export const routes: Routes = [
           ),
       },
 
+      // ── Sponsors ──────────────────────────────────────────────────────────
+      {
+        path: 'sponsors',
+        canActivate: [roleGuard([...ADMIN_HR, 'coach'])],
+        loadComponent: () =>
+          import('./modules/sponsor/sponsor-list/sponsor-list.component').then(
+            (m) => m.SponsorListComponent
+          ),
+      },
+      {
+        path: 'billing/sponsors/:id',
+        canActivate: [roleGuard([...ADMIN_HR, 'coach'])],
+        loadComponent: () =>
+          import('./modules/sponsor/sponsor-billing/sponsor-billing.component').then(
+            (m) => m.SponsorBillingComponent
+          ),
+      },
+
       // ── Coaching Journal ──────────────────────────────────────────────────
       {
         path: 'journal',

@@ -3,13 +3,20 @@ import { tenantFilterPlugin } from './plugins/tenantFilter.plugin';
 
 export type EngagementStatus = 'prospect' | 'contracted' | 'active' | 'paused' | 'completed' | 'alumni';
 
+/**
+ * Billing mode:
+ *   - 'sponsor'      -> sponsorId is required; sessions are billed to the sponsor
+ *   - 'subscription' -> sponsorId is null; cost is covered by the org's
+ *                       subscription plan (no per-session billing)
+ */
+export type BillingMode = 'sponsor' | 'subscription';
+
 export interface ICoachingEngagement extends Document {
   organizationId: mongoose.Types.ObjectId;
   coacheeId: mongoose.Types.ObjectId;
   coachId: mongoose.Types.ObjectId;
-  sponsorName?: string;
-  sponsorEmail?: string;
-  sponsorOrg?: string;
+  sponsorId?: mongoose.Types.ObjectId;
+  billingMode: BillingMode;
   status: EngagementStatus;
   sessionsPurchased: number;
   sessionsUsed: number;
@@ -21,8 +28,7 @@ export interface ICoachingEngagement extends Document {
   goals: string[];
   contractUrl?: string;
   notes?: string;                   // coach's private engagement notes
-  rebillCoachee: boolean;           // bill the coachee for sessions
-  hourlyRate?: number;              // per-engagement rate (defaults from org)
+  hourlyRate?: number;              // per-engagement rate; falls back to sponsor.defaultHourlyRate
   createdAt: Date;
   updatedAt: Date;
 }
@@ -32,9 +38,13 @@ const CoachingEngagementSchema = new Schema<ICoachingEngagement>(
     organizationId:  { type: Schema.Types.ObjectId, ref: 'Organization', required: true, index: true },
     coacheeId:       { type: Schema.Types.ObjectId, ref: 'User', required: true },
     coachId:         { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    sponsorName:     { type: String, trim: true },
-    sponsorEmail:    { type: String, trim: true },
-    sponsorOrg:      { type: String, trim: true },
+    sponsorId:       { type: Schema.Types.ObjectId, ref: 'Sponsor', index: true },
+    billingMode: {
+      type: String,
+      enum: ['sponsor', 'subscription'],
+      default: 'subscription',
+      required: true,
+    },
     status: {
       type: String,
       enum: ['prospect', 'contracted', 'active', 'paused', 'completed', 'alumni'],
@@ -50,7 +60,6 @@ const CoachingEngagementSchema = new Schema<ICoachingEngagement>(
     goals:             [{ type: String }],
     contractUrl:       { type: String },
     notes:             { type: String },
-    rebillCoachee:     { type: Boolean, default: false },
     hourlyRate:        { type: Number, min: 0 },
   },
   { timestamps: true }

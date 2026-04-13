@@ -581,7 +581,16 @@ export class AppShellComponent implements OnInit, OnDestroy {
     },
     { label: 'Neuro-Inclusion',         icon: 'psychology',   route: '/neuroinclusion', roles: ['admin', 'hr_manager', 'manager'],               module: 'neuroinclusion' },
     { label: 'Leadership & Succession', icon: 'trending_up',  route: '/succession',  roles: ['admin', 'hr_manager', 'coach', 'coachee'],        module: 'succession' },
-    { label: 'Coaching',           icon: 'psychology_alt',  route: '/coaching',    roles: ['admin', 'hr_manager', 'coach', 'coachee'],  module: 'coaching' },
+    {
+      label: 'Coaching',
+      icon: 'psychology_alt',
+      module: 'coaching',
+      children: [
+        { label: 'Engagements', icon: 'groups_2',     route: '/coaching',  roles: ['admin', 'hr_manager', 'coach', 'coachee'] as AppRole[], module: 'coaching' },
+        { label: 'Sponsors',    icon: 'account_balance', route: '/sponsors', roles: ['admin', 'hr_manager', 'coach'] as AppRole[],            module: 'coaching' },
+        { label: 'My Journal',  icon: 'menu_book',    route: '/journal',   roles: ['admin', 'hr_manager', 'coach'] as AppRole[],            module: 'coaching' },
+      ],
+    },
     { label: 'Booking',            icon: 'event_available', route: '/booking',     roles: ['admin', 'hr_manager', 'coach'],              module: 'coaching' },
     {
       label: 'Intakes',

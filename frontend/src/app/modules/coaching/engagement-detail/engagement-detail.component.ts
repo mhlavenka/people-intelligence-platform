@@ -78,7 +78,12 @@ interface Session {
               <div class="info-item"><span class="info-label">Sessions</span><span>{{ engagement()!.sessionsUsed }} / {{ engagement()!.sessionsPurchased }}</span></div>
               @if (engagement()!.cadence) { <div class="info-item"><span class="info-label">Cadence</span><span>{{ engagement()!.cadence }}</span></div> }
               @if (engagement()!.startDate) { <div class="info-item"><span class="info-label">Started</span><span>{{ engagement()!.startDate | date:'MMM d, y' }}</span></div> }
-              @if (engagement()!.sponsorName) { <div class="info-item"><span class="info-label">Sponsor</span><span>{{ engagement()!.sponsorName }}</span></div> }
+              @if (engagement()!.sponsorId?.name) {
+                <div class="info-item">
+                  <span class="info-label">Sponsor</span>
+                  <span>{{ engagement()!.sponsorId.name }}</span>
+                </div>
+              }
             </div>
             @if (engagement()!.goals?.length) {
               <mat-divider />
@@ -96,21 +101,26 @@ interface Session {
                 <p>{{ engagement()!.notes }}</p>
               </div>
             }
-            @if (engagement()!.rebillCoachee && canManage()) {
+            @if (canManage()) {
               <mat-divider />
               <div class="billing-block">
                 <span class="info-label">Billing</span>
                 <div class="billing-row">
                   <mat-icon>receipt_long</mat-icon>
-                  <span>Rebill coachee</span>
-                  <span class="billing-badge">Active</span>
+                  @if (engagement()!.billingMode === 'sponsor' && engagement()!.sponsorId?._id) {
+                    <span>Sponsor pays</span>
+                  } @else {
+                    <span>Covered by subscription</span>
+                  }
                 </div>
-                @if (engagementHourlyRate()) {
+                @if (engagement()!.billingMode === 'sponsor' && engagementHourlyRate()) {
                   <div class="billing-rate">{{ engagementHourlyRate() | currency:'CAD':'symbol':'1.2-2' }} / hr</div>
                 }
-                <a class="billing-link" [routerLink]="'/coaching/billing/' + coacheeId()" [queryParams]="{ engagementId: engagement()!._id }">
-                  <mat-icon>open_in_new</mat-icon> Coachee Billing
-                </a>
+                @if (engagement()!.billingMode === 'sponsor' && engagement()!.sponsorId?._id) {
+                  <a class="billing-link" [routerLink]="['/billing/sponsors', engagement()!.sponsorId._id]">
+                    <mat-icon>open_in_new</mat-icon> Sponsor billing
+                  </a>
+                }
               </div>
             }
             @if (canManage()) {

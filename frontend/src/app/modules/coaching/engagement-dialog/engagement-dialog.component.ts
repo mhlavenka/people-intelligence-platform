@@ -12,8 +12,11 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatDialog } from '@angular/material/dialog';
 import { ApiService } from '../../../core/api.service';
 import { OrgContextService } from '../../../core/org-context.service';
+import { Sponsor, SponsorService } from '../../sponsor/sponsor.service';
+import { SponsorDialogComponent } from '../../sponsor/sponsor-dialog/sponsor-dialog.component';
 
 interface Coachee { _id: string; firstName: string; lastName: string; email: string; department?: string; }
 
@@ -90,36 +93,43 @@ interface Coachee { _id: string; firstName: string; lastName: string; email: str
         <input matInput [(ngModel)]="goalsRaw" placeholder="e.g. Leadership development, Communication skills" />
       </mat-form-field>
 
-      <div class="section-label">Sponsor (optional)</div>
-      <div class="form-row">
-        <mat-form-field appearance="outline"><mat-label>Sponsor Name</mat-label>
-          <input matInput [(ngModel)]="form.sponsorName" /></mat-form-field>
-        <mat-form-field appearance="outline"><mat-label>Sponsor Email</mat-label>
-          <input matInput [(ngModel)]="form.sponsorEmail" type="email" /></mat-form-field>
-      </div>
+      <div class="section-label">Billing</div>
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>How is this engagement paid?</mat-label>
+        <mat-select [(ngModel)]="form.billingMode" (selectionChange)="onBillingModeChange()">
+          <mat-option value="subscription">Covered by subscription plan</mat-option>
+          <mat-option value="sponsor">Sponsor pays per engagement</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      @if (form.billingMode === 'sponsor') {
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Sponsor</mat-label>
+            <mat-select [(ngModel)]="form.sponsorId" required>
+              @for (s of sponsors(); track s._id) {
+                <mat-option [value]="s._id">
+                  {{ s.name }} <span class="muted">— {{ s.email }}</span>
+                </mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          <button mat-stroked-button class="new-sponsor-btn" (click)="createSponsor()">
+            <mat-icon>add</mat-icon> New
+          </button>
+        </div>
+        <mat-form-field appearance="outline" class="rate-field">
+          <mat-label>Hourly rate (override)</mat-label>
+          <input matInput type="number" [(ngModel)]="form.hourlyRate" min="0" step="0.01" />
+          <mat-icon matPrefix>attach_money</mat-icon>
+          <mat-hint>Leave blank to use the sponsor's default rate</mat-hint>
+        </mat-form-field>
+      }
 
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>Notes (private)</mat-label>
         <textarea matInput [(ngModel)]="form.notes" rows="3" placeholder="Coach-only notes about this engagement"></textarea>
       </mat-form-field>
-
-      @if (showRebill) {
-        <div class="rebill-row">
-          <mat-icon>receipt_long</mat-icon>
-          <div class="rebill-info">
-            <span class="rebill-label">Rebill Coachee</span>
-            <span class="rebill-desc">Bill the coachee for sessions in this engagement</span>
-          </div>
-          <mat-slide-toggle color="primary" [(ngModel)]="form.rebillCoachee" />
-        </div>
-        @if (form.rebillCoachee) {
-          <mat-form-field appearance="outline" class="rate-field">
-            <mat-label>Hourly Rate ($)</mat-label>
-            <input matInput type="number" [(ngModel)]="form.hourlyRate" min="0" step="0.01" />
-            <mat-icon matPrefix>attach_money</mat-icon>
-          </mat-form-field>
-        }
-      }
     </mat-dialog-content>
 
     <mat-dialog-actions align="end">
@@ -135,43 +145,40 @@ interface Coachee { _id: string; firstName: string; lastName: string; email: str
     h2[mat-dialog-title] { display: flex; align-items: center; gap: 8px; color: #1B2A47; mat-icon { color: #3A9FD6; } }
     mat-dialog-content { min-width: 480px; padding-top: 8px !important; }
     .full-width { width: 100%; }
-    .form-row { display: flex; gap: 12px; mat-form-field { flex: 1; } }
-    .section-label { font-size: 12px; font-weight: 600; color: #5a6a7e; text-transform: uppercase; letter-spacing: 0.5px; margin: 8px 0 4px; }
-    .rebill-row {
-      display: flex; align-items: center; gap: 12px; padding: 12px 14px;
-      background: #f8f5ff; border-radius: 10px; margin-top: 4px;
-      > mat-icon { color: #7c5cbf; flex-shrink: 0; }
+    .form-row { display: flex; gap: 12px; align-items: flex-start;
+      mat-form-field { flex: 1; }
+      .new-sponsor-btn { margin-top: 6px; height: 56px; white-space: nowrap; }
     }
-    .rebill-info { flex: 1; }
-    .rate-field { width: 200px; margin-top: 8px; margin-left: 38px; }
-    .rebill-label { font-size: 13px; font-weight: 500; color: #1B2A47; display: block; }
-    .rebill-desc { font-size: 11px; color: #9aa5b4; }
+    .section-label { font-size: 12px; font-weight: 600; color: #5a6a7e; text-transform: uppercase; letter-spacing: 0.5px; margin: 8px 0 4px; }
+    .rate-field { width: 100%; }
+    .muted { color: #9aa5b4; font-size: 12px; }
   `],
 })
 export class EngagementDialogComponent implements OnInit {
   private api = inject(ApiService);
   private dialogRef = inject(MatDialogRef<EngagementDialogComponent>);
   private orgCtx = inject(OrgContextService);
+  private sponsorSvc = inject(SponsorService);
+  private dialog = inject(MatDialog);
   data = inject<any>(MAT_DIALOG_DATA, { optional: true });
 
   coachees = signal<Coachee[]>([]);
+  sponsors = signal<Sponsor[]>([]);
   saving = signal(false);
   isEdit = false;
   goalsRaw = '';
-  showRebill = false;
 
   form = {
     coacheeId: '', status: 'prospect', sessionsPurchased: 6, sessionsUsed: 0,
     cadence: 'biweekly', sessionFormat: 'video', startDate: null as Date | null,
-    sponsorName: '', sponsorEmail: '', sponsorOrg: '', notes: '', goals: [] as string[],
-    rebillCoachee: true,  // defaults to true when org rebill is on (showRebill gates visibility)
+    notes: '', goals: [] as string[],
+    billingMode: 'subscription' as 'subscription' | 'sponsor',
+    sponsorId: '' as string,
     hourlyRate: null as number | null,
   };
 
   ngOnInit(): void {
-    // Default rebill and rate from org-level settings
-    this.showRebill = this.orgCtx.coachingRebill();
-    if (this.showRebill) {
+    if (this.orgCtx.defaultCoachRate?.()) {
       this.form.hourlyRate = this.orgCtx.defaultCoachRate() ?? null;
     }
 
@@ -179,17 +186,51 @@ export class EngagementDialogComponent implements OnInit {
       this.isEdit = true;
       Object.assign(this.form, this.data);
       this.form.coacheeId = typeof this.data.coacheeId === 'object' ? this.data.coacheeId._id : this.data.coacheeId;
+      // Normalize sponsorId in case it was returned populated
+      this.form.sponsorId = typeof this.data.sponsorId === 'object' && this.data.sponsorId
+        ? this.data.sponsorId._id
+        : (this.data.sponsorId || '');
+      this.form.billingMode = this.data.billingMode || (this.form.sponsorId ? 'sponsor' : 'subscription');
       this.goalsRaw = (this.data.goals || []).join(', ');
     }
     this.api.get<Coachee[]>('/users').subscribe({ next: (u) => this.coachees.set(u) });
+    this.sponsorSvc.list().subscribe({ next: (s) => this.sponsors.set(s) });
+  }
+
+  onBillingModeChange(): void {
+    if (this.form.billingMode === 'subscription') {
+      this.form.sponsorId = '';
+      this.form.hourlyRate = null;
+    }
+  }
+
+  createSponsor(): void {
+    const ref = this.dialog.open(SponsorDialogComponent, { data: {}, width: '560px' });
+    ref.afterClosed().subscribe((sponsor: Sponsor | null) => {
+      if (!sponsor) return;
+      this.sponsors.update((list) => [sponsor, ...list]);
+      this.form.sponsorId = sponsor._id;
+    });
   }
 
   save(): void {
+    if (this.form.billingMode === 'sponsor' && !this.form.sponsorId) {
+      // Avoid silent failure — let UI know required field is missing.
+      return;
+    }
     this.saving.set(true);
     this.form.goals = this.goalsRaw.split(',').map((g: string) => g.trim()).filter(Boolean);
+
+    // Strip sponsorId when subscription mode so the backend stores null.
+    const payload: Record<string, unknown> = { ...this.form };
+    if (this.form.billingMode === 'subscription') {
+      payload['sponsorId'] = null;
+      payload['hourlyRate'] = null;
+    }
+
     const req = this.isEdit
-      ? this.api.put(`/coaching/engagements/${this.data._id}`, this.form)
-      : this.api.post('/coaching/engagements', this.form);
+      ? this.api.put(`/coaching/engagements/${this.data._id}`, payload)
+      : this.api.post('/coaching/engagements', payload);
     req.subscribe({
       next: (r) => { this.saving.set(false); this.dialogRef.close(r); },
       error: () => { this.saving.set(false); },

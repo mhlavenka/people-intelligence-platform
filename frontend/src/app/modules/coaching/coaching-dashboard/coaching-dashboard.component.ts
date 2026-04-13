@@ -33,7 +33,8 @@ interface Engagement {
   startDate?: string;
   targetEndDate?: string;
   cadence?: string;
-  sponsorName?: string;
+  sponsorId?: { _id: string; name: string; email: string } | string | null;
+  billingMode?: 'sponsor' | 'subscription';
   createdAt: string;
 }
 
@@ -176,7 +177,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: string
                     <div class="eng-meta">
                       @if (eng.cadence) { <span><mat-icon>schedule</mat-icon> {{ eng.cadence }}</span> }
                       @if (eng.startDate) { <span><mat-icon>event</mat-icon> {{ eng.startDate | date:'MMM d, y' }}</span> }
-                      @if (eng.sponsorName) { <span><mat-icon>business</mat-icon> {{ eng.sponsorName }}</span> }
+                      @if (sponsorName(eng)) { <span><mat-icon>business</mat-icon> {{ sponsorName(eng) }}</span> }
                     </div>
 
                     <div class="progress-bar-wrap">
@@ -415,6 +416,12 @@ export class CoachingDashboardComponent implements OnInit {
   }
   isPopulatedCoach(c: Engagement['coachId']): c is { _id: string; firstName: string; lastName: string; email?: string; profilePicture?: string } {
     return typeof c === 'object' && c !== null;
+  }
+
+  sponsorName(eng: Engagement): string {
+    const s = eng.sponsorId;
+    if (s && typeof s === 'object' && 'name' in s) return s.name;
+    return '';
   }
 
   statusConfig(status: string) { return STATUS_CONFIG[status] || STATUS_CONFIG['prospect']; }

@@ -137,7 +137,7 @@ export async function linkBookingToCoaching(
       sessionsPurchased: 0,
       sessionsUsed: 0,
       goals: [],
-      rebillCoachee: false,
+      billingMode: 'subscription',
     });
   } else {
     console.info(`[BookingSync] Linking booking to existing engagement ${engagement._id}`);
