@@ -1,6 +1,6 @@
 import { Component, Inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -42,6 +42,9 @@ export interface OrgRow {
   taxExempt?: boolean;
   isActive: boolean;
   trialEndsAt?: string;
+  previousPlan?: string;
+  previousModules?: string[];
+  previousMaxUsers?: number;
   maxUsers: number;
   notes?: string;
   userCount?: number;
@@ -54,6 +57,7 @@ export interface OrgRow {
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    FormsModule,
     MatDialogModule,
     MatButtonModule,
     MatFormFieldModule,
@@ -203,12 +207,7 @@ export interface OrgRow {
         </mat-form-field>
 
         <div class="form-row">
-          <mat-form-field>
-            <mat-label>Trial Ends At</mat-label>
-            <input matInput formControlName="trialEndsAt" type="date" />
-            <mat-hint>Leave blank for no trial limit</mat-hint>
-          </mat-form-field>
-
+          <div></div>
           <div class="toggle-field">
             <mat-slide-toggle formControlName="isActive" color="primary">
               Account Active
@@ -231,6 +230,113 @@ export interface OrgRow {
             </div>
           }
         </div>
+
+        @if (data._id) {
+          <div class="section-label trial-label">
+            <mat-icon>schedule</mat-icon> Trial Period
+          </div>
+
+          @if (trialActive()) {
+            <div class="trial-banner">
+              <div class="trial-banner-head">
+                <div class="trial-banner-title">
+                  <mat-icon>auto_awesome</mat-icon> Trial active
+                </div>
+                <div class="trial-countdown" [class.urgent]="daysRemaining() !== null && daysRemaining()! <= 3">
+                  <mat-icon>schedule</mat-icon>
+                  @if (daysRemaining() !== null) {
+                    @if (daysRemaining()! > 0) {
+                      <strong>{{ daysRemaining() }}</strong> {{ daysRemaining() === 1 ? 'day' : 'days' }} remaining
+                    } @else {
+                      expires today
+                    }
+                  }
+                </div>
+              </div>
+
+              <div class="trial-details">
+                <div class="trial-col">
+                  <div class="trial-col-label">Current (trial)</div>
+                  <div class="trial-kv"><span>Plan</span><strong>{{ planName(data.plan) }}</strong></div>
+                  <div class="trial-kv"><span>Max users</span><strong>{{ data.maxUsers }}</strong></div>
+                  <div class="trial-kv"><span>Modules</span>
+                    @if (data.modules?.length) {
+                      <div class="trial-chips">
+                        @for (m of data.modules!; track m) { <span class="trial-chip trial-chip-active">{{ moduleLabel(m) }}</span> }
+                      </div>
+                    } @else { <em>None</em> }
+                  </div>
+                </div>
+
+                <mat-icon class="trial-arrow">arrow_forward</mat-icon>
+
+                <div class="trial-col">
+                  <div class="trial-col-label">Reverts to</div>
+                  <div class="trial-kv"><span>Plan</span><strong>{{ planName(data.previousPlan!) }}</strong></div>
+                  <div class="trial-kv"><span>Max users</span><strong>{{ data.previousMaxUsers ?? '—' }}</strong></div>
+                  <div class="trial-kv"><span>Modules</span>
+                    @if (data.previousModules?.length) {
+                      <div class="trial-chips">
+                        @for (m of data.previousModules!; track m) { <span class="trial-chip">{{ moduleLabel(m) }}</span> }
+                      </div>
+                    } @else { <em>None</em> }
+                  </div>
+                </div>
+              </div>
+
+              <div class="trial-footer">
+                <div class="trial-end-date">
+                  <mat-icon>event</mat-icon>
+                  Ends on <strong>{{ formatDate(data.trialEndsAt!) }}</strong>
+                </div>
+                <button type="button" class="trial-end-btn" (click)="cancelTrial()" [disabled]="trialSaving">
+                  <mat-icon>undo</mat-icon>
+                  {{ trialSaving ? 'Reverting…' : 'End trial & revert now' }}
+                </button>
+              </div>
+            </div>
+          } @else {
+            <div class="trial-form">
+              <p class="trial-hint">
+                Temporarily upgrade this org to a different plan or add modules for a trial period.
+                The pre-trial state is saved and auto-restored when the trial ends.
+              </p>
+              <div class="form-row">
+                <mat-form-field>
+                  <mat-label>Trial Plan (optional)</mat-label>
+                  <mat-select [(value)]="trialPlan">
+                    <mat-option [value]="null">— Keep current plan —</mat-option>
+                    @for (p of plans(); track p.key) {
+                      <mat-option [value]="p.key">{{ p.name }}</mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+                <mat-form-field>
+                  <mat-label>Trial ends on</mat-label>
+                  <input matInput [(ngModel)]="trialEndDate" [ngModelOptions]="{standalone:true}" type="date" [min]="minTrialDate" />
+                </mat-form-field>
+              </div>
+              <div class="modules-label">Add modules for trial (optional)</div>
+              <div class="modules-row">
+                @for (m of availableModules; track m.key) {
+                  <div class="module-check" [class.checked]="trialModules.includes(m.key)" (click)="toggleTrialModule(m.key)">
+                    <mat-icon>{{ m.icon }}</mat-icon>
+                    {{ m.label }}
+                    @if (trialModules.includes(m.key)) {
+                      <mat-icon class="module-check-icon">check_circle</mat-icon>
+                    }
+                  </div>
+                }
+              </div>
+              <div class="trial-actions">
+                <button type="button" mat-raised-button color="accent" (click)="startTrial()" [disabled]="!trialEndDate || trialSaving">
+                  <mat-icon>play_arrow</mat-icon>
+                  {{ trialSaving ? 'Starting…' : 'Start trial' }}
+                </button>
+              </div>
+            </div>
+          }
+        }
 
         <mat-form-field class="full-width">
           <mat-label>Internal Notes</mat-label>
@@ -357,6 +463,101 @@ export interface OrgRow {
     }
 
     mat-dialog-actions { padding: 12px 24px 16px; gap: 8px; }
+
+    /* Trial */
+    .trial-label {
+      display: flex; align-items: center; gap: 6px;
+      mat-icon { font-size: 16px; width: 16px; height: 16px; color: #7c5cbf; }
+    }
+    .trial-banner {
+      background: linear-gradient(135deg, #f3eeff 0%, #faf7ff 100%);
+      border-left: 4px solid #7c5cbf; border-radius: 12px;
+      padding: 16px 18px;
+      display: flex; flex-direction: column; gap: 14px;
+    }
+    .trial-banner-head {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    }
+    .trial-banner-title {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 15px; font-weight: 700; color: #1B2A47;
+      mat-icon { color: #7c5cbf; font-size: 20px; width: 20px; height: 20px; }
+    }
+    .trial-countdown {
+      display: flex; align-items: center; gap: 4px;
+      font-size: 12px; font-weight: 600; color: #5a6a7e;
+      background: white; border-radius: 999px; padding: 4px 12px;
+      border: 1px solid #e8eef4;
+      mat-icon { font-size: 14px; width: 14px; height: 14px; color: #7c5cbf; }
+      strong { color: #1B2A47; font-weight: 700; }
+      &.urgent {
+        background: #fef2f2; border-color: #fca5a5; color: #b91c1c;
+        mat-icon, strong { color: #b91c1c; }
+      }
+    }
+
+    .trial-details {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 14px;
+      align-items: stretch;
+      background: white; border-radius: 10px; padding: 14px;
+    }
+    .trial-col { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+    .trial-col-label {
+      font-size: 10px; font-weight: 700; color: #9aa5b4;
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .trial-kv {
+      display: flex; align-items: baseline; gap: 8px; font-size: 12px;
+      span { color: #9aa5b4; min-width: 70px; }
+      strong { color: #1B2A47; font-size: 13px; font-weight: 600; }
+      em { color: #b8c0cc; font-style: normal; font-size: 12px; }
+    }
+    .trial-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+    .trial-chip {
+      font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 999px;
+      background: #f0f4f8; color: #5a6a7e;
+    }
+    .trial-chip-active { background: #f3eeff; color: #7c5cbf; }
+    .trial-arrow {
+      align-self: center; color: #b8a5e0;
+      font-size: 28px; width: 28px; height: 28px;
+    }
+
+    .trial-footer {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      padding-top: 10px; border-top: 1px dashed #d9ccf0;
+    }
+    .trial-end-date {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 12px; color: #5a6a7e;
+      mat-icon { font-size: 16px; width: 16px; height: 16px; color: #7c5cbf; }
+      strong { color: #1B2A47; font-weight: 700; }
+    }
+    .trial-end-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 16px; border-radius: 8px; cursor: pointer;
+      background: white; color: #b91c1c;
+      border: 1.5px solid #fca5a5;
+      font-size: 13px; font-weight: 600;
+      transition: all 0.15s;
+      mat-icon { font-size: 16px; width: 16px; height: 16px; }
+      &:hover:not(:disabled) { background: #fef2f2; border-color: #ef4444; }
+      &:disabled { opacity: 0.5; cursor: not-allowed; }
+    }
+
+    @media (max-width: 600px) {
+      .trial-details { grid-template-columns: 1fr; }
+      .trial-arrow { transform: rotate(90deg); }
+      .trial-footer { flex-direction: column; align-items: stretch; }
+    }
+    .trial-form {
+      border: 1px solid #e8eef4; border-radius: 10px; padding: 14px;
+      background: #fafbfd;
+    }
+    .trial-hint { font-size: 12px; color: #5a6a7e; margin: 0 0 10px; }
+    .trial-actions { display: flex; justify-content: flex-end; margin-top: 10px; }
   `],
 })
 export class OrgEditDialogComponent implements OnInit {
@@ -364,6 +565,13 @@ export class OrgEditDialogComponent implements OnInit {
   saving = false;
   logoPreview: string | null = null;
   plans = signal<PlanOption[]>([]);
+
+  // Trial state
+  trialPlan: string | null = null;
+  trialModules: string[] = [];
+  trialEndDate: string = '';
+  trialSaving = false;
+  minTrialDate = new Date(Date.now() + 86400000).toISOString().split('T')[0];
 
   availableModules = [
     { key: 'conflict',       label: 'Conflict',        icon: 'warning_amber' },
@@ -432,10 +640,6 @@ export class OrgEditDialogComponent implements OnInit {
     this.logoPreview = this.data.logoUrl ?? null;
     this.selectedModules = [...(this.data.modules ?? ['conflict'])];
 
-    const trialDate = this.data.trialEndsAt
-      ? new Date(this.data.trialEndsAt).toISOString().split('T')[0]
-      : '';
-
     const addr = this.data.billingAddress ?? {};
     this.form = this.fb.group({
       name:                   [this.data.name ?? '', Validators.required],
@@ -451,7 +655,6 @@ export class OrgEditDialogComponent implements OnInit {
       taxExempt:              [this.data.taxExempt ?? false],
       plan:                   [this.data.plan ?? '', Validators.required],
       maxUsers:               [this.data.maxUsers ?? 100, [Validators.required, Validators.min(1)]],
-      trialEndsAt:            [trialDate],
       isActive:               [this.data.isActive ?? true],
       notes:                  [this.data.notes ?? ''],
     });
@@ -481,6 +684,82 @@ export class OrgEditDialogComponent implements OnInit {
     return this.selectedModules.includes(key);
   }
 
+  trialActive(): boolean {
+    return !!this.data.previousPlan;
+  }
+
+  formatDate(iso: string): string {
+    const d = new Date(iso);
+    return isNaN(d.getTime()) ? '' : d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+  }
+
+  daysRemaining(): number | null {
+    if (!this.data.trialEndsAt) return null;
+    const end = new Date(this.data.trialEndsAt).getTime();
+    if (isNaN(end)) return null;
+    return Math.max(0, Math.ceil((end - Date.now()) / 86400000));
+  }
+
+  planName(key: string | undefined): string {
+    if (!key) return '—';
+    return this.plans().find((p) => p.key === key)?.name ?? key;
+  }
+
+  moduleLabel(key: string): string {
+    return this.availableModules.find((m) => m.key === key)?.label ?? key;
+  }
+
+  toggleTrialModule(key: string): void {
+    this.trialModules = this.trialModules.includes(key)
+      ? this.trialModules.filter((m) => m !== key)
+      : [...this.trialModules, key];
+  }
+
+  startTrial(): void {
+    if (!this.data._id || !this.trialEndDate) return;
+    this.trialSaving = true;
+    const body: { plan?: string; addModules?: string[]; endsAt: string } = {
+      endsAt: new Date(this.trialEndDate).toISOString(),
+    };
+    if (this.trialPlan) body.plan = this.trialPlan;
+    if (this.trialModules.length) body.addModules = this.trialModules;
+
+    this.api.post<OrgRow>(`/system-admin/organizations/${this.data._id}/trial`, body).subscribe({
+      next: (org) => {
+        this.trialSaving = false;
+        this.data = { ...this.data, ...org };
+        this.selectedModules = [...(org.modules ?? [])];
+        this.form.patchValue({ plan: org.plan, maxUsers: org.maxUsers });
+        this.trialPlan = null;
+        this.trialModules = [];
+        this.trialEndDate = '';
+        this.snack.open('Trial started', '', { duration: 2000 });
+      },
+      error: (err) => {
+        this.trialSaving = false;
+        this.snack.open(err?.error?.error ?? 'Failed to start trial', 'Close', { duration: 3000 });
+      },
+    });
+  }
+
+  cancelTrial(): void {
+    if (!this.data._id) return;
+    this.trialSaving = true;
+    this.api.delete<OrgRow>(`/system-admin/organizations/${this.data._id}/trial`).subscribe({
+      next: (org) => {
+        this.trialSaving = false;
+        this.data = { ...this.data, ...org, previousPlan: undefined, previousModules: undefined, previousMaxUsers: undefined, trialEndsAt: undefined };
+        this.selectedModules = [...(org.modules ?? [])];
+        this.form.patchValue({ plan: org.plan, maxUsers: org.maxUsers });
+        this.snack.open('Trial ended, plan reverted', '', { duration: 2500 });
+      },
+      error: (err) => {
+        this.trialSaving = false;
+        this.snack.open(err?.error?.error ?? 'Failed to end trial', 'Close', { duration: 3000 });
+      },
+    });
+  }
+
   save(): void {
     if (this.form.invalid) return;
     this.saving = true;
@@ -502,7 +781,6 @@ export class OrgEditDialogComponent implements OnInit {
       },
       plan:         v['plan'],
       maxUsers:     v['maxUsers'],
-      trialEndsAt:  v['trialEndsAt'] || null,
       isActive:     v['isActive'],
       notes:        v['notes'],
       modules:      this.selectedModules,

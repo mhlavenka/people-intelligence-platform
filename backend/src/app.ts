@@ -37,6 +37,7 @@ import journalRoutes from './routes/journal.routes';
 import { webhookRouter } from './routes/webhook.routes';
 import { startReminderJob } from './jobs/reminder.job';
 import { startWebhookRenewalJob } from './jobs/webhookRenewal.job';
+import { startTrialRevertJob } from './jobs/trialRevert.job';
 
 const app = express();
 
@@ -103,6 +104,7 @@ async function bootstrap(): Promise<void> {
   await connectDatabase();
   startReminderJob();
   startWebhookRenewalJob();
+  startTrialRevertJob();
   app.listen(config.port, () => {
     console.log(`[Server] Running on port ${config.port} [${config.nodeEnv}]`);
   });

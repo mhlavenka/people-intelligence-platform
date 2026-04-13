@@ -36,6 +36,12 @@ export interface IOrganization extends Document {
   departments: string[];   // org-defined department list
   isActive: boolean;
   trialEndsAt?: Date;
+  // Trial snapshot: when a system-admin upgrades the org as a trial, the
+  // pre-trial plan/modules/maxUsers are saved here so the nightly cron
+  // (or an explicit DELETE /trial) can revert cleanly.
+  previousPlan?: string;
+  previousModules?: string[];
+  previousMaxUsers?: number;
   maxUsers: number;
   notes?: string;
   coachingRebill: boolean;
@@ -73,6 +79,9 @@ const OrganizationSchema = new Schema<IOrganization>(
     industry: { type: String },
     isActive:         { type: Boolean, default: true },
     trialEndsAt:      { type: Date },
+    previousPlan:     { type: String },
+    previousModules:  [{ type: String }],
+    previousMaxUsers: { type: Number },
     maxUsers:         { type: Number, default: 100 },
     notes:            { type: String, trim: true },
     coachingRebill:   { type: Boolean, default: false },

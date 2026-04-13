@@ -101,6 +101,74 @@ export async function updateOrganization(req: AuthRequest, res: Response, next: 
   } catch (e) { next(e); }
 }
 
+// POST /api/system-admin/organizations/:id/trial
+// Start (or restart) a plan trial. Snapshots the current plan/modules/maxUsers
+// into previousPlan/previousModules/previousMaxUsers so the nightly cron
+// (or an explicit revert) can restore them.
+// Body: { plan?: string, modules?: string[], addModules?: string[],
+//         maxUsers?: number, endsAt: string (ISO date) }
+export async function startOrgTrial(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { plan, modules, addModules, maxUsers, endsAt } = req.body as {
+      plan?: string;
+      modules?: string[];
+      addModules?: string[];
+      maxUsers?: number;
+      endsAt?: string;
+    };
+    if (!endsAt) { res.status(400).json({ error: 'endsAt is required' }); return; }
+    const end = new Date(endsAt);
+    if (isNaN(end.getTime()) || end.getTime() <= Date.now()) {
+      res.status(400).json({ error: 'endsAt must be a future date' }); return;
+    }
+
+    const org = await Organization.findById(req.params['id']).setOptions(bypass);
+    if (!org) { res.status(404).json({ error: 'Organization not found' }); return; }
+
+    // If a trial is already active, keep the existing snapshot — we don't
+    // want to overwrite pre-trial state with the current trial's values.
+    if (!org.previousPlan) {
+      org.previousPlan     = org.plan;
+      org.previousModules  = [...(org.modules || [])];
+      org.previousMaxUsers = org.maxUsers;
+    }
+
+    if (plan !== undefined)    org.plan = plan;
+    if (maxUsers !== undefined) org.maxUsers = maxUsers;
+    if (modules !== undefined) {
+      org.modules = modules;
+    } else if (addModules?.length) {
+      const set = new Set([...(org.modules || []), ...addModules]);
+      org.modules = Array.from(set);
+    }
+    org.trialEndsAt = end;
+
+    await org.save();
+    res.json(org);
+  } catch (e) { next(e); }
+}
+
+// DELETE /api/system-admin/organizations/:id/trial
+// End the trial immediately and revert to the snapshotted pre-trial state.
+export async function endOrgTrial(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const org = await Organization.findById(req.params['id']).setOptions(bypass);
+    if (!org) { res.status(404).json({ error: 'Organization not found' }); return; }
+    if (!org.trialEndsAt && !org.previousPlan) {
+      res.status(400).json({ error: 'No active trial to revert.' }); return;
+    }
+    if (org.previousPlan !== undefined)    org.plan = org.previousPlan;
+    if (org.previousModules !== undefined) org.modules = [...org.previousModules];
+    if (org.previousMaxUsers !== undefined) org.maxUsers = org.previousMaxUsers;
+    org.previousPlan = undefined;
+    org.previousModules = undefined;
+    org.previousMaxUsers = undefined;
+    org.trialEndsAt = undefined;
+    await org.save();
+    res.json(org);
+  } catch (e) { next(e); }
+}
+
 // DELETE /api/system-admin/organizations/:id  (soft-delete — sets isActive: false)
 export async function suspendOrganization(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
   try {

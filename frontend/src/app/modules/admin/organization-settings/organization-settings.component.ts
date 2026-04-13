@@ -968,13 +968,16 @@ export class OrganizationSettingsComponent implements OnInit {
   industries    = INDUSTRIES;
   /** Modules included in the org's current plan (auto-populated from /api/plans). */
   planModules   = signal<string[] | null>(null);
-  /** Filtered to only the modules available in the org's plan.
-   *  Falls back to every module when the plan lookup hasn't run yet or
-   *  the plan record has an empty modules list (e.g. legacy plans). */
+  /** Modules the admin can toggle: union of the plan's modules and anything
+   *  already enabled on the org (covers trial-granted modules that sit
+   *  outside the base plan). Falls back to every module when the plan
+   *  lookup hasn't run yet or the plan record has no modules list. */
   allModules    = computed(() => {
     const allowed = this.planModules();
+    const enabled = this.org()?.modules ?? [];
     if (!allowed || allowed.length === 0) return ALL_MODULES;
-    return ALL_MODULES.filter((m) => allowed.includes(m.key));
+    const keys = new Set([...allowed, ...enabled]);
+    return ALL_MODULES.filter((m) => keys.has(m.key));
   });
   presets       = PRESETS;
   fonts         = FONTS;

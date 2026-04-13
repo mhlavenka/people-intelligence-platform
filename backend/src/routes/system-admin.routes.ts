@@ -11,6 +11,8 @@ import {
   suspendOrganization,
   listOrgUsers,
   updateOrgUser,
+  startOrgTrial,
+  endOrgTrial,
 } from '../controllers/system-admin.controller';
 
 const router = Router();
@@ -24,6 +26,8 @@ router.post('/organizations',                              createOrganization);
 router.get('/organizations/:id',                           getOrganization);
 router.put('/organizations/:id',                           updateOrganization);
 router.delete('/organizations/:id',                        suspendOrganization);
+router.post('/organizations/:id/trial',                    startOrgTrial);
+router.delete('/organizations/:id/trial',                  endOrgTrial);
 router.get('/organizations/:id/users',                     listOrgUsers);
 router.patch('/organizations/:id/users/:userId',           updateOrgUser);
 
