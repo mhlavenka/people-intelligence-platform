@@ -25,7 +25,7 @@ interface DashboardStats {
 interface Engagement {
   _id: string;
   coacheeId: { _id: string; firstName: string; lastName: string; email: string; department?: string; profilePicture?: string } | string;
-  coachId: { _id: string; firstName: string; lastName: string } | string;
+  coachId: { _id: string; firstName: string; lastName: string; email?: string; profilePicture?: string } | string;
   status: string;
   sessionsPurchased: number;
   sessionsUsed: number;
@@ -133,17 +133,34 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: string
                     </div>
 
                     <div class="eng-coachee">
-                      @if (isPopulated(eng.coacheeId)) {
-                        @if (eng.coacheeId.profilePicture) {
-                          <img class="coachee-avatar coachee-avatar-img" [src]="eng.coacheeId.profilePicture" alt="" />
-                        } @else {
-                          <div class="coachee-avatar">{{ eng.coacheeId.firstName[0] }}{{ eng.coacheeId.lastName[0] }}</div>
+                      @if (isCoachee()) {
+                        <!-- Coachees see their coach on each engagement card -->
+                        @if (isPopulatedCoach(eng.coachId)) {
+                          @if (eng.coachId.profilePicture) {
+                            <img class="coachee-avatar coachee-avatar-img" [src]="eng.coachId.profilePicture" alt="" />
+                          } @else {
+                            <div class="coachee-avatar">{{ eng.coachId.firstName[0] }}{{ eng.coachId.lastName[0] }}</div>
+                          }
+                          <div class="coachee-info">
+                            <strong>{{ eng.coachId.firstName }} {{ eng.coachId.lastName }}</strong>
+                            @if (eng.coachId.email) { <span>{{ eng.coachId.email }}</span> }
+                            <span class="role-label">Your coach</span>
+                          </div>
                         }
-                        <div class="coachee-info">
-                          <strong>{{ eng.coacheeId.firstName }} {{ eng.coacheeId.lastName }}</strong>
-                          <span>{{ eng.coacheeId.email }}</span>
-                          @if (eng.coacheeId.department) { <span>{{ eng.coacheeId.department }}</span> }
-                        </div>
+                      } @else {
+                        <!-- Coaches / admins / HR see the coachee -->
+                        @if (isPopulated(eng.coacheeId)) {
+                          @if (eng.coacheeId.profilePicture) {
+                            <img class="coachee-avatar coachee-avatar-img" [src]="eng.coacheeId.profilePicture" alt="" />
+                          } @else {
+                            <div class="coachee-avatar">{{ eng.coacheeId.firstName[0] }}{{ eng.coacheeId.lastName[0] }}</div>
+                          }
+                          <div class="coachee-info">
+                            <strong>{{ eng.coacheeId.firstName }} {{ eng.coacheeId.lastName }}</strong>
+                            <span>{{ eng.coacheeId.email }}</span>
+                            @if (eng.coacheeId.department) { <span>{{ eng.coacheeId.department }}</span> }
+                          </div>
+                        }
                       }
                     </div>
 
@@ -265,6 +282,10 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: string
       display: flex; flex-direction: column; gap: 1px; min-width: 0;
       strong { font-size: 14px; color: #1B2A47; }
       span { font-size: 12px; color: #9aa5b4; }
+      .role-label {
+        text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;
+        color: #3A9FD6; font-size: 10px; margin-top: 2px;
+      }
     }
 
     .eng-goals { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -387,8 +408,12 @@ export class CoachingDashboardComponent implements OnInit {
   ) {}
 
   canManage = () => ['admin', 'hr_manager', 'coach'].includes(this.auth.currentUser()?.role ?? '');
+  isCoachee = () => this.auth.currentUser()?.role === 'coachee';
 
   isPopulated(c: Engagement['coacheeId']): c is { _id: string; firstName: string; lastName: string; email: string; department?: string; profilePicture?: string } {
+    return typeof c === 'object' && c !== null;
+  }
+  isPopulatedCoach(c: Engagement['coachId']): c is { _id: string; firstName: string; lastName: string; email?: string; profilePicture?: string } {
     return typeof c === 'object' && c !== null;
   }
 

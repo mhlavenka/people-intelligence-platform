@@ -49,7 +49,7 @@ router.get('/engagements', async (req: AuthRequest, res: Response, next: NextFun
   try {
     const engagements = await CoachingEngagement.find(scopeCoachingFilter(req))
       .populate('coacheeId', 'firstName lastName email department profilePicture')
-      .populate('coachId', 'firstName lastName')
+      .populate('coachId', 'firstName lastName email profilePicture')
       .sort({ createdAt: -1 });
     res.json(engagements);
   } catch (e) { next(e); }
@@ -62,7 +62,7 @@ router.get('/engagements/:id', async (req: AuthRequest, res: Response, next: Nex
       scopeCoachingFilter(req, { _id: req.params['id'] }),
     )
       .populate('coacheeId', 'firstName lastName email department profilePicture')
-      .populate('coachId', 'firstName lastName');
+      .populate('coachId', 'firstName lastName email profilePicture');
     if (!engagement) { res.status(404).json({ error: 'Engagement not found' }); return; }
     res.json(engagement);
   } catch (e) { next(e); }
@@ -100,7 +100,7 @@ router.put(
         { new: true, runValidators: true }
       )
         .populate('coacheeId', 'firstName lastName email department profilePicture')
-        .populate('coachId', 'firstName lastName');
+        .populate('coachId', 'firstName lastName email profilePicture');
       if (!engagement) { res.status(404).json({ error: 'Engagement not found' }); return; }
       res.json(engagement);
     } catch (e) { next(e); }
@@ -170,7 +170,7 @@ router.get('/sessions', async (req: AuthRequest, res: Response, next: NextFuncti
     const sessions = await CoachingSession.find(filter)
       .select(selectFields as string)
       .populate('coacheeId', 'firstName lastName profilePicture')
-      .populate('coachId', 'firstName lastName')
+      .populate('coachId', 'firstName lastName email profilePicture')
       .sort({ date: -1 });
     res.json(sessions);
   } catch (e) { next(e); }
@@ -185,7 +185,7 @@ router.get('/sessions/:id', async (req: AuthRequest, res: Response, next: NextFu
     )
       .select(selectFields as string)
       .populate('coacheeId', 'firstName lastName profilePicture')
-      .populate('coachId', 'firstName lastName');
+      .populate('coachId', 'firstName lastName email profilePicture');
     if (!session) { res.status(404).json({ error: 'Session not found' }); return; }
     res.json(session);
   } catch (e) { next(e); }
@@ -404,7 +404,7 @@ router.get(
       if (req.user!.role === 'coach') billingFilter['coachId'] = req.user!.userId;
 
       const engagements = await CoachingEngagement.find(billingFilter)
-        .populate('coachId', 'firstName lastName')
+        .populate('coachId', 'firstName lastName email profilePicture')
         .lean();
 
       const engagementIds = engagements.map((e) => e._id);
