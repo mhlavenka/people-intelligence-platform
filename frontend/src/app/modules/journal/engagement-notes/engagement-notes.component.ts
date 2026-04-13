@@ -73,7 +73,7 @@ interface EngagementInfo {
                     <span class="tc-status" [class]="note.status">{{ note.status }}</span>
                   </div>
                   <div class="tc-body">
-                    {{ note.aiSummary || note.inSession.observations?.slice(0, 120) || 'No observations yet' }}
+                    {{ note.aiSummary || note.inSession?.observations?.slice(0, 120) || 'No observations yet' }}
                   </div>
                   @if (note.aiThemes.length) {
                     <div class="tc-themes">
@@ -269,7 +269,7 @@ export class EngagementNotesComponent implements OnInit {
       .map((n) => ({
         noteId: n._id,
         sessionNumber: n.sessionNumber,
-        items: n.postSession.accountabilityItems.filter((a) => !a.completed),
+        items: (n.postSession?.accountabilityItems ?? []).filter((a) => !a.completed),
       }))
   );
 
@@ -306,10 +306,10 @@ export class EngagementNotesComponent implements OnInit {
   toggleAccountability(noteId: string, itemId: string): void {
     const note = this.notes().find((n) => n._id === noteId);
     if (!note) return;
-    const items = note.postSession.accountabilityItems.map((a) =>
+    const items = (note.postSession?.accountabilityItems ?? []).map((a) =>
       a._id === itemId ? { ...a, completed: !a.completed } : a
     );
-    this.journal.updateNote(noteId, { postSession: { ...note.postSession, accountabilityItems: items } } as any).subscribe({
+    this.journal.updateNote(noteId, { postSession: { ...(note.postSession ?? {}), accountabilityItems: items } } as any).subscribe({
       next: (updated) => {
         this.notes.update((prev) => prev.map((n) => n._id === noteId ? updated : n));
       },

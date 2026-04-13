@@ -21,25 +21,27 @@ export interface SessionNote {
   durationMinutes: number;
   format: 'in_person' | 'video' | 'phone';
   status: 'draft' | 'complete';
-  preSession: {
+  // Coach-side subdocs — absent on coachee-created notes that haven't
+  // been touched by the coach yet, so all three are optional.
+  preSession?: {
     agenda?: string;
     hypotheses?: string;
     coachIntention?: string;
   };
-  inSession: {
+  inSession?: {
     openingState?: string;
-    keyThemes: string[];
+    keyThemes?: string[];
     observations?: string;
-    notableQuotes: string[];
+    notableQuotes?: string[];
     coachInterventions?: string;
     energyShifts?: string;
   };
-  postSession: {
+  postSession?: {
     coachReflection?: string;
     whatWorked?: string;
     whatToExplore?: string;
     clientGrowthEdge?: string;
-    accountabilityItems: AccountabilityItem[];
+    accountabilityItems?: AccountabilityItem[];
   };
   coacheePre?: {
     moodRating?: number;
