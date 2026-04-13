@@ -279,7 +279,7 @@ interface Session {
                           <span class="journal-label">Note #{{ note.sessionNumber }}</span>
                           <span class="journal-status" [class]="note.status">{{ note.status }}</span>
                           @if (canManage()) {
-                            <a mat-icon-button [routerLink]="'/journal/note/' + note._id" matTooltip="Open journal note" class="journal-open-btn">
+                            <a mat-icon-button [routerLink]="['/journal/note', note._id, 'edit']" matTooltip="Open journal note" class="journal-open-btn">
                               <mat-icon>open_in_new</mat-icon>
                             </a>
                           } @else {

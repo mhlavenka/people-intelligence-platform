@@ -60,23 +60,12 @@ import { ApiService } from '../../../core/api.service';
 
         <!-- Tabs -->
         <mat-tab-group animationDuration="0ms">
-          <!-- BEFORE -->
+          <!-- BEFORE — read-only view of what the coachee filled in -->
           <mat-tab label="Before">
             <div class="tab-content">
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Agenda</mat-label>
-                <textarea matInput rows="4" [(ngModel)]="preSession.agenda" placeholder="What topics or goals are planned for this session?"></textarea>
-              </mat-form-field>
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Hypotheses</mat-label>
-                <textarea matInput rows="4" [(ngModel)]="preSession.hypotheses" placeholder="What might come up? What patterns do you expect?"></textarea>
-              </mat-form-field>
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Coach Intention</mat-label>
-                <textarea matInput rows="4" [(ngModel)]="preSession.coachIntention" placeholder="What is your coaching intention for this session?"></textarea>
-              </mat-form-field>
-
-              <!-- What the coachee shared (read-only) -->
+              @if (!hasCoacheePre()) {
+                <p class="empty-tab">The coachee hasn't filled in their pre-session input yet.</p>
+              }
               @if (hasCoacheePre()) {
                 <div class="coachee-panel">
                   <div class="coachee-panel-head">
@@ -163,45 +152,12 @@ import { ApiService } from '../../../core/api.service';
             </div>
           </mat-tab>
 
-          <!-- AFTER -->
+          <!-- AFTER — read-only view of what the coachee filled in -->
           <mat-tab label="After">
             <div class="tab-content">
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Coach Reflection</mat-label>
-                <textarea matInput rows="6" [(ngModel)]="postSession.coachReflection" placeholder="Your personal reflections on the session..."></textarea>
-              </mat-form-field>
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label>What Worked</mat-label>
-                <textarea matInput rows="4" [(ngModel)]="postSession.whatWorked"></textarea>
-              </mat-form-field>
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label>What to Explore Next</mat-label>
-                <textarea matInput rows="4" [(ngModel)]="postSession.whatToExplore"></textarea>
-              </mat-form-field>
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Client's Growth Edge</mat-label>
-                <textarea matInput rows="4" [(ngModel)]="postSession.clientGrowthEdge" placeholder="The most significant growth area emerging..."></textarea>
-              </mat-form-field>
-
-              <!-- Accountability Items -->
-              <label class="field-label">Accountability Items</label>
-              @for (item of postSession.accountabilityItems; track $index) {
-                <div class="acc-row">
-                  <mat-checkbox [(ngModel)]="item.completed" />
-                  <mat-form-field appearance="outline" class="flex-grow">
-                    <input matInput [(ngModel)]="item.item" placeholder="Action item...">
-                  </mat-form-field>
-                  <mat-form-field appearance="outline" style="width: 140px">
-                    <mat-label>Due</mat-label>
-                    <input matInput [matDatepicker]="accDp" [(ngModel)]="item.dueDate">
-                    <mat-datepicker-toggle matIconSuffix [for]="accDp" />
-                    <mat-datepicker #accDp />
-                  </mat-form-field>
-                  <button mat-icon-button (click)="removeAccountabilityItem($index)"><mat-icon>remove_circle_outline</mat-icon></button>
-                </div>
+              @if (!hasCoacheePost()) {
+                <p class="empty-tab">The coachee hasn't filled in their post-session reflection yet.</p>
               }
-              <button mat-button (click)="addAccountabilityItem()"><mat-icon>add</mat-icon> Add Item</button>
-
               <!-- What the coachee shared after the session (read-only) -->
               @if (hasCoacheePost()) {
                 <div class="coachee-panel">
@@ -283,6 +239,10 @@ import { ApiService } from '../../../core/api.service';
     }
 
     .tab-content { padding: 20px 0; }
+    .empty-tab {
+      text-align: center; color: #9aa5b4; font-style: italic;
+      padding: 32px 16px; margin: 0;
+    }
     .coachee-panel {
       margin-top: 20px;
       background: #f3eafc; border: 1px solid #e0d0f0; border-radius: 10px;
