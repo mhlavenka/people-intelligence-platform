@@ -366,31 +366,49 @@ router.post(
 
       const subtotal = lineItems.reduce((s, li) => s + li.amount, 0);
 
-      // Sequence: INV-{year}-{seq}. Use org-level sequence.
-      const count = await Invoice.countDocuments({ organizationId: orgId });
-      const invoiceNumber = `INV-${new Date().getFullYear()}-${String(count + 1).padStart(4, '0')}`;
-
       const dueDate = new Date();
       dueDate.setDate(dueDate.getDate() + 30);
+      const year = new Date().getFullYear();
+      const prefix = `SPN-${year}-`;
 
-      const invoice = await Invoice.create({
-        organizationId: orgId,
-        sponsorId: sponsor._id,
-        invoiceNumber,
-        period: {
-          from: new Date(Math.min(...engagements.map((e) => new Date(e.startDate || e.createdAt).getTime()))),
-          to: new Date(),
-        },
-        lineItems,
-        subtotal,
-        taxRate: 0,
-        tax: 0,
-        total: subtotal,
-        currency: 'CAD',
-        status: 'draft',
-        dueDate,
-      });
+      // Sponsor-invoice sequence is independent of the org-level INV- series.
+      // Pick the next number from the count of existing SPN- invoices and
+      // retry once on the rare race-condition collision.
+      let invoice = null;
+      for (let attempt = 0; attempt < 5 && !invoice; attempt++) {
+        const count = await Invoice.countDocuments({
+          organizationId: orgId,
+          invoiceNumber: { $regex: `^${prefix}` },
+        });
+        const invoiceNumber = `${prefix}${String(count + 1 + attempt).padStart(4, '0')}`;
+        try {
+          invoice = await Invoice.create({
+            organizationId: orgId,
+            sponsorId: sponsor._id,
+            invoiceNumber,
+            period: {
+              from: new Date(Math.min(...engagements.map((e) => new Date(e.startDate || e.createdAt).getTime()))),
+              to: new Date(),
+            },
+            lineItems,
+            subtotal,
+            taxRate: 0,
+            tax: 0,
+            total: subtotal,
+            currency: 'CAD',
+            status: 'draft',
+            dueDate,
+          });
+        } catch (err) {
+          if ((err as { code?: number })?.code === 11000) continue; // try next number
+          throw err;
+        }
+      }
 
+      if (!invoice) {
+        res.status(500).json({ error: 'Could not allocate a unique invoice number.' });
+        return;
+      }
       res.status(201).json(invoice);
     } catch (e) { next(e); }
   },
