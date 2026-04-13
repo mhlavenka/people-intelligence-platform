@@ -79,14 +79,6 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: string
           <h1>Coaching</h1>
           <p>Manage coaching engagements and sessions</p>
         </div>
-        @if (canManage()) {
-          <a mat-stroked-button routerLink="/journal">
-            <mat-icon>auto_stories</mat-icon> My Journal
-          </a>
-          <button mat-raised-button color="primary" (click)="createEngagement()">
-            <mat-icon>add</mat-icon> New Engagement
-          </button>
-        }
       </div>
 
       @if (loading()) {
@@ -105,11 +97,11 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: string
         <div class="main-layout">
           <!-- Left: Engagements -->
           <div class="engagements-col">
-            @if (engagements().length === 0) {
+            @if (engagements().length === 0 && !canManage()) {
               <div class="empty-state">
                 <mat-icon>psychology_alt</mat-icon>
                 <h3>No coaching engagements yet</h3>
-                <p>Create your first coaching engagement to get started.</p>
+                <p>You'll see your engagements here once your coach sets one up.</p>
               </div>
             } @else {
               <div class="engagements-grid">
@@ -184,6 +176,12 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: string
                       <div class="progress-bar" [style.width.%]="eng.sessionsPurchased ? (eng.sessionsUsed / eng.sessionsPurchased) * 100 : 0"></div>
                     </div>
                   </div>
+                }
+                @if (canManage()) {
+                  <button class="engagement-card add-card" (click)="createEngagement()" type="button">
+                    <mat-icon class="add-icon">add</mat-icon>
+                    <span class="add-label">New engagement</span>
+                  </button>
                 }
               </div>
             }
@@ -261,6 +259,22 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: string
       display: flex; flex-direction: column; gap: 12px;
       text-decoration: none; color: inherit;
       &:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.1); transform: translateY(-1px); }
+    }
+
+    .add-card {
+      background: transparent;
+      border: 2px dashed #c8d3df;
+      box-shadow: none;
+      align-items: center; justify-content: center;
+      min-height: 200px;
+      color: #6b7c93;
+      font: inherit; gap: 6px;
+      &:hover {
+        border-color: #3A9FD6; color: #3A9FD6;
+        box-shadow: none; transform: translateY(-1px); background: rgba(58,159,214,0.04);
+      }
+      .add-icon { font-size: 36px; width: 36px; height: 36px; }
+      .add-label { font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
     }
 
     .eng-header { display: flex; align-items: center; gap: 8px; }
