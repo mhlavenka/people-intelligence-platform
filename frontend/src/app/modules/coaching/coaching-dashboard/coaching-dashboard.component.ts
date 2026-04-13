@@ -456,14 +456,23 @@ export class CoachingDashboardComponent implements OnInit {
   load(): void {
     this.loading.set(true);
 
-    // Coachees: redirect straight to their engagement
+    // Coachees: redirect to their single engagement; otherwise show the
+    // list with stats. Stats and sessions load alongside engagements so
+    // the dashboard cards aren't all zeros.
     if (this.auth.currentUser()?.role === 'coachee') {
+      this.api.get<DashboardStats>('/coaching/dashboard').subscribe({
+        next: (s) => this.stats.set(s),
+        error: (err) => console.error('[Coaching] Failed to load dashboard stats (coachee):', err),
+      });
+      this.api.get<CalSession[]>('/coaching/sessions').subscribe({
+        next: (s) => this.sessions.set(s),
+        error: (err) => console.error('[Coaching] Failed to load sessions (coachee):', err),
+      });
       this.api.get<Engagement[]>('/coaching/engagements').subscribe({
         next: (engs) => {
           if (engs.length === 1) {
             this.router.navigate(['/coaching', engs[0]._id], { replaceUrl: true });
           } else {
-            // Multiple engagements — show the list
             this.engagements.set(engs);
             this.loading.set(false);
           }

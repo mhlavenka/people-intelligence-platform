@@ -631,9 +631,15 @@ export class AppShellComponent implements OnInit, OnDestroy {
       if (isGroup(entry)) {
         if (entry.module && !modules.includes(entry.module)) return acc;
         const visibleChildren = entry.children.filter(isItemVisible);
-        if (visibleChildren.length) {
-          acc.push({ ...entry, children: visibleChildren });
+        if (visibleChildren.length === 0) return acc;
+        // A group with exactly one visible child collapses to that child
+        // at the top level (e.g. coachees see "Engagements", not
+        // "Coaching > Engagements").
+        if (visibleChildren.length === 1) {
+          acc.push(visibleChildren[0]);
+          return acc;
         }
+        acc.push({ ...entry, children: visibleChildren });
       } else {
         if (isItemVisible(entry)) {
           acc.push(entry);

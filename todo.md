@@ -7,20 +7,10 @@ FRIDAY REVIEW
 -------------
     
 **What was done in the last week**
-  - name change, logo with bridge
-  - Plans changes
-  - Roles changes
-  - Intakes - split into 3 categories for surveys, interview and assessment. New default survey standard forms based on 5 conflict theories
-  - Reports module
-  - EQI imports
-  - Finetuned users, logins, 
 
 **Detail Review**
   - Conflict Intelligence - need to go into details what this module has and should have
   - Coaching module phase 1 review. Go over the rest of the phases
-    - Q: can there be more than one engagement for the same coachee?
-    - Q: what should the coachees see other than the schedule? Notes? Journal? Booking - just a request or full on?
-    - Coachee rebilling review
 
 IMPROVEMENTS
 ------------
@@ -31,7 +21,7 @@ IMPROVEMENTS
 - add mentoring to coaching module
   - add lumina spark to 2.4
 - coaching
-  - coachee might be thru a sponsor which has impact on billing. Setup Customers for billing purposes - they become sponsors
+  - coachee - send message to coach
   - lead, initial chemistry call
   - intake - attach to session, create different session types
   - coachees send pre and post session forms
