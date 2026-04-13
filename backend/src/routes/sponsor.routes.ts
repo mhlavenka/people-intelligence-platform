@@ -201,7 +201,7 @@ router.put(
 // ─── Delete ─────────────────────────────────────────────────────────────────
 router.delete(
   '/:id',
-  requireRole('admin', 'hr_manager'),
+  requireRole('admin', 'hr_manager', 'coach'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       // Block delete when active engagements still reference this sponsor.
@@ -345,7 +345,7 @@ router.get(
 // from the existing invoice flow.
 router.post(
   '/:id/invoice',
-  requireRole('admin', 'hr_manager'),
+  requireRole('admin', 'hr_manager', 'coach'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const orgId = req.user!.organizationId;
@@ -529,7 +529,7 @@ router.get(
 // ─── Edit a sponsor invoice (only while draft) ──────────────────────────────
 router.put(
   '/:id/invoices/:invoiceId',
-  requireRole('admin', 'hr_manager'),
+  requireRole('admin', 'hr_manager', 'coach'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const orgId = req.user!.organizationId;
@@ -576,7 +576,7 @@ router.put(
 // ─── Send a sponsor invoice (status draft -> sent + email) ──────────────────
 router.post(
   '/:id/invoices/:invoiceId/send',
-  requireRole('admin', 'hr_manager'),
+  requireRole('admin', 'hr_manager', 'coach'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const orgId = req.user!.organizationId;
@@ -652,7 +652,7 @@ router.post(
 // Voiding releases its engagements so they become billable again.
 router.patch(
   '/:id/invoices/:invoiceId/void',
-  requireRole('admin', 'hr_manager'),
+  requireRole('admin', 'hr_manager', 'coach'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const orgId = req.user!.organizationId;
@@ -670,7 +670,7 @@ router.patch(
 // ─── Delete a sponsor invoice (only when draft or void) ─────────────────────
 router.delete(
   '/:id/invoices/:invoiceId',
-  requireRole('admin', 'hr_manager'),
+  requireRole('admin', 'hr_manager', 'coach'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const orgId = req.user!.organizationId;
