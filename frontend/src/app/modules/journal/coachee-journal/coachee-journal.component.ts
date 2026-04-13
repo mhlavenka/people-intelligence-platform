@@ -10,6 +10,17 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { JournalService, SessionNote } from '../journal.service';
+import { ApiService } from '../../../core/api.service';
+
+interface CoachingSession {
+  _id: string;
+  date: string;
+  duration: number;
+  format: string;
+  status: string;
+  googleMeetLink?: string;
+  inSession?: { observations?: string; openingState?: string; keyThemes?: string[] };
+}
 
 /**
  * Coachee-facing journal:
@@ -35,18 +46,19 @@ import { JournalService, SessionNote } from '../journal.service';
 
       @if (loading()) {
         <div class="loading"><mat-spinner diameter="36" /></div>
-      } @else if (notes().length === 0) {
+      } @else if (sessions().length === 0) {
         <div class="empty">
           <mat-icon>menu_book</mat-icon>
           <p>No sessions yet. Once your coach schedules a session you can capture pre- and post-session notes here.</p>
         </div>
       } @else {
         <div class="note-list">
-          @for (n of notes(); track n._id) {
+          @for (s of sessions(); track s._id; let idx = $index) {
             <section class="note-card">
               <header class="note-head">
-                <strong>Session #{{ n.sessionNumber }}</strong>
-                <span class="muted">{{ n.sessionDate | date:'mediumDate' }}</span>
+                <strong>Session #{{ sessions().length - idx }}</strong>
+                <span class="muted">{{ s.date | date:'mediumDate' }} · {{ s.date | date:'shortTime' }}</span>
+                <span class="muted-status" [class]="'st-' + s.status">{{ s.status }}</span>
               </header>
 
               <mat-tab-group animationDuration="0ms">
@@ -61,15 +73,15 @@ import { JournalService, SessionNote } from '../journal.service';
                       <div class="stars" role="radiogroup" aria-label="Mood rating">
                         @for (i of [1,2,3,4,5]; track i) {
                           <button type="button" class="star-btn"
-                                  [class.filled]="(forms[n._id].pre.moodRating || 0) >= i"
-                                  (click)="forms[n._id].pre.moodRating = i"
+                                  [class.filled]="(forms[s._id].pre.moodRating || 0) >= i"
+                                  (click)="forms[s._id].pre.moodRating = i"
                                   [attr.aria-label]="i + ' stars'">
-                            <mat-icon>{{ (forms[n._id].pre.moodRating || 0) >= i ? 'star' : 'star_border' }}</mat-icon>
+                            <mat-icon>{{ (forms[s._id].pre.moodRating || 0) >= i ? 'star' : 'star_border' }}</mat-icon>
                           </button>
                         }
-                        @if (forms[n._id].pre.moodRating) {
+                        @if (forms[s._id].pre.moodRating) {
                           <button type="button" class="clear-btn"
-                                  (click)="forms[n._id].pre.moodRating = undefined">Clear</button>
+                                  (click)="forms[s._id].pre.moodRating = undefined">Clear</button>
                         }
                       </div>
                       <div class="scale-labels"><span>1 — very low</span><span>5 — very high</span></div>
@@ -77,7 +89,7 @@ import { JournalService, SessionNote } from '../journal.service';
 
                     <mat-form-field appearance="outline" class="full">
                       <mat-label>What feels most present or top of mind for you today?</mat-label>
-                      <textarea matInput rows="3" [(ngModel)]="forms[n._id].pre.topOfMind"
+                      <textarea matInput rows="3" [(ngModel)]="forms[s._id].pre.topOfMind"
                                 placeholder="Share what's occupying your thoughts or attention right now…"></textarea>
                     </mat-form-field>
 
@@ -85,19 +97,19 @@ import { JournalService, SessionNote } from '../journal.service';
 
                     <mat-form-field appearance="outline" class="full">
                       <mat-label>What is the main topic or challenge you want to explore in this session?</mat-label>
-                      <textarea matInput rows="3" [(ngModel)]="forms[n._id].pre.mainTopic"
+                      <textarea matInput rows="3" [(ngModel)]="forms[s._id].pre.mainTopic"
                                 placeholder="Be as specific as possible — the clearer the focus, the more useful the session…"></textarea>
                     </mat-form-field>
 
                     <mat-form-field appearance="outline" class="full">
                       <mat-label>What would make this session feel truly valuable to you?</mat-label>
-                      <textarea matInput rows="3" [(ngModel)]="forms[n._id].pre.valueDefinition"
+                      <textarea matInput rows="3" [(ngModel)]="forms[s._id].pre.valueDefinition"
                                 placeholder="What outcome, insight, or clarity would feel like success?"></textarea>
                     </mat-form-field>
 
                     <mat-form-field appearance="outline" class="full">
                       <mat-label>What has shifted or happened since your last session? (if applicable)</mat-label>
-                      <textarea matInput rows="3" [(ngModel)]="forms[n._id].pre.recentShifts"
+                      <textarea matInput rows="3" [(ngModel)]="forms[s._id].pre.recentShifts"
                                 placeholder="Progress, setbacks, new developments…"></textarea>
                     </mat-form-field>
 
@@ -105,13 +117,13 @@ import { JournalService, SessionNote } from '../journal.service';
 
                     <mat-form-field appearance="outline" class="full">
                       <mat-label>Is there anything you'd like your coach to know before you begin?</mat-label>
-                      <textarea matInput rows="3" [(ngModel)]="forms[n._id].pre.contextForCoach"
+                      <textarea matInput rows="3" [(ngModel)]="forms[s._id].pre.contextForCoach"
                                 placeholder="Context, boundaries, or anything on your mind…"></textarea>
                     </mat-form-field>
 
                     <button mat-flat-button color="primary"
-                            (click)="save(n, 'pre')" [disabled]="forms[n._id].saving">
-                      @if (forms[n._id].saving) { <mat-spinner diameter="16" /> }
+                            (click)="save(s, 'pre')" [disabled]="forms[s._id].saving">
+                      @if (forms[s._id].saving) { <mat-spinner diameter="16" /> }
                       Save pre-session
                     </button>
                   </div>
@@ -120,20 +132,24 @@ import { JournalService, SessionNote } from '../journal.service';
                 <mat-tab label="During">
                   <div class="tab-body">
                     <p class="hint">Read-only. Notes your coach made during the session.</p>
-                    @if (n.inSession?.observations) {
-                      <div class="ro-field"><label>Observations</label><p>{{ n.inSession.observations }}</p></div>
-                    }
-                    @if (n.inSession?.openingState) {
-                      <div class="ro-field"><label>Opening state</label><p>{{ n.inSession.openingState }}</p></div>
-                    }
-                    @if (n.inSession?.keyThemes?.length) {
-                      <div class="ro-field"><label>Key themes</label>
-                        <div class="chips">
-                          @for (t of n.inSession.keyThemes; track t) { <span class="chip">{{ t }}</span> }
+                    @if (noteForSession(s._id); as note) {
+                      @if (note.inSession?.observations) {
+                        <div class="ro-field"><label>Observations</label><p>{{ note.inSession!.observations }}</p></div>
+                      }
+                      @if (note.inSession?.openingState) {
+                        <div class="ro-field"><label>Opening state</label><p>{{ note.inSession!.openingState }}</p></div>
+                      }
+                      @if (note.inSession?.keyThemes?.length) {
+                        <div class="ro-field"><label>Key themes</label>
+                          <div class="chips">
+                            @for (t of note.inSession!.keyThemes; track t) { <span class="chip">{{ t }}</span> }
+                          </div>
                         </div>
-                      </div>
-                    }
-                    @if (!n.inSession?.observations && !n.inSession?.openingState && !n.inSession?.keyThemes?.length) {
+                      }
+                      @if (!note.inSession?.observations && !note.inSession?.openingState && !note.inSession?.keyThemes?.length) {
+                        <p class="muted">No notes added by your coach yet.</p>
+                      }
+                    } @else {
                       <p class="muted">No notes added by your coach yet.</p>
                     }
                   </div>
@@ -144,19 +160,19 @@ import { JournalService, SessionNote } from '../journal.service';
                     <p class="hint">Filled by you after the session. Your coach can read this.</p>
                     <mat-form-field appearance="outline" class="full">
                       <mat-label>Takeaways — what I learned</mat-label>
-                      <textarea matInput rows="3" [(ngModel)]="forms[n._id].post.takeaways"></textarea>
+                      <textarea matInput rows="3" [(ngModel)]="forms[s._id].post.takeaways"></textarea>
                     </mat-form-field>
                     <mat-form-field appearance="outline" class="full">
                       <mat-label>Reflection — how the session felt</mat-label>
-                      <textarea matInput rows="3" [(ngModel)]="forms[n._id].post.reflection"></textarea>
+                      <textarea matInput rows="3" [(ngModel)]="forms[s._id].post.reflection"></textarea>
                     </mat-form-field>
                     <mat-form-field appearance="outline" class="full">
                       <mat-label>Commitments — what I'll do before next session</mat-label>
-                      <textarea matInput rows="3" [(ngModel)]="forms[n._id].post.commitments"></textarea>
+                      <textarea matInput rows="3" [(ngModel)]="forms[s._id].post.commitments"></textarea>
                     </mat-form-field>
                     <button mat-flat-button color="primary"
-                            (click)="save(n, 'post')" [disabled]="forms[n._id].saving">
-                      @if (forms[n._id].saving) { <mat-spinner diameter="16" /> }
+                            (click)="save(s, 'post')" [disabled]="forms[s._id].saving">
+                      @if (forms[s._id].saving) { <mat-spinner diameter="16" /> }
                       Save post-session
                     </button>
                   </div>
@@ -186,6 +202,14 @@ import { JournalService, SessionNote } from '../journal.service';
       display: flex; align-items: center; gap: 12px;
       strong { color: #1B2A47; font-size: 15px; }
       .muted { color: #6b7c93; font-size: 13px; }
+      .muted-status {
+        margin-left: auto; text-transform: uppercase; letter-spacing: 0.5px;
+        font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 999px;
+        background: #f0f4f8; color: #6b7c93;
+        &.st-scheduled { background: #EBF5FB; color: #3A9FD6; }
+        &.st-completed { background: #e8f9f2; color: #0f8a5f; }
+        &.st-cancelled { background: #fef2f2; color: #dc2626; }
+      }
     }
     .tab-body { padding: 16px 18px; }
     .hint { color: #6b7c93; font-size: 12px; margin: 0 0 10px; font-style: italic; }
@@ -237,7 +261,8 @@ import { JournalService, SessionNote } from '../journal.service';
 })
 export class CoacheeJournalComponent implements OnInit {
   loading = signal(true);
-  notes = signal<SessionNote[]>([]);
+  sessions = signal<CoachingSession[]>([]);
+  private notesBySession = new Map<string, SessionNote>();
   engagementId = '';
 
   forms: Record<string, {
@@ -256,47 +281,80 @@ export class CoacheeJournalComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private journal: JournalService,
+    private api: ApiService,
     private snack: MatSnackBar,
   ) {}
 
   ngOnInit(): void {
     this.engagementId = this.route.snapshot.params['engagementId'];
-    this.journal.getEngagementNotes(this.engagementId).subscribe({
-      next: (notes) => {
-        this.notes.set(notes);
-        for (const n of notes) {
-          this.forms[n._id] = {
-            pre: {
-              moodRating: n.coacheePre?.moodRating,
-              topOfMind: n.coacheePre?.topOfMind || '',
-              mainTopic: n.coacheePre?.mainTopic || '',
-              valueDefinition: n.coacheePre?.valueDefinition || '',
-              recentShifts: n.coacheePre?.recentShifts || '',
-              contextForCoach: n.coacheePre?.contextForCoach || '',
-            },
-            post: {
-              takeaways: n.coacheePost?.takeaways || '',
-              reflection: n.coacheePost?.reflection || '',
-              commitments: n.coacheePost?.commitments || '',
-            },
-            saving: false,
-          };
-        }
-        this.loading.set(false);
-      },
-      error: () => this.loading.set(false),
-    });
+    this.load();
   }
 
-  save(note: SessionNote, which: 'pre' | 'post'): void {
-    const f = this.forms[note._id];
+  noteForSession(sessionId: string): SessionNote | undefined {
+    return this.notesBySession.get(sessionId);
+  }
+
+  private load(): void {
+    Promise.all([
+      this.api.get<CoachingSession[]>(`/coaching/sessions?engagementId=${this.engagementId}`).toPromise(),
+      this.journal.getEngagementNotes(this.engagementId).toPromise().catch(() => [] as SessionNote[]),
+    ]).then(([sessions, notes]) => {
+      const sorted = (sessions || []).slice().sort(
+        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+      );
+      this.sessions.set(sorted);
+      this.notesBySession.clear();
+      for (const n of notes || []) {
+        if (n.sessionId) this.notesBySession.set(n.sessionId, n);
+      }
+      for (const s of sorted) {
+        const n = this.notesBySession.get(s._id);
+        this.forms[s._id] = {
+          pre: {
+            moodRating: n?.coacheePre?.moodRating,
+            topOfMind: n?.coacheePre?.topOfMind || '',
+            mainTopic: n?.coacheePre?.mainTopic || '',
+            valueDefinition: n?.coacheePre?.valueDefinition || '',
+            recentShifts: n?.coacheePre?.recentShifts || '',
+            contextForCoach: n?.coacheePre?.contextForCoach || '',
+          },
+          post: {
+            takeaways: n?.coacheePost?.takeaways || '',
+            reflection: n?.coacheePost?.reflection || '',
+            commitments: n?.coacheePost?.commitments || '',
+          },
+          saving: false,
+        };
+      }
+      this.loading.set(false);
+    }).catch(() => this.loading.set(false));
+  }
+
+  save(s: CoachingSession, which: 'pre' | 'post'): void {
+    const f = this.forms[s._id];
     f.saving = true;
     const payload = which === 'pre'
       ? { coacheePre: f.pre }
       : { coacheePost: f.post };
-    this.journal.updateNote(note._id, payload).subscribe({
-      next: () => {
+
+    const existing = this.notesBySession.get(s._id);
+    const op = existing
+      ? this.journal.updateNote(existing._id, payload)
+      // No note yet — find-or-create one bound to this session. The
+      // backend POST is idempotent on sessionId so racing creates won't
+      // produce duplicates.
+      : this.journal.createNote(this.engagementId, {
+          sessionId: s._id,
+          sessionDate: s.date,
+          durationMinutes: s.duration || 60,
+          format: (s.format as 'video' | 'phone' | 'in_person') || 'video',
+          ...payload,
+        });
+
+    op.subscribe({
+      next: (note) => {
         f.saving = false;
+        this.notesBySession.set(s._id, note);
         this.snack.open('Saved', 'OK', { duration: 2000 });
       },
       error: () => {
