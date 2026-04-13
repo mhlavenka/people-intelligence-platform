@@ -20,22 +20,44 @@ export interface Sponsor {
   updatedAt?: string;
 }
 
+export interface SponsorBillingEngagement {
+  engagementId: string;
+  coach: { _id: string; firstName: string; lastName: string; email?: string; profilePicture?: string };
+  coachee: { _id: string; firstName: string; lastName: string; email: string };
+  status: string;
+  hourlyRate: number;
+  sessionsPurchased: number;
+  sessionsUsed: number;
+  sessionsCompleted: number;
+  sessionsTotal: number;
+  billedHours: number;
+  completedHours: number;
+  totalAmount: number;
+}
+
+export interface SponsorBillingCoacheeGroup {
+  coachee: { _id: string; firstName: string; lastName: string; email: string };
+  engagements: SponsorBillingEngagement[];
+  subtotal: number;
+}
+
+export interface SponsorInvoice {
+  _id: string;
+  invoiceNumber: string;
+  status: 'draft' | 'sent' | 'paid' | 'overdue' | 'void';
+  total: number;          // cents
+  subtotal: number;       // cents
+  currency: string;
+  dueDate: string;
+  createdAt: string;
+  paidAt?: string;
+}
+
 export interface SponsorBilling {
   sponsor: Sponsor;
-  engagements: Array<{
-    engagementId: string;
-    coach: { _id: string; firstName: string; lastName: string; email?: string; profilePicture?: string };
-    coachee: { _id: string; firstName: string; lastName: string; email: string };
-    status: string;
-    hourlyRate: number;
-    sessionsPurchased: number;
-    sessionsUsed: number;
-    sessionsCompleted: number;
-    sessionsTotal: number;
-    billedHours: number;
-    completedHours: number;
-    totalAmount: number;
-  }>;
+  engagements: SponsorBillingEngagement[];
+  coacheeGroups: SponsorBillingCoacheeGroup[];
+  invoices: SponsorInvoice[];
   grandTotal: number;
 }
 
@@ -69,5 +91,9 @@ export class SponsorService {
 
   billing(id: string): Observable<SponsorBilling> {
     return this.api.get<SponsorBilling>(`/sponsors/${id}/billing`);
+  }
+
+  generateInvoice(id: string): Observable<SponsorInvoice> {
+    return this.api.post<SponsorInvoice>(`/sponsors/${id}/invoice`, {});
   }
 }

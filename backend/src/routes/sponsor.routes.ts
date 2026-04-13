@@ -6,6 +6,7 @@ import { Sponsor } from '../models/Sponsor.model';
 import { CoachingEngagement } from '../models/CoachingEngagement.model';
 import { CoachingSession } from '../models/CoachingSession.model';
 import { User } from '../models/User.model';
+import { Invoice } from '../models/Invoice.model';
 
 const router = Router();
 router.use(authenticateToken, tenantResolver);
@@ -281,11 +282,116 @@ router.get(
 
       const grandTotal = items.reduce((sum, i) => sum + i.totalAmount, 0);
 
+      // Group engagements by coachee for the UI
+      const byCoachee = new Map<string, typeof items>();
+      for (const it of items) {
+        const key = it.coachee?._id?.toString?.() || 'unknown';
+        if (!byCoachee.has(key)) byCoachee.set(key, []);
+        byCoachee.get(key)!.push(it);
+      }
+      const coacheeGroups = Array.from(byCoachee.entries()).map(([_id, list]) => ({
+        coachee: list[0].coachee,
+        engagements: list,
+        subtotal: Math.round(list.reduce((s, e) => s + e.totalAmount, 0) * 100) / 100,
+      }));
+
+      // Existing invoices for this sponsor
+      const invoices = await Invoice.find({
+        organizationId: orgId,
+        sponsorId: sponsor._id,
+      }).sort({ createdAt: -1 }).lean();
+
       res.json({
         sponsor,
         engagements: items,
+        coacheeGroups,
+        invoices,
         grandTotal: Math.round(grandTotal * 100) / 100,
       });
+    } catch (e) { next(e); }
+  },
+);
+
+// ─── Generate an invoice for one sponsor ────────────────────────────────────
+//
+// Bundles every billable engagement (billingMode='sponsor') under the sponsor
+// into line items grouped per engagement: "<Coachee name> — <N> sessions @
+// $X/hr". Status starts as 'draft'. The coach/admin can then send / mark paid
+// from the existing invoice flow.
+router.post(
+  '/:id/invoice',
+  requireRole('admin', 'hr_manager'),
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const orgId = req.user!.organizationId;
+      const sponsor = await Sponsor.findOne({ _id: req.params['id'], organizationId: orgId });
+      if (!sponsor) { res.status(404).json({ error: 'Sponsor not found' }); return; }
+
+      const engagements = await CoachingEngagement.find({
+        organizationId: orgId,
+        sponsorId: sponsor._id,
+        billingMode: 'sponsor',
+      })
+        .populate('coacheeId', 'firstName lastName')
+        .lean();
+
+      if (!engagements.length) {
+        res.status(400).json({ error: 'This sponsor has no billable engagements yet.' });
+        return;
+      }
+
+      const lineItems = engagements.map((eng) => {
+        const coachee = eng.coacheeId as unknown as { firstName: string; lastName: string };
+        const coacheeName = coachee
+          ? `${coachee.firstName} ${coachee.lastName}`
+          : 'Coachee';
+        const rate = eng.hourlyRate ?? sponsor.defaultHourlyRate ?? 0;
+        const hours = eng.sessionsPurchased ?? 0;
+        const unitPriceCents = Math.round(rate * 100);
+        const amountCents = unitPriceCents * hours;
+        return {
+          description: `${coacheeName} — ${hours} session(s) @ ${rate.toFixed(2)}/hr`,
+          quantity: hours,
+          unitPrice: unitPriceCents,
+          amount: amountCents,
+        };
+      }).filter((li) => li.amount > 0);
+
+      if (!lineItems.length) {
+        res.status(400).json({
+          error: 'No billable amount found — set hourly rate + sessions purchased on engagements first.',
+        });
+        return;
+      }
+
+      const subtotal = lineItems.reduce((s, li) => s + li.amount, 0);
+
+      // Sequence: INV-{year}-{seq}. Use org-level sequence.
+      const count = await Invoice.countDocuments({ organizationId: orgId });
+      const invoiceNumber = `INV-${new Date().getFullYear()}-${String(count + 1).padStart(4, '0')}`;
+
+      const dueDate = new Date();
+      dueDate.setDate(dueDate.getDate() + 30);
+
+      const invoice = await Invoice.create({
+        organizationId: orgId,
+        sponsorId: sponsor._id,
+        invoiceNumber,
+        period: {
+          from: new Date(Math.min(...engagements.map((e) => new Date(e.startDate || e.createdAt).getTime()))),
+          to: new Date(),
+        },
+        lineItems,
+        subtotal,
+        taxRate: 0,
+        tax: 0,
+        total: subtotal,
+        currency: 'CAD',
+        status: 'draft',
+        dueDate,
+      });
+
+      res.status(201).json(invoice);
     } catch (e) { next(e); }
   },
 );

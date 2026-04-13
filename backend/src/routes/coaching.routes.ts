@@ -47,11 +47,16 @@ function scopeCoachingFilter(req: AuthRequest, base: Record<string, unknown> = {
 /** List engagements — scoped per role. */
 router.get('/engagements', async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const engagements = await CoachingEngagement.find(scopeCoachingFilter(req))
+    const filter = scopeCoachingFilter(req);
+    const engagements = await CoachingEngagement.find(filter)
       .populate('coacheeId', 'firstName lastName email department profilePicture')
       .populate('coachId', 'firstName lastName email profilePicture')
       .populate('sponsorId', 'name email organization')
       .sort({ createdAt: -1 });
+    console.info(
+      `[Coaching] /engagements role=${req.user!.role} userId=${req.user!.userId} ` +
+      `filter=${JSON.stringify(filter)} returned=${engagements.length}`,
+    );
     res.json(engagements);
   } catch (e) { next(e); }
 });

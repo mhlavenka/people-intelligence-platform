@@ -28,6 +28,8 @@ export interface ITaxBreakdown {
 
 export interface IInvoice extends Document {
   organizationId: mongoose.Types.ObjectId;
+  // For sponsor coaching invoices. Null = org-level subscription invoice.
+  sponsorId?: mongoose.Types.ObjectId;
   invoiceNumber: string;        // INV-2024-0001
   period: { from: Date; to: Date };
   lineItems: ILineItem[];
@@ -65,6 +67,7 @@ const LineItemSchema = new Schema<ILineItem>(
 const InvoiceSchema = new Schema<IInvoice>(
   {
     organizationId: { type: Schema.Types.ObjectId, ref: 'Organization', required: true, index: true },
+    sponsorId:      { type: Schema.Types.ObjectId, ref: 'Sponsor', index: true },
     invoiceNumber: { type: String, required: true, unique: true },
     period: {
       from: { type: Date, required: true },

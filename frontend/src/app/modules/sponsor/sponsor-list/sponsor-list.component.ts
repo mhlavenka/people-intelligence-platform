@@ -86,6 +86,14 @@ import { HttpErrorResponse } from '@angular/common/http';
                   <span class="badge rate">{{ s.defaultHourlyRate | currency }}/hr</span>
                 }
               </div>
+
+              <div class="card-footer">
+                <a mat-stroked-button color="primary"
+                   class="billing-btn"
+                   [routerLink]="['/billing/sponsors', s._id]">
+                  <mat-icon>receipt_long</mat-icon> View billing
+                </a>
+              </div>
             </div>
           }
         </div>
@@ -139,6 +147,13 @@ import { HttpErrorResponse } from '@angular/common/http';
       &.rate      { background: #e8f9f2; color: #0f8a5f; }
     }
     .delete-item { color: #dc2626 !important; }
+
+    .card-footer {
+      margin-top: 14px; padding-top: 12px;
+      border-top: 1px solid #f0f3f7;
+      display: flex; justify-content: flex-end;
+    }
+    .billing-btn { font-size: 13px; }
   `],
 })
 export class SponsorListComponent implements OnInit {
