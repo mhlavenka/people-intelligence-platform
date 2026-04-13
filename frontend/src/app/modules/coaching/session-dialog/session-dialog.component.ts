@@ -11,7 +11,6 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatTabsModule } from '@angular/material/tabs';
 import { ApiService } from '../../../core/api.service';
 
 const GROW_PHASES = [
@@ -32,7 +31,7 @@ const FRAMEWORKS = [
   imports: [
     CommonModule, FormsModule, MatDialogModule, MatFormFieldModule, MatInputModule,
     MatSelectModule, MatButtonModule, MatIconModule, MatProgressSpinnerModule,
-    MatDatepickerModule, MatNativeDateModule, MatCheckboxModule, MatTabsModule,
+    MatDatepickerModule, MatNativeDateModule, MatCheckboxModule,
   ],
   template: `
     <h2 mat-dialog-title>
@@ -40,134 +39,87 @@ const FRAMEWORKS = [
       {{ isEdit ? 'Edit Session' : 'New Session' }}
     </h2>
     <mat-dialog-content>
-      <mat-tab-group>
-        <!-- Details tab -->
-        <mat-tab label="Details">
-          <div class="tab-content">
-            <div class="form-row">
-              <mat-form-field appearance="outline">
-                <mat-label>Date</mat-label>
-                <input matInput [matDatepicker]="dp" [(ngModel)]="form.date" />
-                <mat-datepicker-toggle matIconSuffix [for]="dp" /><mat-datepicker #dp />
-              </mat-form-field>
-              <mat-form-field appearance="outline" class="time-field">
-                <mat-label>Start Time</mat-label>
-                <input matInput type="time" [(ngModel)]="startTime" />
-              </mat-form-field>
-              <mat-form-field appearance="outline" class="dur-field">
-                <mat-label>Duration (min)</mat-label>
-                <input matInput type="number" [(ngModel)]="form.duration" min="15" max="180" />
-              </mat-form-field>
-            </div>
+      <div class="form-section">
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Date</mat-label>
+            <input matInput [matDatepicker]="dp" [(ngModel)]="form.date" />
+            <mat-datepicker-toggle matIconSuffix [for]="dp" /><mat-datepicker #dp />
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="time-field">
+            <mat-label>Start Time</mat-label>
+            <input matInput type="time" [(ngModel)]="startTime" />
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="dur-field">
+            <mat-label>Duration (min)</mat-label>
+            <input matInput type="number" [(ngModel)]="form.duration" min="15" max="180" />
+          </mat-form-field>
+        </div>
 
-            <div class="form-row">
-              <mat-form-field appearance="outline">
-                <mat-label>Format</mat-label>
-                <mat-select [(ngModel)]="form.format">
-                  <mat-option value="video">Video</mat-option>
-                  <mat-option value="phone">Phone</mat-option>
-                  <mat-option value="in_person">In Person</mat-option>
-                </mat-select>
-              </mat-form-field>
-              <mat-form-field appearance="outline">
-                <mat-label>Status</mat-label>
-                <mat-select [(ngModel)]="form.status">
-                  <mat-option value="scheduled">Scheduled</mat-option>
-                  <mat-option value="completed">Completed</mat-option>
-                  <mat-option value="cancelled">Cancelled</mat-option>
-                  <mat-option value="no_show">No Show</mat-option>
-                </mat-select>
-              </mat-form-field>
-            </div>
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Format</mat-label>
+            <mat-select [(ngModel)]="form.format">
+              <mat-option value="video">Video</mat-option>
+              <mat-option value="phone">Phone</mat-option>
+              <mat-option value="in_person">In Person</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Status</mat-label>
+            <mat-select [(ngModel)]="form.status">
+              <mat-option value="scheduled">Scheduled</mat-option>
+              <mat-option value="completed">Completed</mat-option>
+              <mat-option value="cancelled">Cancelled</mat-option>
+              <mat-option value="no_show">No Show</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
 
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Topics discussed</mat-label>
-              <input matInput [(ngModel)]="topicsRaw" placeholder="e.g. Leadership style, Team dynamics, Communication" />
-              <mat-hint>Comma separated</mat-hint>
-            </mat-form-field>
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Topics discussed</mat-label>
+          <input matInput [(ngModel)]="topicsRaw" placeholder="e.g. Leadership style, Team dynamics" />
+          <mat-hint>Comma separated</mat-hint>
+        </mat-form-field>
 
-            <!-- GROW Focus -->
-            <div class="section-label">GROW Focus</div>
-            <div class="grow-checks">
-              @for (g of growPhases; track g.key) {
-                <label class="grow-check" [class.checked]="isGrowChecked(g.key)">
-                  <mat-checkbox [checked]="isGrowChecked(g.key)" (change)="toggleGrow(g.key)" color="primary" />
-                  <mat-icon>{{ g.icon }}</mat-icon> {{ g.label }}
-                </label>
-              }
-            </div>
+        <div class="section-label">GROW Focus</div>
+        <div class="grow-checks">
+          @for (g of growPhases; track g.key) {
+            <label class="grow-check" [class.checked]="isGrowChecked(g.key)">
+              <mat-checkbox [checked]="isGrowChecked(g.key)" (change)="toggleGrow(g.key)" color="primary" />
+              <mat-icon>{{ g.icon }}</mat-icon> {{ g.label }}
+            </label>
+          }
+        </div>
 
-            <!-- Frameworks -->
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Frameworks used</mat-label>
-              <mat-select [(ngModel)]="form.frameworks" multiple>
-                @for (f of frameworks; track f) { <mat-option [value]="f">{{ f }}</mat-option> }
-              </mat-select>
-            </mat-form-field>
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Frameworks used</mat-label>
+          <mat-select [(ngModel)]="form.frameworks" multiple>
+            @for (f of frameworks; track f) { <mat-option [value]="f">{{ f }}</mat-option> }
+          </mat-select>
+        </mat-form-field>
 
-            <!-- Pre-session mood (1-10 stars) -->
-            <div class="star-section">
-              <div class="star-label">Pre-session Mood</div>
-              <div class="star-row ten">
-                @for (i of moodStars; track i) {
-                  <mat-icon
-                    class="star"
-                    [class.filled]="form.preSessionRating !== null && i <= form.preSessionRating!"
-                    (click)="form.preSessionRating = form.preSessionRating === i ? null : i"
-                    (mouseenter)="moodHover = i"
-                    (mouseleave)="moodHover = 0"
-                    [class.hovered]="moodHover >= i">
-                    {{ (form.preSessionRating !== null && i <= form.preSessionRating!) || moodHover >= i ? 'star' : 'star_border' }}
-                  </mat-icon>
-                }
-                <span class="star-value">{{ form.preSessionRating ?? '—' }}/10</span>
-              </div>
-            </div>
+        <div class="section-label">Notes</div>
+        <div class="notes-warning">
+          <mat-icon>visibility</mat-icon>
+          <span><strong>Shared Notes</strong> are visible to the coachee.</span>
+        </div>
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Shared Notes</mat-label>
+          <textarea matInput [(ngModel)]="form.sharedNotes" rows="3"
+                    placeholder="Key takeaways to share with the coachee..."></textarea>
+        </mat-form-field>
 
-            <!-- Session rating (1-5 stars) -->
-            <div class="star-section">
-              <div class="star-label">Session Rating</div>
-              <div class="star-row">
-                @for (i of ratingStars; track i) {
-                  <mat-icon
-                    class="star"
-                    [class.filled]="form.postSessionRating !== null && i <= form.postSessionRating!"
-                    (click)="form.postSessionRating = form.postSessionRating === i ? null : i"
-                    (mouseenter)="ratingHover = i"
-                    (mouseleave)="ratingHover = 0"
-                    [class.hovered]="ratingHover >= i">
-                    {{ (form.postSessionRating !== null && i <= form.postSessionRating!) || ratingHover >= i ? 'star' : 'star_border' }}
-                  </mat-icon>
-                }
-                <span class="star-value">{{ form.postSessionRating ?? '—' }}/5</span>
-              </div>
-            </div>
-          </div>
-        </mat-tab>
-
-        <!-- Notes tab -->
-        <mat-tab label="Notes">
-          <div class="tab-content">
-            <div class="notes-warning">
-              <mat-icon>visibility</mat-icon>
-              <span><strong>Shared Notes</strong> are visible to the coachee in their portal.</span>
-            </div>
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Shared Notes (visible to coachee)</mat-label>
-              <textarea matInput [(ngModel)]="form.sharedNotes" rows="5" placeholder="Key takeaways and insights to share with the coachee..."></textarea>
-            </mat-form-field>
-
-            <div class="notes-private-warning">
-              <mat-icon>lock</mat-icon>
-              <span><strong>Private Notes</strong> are for your eyes only — never shown to the coachee.</span>
-            </div>
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Private Coach Notes</mat-label>
-              <textarea matInput [(ngModel)]="form.coachNotes" rows="5" placeholder="Your observations, hypotheses, and patterns noticed..."></textarea>
-            </mat-form-field>
-          </div>
-        </mat-tab>
-      </mat-tab-group>
+        <div class="notes-private-warning">
+          <mat-icon>lock</mat-icon>
+          <span><strong>Private Notes</strong> stay with you.</span>
+        </div>
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Private Coach Notes</mat-label>
+          <textarea matInput [(ngModel)]="form.coachNotes" rows="3"
+                    placeholder="Your observations and patterns noticed..."></textarea>
+        </mat-form-field>
+      </div>
     </mat-dialog-content>
 
     <mat-dialog-actions align="end">
@@ -182,7 +134,7 @@ const FRAMEWORKS = [
   styles: [`
     h2[mat-dialog-title] { display: flex; align-items: center; gap: 8px; color: #1B2A47; mat-icon { color: #3A9FD6; } }
     mat-dialog-content { min-width: 540px; max-height: 75vh; overflow-y: auto; padding-top: 8px !important; }
-    .tab-content { padding: 16px 0; display: flex; flex-direction: column; gap: 8px; overflow-x: hidden;}
+    .form-section { padding: 8px 0; display: flex; flex-direction: column; gap: 8px; }
     .full-width { width: 100%; }
     .form-row { display: flex; gap: 12px; mat-form-field { flex: 1; } }
     .time-field { max-width: 140px; }

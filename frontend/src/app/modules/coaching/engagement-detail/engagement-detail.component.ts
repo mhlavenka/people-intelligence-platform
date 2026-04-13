@@ -285,25 +285,25 @@ interface Session {
                         </div>
 
                         @if (canManage()) {
-                          @if (note.preSession.agenda) {
+                          @if (note.preSession?.agenda) {
                             <div class="journal-field">
                               <span class="journal-field-label">Agenda</span>
                               <p>{{ note.preSession!.agenda! | slice:0:120 }}{{ note.preSession!.agenda!.length > 120 ? '...' : '' }}</p>
                             </div>
                           }
-                          @if (note.inSession.observations) {
+                          @if (note.inSession?.observations) {
                             <div class="journal-field">
                               <span class="journal-field-label">Observations</span>
                               <p>{{ note.inSession!.observations! | slice:0:150 }}{{ note.inSession!.observations!.length > 150 ? '...' : '' }}</p>
                             </div>
                           }
-                          @if (note.postSession.coachReflection) {
+                          @if (note.postSession?.coachReflection) {
                             <div class="journal-field">
                               <span class="journal-field-label">Reflection</span>
                               <p>{{ note.postSession!.coachReflection! | slice:0:120 }}{{ note.postSession!.coachReflection!.length > 120 ? '...' : '' }}</p>
                             </div>
                           }
-                          @if (!note.preSession.agenda && !note.inSession.observations && !note.postSession.coachReflection) {
+                          @if (!note.preSession?.agenda && !note.inSession?.observations && !note.postSession?.coachReflection) {
                             <p class="journal-empty-hint">No content yet — open to start writing.</p>
                           }
                         } @else {

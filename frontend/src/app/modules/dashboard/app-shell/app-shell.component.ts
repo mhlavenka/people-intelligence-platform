@@ -65,7 +65,7 @@ function isGroup(entry: NavEntry): entry is NavGroup {
         <button class="mobile-menu-btn" (click)="mobileMenuOpen.set(true)">
           <mat-icon>menu</mat-icon>
         </button>
-        <img src="assets/PIP_Icon_512.png" alt="PIP" class="mobile-logo" />
+        <img src="assets/artes_icon_512.png" alt="PIP" class="mobile-logo" />
         <span class="mobile-title">{{ orgName() }}</span>
         <button class="mobile-bell-btn" (click)="openHub()">
           <mat-icon [matBadge]="unreadCount() > 0 ? unreadCount() : null" matBadgeColor="warn" matBadgeSize="small">notifications</mat-icon>
