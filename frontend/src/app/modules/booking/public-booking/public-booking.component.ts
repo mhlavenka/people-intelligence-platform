@@ -2,6 +2,7 @@ import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { AuthService } from '../../../core/auth.service';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -394,11 +395,21 @@ export class PublicBookingComponent implements OnInit {
     private router: Router,
     private publicBookingSvc: PublicBookingService,
     private snackBar: MatSnackBar,
+    private auth: AuthService,
   ) {}
 
   ngOnInit(): void {
     this.coachSlug = this.route.snapshot.params['coachSlug'];
     this.loadCoachInfo();
+
+    // Pre-fill the booking form when the visitor is an authenticated coachee.
+    // Anonymous visitors see empty fields as before.
+    const me = this.auth.currentUser();
+    if (me) {
+      this.firstName = me.firstName || '';
+      this.lastName = me.lastName || '';
+      this.email = me.email || '';
+    }
   }
 
   private loadCoachInfo(): void {

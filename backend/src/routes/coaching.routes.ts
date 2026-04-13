@@ -5,6 +5,11 @@ import { CoachingEngagement } from '../models/CoachingEngagement.model';
 import { CoachingSession } from '../models/CoachingSession.model';
 import { User } from '../models/User.model';
 import * as gcal from '../services/googleCalendar.service';
+import {
+  mirrorSessionToBooking,
+  propagateSessionUpdate,
+  propagateSessionDelete,
+} from '../services/bookingCoachingSync.service';
 
 const router = Router();
 router.use(authenticateToken, tenantResolver);
@@ -189,6 +194,13 @@ router.post(
         console.warn('[GCal] Failed to create event:', calErr);
       }
 
+      // Mirror this coach-created session into a Booking row so it shows
+      // in booking dashboards and webhook sync covers it. Best-effort —
+      // a failure here must not fail the session create.
+      await mirrorSessionToBooking(session).catch((err) =>
+        console.error('[BookingSync] Failed to mirror session to booking:', err),
+      );
+
       const populated = await session.populate([
         { path: 'coacheeId', select: 'firstName lastName profilePicture' },
         { path: 'coachId', select: 'firstName lastName' },
@@ -211,8 +223,14 @@ router.put(
       if (!existing) { res.status(404).json({ error: 'Session not found' }); return; }
 
       const wasNotCompleted = existing.status !== 'completed';
+      const prev = { date: existing.date, status: existing.status };
       Object.assign(existing, req.body);
       await existing.save();
+
+      // Mirror date / status changes into the linked Booking
+      await propagateSessionUpdate(existing, prev).catch((err) =>
+        console.error('[BookingSync] Failed to propagate session update:', err),
+      );
 
       // If status changed to completed, increment engagement counter
       if (wasNotCompleted && existing.status === 'completed') {
@@ -256,6 +274,12 @@ router.delete(
         organizationId: req.user!.organizationId,
       });
       if (!session) { res.status(404).json({ error: 'Session not found' }); return; }
+
+      // Cancel the linked Booking (if any). Done before GCal delete so the
+      // Booking row is in a consistent state regardless of GCal outcome.
+      await propagateSessionDelete(session).catch((err) =>
+        console.error('[BookingSync] Failed to propagate session delete:', err),
+      );
 
       // Google Calendar sync
       try {

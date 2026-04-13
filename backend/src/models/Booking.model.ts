@@ -18,6 +18,10 @@ export interface IBooking extends Document {
   organizationId: mongoose.Types.ObjectId;
   eventTypeId?: mongoose.Types.ObjectId;
   eventTypeName?: string;
+  // Internal coaching links — populated when an authenticated coachee booked.
+  coacheeId?: mongoose.Types.ObjectId;
+  engagementId?: mongoose.Types.ObjectId;
+  sessionId?: mongoose.Types.ObjectId;
   clientName: string;
   clientEmail: string;
   clientPhone?: string;
@@ -68,6 +72,9 @@ const BookingSchema = new Schema<IBooking>(
     },
     eventTypeId: { type: Schema.Types.ObjectId, ref: 'AvailabilityConfig' },
     eventTypeName: { type: String, trim: true },
+    coacheeId:    { type: Schema.Types.ObjectId, ref: 'User', index: true },
+    engagementId: { type: Schema.Types.ObjectId, ref: 'CoachingEngagement', index: true },
+    sessionId:    { type: Schema.Types.ObjectId, ref: 'CoachingSession', index: true },
     clientName:  { type: String, required: true, trim: true },
     clientEmail: { type: String, required: true, lowercase: true, trim: true },
     clientPhone: { type: String, trim: true },

@@ -1,6 +1,8 @@
 import { Router, Response, NextFunction, Request } from 'express';
 import rateLimit from 'express-rate-limit';
-import { authenticateToken, requireRole, AuthRequest } from '../middleware/auth.middleware';
+import {
+  authenticateToken, optionalAuth, requireRole, AuthRequest,
+} from '../middleware/auth.middleware';
 import { tenantResolver } from '../middleware/tenant.middleware';
 import { AvailabilityConfig } from '../models/AvailabilityConfig.model';
 import { BookingSettings } from '../models/BookingSettings.model';
@@ -15,6 +17,7 @@ import {
   createBooking, cancelBooking, clientCancelBooking, rescheduleBooking,
 } from '../services/booking.service';
 import { registerGoogleWebhook } from '../services/calendarWebhook.service';
+import { linkBookingToCoaching } from '../services/bookingCoachingSync.service';
 
 // ─── Slug helper ────────────────────────────────────────────────────────────
 
@@ -78,32 +81,49 @@ publicBookingRouter.get('/:coachSlug/slots', async (req: Request, res: Response,
   } catch (e) { next(e); }
 });
 
-// Create booking
-publicBookingRouter.post('/:coachSlug', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const { coachSlug } = req.params;
-    const { startTime, endTime, clientName, clientEmail, clientPhone, topic, clientTimezone } = req.body;
+// Create booking. optionalAuth attaches req.user when an authenticated
+// coachee posts here from the in-app flow; for anonymous clients it's
+// a transparent no-op.
+publicBookingRouter.post(
+  '/:coachSlug',
+  optionalAuth,
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const { coachSlug } = req.params;
+      const { startTime, endTime, clientName, clientEmail, clientPhone, topic, clientTimezone } = req.body;
 
-    if (!startTime || !endTime || !clientName || !clientEmail) {
-      res.status(400).json({ error: 'startTime, endTime, clientName, and clientEmail are required' });
-      return;
-    }
+      if (!startTime || !endTime || !clientName || !clientEmail) {
+        res.status(400).json({ error: 'startTime, endTime, clientName, and clientEmail are required' });
+        return;
+      }
 
-    const booking = await createBooking(coachSlug, {
-      startTime, endTime, clientName, clientEmail, clientPhone, topic, clientTimezone,
-    });
+      const booking = await createBooking(coachSlug, {
+        startTime, endTime, clientName, clientEmail, clientPhone, topic, clientTimezone,
+      });
 
-    res.status(201).json({
-      _id: booking._id,
-      startTime: booking.startTime,
-      endTime: booking.endTime,
-      clientTimezone: booking.clientTimezone,
-      coachTimezone: booking.coachTimezone,
-      googleMeetLink: booking.googleMeetLink,
-      status: booking.status,
-    });
-  } catch (e) { next(e); }
-});
+      // If the booker is an authenticated coachee in the same org, link
+      // the booking to a CoachingSession (and create the Engagement if
+      // one doesn't yet exist). Anonymous bookers fall through unchanged.
+      if (req.user && req.user.role === 'coachee') {
+        try {
+          await linkBookingToCoaching(booking, req.user.userId);
+        } catch (linkErr) {
+          console.error('[BookingSync] Failed to link booking to coaching:', linkErr);
+        }
+      }
+
+      res.status(201).json({
+        _id: booking._id,
+        startTime: booking.startTime,
+        endTime: booking.endTime,
+        clientTimezone: booking.clientTimezone,
+        coachTimezone: booking.coachTimezone,
+        googleMeetLink: booking.googleMeetLink,
+        status: booking.status,
+      });
+    } catch (e) { next(e); }
+  },
+);
 
 // Get booking confirmation details (public, limited fields)
 publicBookingRouter.get('/:coachSlug/confirmation/:bookingId', async (req: Request, res: Response, next: NextFunction) => {

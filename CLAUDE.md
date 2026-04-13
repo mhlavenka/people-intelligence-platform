@@ -217,3 +217,19 @@ Key implementation notes:
 - Google push-notification channels are registered via `registerGoogleWebhook(coachId)` after calendar select / settings save, stopped on disconnect, and renewed hourly when within 2 days of expiry. Notifications land on `POST /api/webhooks/gcal`; the handler validates `X-Goog-Channel-ID` / `X-Goog-Resource-ID` + the optional `X-Goog-Channel-Token` against `GOOGLE_WEBHOOK_SECRET`, then uses `calendar.events.list(updatedMin, showDeleted)` to diff changes. Activate with `BOOKING_WEBHOOKS_ENABLED=true` after the Apache vhost proxies `/api/webhooks/gcal` to PM2.
 - Full gap audit and implementation log in `docs/booking-sync-audit.md`.
 - Integration tests at `backend/tests/behavior-*.test.ts` cover all 8 sync behaviors against a real in-memory MongoDB with googleapis/SES mocked. Run `npm test` from `/backend` (20 tests, ~40s).
+
+## Booking ↔ Coaching Integration
+
+Booking and CoachingSession are paired records when an internal coachee is involved:
+
+- `Booking.coacheeId` / `Booking.engagementId` / `Booking.sessionId` link a Booking back into the coaching model
+- `CoachingSession.bookingId` is the inverse pointer
+- All cross-module logic lives in `backend/src/services/bookingCoachingSync.service.ts` to avoid circular imports
+
+Flow rules:
+- **Coachee books via public flow:** `POST /api/public/booking/:coachSlug` runs `optionalAuth`. When the booker is an authenticated coachee in the same org as the coach, `linkBookingToCoaching()` finds (or creates with `status='active'`) the CoachingEngagement and creates a paired CoachingSession with `status='scheduled'`. Anonymous bookings are unchanged.
+- **Coach creates a Session:** `POST /api/coaching/sessions` mirrors the new session into a Booking via `mirrorSessionToBooking()`.
+- **Cancel propagation:** `cancelBooking` → `propagateBookingCancel` sets the linked CoachingSession to `cancelled`. `DELETE /coaching/sessions/:id` → `propagateSessionDelete` cancels the linked Booking.
+- **Reschedule propagation:** `rescheduleBooking` → `propagateBookingReschedule` updates the linked CoachingSession's `date` + `duration`. `PUT /coaching/sessions/:id` → `propagateSessionUpdate` mirrors date + completed/cancelled status to the linked Booking.
+- **GCal ownership:** whichever side creates the record first owns the GCal event. The webhook diff path (B.2) finds the matching Booking by `googleEventId`, and propagation handles the paired CoachingSession from there.
+- The public booking form pre-fills firstName/lastName/email from `AuthService.currentUser()` when the visitor is logged in.

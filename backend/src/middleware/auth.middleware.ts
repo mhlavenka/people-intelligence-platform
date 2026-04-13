@@ -32,6 +32,22 @@ export function authenticateToken(req: AuthRequest, res: Response, next: NextFun
   }
 }
 
+/** Same as authenticateToken but never blocks. Attaches req.user when a
+ *  valid bearer token is present, otherwise lets the request through
+ *  unauthenticated. Used on public routes that benefit from knowing the
+ *  caller (e.g. coachee booking via the public flow). */
+export function optionalAuth(req: AuthRequest, _res: Response, next: NextFunction): void {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if (!token) { next(); return; }
+  try {
+    req.user = jwt.verify(token, config.jwt.secret) as AuthRequest['user'];
+  } catch {
+    // ignore — public route, treat as anonymous
+  }
+  next();
+}
+
 /** Gate by system role key (unchanged behaviour — backward compatible). */
 export function requireRole(...roles: string[]) {
   return (req: AuthRequest, res: Response, next: NextFunction): void => {

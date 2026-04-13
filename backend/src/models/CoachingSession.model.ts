@@ -21,6 +21,7 @@ export interface ICoachingSession extends Document {
   status: SessionStatus;
   googleEventId?: string;
   googleMeetLink?: string;
+  bookingId?: mongoose.Types.ObjectId;  // paired Booking row, if any
   createdAt: Date;
   updatedAt: Date;
 }
@@ -48,6 +49,7 @@ const CoachingSessionSchema = new Schema<ICoachingSession>(
     },
     googleEventId: { type: String },
     googleMeetLink: { type: String },
+    bookingId: { type: Schema.Types.ObjectId, ref: 'Booking', index: true },
   },
   { timestamps: true }
 );

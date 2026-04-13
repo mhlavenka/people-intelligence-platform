@@ -12,6 +12,10 @@ import {
   sendCancellationEmail,
   sendRescheduleConfirmation,
 } from './bookingNotification.service';
+import {
+  propagateBookingCancel,
+  propagateBookingReschedule,
+} from './bookingCoachingSync.service';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -301,6 +305,11 @@ export async function cancelBooking(
   booking.cancellationReason = reason;
   await booking.save();
 
+  // Mirror cancel into the linked CoachingSession (if any)
+  await propagateBookingCancel(booking).catch((err) =>
+    console.error('[BookingSync] Failed to propagate cancel:', err),
+  );
+
   // Invalidate cache
   const cfg = await AvailabilityConfig.findOne({ coachId: booking.coachId })
     .setOptions({ bypassTenantCheck: true });
@@ -405,6 +414,11 @@ export async function rescheduleBooking(
   booking.cancelToken = newCancelToken;
   booking.remindersSent = []; // re-eligible for reminders at the new time
   await booking.save();
+
+  // Mirror reschedule into the linked CoachingSession (if any)
+  await propagateBookingReschedule(booking, newStartTime, newEndTime).catch((err) =>
+    console.error('[BookingSync] Failed to propagate reschedule:', err),
+  );
 
   // Invalidate availability cache
   const cfg = await AvailabilityConfig.findOne({ coachId: booking.coachId })

@@ -182,7 +182,7 @@ const FRAMEWORKS = [
   styles: [`
     h2[mat-dialog-title] { display: flex; align-items: center; gap: 8px; color: #1B2A47; mat-icon { color: #3A9FD6; } }
     mat-dialog-content { min-width: 540px; max-height: 75vh; overflow-y: auto; padding-top: 8px !important; }
-    .tab-content { padding: 16px 0; display: flex; flex-direction: column; gap: 8px; }
+    .tab-content { padding: 16px 0; display: flex; flex-direction: column; gap: 8px; overflow-x: hidden;}
     .full-width { width: 100%; }
     .form-row { display: flex; gap: 12px; mat-form-field { flex: 1; } }
     .time-field { max-width: 140px; }
@@ -202,10 +202,10 @@ const FRAMEWORKS = [
     .star-label { font-size: 12px; font-weight: 600; color: #5a6a7e; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
     .star-row {
       display: flex; align-items: center; gap: 2px;
-      &.ten .star { font-size: 20px; width: 20px; height: 20px; }
+      &.ten .star { font-size: 24px; width: 24px; height: 24px; }
     }
     .star {
-      font-size: 26px; width: 26px; height: 26px; cursor: pointer;
+      font-size: 24px; width: 24px; height: 24px; cursor: pointer;
       color: #d1d5db; transition: color 0.1s;
       &.filled { color: #f59e0b; }
       &.hovered { color: #fbbf24; }
