@@ -84,6 +84,15 @@ async function fetchGoogleBusyPeriods(
 ): Promise<BusyPeriod[]> {
   if (!calendarIds.length) return [];
 
+  // Google's freebusy API returns only BUSY periods by default — events marked
+  // as FREE (e.g. all-day placeholder events, availability blocks from other
+  // tools) are intentionally excluded. This matches Calendly's behavior: only
+  // BUSY events block availability. Do NOT add `timeZone` or any other option
+  // here that could alter this contract.
+  // Ref: calendar.freebusy.query returns `busy[]` containing periods where
+  // `transparency === 'opaque'`.
+  const uniqueIds = Array.from(new Set(calendarIds.filter(Boolean)));
+
   try {
     const auth = await getAuthenticatedClient(coachId);
     const calendar = google.calendar({ version: 'v3', auth });
@@ -91,7 +100,7 @@ async function fetchGoogleBusyPeriods(
       requestBody: {
         timeMin,
         timeMax,
-        items: calendarIds.map((id) => ({ id })),
+        items: uniqueIds.map((id) => ({ id })),
       },
     });
 
@@ -259,11 +268,22 @@ export async function getAvailableSlots(
 
   if (!candidates.length) return [];
 
-  const calendarIds = [
-    ...(shared.targetCalendarId ? [shared.targetCalendarId] : []),
-    ...shared.conflictCalendarIds,
-  ];
-  const rangeStartUtc = rangeStart.toUTC().toISO()!;
+  // B8: targetCalendarId must always be checked for conflicts, even if the
+  // admin saved an empty conflictCalendarIds list. Dedup because a careless
+  // admin might list the target inside conflictCalendarIds too.
+  const calendarIds = Array.from(
+    new Set(
+      [
+        shared.targetCalendarId,
+        ...(shared.conflictCalendarIds || []),
+      ].filter(Boolean) as string[],
+    ),
+  );
+
+  // B7: anchor timeMin to max(rangeStart, now + minNotice) so a stale cached
+  // request (replayed with a past fromDate) can never query freebusy for past time.
+  const freebusyFloor = DateTime.max(rangeStart, minNotice);
+  const rangeStartUtc = freebusyFloor.toUTC().toISO()!;
   const rangeEndUtc = rangeEnd.toUTC().toISO()!;
 
   const [googleBusy, bookingBusy] = await Promise.all([

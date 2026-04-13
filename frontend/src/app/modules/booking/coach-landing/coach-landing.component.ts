@@ -1,9 +1,10 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, Inject, OnInit, Optional, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import {
   PublicBookingService,
   CoachLanding,
@@ -14,11 +15,16 @@ import {
   selector: 'app-coach-landing',
   standalone: true,
   imports: [
-    CommonModule, RouterLink,
+    CommonModule,
     MatIconModule, MatButtonModule, MatProgressSpinnerModule,
   ],
   template: `
-    <div class="page">
+    <div class="page" [class.dialog-mode]="isDialog">
+      @if (isDialog) {
+        <button mat-icon-button class="close-btn" (click)="closeDialog()" aria-label="Close">
+          <mat-icon>close</mat-icon>
+        </button>
+      }
       @if (loading()) {
         <div class="loading"><mat-spinner diameter="40" /></div>
       } @else if (notFound()) {
@@ -67,12 +73,12 @@ import {
                         <p class="event-desc">{{ et.description }}</p>
                       }
                     </div>
-                    <a mat-flat-button color="primary"
-                       [routerLink]="['/book', et.coachSlug]"
-                       class="book-btn">
+                    <button mat-flat-button color="primary"
+                            (click)="selectEventType(et)"
+                            class="book-btn">
                       Select
                       <mat-icon>arrow_forward</mat-icon>
-                    </a>
+                    </button>
                   </li>
                 }
               </ul>
@@ -92,6 +98,13 @@ import {
       background: linear-gradient(180deg, #f7f9fc 0%, #EBF5FB 100%);
       padding: 48px 16px;
       box-sizing: border-box;
+      position: relative;
+    }
+    .page.dialog-mode {
+      min-height: auto; padding: 32px 24px 24px;
+    }
+    .close-btn {
+      position: absolute; top: 8px; right: 8px; z-index: 2;
     }
     .loading, .error-state {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -190,13 +203,20 @@ export class CoachLandingComponent implements OnInit {
   notFound = signal(false);
   data = signal<CoachLanding | null>(null);
 
+  isDialog = false;
+
   constructor(
     private route: ActivatedRoute,
+    private router: Router,
     private bookingSvc: PublicBookingService,
-  ) {}
+    @Optional() private dialogRef?: MatDialogRef<CoachLandingComponent>,
+    @Optional() @Inject(MAT_DIALOG_DATA) private dialogData?: { slug: string },
+  ) {
+    this.isDialog = !!this.dialogRef;
+  }
 
   ngOnInit(): void {
-    const slug = this.route.snapshot.params['slug'];
+    const slug = this.dialogData?.slug ?? this.route.snapshot.params['slug'];
     this.bookingSvc.getCoachLanding(slug).subscribe({
       next: (d) => {
         this.data.set(d);
@@ -218,6 +238,17 @@ export class CoachLandingComponent implements OnInit {
     const d = this.data();
     if (!d) return '';
     return `${d.coach.firstName.charAt(0)}${d.coach.lastName.charAt(0)}`.toUpperCase();
+  }
+
+  selectEventType(et: CoachLandingEventType): void {
+    if (this.isDialog) {
+      this.dialogRef?.close();
+    }
+    this.router.navigate(['/book', et.coachSlug]);
+  }
+
+  closeDialog(): void {
+    this.dialogRef?.close();
   }
 
   trackEt = (_: number, et: CoachLandingEventType) => et._id;

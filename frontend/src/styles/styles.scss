@@ -354,6 +354,14 @@ a {
   }
 }
 
+// Remove default dialog padding for the coach landing dialog so the
+// gradient background extends to the edges.
+.coach-landing-dialog .mat-mdc-dialog-surface {
+  padding: 0 !important;
+  overflow: hidden;
+  border-radius: 16px;
+}
+
 @media (max-width: 480px) {
   .page-header h1 { font-size: 20px; }
 

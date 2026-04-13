@@ -19,6 +19,11 @@ export function startReminderJob(): void {
       }).setOptions({ bypassTenantCheck: true });
 
       for (const booking of upcomingBookings) {
+        // B7 defense-in-depth: the Mongo filter above is time-sensitive, so a
+        // booking whose startTime slipped into the past between query and
+        // processing must be skipped here too.
+        if (booking.startTime <= new Date()) continue;
+
         const startMs = booking.startTime.getTime();
         const sentTypes = booking.remindersSent.map((r) => r.type);
 

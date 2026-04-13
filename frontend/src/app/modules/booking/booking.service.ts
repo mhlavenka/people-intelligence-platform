@@ -165,6 +165,13 @@ export class BookingService {
   cancelBooking(id: string, reason?: string): Observable<BookingRecord> {
     return this.api.delete<BookingRecord>(`/booking/bookings/${id}`, { body: { reason } });
   }
+
+  rescheduleBooking(id: string, newStartTime: string): Observable<BookingRecord> {
+    return this.api.patch<BookingRecord>(
+      `/booking/bookings/${id}/reschedule`,
+      { newStartTime },
+    );
+  }
 }
 
 // ─── Public Booking Service (no auth) ────────────────────────────────────────

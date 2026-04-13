@@ -11,7 +11,9 @@ import {
   getPublicCoachInfo,
   invalidateSlotCache,
 } from '../services/availability.service';
-import { createBooking, cancelBooking, clientCancelBooking } from '../services/booking.service';
+import {
+  createBooking, cancelBooking, clientCancelBooking, rescheduleBooking,
+} from '../services/booking.service';
 
 // ─── Slug helper ────────────────────────────────────────────────────────────
 
@@ -235,9 +237,19 @@ router.put(
       const coachId = req.user!.userId;
       const organizationId = req.user!.organizationId;
 
+      // B8: ensure conflictCalendarIds always contains targetCalendarId and
+      // that duplicate ids are folded out before we persist them.
+      const body = { ...req.body };
+      if (body.targetCalendarId) {
+        const ids = Array.isArray(body.conflictCalendarIds) ? body.conflictCalendarIds : [];
+        body.conflictCalendarIds = Array.from(
+          new Set([body.targetCalendarId, ...ids].filter(Boolean) as string[]),
+        );
+      }
+
       const existing = await BookingSettings.findOne({ coachId, organizationId });
       if (existing) {
-        const updateData = { ...req.body };
+        const updateData = { ...body };
         delete updateData.coachId;
         delete updateData.organizationId;
         Object.assign(existing, updateData);
@@ -250,7 +262,7 @@ router.put(
         res.json(existing);
       } else {
         const settings = await BookingSettings.create({
-          ...req.body,
+          ...body,
           coachId,
           organizationId,
         });
@@ -466,6 +478,38 @@ router.delete(
         req.body?.reason,
       );
       res.json(result);
+    } catch (e) { next(e); }
+  },
+);
+
+// Reschedule booking (coach/admin-side)
+router.patch(
+  '/bookings/:id/reschedule',
+  requireRole('coach', 'admin'),
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const { newStartTime } = req.body as { newStartTime?: string };
+      if (!newStartTime) {
+        res.status(400).json({ error: 'newStartTime is required' }); return;
+      }
+      const newStart = new Date(newStartTime);
+      if (isNaN(newStart.getTime())) {
+        res.status(400).json({ error: 'newStartTime is not a valid date' }); return;
+      }
+
+      const booking = await Booking.findOne({
+        _id: req.params['id'],
+        organizationId: req.user!.organizationId,
+      });
+      if (!booking) { res.status(404).json({ error: 'Booking not found' }); return; }
+
+      const durationMs = booking.endTime.getTime() - booking.startTime.getTime();
+      const newEnd = new Date(newStart.getTime() + durationMs);
+
+      const updated = await rescheduleBooking(
+        req.params['id'], newStart, newEnd, 'admin',
+      );
+      res.json(updated);
     } catch (e) { next(e); }
   },
 );

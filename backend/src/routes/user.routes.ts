@@ -263,6 +263,36 @@ router.get(
   }
 );
 
+// List active coaches in the same org with their public booking slug
+// (auto-generated on demand for any that don't have one yet)
+router.get(
+  '/coaches',
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const coaches = await User.find({
+        organizationId: req.user!.organizationId,
+        role: 'coach',
+        isActive: true,
+      }).select('_id firstName lastName email profilePicture bio publicSlug');
+
+      const result = [];
+      for (const c of coaches) {
+        const slug = await ensureUserPublicSlug(c);
+        result.push({
+          _id: c._id,
+          firstName: c.firstName,
+          lastName: c.lastName,
+          email: c.email,
+          profilePicture: c.profilePicture ?? null,
+          bio: c.bio ?? '',
+          publicSlug: slug,
+        });
+      }
+      res.json(result);
+    } catch (e) { next(e); }
+  },
+);
+
 // ── Admin / HR endpoints ─────────────────────────────────────────────────────
 
 router.get(

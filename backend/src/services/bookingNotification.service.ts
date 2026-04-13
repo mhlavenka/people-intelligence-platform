@@ -258,6 +258,89 @@ export async function sendCancellationEmail(
   await ses.send(command);
 }
 
+export async function sendRescheduleConfirmation(
+  booking: IBooking,
+  coachName: string,
+  coachEmail: string,
+  oldStartTime: Date,
+  cancelUrl: string,
+  triggeredBy: 'coach_gcal' | 'admin' | 'coach',
+): Promise<void> {
+  const oldClientDt = DateTime.fromJSDate(oldStartTime).setZone(booking.clientTimezone);
+  const newClientDt = DateTime.fromJSDate(booking.startTime).setZone(booking.clientTimezone);
+  const newCoachDt = DateTime.fromJSDate(booking.startTime).setZone(booking.coachTimezone);
+
+  const meetSection = booking.googleMeetLink
+    ? `<a href="${booking.googleMeetLink}"
+         style="display:inline-block;background:#3A9FD6;color:#ffffff;
+                padding:14px 28px;border-radius:6px;text-decoration:none;
+                font-weight:600;font-size:15px;margin-top:12px;">
+        Join Google Meet
+      </a>`
+    : '';
+
+  const icsContent = generateICS(booking, coachName, coachEmail);
+
+  // Always email the client. Skip the coach when they triggered the change
+  // from their own calendar — they already know.
+  const clientHtml = bookingHtml('Your session has been rescheduled', `
+    <h2 style="color:#1B2A47;margin:0 0 12px;font-size:22px;">
+      Your session has been rescheduled
+    </h2>
+    <p style="color:#5a6a7e;margin:0 0 16px;line-height:1.6;">
+      Your coaching session with <strong>${coachName}</strong> has been moved.
+    </p>
+    <table cellpadding="0" cellspacing="0" style="margin:0 0 20px;">
+      <tr>
+        <td style="padding:8px 0;color:#9aa5b4;font-size:13px;">Previously</td>
+        <td style="padding:8px 16px;color:#9aa5b4;text-decoration:line-through;">
+          ${oldClientDt.toFormat('cccc, LLL d')} at ${oldClientDt.toFormat('h:mm a')}
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:8px 0;color:#1B2A47;font-size:13px;font-weight:600;">Now</td>
+        <td style="padding:8px 16px;color:#1B2A47;font-weight:600;">
+          ${newClientDt.toFormat('cccc, LLLL d, yyyy')} at ${newClientDt.toFormat('h:mm a')}
+          (${booking.clientTimezone})
+        </td>
+      </tr>
+    </table>
+    ${meetSection}
+    <p style="color:#9aa5b4;font-size:12px;margin:20px 0 0;">
+      Need to cancel? <a href="${cancelUrl}" style="color:#3A9FD6;">Cancel this session</a>
+    </p>
+  `);
+
+  await sendRawEmailWithICS({
+    to: booking.clientEmail,
+    subject: `Rescheduled: Coaching Session on ${newClientDt.toFormat('LLL d')}`,
+    html: clientHtml,
+    icsContent,
+  });
+
+  if (triggeredBy === 'coach_gcal') return;
+
+  // Coach email (admin-triggered reschedules only)
+  const coachHtml = bookingHtml('Session rescheduled', `
+    <h2 style="color:#1B2A47;margin:0 0 12px;font-size:22px;">
+      Session rescheduled
+    </h2>
+    <p style="color:#5a6a7e;margin:0 0 16px;line-height:1.6;">
+      The session with <strong>${booking.clientName}</strong> has been moved to
+      <strong>${newCoachDt.toFormat('cccc, LLLL d, yyyy')}</strong> at
+      <strong>${newCoachDt.toFormat('h:mm a')}</strong> (${booking.coachTimezone}).
+    </p>
+    ${booking.topic ? `<p style="color:#5a6a7e;margin:0 0 8px;"><strong>Topic:</strong> ${booking.topic}</p>` : ''}
+  `);
+
+  await sendRawEmailWithICS({
+    to: coachEmail,
+    subject: `Rescheduled: ${booking.clientName} on ${newCoachDt.toFormat('LLL d')}`,
+    html: coachHtml,
+    icsContent,
+  });
+}
+
 export async function sendReminder(
   booking: IBooking,
   coachName: string,

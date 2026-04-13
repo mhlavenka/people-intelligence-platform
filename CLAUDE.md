@@ -192,3 +192,26 @@ node dist/scripts/seed-plans.js
 - `scroll` events inside MatDialog overlays don't bubble to `document` — activity tracking uses `mousemove`/`keydown`/`mousedown`/`touchstart` which work fine
 - The `tenantFilterPlugin` only warns on missing `organizationId` in development — don't rely on it as a hard guard in production
 - `SurveyResponse.submissionToken` has a unique DB index — duplicate submissions fail at DB level; always handle the 409 response in the frontend
+
+---
+
+## Booking Module — Google Calendar Sync Model
+
+Our sync model mirrors Calendly's verified behavior:
+
+| Direction | Trigger | Effect | Implemented |
+|-----------|---------|--------|-------------|
+| GCal → System | Coach deletes/declines event | Booking cancelled, client emailed | **Not yet** (needs webhook infra — see audit doc) |
+| GCal → System | Coach reschedules event | Booking time updated, client emailed | **Not yet** (same dependency) |
+| GCal → System | Client deletes event | No effect (we watch coach calendar only) | ✓ by design |
+| GCal → System | FREE event added | No effect (freebusy API excludes FREE) | ✓ |
+| System → GCal | Booking created | GCal event created in `targetCalendarId` | ✓ |
+| System → GCal | Booking cancelled | GCal event deleted (graceful on 404/410) | ✓ |
+| System → GCal | Booking rescheduled by admin | GCal event patched with new times | ✓ |
+
+Key implementation notes:
+- `targetCalendarId` is always included in the freebusy conflict check, deduplicated against `conflictCalendarIds`. Enforced on save in `PUT /api/booking/settings` and at the freebusy call site.
+- `cancelBooking()` is idempotent: handles missing `googleEventId`, swallows GCal 404/410 with an INFO log, logs other failures at ERROR. MongoDB state is always updated regardless of GCal outcome.
+- `rescheduleBooking(id, newStart, newEnd, triggeredBy)` supports `'admin'` (update GCal, email both) and `'coach_gcal'` (skip GCal update, email client only). `Booking.rescheduleHistory` records every change.
+- Reminder cron filters `startTime >= now` at the Mongo layer and has a per-loop defensive guard.
+- Full gap audit and outstanding items (webhook receiver, test harness) are in `docs/booking-sync-audit.md`.

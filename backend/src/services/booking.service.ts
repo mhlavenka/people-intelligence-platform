@@ -10,6 +10,7 @@ import { invalidateSlotCache } from './availability.service';
 import {
   sendBookingConfirmation,
   sendCancellationEmail,
+  sendRescheduleConfirmation,
 } from './bookingNotification.service';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -139,11 +140,13 @@ export async function createBooking(
   const startTime = new Date(data.startTime);
   const endTime = new Date(data.endTime);
 
-  // Race condition protection: re-check availability
-  const calendarIds = [
-    ...(targetCalendarId ? [targetCalendarId] : []),
-    ...conflictCalendarIds,
-  ];
+  // Race condition protection: re-check availability.
+  // B8: always include targetCalendarId, dedup against conflictCalendarIds.
+  const calendarIds = Array.from(
+    new Set(
+      [targetCalendarId, ...(conflictCalendarIds || [])].filter(Boolean) as string[],
+    ),
+  );
   const slotFree = await isSlotFree(cfg.coachId.toString(), calendarIds, startTime, endTime);
   if (!slotFree) throw new SlotUnavailableError();
 
@@ -253,8 +256,13 @@ export async function cancelBooking(
     throw Object.assign(new Error('Booking is not active'), { statusCode: 400 });
   }
 
-  // Delete/cancel Google Calendar event
-  if (booking.googleEventId) {
+  // Delete/cancel Google Calendar event. Idempotent: a 404 from Google means
+  // the event was already removed (e.g. the coach deleted it manually in GCal,
+  // which itself triggered this cancellation via webhook). Never let a GCal
+  // failure block the MongoDB update — the booking must still be cancelled locally.
+  if (!booking.googleEventId) {
+    console.warn(`[Booking] Booking ${booking._id} has no googleEventId — skipping GCal delete`);
+  } else {
     const coach = await User.findById(booking.coachId).select(
       '+googleCalendar.accessToken +googleCalendar.refreshToken googleCalendar.connected googleCalendar.tokenExpiry googleCalendar.calendarId',
     );
@@ -274,7 +282,14 @@ export async function cancelBooking(
           sendUpdates: 'none',
         });
       } catch (err) {
-        console.error('[Booking] Failed to delete Google Calendar event:', err);
+        const code = (err as { code?: number })?.code;
+        if (code === 404 || code === 410) {
+          console.info(
+            `[Booking] GCal event ${booking.googleEventId} already gone (${code}) — skipping`,
+          );
+        } else {
+          console.error(`[Booking] Failed to delete GCal event ${booking.googleEventId}:`, err);
+        }
       }
     }
   }
@@ -300,6 +315,114 @@ export async function cancelBooking(
     );
   }
 
+  return booking;
+}
+
+/**
+ * Reschedule a confirmed booking.
+ *
+ *   triggeredBy = 'coach_gcal' — change originated from the coach moving the
+ *     event in Google Calendar. The GCal event already has the new time, so
+ *     we skip updating GCal and skip emailing the coach. Only the client
+ *     gets notified.
+ *   triggeredBy = 'admin' — change originated from the admin/coach UI; we
+ *     update the GCal event and email both parties.
+ */
+export async function rescheduleBooking(
+  bookingId: string,
+  newStartTime: Date,
+  newEndTime: Date,
+  triggeredBy: 'coach_gcal' | 'admin',
+): Promise<IBooking> {
+  const booking = await Booking.findById(bookingId).setOptions({ bypassTenantCheck: true });
+  if (!booking) throw Object.assign(new Error('Booking not found'), { statusCode: 404 });
+  if (booking.status !== 'confirmed') {
+    throw Object.assign(new Error('Booking is not active'), { statusCode: 400 });
+  }
+  if (newStartTime.getTime() <= Date.now()) {
+    throw Object.assign(new Error('New start time must be in the future'), { statusCode: 400 });
+  }
+  if (newEndTime.getTime() <= newStartTime.getTime()) {
+    throw Object.assign(new Error('End time must be after start time'), { statusCode: 400 });
+  }
+
+  const oldStartTime = booking.startTime;
+
+  // Update GCal event only when the change didn't originate there.
+  if (triggeredBy !== 'coach_gcal' && booking.googleEventId) {
+    const coach = await User.findById(booking.coachId).select(
+      '+googleCalendar.accessToken +googleCalendar.refreshToken googleCalendar.connected googleCalendar.tokenExpiry',
+    );
+    const shared = await BookingSettings.findOne({ coachId: booking.coachId })
+      .setOptions({ bypassTenantCheck: true });
+    const cfg = await AvailabilityConfig.findOne({ coachId: booking.coachId })
+      .setOptions({ bypassTenantCheck: true });
+    const calId = shared?.targetCalendarId || cfg?.targetCalendarId;
+
+    if (coach?.googleCalendar?.connected && calId) {
+      try {
+        const auth = await getAuthenticatedClient(booking.coachId.toString());
+        const calendar = google.calendar({ version: 'v3', auth });
+        await calendar.events.patch({
+          calendarId: calId,
+          eventId: booking.googleEventId,
+          requestBody: {
+            start: { dateTime: newStartTime.toISOString() },
+            end: { dateTime: newEndTime.toISOString() },
+          },
+          sendUpdates: 'none',
+        });
+      } catch (err) {
+        const code = (err as { code?: number })?.code;
+        if (code === 404 || code === 410) {
+          console.warn(
+            `[Booking] GCal event ${booking.googleEventId} gone during reschedule — continuing`,
+          );
+        } else {
+          console.error(`[Booking] Failed to patch GCal event ${booking.googleEventId}:`, err);
+        }
+      }
+    }
+  }
+
+  // Rotate cancel token (7-day expiry anchored to the new booking time).
+  const newCancelToken = jwt.sign(
+    { type: 'cancel' },
+    config.booking.cancelTokenSecret,
+    { expiresIn: '7d' },
+  );
+
+  booking.startTime = newStartTime;
+  booking.endTime = newEndTime;
+  booking.rescheduledAt = new Date();
+  booking.rescheduledBy = triggeredBy;
+  booking.rescheduleHistory.push({
+    from: oldStartTime,
+    to: newStartTime,
+    by: triggeredBy,
+    at: new Date(),
+  });
+  booking.cancelToken = newCancelToken;
+  booking.remindersSent = []; // re-eligible for reminders at the new time
+  await booking.save();
+
+  // Invalidate availability cache
+  const cfg = await AvailabilityConfig.findOne({ coachId: booking.coachId })
+    .setOptions({ bypassTenantCheck: true });
+  if (cfg) invalidateSlotCache(cfg.coachSlug);
+
+  // Notify
+  const coach = await User.findById(booking.coachId).select('firstName lastName email');
+  if (coach && cfg) {
+    const coachName = `${coach.firstName} ${coach.lastName}`;
+    const cancelUrl =
+      `${config.frontendUrl}/book/${cfg.coachSlug}/cancel/${booking._id}/${newCancelToken}`;
+    sendRescheduleConfirmation(
+      booking, coachName, coach.email, oldStartTime, cancelUrl, triggeredBy,
+    ).catch((err) => console.error('[Booking] Failed to send reschedule email:', err));
+  }
+
+  console.info(`[Booking] Booking ${booking._id} rescheduled by ${triggeredBy}`);
   return booking;
 }
 

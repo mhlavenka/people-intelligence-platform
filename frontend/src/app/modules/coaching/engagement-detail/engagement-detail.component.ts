@@ -1,6 +1,6 @@
 import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule, DatePipe, CurrencyPipe } from '@angular/common';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -11,7 +11,8 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { ApiService } from '../../../core/api.service';
 import { AuthService } from '../../../core/auth.service';
 import { SessionDialogComponent } from '../session-dialog/session-dialog.component';
-import { BookSessionDialogComponent } from '../book-session-dialog/book-session-dialog.component';
+import { CoachPickerDialogComponent, CoachPick } from '../coach-picker-dialog/coach-picker-dialog.component';
+import { CoachLandingComponent } from '../../booking/coach-landing/coach-landing.component';
 import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog.component';
 import { JournalService, SessionNote } from '../../journal/journal.service';
 
@@ -545,6 +546,7 @@ export class EngagementDetailComponent implements OnInit {
 
   constructor(
     private route: ActivatedRoute,
+    private router: Router,
     private api: ApiService,
     private auth: AuthService,
     private dialog: MatDialog,
@@ -615,9 +617,36 @@ export class EngagementDetailComponent implements OnInit {
   }
 
   bookSession(): void {
-    this.dialog.open(BookSessionDialogComponent, {
-      data: { coachName: this.coachFullName(), engagementId: this.engId },
-      width: '480px',
+    this.api.get<CoachPick[]>('/users/coaches').subscribe({
+      next: (coaches) => {
+        const withSlug = coaches.filter((c) => !!c.publicSlug);
+        if (!withSlug.length) {
+          this.snack.open('No coaches available for booking yet.', 'OK', { duration: 3000 });
+          return;
+        }
+        if (withSlug.length === 1) {
+          this.openLandingDialog(withSlug[0].publicSlug);
+          return;
+        }
+        const ref = this.dialog.open(CoachPickerDialogComponent, {
+          data: { coaches: withSlug },
+          width: '520px', maxHeight: '80vh',
+        });
+        ref.afterClosed().subscribe((picked: CoachPick | null) => {
+          if (picked?.publicSlug) {
+            this.openLandingDialog(picked.publicSlug);
+          }
+        });
+      },
+      error: () => this.snack.open('Failed to load coaches', 'OK', { duration: 3000 }),
+    });
+  }
+
+  private openLandingDialog(slug: string): void {
+    this.dialog.open(CoachLandingComponent, {
+      data: { slug },
+      width: '720px', maxWidth: '95vw', maxHeight: '92vh',
+      panelClass: 'coach-landing-dialog',
     });
   }
 

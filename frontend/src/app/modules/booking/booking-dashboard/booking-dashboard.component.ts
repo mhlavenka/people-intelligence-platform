@@ -20,6 +20,7 @@ import { MatCalendar, MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { Subscription, forkJoin } from 'rxjs';
 import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog.component';
+import { RescheduleDialogComponent } from '../reschedule-dialog/reschedule-dialog.component';
 import { BookingService, BookingRecord, AvailabilityConfig } from '../booking.service';
 
 type DayBuckets = {
@@ -201,6 +202,12 @@ type DayBuckets = {
                        matTooltip="Open Google Meet">
                       <mat-icon>videocam</mat-icon>
                     </a>
+                  }
+                  @if (b.status === 'confirmed' && activeTab() === 'upcoming') {
+                    <button mat-icon-button (click)="openReschedule(b)"
+                            matTooltip="Reschedule booking">
+                      <mat-icon>event_repeat</mat-icon>
+                    </button>
                   }
                   @if (b.status === 'confirmed') {
                     <button mat-icon-button color="warn" (click)="confirmCancel(b)"
@@ -604,6 +611,27 @@ export class BookingDashboardComponent implements OnInit, AfterViewInit, OnDestr
         this.loading.set(false);
         this.snackBar.open('Failed to load bookings', 'OK', { duration: 3000 });
       },
+    });
+  }
+
+  openReschedule(booking: BookingRecord): void {
+    const ref = this.dialog.open(RescheduleDialogComponent, {
+      data: { booking },
+      width: '480px',
+    });
+    ref.afterClosed().subscribe((newStartIso: string | null | undefined) => {
+      if (!newStartIso) return;
+      this.bookingSvc.rescheduleBooking(booking._id, newStartIso).subscribe({
+        next: () => {
+          this.snackBar.open('Booking rescheduled', 'OK', { duration: 3000 });
+          this.load();
+          this.loadCalendarData();
+        },
+        error: (err) => {
+          const msg = err?.error?.error || 'Failed to reschedule';
+          this.snackBar.open(msg, 'OK', { duration: 4000 });
+        },
+      });
     });
   }
 

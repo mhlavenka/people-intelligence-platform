@@ -6,6 +6,13 @@ export interface IReminderRecord {
   sentAt: Date;
 }
 
+export interface IRescheduleRecord {
+  from: Date;
+  to: Date;
+  by: string;
+  at: Date;
+}
+
 export interface IBooking extends Document {
   coachId: mongoose.Types.ObjectId;
   organizationId: mongoose.Types.ObjectId;
@@ -27,6 +34,9 @@ export interface IBooking extends Document {
   cancelledBy?: string;
   cancellationReason?: string;
   remindersSent: IReminderRecord[];
+  rescheduledAt?: Date;
+  rescheduledBy?: string;
+  rescheduleHistory: IRescheduleRecord[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -34,6 +44,13 @@ export interface IBooking extends Document {
 const ReminderRecordSchema = new Schema({
   type:   { type: String, required: true },
   sentAt: { type: Date, required: true },
+}, { _id: false });
+
+const RescheduleRecordSchema = new Schema({
+  from: { type: Date, required: true },
+  to:   { type: Date, required: true },
+  by:   { type: String, required: true },
+  at:   { type: Date, required: true },
 }, { _id: false });
 
 const BookingSchema = new Schema<IBooking>(
@@ -71,6 +88,9 @@ const BookingSchema = new Schema<IBooking>(
     cancelledBy:         { type: String },
     cancellationReason:  { type: String },
     remindersSent:       [ReminderRecordSchema],
+    rescheduledAt:       { type: Date },
+    rescheduledBy:       { type: String },
+    rescheduleHistory:   { type: [RescheduleRecordSchema], default: [] },
   },
   { timestamps: true },
 );
