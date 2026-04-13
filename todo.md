@@ -23,8 +23,7 @@ IMPROVEMENTS
 - coaching
   - lead, initial chemistry call
   - intake - attach to session, create different session types
-  - coachees send pre and post session forms
-  - coachee journal, pre and post forms
+
   
 I. MODULES
 ----------

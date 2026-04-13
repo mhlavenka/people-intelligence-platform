@@ -47,11 +47,6 @@ interface Session {
         @if (canManage()) {
           <a routerLink="/coaching" class="back-link"><mat-icon>arrow_back</mat-icon> Coaching</a>
         }
-        @if (canManage()) {
-          <button mat-raised-button color="primary" (click)="addSession()">
-            <mat-icon>add</mat-icon> New Session
-          </button>
-        }
       </div>
 
       @if (loading()) {
@@ -355,7 +350,14 @@ interface Session {
               </div>
             }
 
-            <!-- Coachee: 'Book a Session' as an empty + tile after the list -->
+            <!-- Coach: 'New Session' as an empty + tile -->
+            @if (canManage()) {
+              <button class="session-card add-session-card" type="button" (click)="addSession()">
+                <mat-icon class="add-icon">add</mat-icon>
+                <span class="add-label">New session</span>
+              </button>
+            }
+            <!-- Coachee: 'Book a Session' as an empty + tile -->
             @if (!canManage()) {
               <button class="session-card add-session-card" type="button" (click)="bookSession()">
                 <mat-icon class="add-icon">add</mat-icon>
@@ -751,8 +753,16 @@ export class EngagementDetailComponent implements OnInit {
   }
 
   addSession(): void {
+    const eng = this.engagement();
+    const coacheeId = (eng?.coacheeId && typeof eng.coacheeId === 'object')
+      ? eng.coacheeId._id
+      : eng?.coacheeId;
+    if (!eng || !this.engId || !coacheeId) {
+      this.snack.open('Engagement still loading — try again in a moment.', 'OK', { duration: 3000 });
+      return;
+    }
     const ref = this.dialog.open(SessionDialogComponent, {
-      data: { engagementId: this.engId, coacheeId: this.engagement()?.coacheeId?._id },
+      data: { engagementId: this.engId, coacheeId },
       minWidth: '600px', maxHeight: '92vh',
     });
     ref.afterClosed().subscribe((r) => { if (r) this.load(); });
