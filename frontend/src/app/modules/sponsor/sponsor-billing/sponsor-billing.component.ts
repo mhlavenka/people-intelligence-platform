@@ -57,7 +57,7 @@ import { SponsorInvoiceEditDialogComponent } from '../sponsor-invoice-edit-dialo
               <span class="totals-hint">Engagements not yet on a non-void invoice</span>
             </div>
             <div class="totals">
-              <span class="totals-label">Total billable</span>
+              <span class="totals-label">Total billed</span>
               <span class="totals-value">{{ data()!.grandTotal | currency }}</span>
               <span class="totals-hint">All sponsor-mode engagements combined</span>
             </div>

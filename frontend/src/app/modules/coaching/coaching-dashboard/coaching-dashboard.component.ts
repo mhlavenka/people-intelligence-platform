@@ -454,21 +454,34 @@ export class CoachingDashboardComponent implements OnInit {
             this.loading.set(false);
           }
         },
-        error: () => this.loading.set(false),
+        error: (err) => {
+          console.error('[Coaching] Failed to load engagements (coachee):', err);
+          this.loading.set(false);
+        },
       });
       return;
     }
 
-    Promise.all([
-      this.api.get<DashboardStats>('/coaching/dashboard').toPromise(),
-      this.api.get<Engagement[]>('/coaching/engagements').toPromise(),
-      this.api.get<CalSession[]>('/coaching/sessions').toPromise(),
-    ]).then(([stats, engagements, sessions]) => {
-      this.stats.set(stats!);
-      this.engagements.set(engagements!);
-      this.sessions.set(sessions!);
-      this.loading.set(false);
-    }).catch(() => this.loading.set(false));
+    // Independent fires so one failed call doesn't blank the others.
+    this.api.get<DashboardStats>('/coaching/dashboard').subscribe({
+      next: (s) => this.stats.set(s),
+      error: (err) => console.error('[Coaching] Failed to load dashboard stats:', err),
+    });
+    this.api.get<Engagement[]>('/coaching/engagements').subscribe({
+      next: (e) => {
+        console.info('[Coaching] engagements loaded:', e.length);
+        this.engagements.set(e);
+        this.loading.set(false);
+      },
+      error: (err) => {
+        console.error('[Coaching] Failed to load engagements:', err);
+        this.loading.set(false);
+      },
+    });
+    this.api.get<CalSession[]>('/coaching/sessions').subscribe({
+      next: (s) => this.sessions.set(s),
+      error: (err) => console.error('[Coaching] Failed to load sessions:', err),
+    });
   }
 
   createEngagement(): void {

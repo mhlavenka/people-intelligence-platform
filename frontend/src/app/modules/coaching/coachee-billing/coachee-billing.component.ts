@@ -86,7 +86,7 @@ interface BillingData {
           </div>
           <div class="summary-card accent">
             <div class="sum-num">{{ data()!.summary.totalAmount | currency:'CAD':'symbol':'1.2-2' }}</div>
-            <div class="sum-label">Total Billable</div>
+            <div class="sum-label">Total Billed</div>
           </div>
         </div>
 
