@@ -1,0 +1,546 @@
+import { Component, EventEmitter, Output, signal, computed } from '@angular/core';
+import { CommonModule, DatePipe } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule } from '@angular/material/core';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatExpansionModule } from '@angular/material/expansion';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import {
+  BookingService,
+  ImportEvent,
+  ImportResultResponse,
+} from '../booking.service';
+
+type State = 'idle' | 'loading' | 'preview' | 'importing' | 'done';
+
+@Component({
+  selector: 'app-booking-import',
+  standalone: true,
+  imports: [
+    CommonModule, DatePipe, FormsModule,
+    MatIconModule, MatButtonModule, MatProgressSpinnerModule,
+    MatFormFieldModule, MatInputModule, MatDatepickerModule, MatNativeDateModule,
+    MatCheckboxModule, MatTooltipModule, MatExpansionModule, MatSnackBarModule,
+  ],
+  template: `
+    <div class="import-wrap">
+
+      <!-- ═══════════════ IDLE ═══════════════ -->
+      @if (state() === 'idle') {
+        <div class="idle">
+          <div class="intro">
+            <mat-icon>cloud_download</mat-icon>
+            <h2>Import from Google Calendar</h2>
+            <p>
+              Pull existing coaching sessions from your connected Google Calendar into
+              this booking dashboard. Every event is previewed first — you approve
+              each one before anything is imported.
+            </p>
+          </div>
+
+          <div class="date-row">
+            <mat-form-field appearance="outline">
+              <mat-label>From</mat-label>
+              <input matInput [matDatepicker]="pickerFrom" [(ngModel)]="fromDate" />
+              <mat-datepicker-toggle matIconSuffix [for]="pickerFrom" />
+              <mat-datepicker #pickerFrom />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>To</mat-label>
+              <input matInput [matDatepicker]="pickerTo" [(ngModel)]="toDate" />
+              <mat-datepicker-toggle matIconSuffix [for]="pickerTo" />
+              <mat-datepicker #pickerTo />
+            </mat-form-field>
+          </div>
+
+          <button mat-flat-button color="primary" (click)="runPreview()">
+            <mat-icon>search</mat-icon> Preview Events
+          </button>
+
+          @if (error()) {
+            <div class="error-banner">
+              <mat-icon>error_outline</mat-icon>
+              <span>{{ error() }}</span>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- ═══════════════ LOADING ═══════════════ -->
+      @if (state() === 'loading') {
+        <div class="center-state">
+          <mat-spinner diameter="40" />
+          <p>Fetching events from Google Calendar…</p>
+          <span class="hint">Calendars with many events can take a few seconds.</span>
+        </div>
+      }
+
+      <!-- ═══════════════ PREVIEW ═══════════════ -->
+      @if (state() === 'preview') {
+        <div class="preview">
+          <div class="summary-bar">
+            <strong>{{ events().length }}</strong> events &middot;
+            <span class="chip done">{{ alreadyImportedCount() }} already imported</span>
+            <span class="chip pending">{{ pendingCount() }} pending</span>
+          </div>
+
+          <div class="bulk">
+            <button mat-stroked-button (click)="approveAllPending()">
+              <mat-icon>check_circle</mat-icon> Approve all pending
+            </button>
+            <button mat-stroked-button (click)="skipAll()">
+              <mat-icon>do_not_disturb_on</mat-icon> Skip all
+            </button>
+            <button mat-button (click)="cancelPreview()">Cancel</button>
+          </div>
+
+          @if (!events().length) {
+            <div class="empty">
+              <mat-icon>event_busy</mat-icon>
+              <p>No coaching sessions found in this date range.</p>
+              <span class="hint">Try widening the From / To window.</span>
+            </div>
+          } @else {
+            <div class="table">
+              <div class="th">
+                <div class="col-check"></div>
+                <div class="col-when">Date &amp; time</div>
+                <div class="col-client">Client</div>
+                <div class="col-topic">Topic</div>
+                <div class="col-dur">Duration</div>
+                <div class="col-status">Status</div>
+              </div>
+              @for (ev of events(); track ev.googleEventId) {
+                <div class="tr" [class.imported]="ev.alreadyImported" [class.approved]="ev.approved">
+                  <div class="col-check">
+                    @if (ev.alreadyImported) {
+                      <mat-icon matTooltip="Already imported" class="lock-icon">lock</mat-icon>
+                    } @else {
+                      <mat-checkbox [checked]="ev.approved" (change)="toggleRow(ev, $event.checked)" />
+                    }
+                  </div>
+
+                  <div class="col-when">
+                    <div class="when-main">{{ ev.startTime | date:'MMM d, y' }}</div>
+                    <div class="when-time">{{ ev.startTime | date:'shortTime' }}</div>
+                  </div>
+
+                  <div class="col-client">
+                    @if (isEditing('name', ev)) {
+                      <input class="edit-input" [(ngModel)]="editBuffer"
+                             (blur)="commitEdit('name', ev)"
+                             (keydown.enter)="commitEdit('name', ev)" autofocus />
+                    } @else {
+                      <div class="client-name" (click)="beginEdit('name', ev)">
+                        {{ ev.editedClientName ?? ev.clientName }}
+                        @if (ev.editedClientName) { <mat-icon class="edit-mark">edit</mat-icon> }
+                        @if (!ev.clientEmail) {
+                          <mat-icon class="warn-mark" matTooltip="No client email found — will import without an email">warning</mat-icon>
+                        }
+                      </div>
+                      @if (ev.clientEmail) { <div class="client-email">{{ ev.clientEmail }}</div> }
+                    }
+                  </div>
+
+                  <div class="col-topic">
+                    @if (isEditing('topic', ev)) {
+                      <input class="edit-input" [(ngModel)]="editBuffer"
+                             (blur)="commitEdit('topic', ev)"
+                             (keydown.enter)="commitEdit('topic', ev)" autofocus />
+                    } @else {
+                      <div class="topic" (click)="beginEdit('topic', ev)">
+                        {{ (ev.editedTopic ?? ev.topic) || '—' }}
+                        @if (ev.editedTopic) { <mat-icon class="edit-mark">edit</mat-icon> }
+                      </div>
+                    }
+                  </div>
+
+                  <div class="col-dur">{{ ev.durationMinutes }} min</div>
+
+                  <div class="col-status">
+                    @if (ev.alreadyImported) {
+                      <span class="st-chip imported">Imported</span>
+                    } @else {
+                      <span class="st-chip" [class.past]="ev.status === 'completed'"
+                                            [class.upcoming]="ev.status === 'upcoming'">
+                        {{ ev.status === 'completed' ? 'Past' : 'Upcoming' }}
+                      </span>
+                    }
+                  </div>
+
+                  <button mat-icon-button class="expand-btn" (click)="ev.expanded = !ev.expanded">
+                    <mat-icon>{{ ev.expanded ? 'expand_less' : 'expand_more' }}</mat-icon>
+                  </button>
+
+                  @if (ev.expanded) {
+                    <div class="detail">
+                      <div><strong>Raw title:</strong> {{ ev.rawSummary || '—' }}</div>
+                      @if (ev.googleMeetLink) {
+                        <div><strong>Meet link:</strong>
+                          <a [href]="ev.googleMeetLink" target="_blank">{{ ev.googleMeetLink }}</a>
+                        </div>
+                      }
+                      <div class="attendees">
+                        <strong>Attendees ({{ ev.attendees.length }}):</strong>
+                        <ul>
+                          @for (a of ev.attendees; track a.email) {
+                            <li>
+                              {{ a.displayName || a.email }}
+                              @if (a.email) { <span class="att-email">&lt;{{ a.email }}&gt;</span> }
+                              @if (a.self) { <span class="att-badge">you</span> }
+                              @if (a.organizer) { <span class="att-badge">organizer</span> }
+                            </li>
+                          }
+                        </ul>
+                      </div>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          }
+
+          <div class="footer">
+            <span class="sel-count">{{ selectedCount() }} event{{ selectedCount() === 1 ? '' : 's' }} selected for import</span>
+            <div class="footer-actions">
+              <button mat-button (click)="cancelPreview()">Cancel</button>
+              <button mat-flat-button color="primary"
+                      [disabled]="selectedCount() === 0"
+                      (click)="runImport()">
+                <mat-icon>cloud_upload</mat-icon>
+                Import {{ selectedCount() }} event{{ selectedCount() === 1 ? '' : 's' }} →
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- ═══════════════ IMPORTING ═══════════════ -->
+      @if (state() === 'importing') {
+        <div class="center-state">
+          <mat-spinner diameter="40" />
+          <p>Importing {{ selectedCount() }} event{{ selectedCount() === 1 ? '' : 's' }}…</p>
+          <span class="hint">Do not close this tab.</span>
+        </div>
+      }
+
+      <!-- ═══════════════ DONE ═══════════════ -->
+      @if (state() === 'done' && result(); as r) {
+        <div class="done">
+          <div class="done-card">
+            <mat-icon class="done-icon">check_circle</mat-icon>
+            <h2>Import complete</h2>
+            <div class="metrics">
+              <div><span class="num">{{ r.imported }}</span><span>Imported</span></div>
+              <div><span class="num">{{ r.skipped }}</span><span>Skipped</span></div>
+              <div [class.err]="r.errors.length"><span class="num">{{ r.errors.length }}</span><span>Errors</span></div>
+            </div>
+            @if (r.errors.length) {
+              <details class="errors">
+                <summary>{{ r.errors.length }} error{{ r.errors.length === 1 ? '' : 's' }}</summary>
+                <ul>
+                  @for (err of r.errors; track err.googleEventId) {
+                    <li><code>{{ err.googleEventId }}</code>: {{ err.message }}</li>
+                  }
+                </ul>
+              </details>
+            }
+            <div class="done-actions">
+              <button mat-stroked-button (click)="viewDashboard.emit()">
+                <mat-icon>event</mat-icon> View booking dashboard
+              </button>
+              <button mat-flat-button color="primary" (click)="resetToIdle()">
+                <mat-icon>refresh</mat-icon> Import more
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  `,
+  styles: [`
+    .import-wrap { padding: 8px 4px 16px; }
+
+    /* ─ IDLE ─ */
+    .idle { max-width: 720px; margin: 0 auto; padding: 24px; }
+    .intro {
+      text-align: center; padding: 20px 0 28px;
+      mat-icon { font-size: 44px; width: 44px; height: 44px; color: #3A9FD6; }
+      h2 { margin: 8px 0 4px; color: #1B2A47; font-size: 20px; }
+      p  { margin: 0 auto; max-width: 520px; color: #6b7c93; font-size: 14px; line-height: 1.5; }
+    }
+    .date-row { display: flex; gap: 12px; justify-content: center; margin-bottom: 16px; }
+    .idle > button { display: block; margin: 0 auto; min-width: 200px; }
+    .error-banner {
+      margin-top: 20px; padding: 12px 16px; border-radius: 10px;
+      background: #fef2f2; color: #b91c1c; display: flex; align-items: center; gap: 8px;
+      mat-icon { color: #b91c1c; }
+    }
+
+    /* ─ Centered states (loading/importing) ─ */
+    .center-state {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 12px; padding: 80px 20px; color: #5a6a7e;
+      p { margin: 0; font-size: 15px; color: #1B2A47; font-weight: 500; }
+      .hint { font-size: 12px; color: #9aa5b4; }
+    }
+
+    /* ─ PREVIEW ─ */
+    .preview { display: flex; flex-direction: column; gap: 12px; }
+    .summary-bar {
+      background: #f8fafc; border: 1px solid #eef2f7; border-radius: 10px;
+      padding: 10px 16px; font-size: 14px; color: #1B2A47;
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    }
+    .chip {
+      font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 999px;
+      &.done { background: #f0f4f8; color: #5a6a7e; }
+      &.pending { background: #e8faf4; color: #1a9678; }
+    }
+    .bulk { display: flex; gap: 8px; flex-wrap: wrap; }
+    .empty {
+      text-align: center; padding: 48px; color: #6b7c93;
+      background: #fff; border-radius: 12px; border: 1px solid #eef2f7;
+      mat-icon { font-size: 40px; width: 40px; height: 40px; color: #c8d3df; display: block; margin: 0 auto 8px; }
+    }
+    .hint { color: #9aa5b4; font-size: 12px; }
+
+    .table {
+      background: #fff; border: 1px solid #eef2f7; border-radius: 12px; overflow: hidden;
+    }
+    .th, .tr {
+      display: grid;
+      grid-template-columns: 40px 140px 1fr 1fr 90px 90px 40px;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+    }
+    .th {
+      font-size: 11px; font-weight: 700; color: #9aa5b4;
+      text-transform: uppercase; letter-spacing: 0.3px;
+      border-bottom: 1px solid #eef2f7; background: #fafbfd;
+    }
+    .tr {
+      border-bottom: 1px solid #f4f6fa; position: relative;
+      &:last-child { border-bottom: none; }
+      &.imported { opacity: 0.55; }
+      &.approved { background: rgba(39,196,160,0.04); }
+    }
+    .col-when .when-main  { font-weight: 600; color: #1B2A47; font-size: 13px; }
+    .col-when .when-time  { font-size: 12px; color: #5a6a7e; }
+    .client-name {
+      font-weight: 600; color: #1B2A47; font-size: 13px; cursor: pointer;
+      display: flex; align-items: center; gap: 4px;
+      &:hover { text-decoration: underline dashed #9aa5b4; text-underline-offset: 2px; }
+      .edit-mark, .warn-mark { font-size: 14px; width: 14px; height: 14px; }
+      .edit-mark { color: #3A9FD6; }
+      .warn-mark { color: #f0a500; }
+    }
+    .client-email { font-size: 12px; color: #6b7c93; }
+    .topic {
+      font-size: 13px; color: #1B2A47; cursor: pointer;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      display: flex; align-items: center; gap: 4px;
+      &:hover { text-decoration: underline dashed #9aa5b4; text-underline-offset: 2px; }
+      .edit-mark { font-size: 14px; width: 14px; height: 14px; color: #3A9FD6; }
+    }
+    .edit-input {
+      width: 100%; border: 1px solid #3A9FD6; border-radius: 6px;
+      padding: 4px 8px; font-size: 13px; outline: none;
+      &:focus { border-color: #1B2A47; box-shadow: 0 0 0 2px rgba(58,159,214,0.15); }
+    }
+    .st-chip {
+      display: inline-block; font-size: 10px; font-weight: 700; text-transform: uppercase;
+      padding: 3px 8px; border-radius: 999px;
+      &.upcoming { background: #e0f0fb; color: #2080b0; }
+      &.past     { background: #f0f4f8; color: #5a6a7e; }
+      &.imported { background: #f3eaff; color: #7c5cbf; }
+    }
+    .lock-icon { color: #9aa5b4; font-size: 18px; width: 18px; height: 18px; }
+    .expand-btn { justify-self: end; }
+    .detail {
+      grid-column: 1 / -1;
+      padding: 10px 14px; background: #fafbfd; border-top: 1px solid #eef2f7;
+      font-size: 13px; color: #5a6a7e;
+      div { margin-bottom: 4px; }
+      a { color: #3A9FD6; word-break: break-all; }
+      .attendees ul { margin: 4px 0 0 0; padding-left: 20px; }
+      .att-email { color: #9aa5b4; font-size: 12px; margin-left: 4px; }
+      .att-badge { background: #EBF5FB; color: #2080b0; font-size: 10px; padding: 1px 6px;
+                   border-radius: 999px; margin-left: 4px; font-weight: 600; }
+    }
+
+    .footer {
+      position: sticky; bottom: 0; z-index: 1;
+      display: flex; align-items: center; justify-content: space-between;
+      background: #fff; border: 1px solid #eef2f7; border-radius: 12px;
+      padding: 12px 16px; box-shadow: 0 -2px 8px rgba(0,0,0,0.04);
+    }
+    .sel-count { font-size: 13px; color: #1B2A47; font-weight: 500; }
+    .footer-actions { display: flex; gap: 8px; }
+
+    /* ─ DONE ─ */
+    .done { display: flex; justify-content: center; padding: 40px 16px; }
+    .done-card {
+      background: #fff; border: 1px solid #eef2f7; border-radius: 16px;
+      padding: 32px 36px; max-width: 540px; width: 100%; text-align: center;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.04);
+    }
+    .done-icon {
+      font-size: 48px; width: 48px; height: 48px; color: #27C4A0;
+      display: block; margin: 0 auto 8px;
+    }
+    .done-card h2 { margin: 0 0 20px; color: #1B2A47; font-size: 22px; }
+    .metrics {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+      margin-bottom: 20px;
+      > div {
+        background: #f8fafc; border-radius: 10px; padding: 14px 8px;
+        display: flex; flex-direction: column; gap: 4px;
+        .num { font-size: 26px; font-weight: 700; color: #1B2A47; }
+        span:last-child { font-size: 12px; color: #6b7c93; text-transform: uppercase; letter-spacing: 0.3px; }
+      }
+      > div.err .num { color: #b91c1c; }
+    }
+    .errors {
+      text-align: left; background: #fef2f2; border: 1px solid #fecaca;
+      padding: 10px 14px; border-radius: 8px; margin-bottom: 16px;
+      summary { cursor: pointer; font-weight: 600; color: #b91c1c; }
+      ul { margin: 8px 0 0; padding-left: 20px; font-size: 12px; color: #5a6a7e; }
+      code { background: #fff; padding: 1px 6px; border-radius: 4px; font-size: 11px; }
+    }
+    .done-actions { display: flex; gap: 10px; justify-content: center; }
+  `],
+})
+export class BookingImportComponent {
+  @Output() viewDashboard = new EventEmitter<void>();
+  @Output() imported = new EventEmitter<void>();
+
+  state = signal<State>('idle');
+  events = signal<ImportEvent[]>([]);
+  error = signal<string>('');
+  result = signal<ImportResultResponse | null>(null);
+
+  // Defaults: 2 years ago → 1 year ahead.
+  fromDate: Date = new Date(Date.now() - 2 * 365 * 24 * 60 * 60 * 1000);
+  toDate:   Date = new Date(Date.now() + 1 * 365 * 24 * 60 * 60 * 1000);
+
+  // Inline-edit state.
+  editingField: 'name' | 'topic' | null = null;
+  editingId: string | null = null;
+  editBuffer = '';
+
+  constructor(private bookingSvc: BookingService, private snack: MatSnackBar) {}
+
+  alreadyImportedCount = computed(() => this.events().filter((e) => e.alreadyImported).length);
+  pendingCount         = computed(() => this.events().filter((e) => !e.alreadyImported).length);
+  selectedCount        = computed(() => this.events().filter((e) => e.approved && !e.alreadyImported).length);
+
+  runPreview(): void {
+    this.error.set('');
+    this.state.set('loading');
+    const from = this.fromDate.toISOString();
+    const to = this.toDate.toISOString();
+    this.bookingSvc.previewImport(from, to).subscribe({
+      next: (res) => {
+        // Default: approve every non-imported event.
+        const list = res.events.map((e) => ({ ...e, approved: !e.alreadyImported }));
+        this.events.set(list);
+        this.state.set('preview');
+      },
+      error: (err) => {
+        this.error.set(err?.error?.error ?? 'Failed to fetch calendar events.');
+        this.state.set('idle');
+      },
+    });
+  }
+
+  toggleRow(ev: ImportEvent, checked: boolean): void {
+    this.events.update((list) => list.map((e) =>
+      e.googleEventId === ev.googleEventId ? { ...e, approved: checked } : e,
+    ));
+  }
+
+  approveAllPending(): void {
+    this.events.update((list) => list.map((e) => e.alreadyImported ? e : { ...e, approved: true }));
+  }
+
+  skipAll(): void {
+    this.events.update((list) => list.map((e) => e.alreadyImported ? e : { ...e, approved: false }));
+  }
+
+  // ── Inline edit ─────────────────────────────────────────────────────────
+  isEditing(field: 'name' | 'topic', ev: ImportEvent): boolean {
+    return this.editingField === field && this.editingId === ev.googleEventId;
+  }
+
+  beginEdit(field: 'name' | 'topic', ev: ImportEvent): void {
+    if (ev.alreadyImported) return;
+    this.editingField = field;
+    this.editingId = ev.googleEventId;
+    this.editBuffer = field === 'name'
+      ? (ev.editedClientName ?? ev.clientName)
+      : (ev.editedTopic ?? ev.topic ?? '');
+  }
+
+  commitEdit(field: 'name' | 'topic', ev: ImportEvent): void {
+    const v = this.editBuffer.trim();
+    this.events.update((list) => list.map((e) => {
+      if (e.googleEventId !== ev.googleEventId) return e;
+      if (field === 'name') {
+        return { ...e, editedClientName: v && v !== e.clientName ? v : undefined };
+      }
+      return { ...e, editedTopic: v && v !== (e.topic ?? '') ? v : undefined };
+    }));
+    this.editingField = null;
+    this.editingId = null;
+    this.editBuffer = '';
+  }
+
+  cancelPreview(): void {
+    this.events.set([]);
+    this.result.set(null);
+    this.state.set('idle');
+  }
+
+  runImport(): void {
+    const selected = this.events().filter((e) => e.approved && !e.alreadyImported);
+    if (!selected.length) return;
+
+    const overrides: Record<string, { clientName?: string; topic?: string | null }> = {};
+    for (const e of selected) {
+      if (e.editedClientName || e.editedTopic !== undefined) {
+        overrides[e.googleEventId] = {
+          ...(e.editedClientName ? { clientName: e.editedClientName } : {}),
+          ...(e.editedTopic !== undefined ? { topic: e.editedTopic } : {}),
+        };
+      }
+    }
+
+    this.state.set('importing');
+    this.bookingSvc.executeImport(selected.map((e) => e.googleEventId), overrides).subscribe({
+      next: (res) => {
+        this.result.set(res);
+        this.state.set('done');
+        if (res.imported > 0) this.imported.emit();
+      },
+      error: (err) => {
+        this.snack.open(err?.error?.error ?? 'Import failed.', 'OK', { duration: 4000 });
+        this.state.set('preview');
+      },
+    });
+  }
+
+  resetToIdle(): void {
+    this.events.set([]);
+    this.result.set(null);
+    this.state.set('idle');
+  }
+}

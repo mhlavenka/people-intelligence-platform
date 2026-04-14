@@ -1,0 +1,535 @@
+================================================================================
+CLAUDE CODE PROMPT — Booking Module: Calendly Sync Logic Validation & Gap Fill
+People Intelligence Platform (PIP) / Artes App
+HeadSoft Tech | headsoft.net
+================================================================================
+
+OBJECTIVE
+---------
+Audit the existing Coaching Booking Module implementation against the sync
+behaviors of Calendly's Google Calendar integration, identify every gap where
+our implementation differs or falls short, and implement the missing pieces.
+
+Do NOT rewrite working code. Only add or patch what is genuinely missing.
+Check CLAUDE.md before touching any file.
+
+================================================================================
+SYNC BEHAVIOR REFERENCE (source of truth for this audit)
+================================================================================
+
+The following is the verified Calendly ↔ Google Calendar sync model.
+Our booking module must match or exceed each behavior.
+
+BEHAVIOR 1 — Booking created → Google Calendar event created
+  Calendly: New booking writes an event to the designated target calendar.
+  Expected: Our BookingService.createBooking() does this. ✓ (verify only)
+
+BEHAVIOR 2 — Google Calendar event deleted or declined BY THE COACH
+           → Booking cancelled in our system
+  Calendly: If the coach deletes or declines the Calendly event in GCal,
+            it is also cancelled in Calendly.
+  Gap risk: Our webhook handler flushes cache only. It does NOT detect
+            deletions or RSVP declines and does NOT cancel the Booking
+            document or notify the client.
+
+BEHAVIOR 3 — Google Calendar event rescheduled BY THE COACH
+           → Booking updated in our system (new start/end time)
+  Calendly: If the coach moves a booking to a different time in GCal,
+            the change syncs back into Calendly (bi-directional time sync).
+  Gap risk: Our webhook handler flushes cache only. It does NOT detect
+            time changes and does NOT update Booking.startTime / endTime
+            or re-send a reschedule confirmation to the client.
+
+BEHAVIOR 4 — Google Calendar event deleted BY THE CLIENT (invitee)
+           → No effect on booking
+  Calendly: If an invitee removes the event from their own calendar,
+            the booking in Calendly is NOT cancelled.
+  Gap risk: Our webhook is registered on the COACH's target calendar, so
+            client-side deletions are invisible to us. Verify this is true
+            and document it. No code change needed if confirmed correct.
+
+BEHAVIOR 5 — Google Calendar event marked FREE → ignored for conflict checking
+  Calendly: Only events marked BUSY block availability. FREE events
+            (common for all-day events added from other sources) are ignored.
+  Gap risk: Google's freebusy API already filters to BUSY-only by default.
+            Verify our freebusy query does not pass any override that would
+            include FREE events. Document the confirmation.
+
+BEHAVIOR 6 — Cancellation made IN OUR SYSTEM → Google Calendar event removed
+  Calendly: Cancellations in Calendly are reflected in Google Calendar.
+  Gap risk: Our BookingService.cancelBooking() calls Google Calendar API
+            to remove/cancel the event. Verify this path is complete and
+            handles the case where googleEventId is missing (event was
+            manually deleted from GCal before we tried to cancel it —
+            Google returns 404, which must be caught gracefully).
+
+BEHAVIOR 7 — Past events have no effect on availability
+  Calendly: Past Google Calendar events are irrelevant to slot generation.
+  Gap risk: Verify our freebusy query uses timeMin >= now (not some
+            earlier anchor date). Verify our reminder cron job skips
+            bookings whose startTime is already in the past.
+
+BEHAVIOR 8 — Multiple sub-calendars checked for conflicts
+  Calendly: You can select multiple sub-calendars for conflict checking.
+            Only BUSY events on those calendars block slots.
+  Gap risk: Our freebusy query uses conflictCalendarIds array. Verify
+            the array is always populated (default: include at least the
+            targetCalendarId itself). Verify the admin UI lets the coach
+            select multiple conflict calendars.
+
+================================================================================
+PHASE A — AUDIT (run first, before any code changes)
+================================================================================
+
+TASK A.1 — Read and audit the following files against each behavior above.
+  For each file, list every gap found as a comment block at the top.
+  Do not modify implementation yet — audit only.
+
+  Files to audit:
+    src/services/booking.service.js          (Behaviors 1, 6)
+    src/services/availability.service.js     (Behaviors 5, 7, 8)
+    src/controllers/booking-webhook.controller.js  (Behaviors 2, 3, 4)
+    src/jobs/reminder.job.js                 (Behavior 7)
+    src/services/notification.service.js     (Behaviors 2, 3, 6 — emails)
+    src/routes/booking.routes.js             (all — check rate limiting)
+
+  Output format for each file:
+    // AUDIT — <filename>
+    // BEHAVIOR 1: PASS / FAIL / PARTIAL — <brief note>
+    // BEHAVIOR 2: PASS / FAIL / PARTIAL — <brief note>
+    // ... etc.
+
+TASK A.2 — After auditing all files, produce a consolidated gap report:
+  Create file: docs/booking-sync-audit.md
+
+  Format:
+    # Booking Sync Audit — [date]
+
+    ## Gaps Found
+    | # | Behavior | File | Status | Description |
+    |---|----------|------|--------|-------------|
+    | 1 | B2 — Coach deletes GCal event | webhook.controller.js | FAIL | ... |
+    ...
+
+    ## Confirmed Passing
+    | # | Behavior | Notes |
+    ...
+
+    ## Implementation Plan
+    Ordered list of tasks with estimated complexity (S/M/L)
+
+================================================================================
+PHASE B — IMPLEMENT MISSING PIECES
+================================================================================
+
+Only implement gaps confirmed in Phase A. Skip any behavior already passing.
+Implement in dependency order (services before controllers before jobs).
+
+--- GAP: BEHAVIOR 2 & 3 — Webhook must detect coach-side changes ---
+
+TASK B.1 — Upgrade the Google Calendar webhook handler to fetch and diff events
+
+  File: src/controllers/booking-webhook.controller.js
+
+  Current behavior: receive notification → flush cache → return 200
+  Required behavior: receive notification → fetch changed events → diff →
+                     update/cancel bookings as needed → flush cache → return 200
+
+  Implementation:
+
+  When a webhook notification arrives:
+
+  Step 1 — Identify the changed event(s)
+    Use the google calendar.events.list() API with:
+      calendarId: targetCalendarId for that coach
+      updatedMin: (timestamp of last webhook processing — store in a
+                   WebhookState collection or in-memory with fallback to now-5min)
+      showDeleted: true   ← CRITICAL: needed to detect deletions
+      singleEvents: true
+      maxResults: 50
+
+  Step 2 — For each changed event returned:
+    a. Look up Booking in MongoDB by googleEventId === event.id
+    b. If no matching Booking found: skip (not one of ours — e.g. a personal event)
+    c. If matching Booking found:
+
+       DELETION / CANCELLATION detection:
+         If event.status === 'cancelled'
+         OR event is absent (returned with status: 'cancelled' when showDeleted: true)
+         AND Booking.status === 'confirmed':
+           → Call bookingService.cancelBooking(bookingId, 'coach', 'Cancelled via Google Calendar')
+           → This will: update Booking.status, send cancellation email to client
+           → Do NOT attempt to delete GCal event again (it's already gone)
+           → Log: `Booking ${bookingId} auto-cancelled via GCal webhook`
+
+       RESCHEDULE detection:
+         If event.status !== 'cancelled'
+         AND (event.start.dateTime !== booking.startTime.toISOString()
+              OR event.end.dateTime !== booking.endTime.toISOString()):
+           → Call bookingService.rescheduleBooking(bookingId, newStart, newEnd, 'coach_gcal')
+           → Log: `Booking ${bookingId} rescheduled via GCal webhook`
+
+  Step 3 — Update stored updatedMin timestamp to now
+  Step 4 — Flush availability cache for coachId
+  Step 5 — Return 200
+
+  WebhookState collection (or use a simple key-value in OAuthToken):
+    coachId: ObjectId
+    lastProcessedAt: Date   ← used as updatedMin in events.list query
+    lastChannelId: String
+
+  Edge cases to handle:
+    - events.list() returns 0 results: nothing changed that affects us, just flush cache
+    - Google API call fails: log error, still return 200 (Google will retry)
+    - Booking already cancelled: skip silently (idempotent)
+    - Multiple changes in one webhook: process all, not just first
+
+TASK B.2 — Add rescheduleBooking method to BookingService
+
+  File: src/services/booking.service.js
+
+  Method: rescheduleBooking(bookingId, newStartTime, newEndTime, triggeredBy)
+    triggeredBy: 'coach_gcal' | 'admin' (for audit trail)
+
+  Steps:
+    1. Load Booking, verify status === 'confirmed'
+    2. Verify newStartTime is in the future (reject past reschedules)
+    3. If triggeredBy !== 'coach_gcal':
+       Update Google Calendar event with new start/end times
+       (if triggeredBy === 'coach_gcal', GCal already has the right time — skip)
+    4. Update Booking document:
+         startTime: newStartTime
+         endTime: newEndTime
+         rescheduledAt: new Date()
+         rescheduledBy: triggeredBy
+         rescheduleHistory: push { from: oldStart, to: newStart, by: triggeredBy, at: now }
+    5. Regenerate cancelToken (new JWT, 7-day expiry from new booking time)
+    6. Send reschedule confirmation emails (coach + client) — see B.3
+    7. Invalidate availability cache for coachId
+    8. Return updated booking
+
+  Add to Booking schema:
+    rescheduledAt:      Date
+    rescheduledBy:      String
+    rescheduleHistory:  [{ from: Date, to: Date, by: String, at: Date }]
+
+TASK B.3 — Add reschedule email to NotificationService
+
+  File: src/services/notification.service.js
+
+  Method: sendRescheduleConfirmation(booking, oldStartTime, triggeredBy)
+
+  Send to client:
+    Subject: "Your coaching session has been rescheduled"
+    Body:
+      - "Your session has been moved to [new date/time in client timezone]"
+      - Previous time: [old date/time]
+      - Google Meet link (unchanged)
+      - Updated cancel link (new token)
+      - Updated ICS attachment
+
+  Send to coach (only if triggeredBy !== 'coach_gcal'):
+    Subject: "Session rescheduled — [client name]"
+    Body: new time, client name, topic
+
+  If triggeredBy === 'coach_gcal':
+    Coach already knows (they made the change) — do NOT email coach
+    Only email client
+
+--- GAP: BEHAVIOR 6 — cancelBooking must handle missing GCal event ---
+
+TASK B.4 — Harden cancelBooking against missing Google Calendar event
+
+  File: src/services/booking.service.js
+
+  In the cancelBooking method, when calling Google Calendar API to
+  delete/cancel the event, wrap the API call:
+
+  try {
+    await calendar.events.delete({
+      calendarId: targetCalendarId,
+      eventId: booking.googleEventId,
+      sendUpdates: 'none'
+    });
+  } catch (err) {
+    if (err.code === 404) {
+      // Event already deleted from GCal (e.g. coach manually deleted it
+      // which triggered this cancellation via webhook). Safe to continue.
+      logger.info(`GCal event ${booking.googleEventId} already deleted — skipping GCal delete`);
+    } else {
+      // Unexpected error — still cancel in our DB but log the GCal failure
+      logger.error(`Failed to delete GCal event ${booking.googleEventId}:`, err);
+    }
+  }
+
+  Also handle missing googleEventId:
+  if (!booking.googleEventId) {
+    logger.warn(`Booking ${bookingId} has no googleEventId — skipping GCal delete`);
+  }
+
+  In both cases: proceed to update Booking status and send cancellation email.
+  Never let a GCal API failure block the MongoDB update.
+
+--- GAP: BEHAVIOR 5 — Verify freebusy query excludes FREE events ---
+
+TASK B.5 — Verify and document freebusy behavior
+
+  File: src/services/availability.service.js
+
+  In the getAvailableSlots method, locate the freebusy query call.
+
+  Verify it is structured as:
+    const freeBusyResponse = await calendar.freebusy.query({
+      requestBody: {
+        timeMin: fromDate.toISO(),
+        timeMax: toDate.toISO(),
+        items: conflictCalendarIds.map(id => ({ id })),
+        // DO NOT add any custom params — default behavior returns BUSY only
+      }
+    });
+
+  Add a comment above the call:
+    // Google freebusy API returns only BUSY periods by default.
+    // FREE events (e.g. all-day placeholder events) are intentionally excluded.
+    // This matches Calendly's behavior: only BUSY blocks availability.
+    // Do NOT add timeZone or other params that could alter this behavior.
+    // Verified against Google Calendar API docs: calendar.freebusy.query
+    // returns busy[] array containing only periods where transparency = 'opaque' (BUSY).
+
+  If the query uses any different structure, refactor to match the above.
+
+--- GAP: BEHAVIOR 7 — Verify past-event safety ---
+
+TASK B.6 — Verify timeMin anchor in freebusy query
+
+  File: src/services/availability.service.js
+
+  Locate where timeMin is set for the freebusy query.
+
+  It must be: Max(fromDate, now + minNoticeHours)
+  It must NOT be: fromDate alone (which could be in the past if a cached
+                  request is replayed)
+
+  Add guard:
+    const safeFrom = DateTime.max(
+      DateTime.fromISO(fromDate),
+      DateTime.now().plus({ hours: config.minNoticeHours })
+    );
+
+  Use safeFrom as timeMin, not raw fromDate.
+
+  Also in the slot generation loop, add an explicit guard per slot:
+    // Skip slot if it starts in the past or within minNoticeHours
+    if (slotStart <= DateTime.now().plus({ hours: config.minNoticeHours })) {
+      continue;
+    }
+
+TASK B.7 — Verify reminder cron skips past bookings
+
+  File: src/jobs/reminder.job.js
+
+  The query must include: startTime: { $gte: new Date() }
+
+  If the query fetches all confirmed bookings and filters in JS, refactor
+  to push the date filter into the MongoDB query for efficiency.
+
+  Add explicit guard inside the processing loop:
+    if (booking.startTime <= new Date()) {
+      continue; // Already in the past, skip
+    }
+
+--- GAP: BEHAVIOR 8 — Default conflictCalendarIds population ---
+
+TASK B.8 — Ensure conflictCalendarIds always includes targetCalendarId
+
+  File: src/services/availability.service.js (freebusy call)
+  File: src/services/booking.service.js (slot validation on createBooking)
+
+  Before the freebusy query, enforce:
+    const calendarIdsToCheck = [
+      ...new Set([
+        config.targetCalendarId,           // always check the booking calendar itself
+        ...(config.conflictCalendarIds || [])
+      ])
+    ].filter(Boolean);
+
+  Use calendarIdsToCheck in the freebusy items array.
+  This ensures that even if the admin UI saved an empty conflictCalendarIds,
+  the target calendar is always checked for conflicts.
+
+  Add a migration/validation in the PUT /api/booking/config handler:
+    If req.body.conflictCalendarIds is empty or missing,
+    default it to [req.body.targetCalendarId].
+
+================================================================================
+PHASE C — ADMIN UI ADDITIONS
+================================================================================
+
+TASK C.1 — Expose reschedule in the booking dashboard
+
+  File: src/app/features/booking/admin/booking-dashboard/
+
+  Add "Reschedule" action button to each upcoming booking row (alongside Cancel).
+
+  On click: open a mat-dialog with:
+    - Current booking time (read-only display)
+    - Date picker for new date
+    - Time slot picker (call GET /api/booking/slots for available slots on new date)
+    - Confirm Reschedule button → PATCH /api/booking/bookings/:id/reschedule
+
+  Add PATCH /api/booking/bookings/:id/reschedule to the admin router:
+    Body: { newStartTime: ISO string }
+    Auth: JWT required
+    Action: call bookingService.rescheduleBooking(id, newStart, newEnd, 'admin')
+
+TASK C.2 — Add reschedule endpoint to booking routes
+
+  File: src/routes/booking.routes.js
+
+  PATCH /api/booking/bookings/:id/reschedule
+    - Validate JWT
+    - Validate newStartTime is a valid ISO date in the future
+    - Compute newEndTime: newStartTime + config.appointmentDuration minutes
+    - Call bookingService.rescheduleBooking()
+    - Return updated booking
+
+================================================================================
+PHASE D — REGRESSION TESTS
+================================================================================
+
+Write integration tests for each behavior. Use Jest + supertest (or whichever
+test framework is already in the project).
+
+TASK D.1 — Test file: tests/booking-sync.test.js
+
+  Mock: googleapis (jest.mock), nodemailer/SES, node-cache
+  Use: MongoDB in-memory (mongodb-memory-server) if not already set up
+
+  Test cases (one describe block per behavior):
+
+  describe('BEHAVIOR 1 — Create booking writes GCal event', () => {
+    it('creates a GCal event with correct calendarId, start, end, attendees')
+    it('saves googleEventId and googleMeetLink to Booking document')
+    it('sends confirmation email to both coach and client')
+  })
+
+  describe('BEHAVIOR 2 — Coach deletes GCal event → booking cancelled', () => {
+    it('webhook handler detects event.status === cancelled for a known googleEventId')
+    it('updates Booking.status to cancelled')
+    it('sends cancellation email to client')
+    it('does NOT attempt to delete the GCal event again (would get 404)')
+    it('ignores cancelled events that have no matching Booking document')
+  })
+
+  describe('BEHAVIOR 3 — Coach reschedules GCal event → booking updated', () => {
+    it('webhook handler detects changed start/end time for a known googleEventId')
+    it('updates Booking.startTime and Booking.endTime')
+    it('sends reschedule email to client only (not coach)')
+    it('does NOT update GCal event again (coach already changed it)')
+    it('adds entry to Booking.rescheduleHistory')
+  })
+
+  describe('BEHAVIOR 4 — Client deletes GCal event → no effect', () => {
+    it('webhook is registered on coach calendar only — client deletions are invisible')
+    // This is a documentation test: verify webhook registration uses coach targetCalendarId
+    it('webhook registration uses targetCalendarId, not the client attendee calendar')
+  })
+
+  describe('BEHAVIOR 5 — FREE events do not block slots', () => {
+    it('freebusy query does not include FREE periods in response processing')
+    it('a FREE all-day event on the coach calendar does not remove slots')
+  })
+
+  describe('BEHAVIOR 6 — Cancel in system → GCal event removed', () => {
+    it('cancelBooking calls calendar.events.delete with correct eventId')
+    it('cancelBooking proceeds if calendar.events.delete returns 404')
+    it('cancelBooking proceeds if googleEventId is null')
+    it('sends cancellation email to client on cancel')
+  })
+
+  describe('BEHAVIOR 7 — Past events have no effect', () => {
+    it('slot generation excludes slots before now + minNoticeHours')
+    it('freebusy query uses timeMin >= now, not a past date')
+    it('reminder cron does not process bookings whose startTime is in the past')
+  })
+
+  describe('BEHAVIOR 8 — Multiple conflict calendars checked', () => {
+    it('targetCalendarId is always included in freebusy items even if conflictCalendarIds is empty')
+    it('all IDs in conflictCalendarIds are included in freebusy items')
+    it('deduplicates calendar IDs if targetCalendarId appears in conflictCalendarIds')
+  })
+
+================================================================================
+PHASE E — DOCUMENTATION UPDATE
+================================================================================
+
+TASK E.1 — Update docs/booking-sync-audit.md
+
+  After implementation, update each gap entry:
+    Status: IMPLEMENTED
+    File(s) changed: [list]
+    Test coverage: [test case names]
+
+TASK E.2 — Add sync behavior notes to CLAUDE.md (project memory)
+
+  Append to CLAUDE.md:
+
+  ## Booking Module — Google Calendar Sync Model
+
+  Our sync model mirrors Calendly's verified behavior:
+
+  | Direction | Trigger | Effect | Implemented |
+  |-----------|---------|--------|-------------|
+  | GCal → System | Coach deletes/declines event | Booking cancelled, client emailed | ✓ |
+  | GCal → System | Coach reschedules event | Booking time updated, client emailed | ✓ |
+  | GCal → System | Client deletes event | No effect (we watch coach calendar only) | ✓ |
+  | GCal → System | FREE event added | No effect (freebusy API excludes FREE) | ✓ |
+  | System → GCal | Booking created | GCal event created in targetCalendarId | ✓ |
+  | System → GCal | Booking cancelled | GCal event deleted (graceful on 404) | ✓ |
+  | System → GCal | Booking rescheduled by admin | GCal event updated | ✓ |
+
+  Key implementation notes:
+  - Webhook handler uses calendar.events.list(showDeleted: true, updatedMin: lastProcessedAt)
+    to detect deletions and time changes. It does NOT rely on webhook payload content.
+  - targetCalendarId is always included in freebusy conflict check, even if
+    conflictCalendarIds array is empty.
+  - cancelBooking() is idempotent: handles missing googleEventId and GCal 404 gracefully.
+  - rescheduleBooking() triggered by 'coach_gcal' skips GCal update (already done)
+    and skips coach email (they know — they made the change).
+
+================================================================================
+EXECUTION ORDER
+================================================================================
+
+Run phases in this order. Stop and report if any phase reveals a blocker.
+
+  1. Phase A — Audit (read-only, produces docs/booking-sync-audit.md)
+  2. Phase B — Implement gaps (in order B.1 through B.8)
+  3. Phase C — Admin UI additions
+  4. Phase D — Write and run tests (all must pass before proceeding)
+  5. Phase E — Documentation
+
+Do not proceed to Phase B until Phase A audit doc is complete.
+Do not proceed to Phase C until Phase B tests pass (run existing test suite).
+Do not mark this prompt complete until all Phase D tests pass.
+
+================================================================================
+CONSTRAINTS
+================================================================================
+
+- Do not modify the OAuth service, OAuthToken model, or email templates
+  unless a specific task above explicitly targets them
+- Do not change the public booking page or slot generation algorithm
+  unless a specific gap in Phase A confirms a defect there
+- All new MongoDB queries must use the existing Mongoose model instances —
+  do not issue raw queries
+- All Google API calls must go through the getOAuth2Client(coachId) helper
+  (for token refresh handling) — never construct a raw API client
+- Maintain existing error handling middleware patterns — do not introduce
+  new error response shapes
+- Log all webhook-triggered state changes at INFO level with booking ID:
+    logger.info(`[Webhook] Booking ${bookingId} ${action} via GCal`)
+
+================================================================================
+END OF PROMPT
+================================================================================

@@ -1,0 +1,367 @@
+================================================================================
+CLAUDE CODE PROMPT — Google Calendar Import UI
+People Intelligence Platform (PIP) / Artes App
+HeadSoft Tech | headsoft.net
+================================================================================
+
+OBJECTIVE
+---------
+Build a "Import from Google Calendar" feature into the existing Booking admin
+module. The coach can preview all existing calendar events, individually
+approve or skip each one, then import only the approved ones into MongoDB.
+
+This replaces the CLI script approach. No standalone script is needed.
+All logic lives in the Angular booking module + existing Node.js API.
+
+Check CLAUDE.md before writing any code.
+
+================================================================================
+FEATURE LOCATION
+================================================================================
+
+Integrate into the existing booking dashboard component as a new tab or
+action panel. Do not create a separate route.
+
+  Existing: src/app/features/booking/admin/booking-dashboard/
+  Add tab:  "Import from Calendar" (only shown if importedCount === 0,
+             OR always accessible via an "Import more" button after first import)
+
+================================================================================
+BACKEND — New API Endpoints
+================================================================================
+
+TASK B.1 — Preview endpoint
+
+  GET /api/booking/import/preview
+
+  Auth: JWT required (existing middleware)
+  Query params:
+    from    ISO date string, default: 2 years ago
+    to      ISO date string, default: 1 year from now
+
+  Steps:
+    1. Load AvailabilityConfig for the authenticated coach → get targetCalendarId
+    2. Call getOAuth2Client(coachId) — reuse existing OAuth service
+    3. Fetch all events from Google Calendar via paginated events.list():
+         calendarId:   targetCalendarId
+         timeMin:      from
+         timeMax:      to
+         singleEvents: true       ← expand recurring events
+         showDeleted:  false
+         orderBy:      'startTime'
+         maxResults:   250 per page
+    4. Filter events (see Filtering Rules below)
+    5. For each filtered event, check if a Booking already exists in MongoDB
+       with matching googleEventId + coachId → set alreadyImported: true
+    6. Return the event list with import status
+
+  Response shape:
+    {
+      total:           number,    // total fetched from GCal
+      filtered:        number,    // after applying filters
+      alreadyImported: number,    // subset already in our DB
+      events: [
+        {
+          googleEventId:   string,
+          title:           string,    // event.summary
+          startTime:       ISO string,
+          endTime:         ISO string,
+          durationMinutes: number,
+          clientName:      string,    // derived from attendees
+          clientEmail:     string,    // derived from attendees
+          clientPhone:     null,
+          topic:           string,    // event.description
+          googleMeetLink:  string | null,
+          status:          'upcoming' | 'completed',  // based on startTime vs now
+          alreadyImported: boolean,
+          rawSummary:      string,    // original event.summary for display
+          attendees:       [{ email, displayName, self, organizer }]
+        }
+      ]
+    }
+
+  Filtering Rules (same as CLI script — apply server-side):
+    - Skip all-day events (no event.start.dateTime)
+    - Skip events shorter than 15 minutes
+    - Skip events where attendees count <= 1 (solo personal blocks)
+    - Skip events with status !== 'confirmed'
+
+  Do NOT filter out alreadyImported events — return them so the UI can
+  show them as greyed out / skipped.
+
+  Performance note: if the calendar has 500+ events, this may take a few
+  seconds. The frontend must show a loading spinner with a progress message.
+
+TASK B.2 — Import endpoint
+
+  POST /api/booking/import/execute
+
+  Auth: JWT required
+  Body:
+    {
+      approvedEventIds: [string]   // array of googleEventIds the coach approved
+    }
+
+  Steps:
+    1. Load AvailabilityConfig (for coachId, tenantId, timezone)
+    2. For each approvedEventId:
+       a. Fetch the event from Google Calendar API to get current data
+          (do not trust the preview payload — re-fetch for accuracy)
+       b. Check Booking collection: if googleEventId already exists → skip (idempotent)
+       c. Map event to Booking document (see Mapping Rules below)
+       d. Insert new Booking with importedAt and importSource fields
+    3. Return:
+       {
+         imported: number,
+         skipped:  number,    // already existed
+         errors:   [{ googleEventId, message }]
+       }
+
+  Mapping Rules:
+    clientName:     first non-coach attendee displayName, or derived from email,
+                    or event.summary if no attendees
+    clientEmail:    first non-coach attendee email, or null
+    topic:          event.description or null
+    startTime:      new Date(event.start.dateTime)
+    endTime:        new Date(event.end.dateTime)
+    clientTimezone: event.start.timeZone or null
+    coachTimezone:  config.timezone
+    googleEventId:  event.id
+    googleMeetLink: event.hangoutLink or conferenceData video entry URI or null
+    cancelToken:    null  (no cancel-by-link for imported events)
+    status:         'completed' if endTime < now, else 'confirmed'
+    remindersSent:  []
+    importedAt:     new Date()
+    importSource:   'gcal_import_ui'
+
+  Add importedAt and importSource to Booking schema if not already present:
+    importedAt:   { type: Date, default: null }
+    importSource: { type: String, default: null }
+
+TASK B.3 — Add routes to booking.routes.js
+
+  GET  /api/booking/import/preview   → bookingImportController.preview
+  POST /api/booking/import/execute   → bookingImportController.execute
+
+  Create: src/controllers/booking-import.controller.js
+  Logic for fetching + filtering + mapping goes here, not in the route file.
+
+================================================================================
+FRONTEND — Angular Import UI
+================================================================================
+
+TASK F.1 — Add "Import from Calendar" tab to booking dashboard
+
+  File: src/app/features/booking/admin/booking-dashboard/
+
+  Add a third tab to the existing tab bar:
+    Tab 1: Upcoming
+    Tab 2: Past
+    Tab 3: Import from Calendar  ← new
+
+  The tab label should show a badge if import has never been run:
+    "Import from Calendar  🔴"  (badge disappears after first successful import)
+
+  Store "hasImported" flag in localStorage keyed by coachId so the badge
+  doesn't reappear after a page refresh.
+
+TASK F.2 — Create Import Tab Component
+
+  File: src/app/features/booking/admin/booking-import/
+    booking-import.component.ts
+    booking-import.component.html
+    booking-import.component.scss
+
+  STATES the component can be in:
+    IDLE       — initial state, shows date range form + "Preview" button
+    LOADING    — fetching preview from API, shows spinner
+    PREVIEW    — table of events shown, coach can approve/skip each
+    IMPORTING  — submitting approved events, shows progress
+    DONE       — import complete, shows summary
+
+  ── STATE: IDLE ──────────────────────────────────────────────────────────────
+
+  Show a brief explanation panel:
+    "Import existing coaching sessions from your Google Calendar into the
+     booking dashboard. You can preview all events before importing."
+
+  Date range inputs:
+    From: mat-datepicker, default 2 years ago
+    To:   mat-datepicker, default 1 year from now
+
+  "Preview Events" button → triggers API call, transitions to LOADING
+
+  ── STATE: LOADING ───────────────────────────────────────────────────────────
+
+  Centered spinner with message:
+    "Fetching events from Google Calendar..."
+
+  ── STATE: PREVIEW ───────────────────────────────────────────────────────────
+
+  Summary bar at the top:
+    "Found 87 coaching sessions  |  5 already imported  |  82 pending"
+
+  Bulk action bar:
+    [ Approve All Pending ] [ Skip All ] — buttons that toggle all checkboxes
+
+  Events table with these columns:
+    ┌──────────┬───────────────────┬────────────────┬──────────────────┬──────────┬──────────┐
+    │ Approve  │ Date & Time       │ Client         │ Topic            │ Duration │ Status   │
+    ├──────────┼───────────────────┼────────────────┼──────────────────┼──────────┼──────────┤
+    │ checkbox │ Mar 15, 2:00 PM   │ John Smith     │ Leadership dev.  │ 60 min   │ Past     │
+    │          │                   │ john@email.com │                  │          │          │
+    ├──────────┼───────────────────┼────────────────┼──────────────────┼──────────┼──────────┤
+    │ [locked] │ Apr 20, 3:00 PM   │ Jane Doe       │ Team conflict    │ 60 min   │ Upcoming │
+    │ ✓ done   │                   │ jane@email.com │                  │          │          │
+    └──────────┴───────────────────┴────────────────┴──────────────────┴──────────┴──────────┘
+
+  Row behavior:
+    - Default state: all pending events have checkbox CHECKED (approve all by default)
+    - Coach unchecks rows they want to skip
+    - alreadyImported rows: checkbox disabled + greyed out, show "Already imported" badge
+    - Hover on a row: show expand arrow → inline detail panel below the row
+      showing: full attendee list, raw event title, Google Meet link if present
+
+  Inline edit (optional quality-of-life):
+    Client Name and Topic cells should be editable inline on the preview table.
+    Coach may want to clean up names before importing
+    (e.g. GCal says "john.doe@gmail.com" but she knows the person as "John Doe").
+    Clicking the cell opens a small text input; pressing Enter or blur saves
+    the edited value into the local preview state (not persisted until import).
+    Edited cells show a small pencil icon.
+
+  Fixed bottom action bar:
+    Left:  "X events selected for import"  (updates as checkboxes change)
+    Right: [ Cancel ] [ Import X Events → ]
+
+  "Cancel" → back to IDLE state (discards preview)
+  "Import X Events" → disabled if 0 selected, triggers IMPORTING state
+
+  ── STATE: IMPORTING ─────────────────────────────────────────────────────────
+
+  Show progress:
+    Importing session 12 of 45...
+    [████████████░░░░░░░░░░░░░] 27%
+
+  Implement as a streaming/batch progress:
+    Break the approvedEventIds into batches of 10.
+    POST each batch to /api/booking/import/execute separately.
+    Update progress bar after each batch response.
+    This prevents a single large request from timing out.
+
+  Alternative if batching is complex: single POST with a loading bar that
+  animates while waiting. Simpler but less accurate progress.
+
+  ── STATE: DONE ──────────────────────────────────────────────────────────────
+
+  Show result summary card:
+
+    ╔══════════════════════════════════════╗
+    ║   ✅  Import Complete                ║
+    ╠══════════════════════════════════════╣
+    ║  Imported:   82 sessions            ║
+    ║  Skipped:     5 (already existed)   ║
+    ║  Errors:      0                     ║
+    ╚══════════════════════════════════════╝
+
+  If errors > 0: show a collapsible list of failed event titles + error messages.
+
+  Buttons:
+    [ View Booking Dashboard ]  → switches to Upcoming tab
+    [ Import More ]             → back to IDLE (for running again with different dates)
+
+  Set hasImported = true in localStorage → removes the tab badge.
+
+TASK F.3 — Service method additions
+
+  File: src/app/features/booking/services/booking.service.ts
+
+  Add:
+    previewImport(from: string, to: string): Observable<ImportPreviewResponse>
+      → GET /api/booking/import/preview?from=...&to=...
+
+    executeImport(approvedEventIds: string[]): Observable<ImportResultResponse>
+      → POST /api/booking/import/execute
+
+  TypeScript interfaces:
+    interface ImportEvent {
+      googleEventId:   string;
+      title:           string;
+      startTime:       string;
+      endTime:         string;
+      durationMinutes: number;
+      clientName:      string;
+      clientEmail:     string;
+      topic:           string | null;
+      googleMeetLink:  string | null;
+      status:          'upcoming' | 'completed';
+      alreadyImported: boolean;
+      rawSummary:      string;
+      attendees:       AttendeeInfo[];
+      // local UI state (not from API):
+      approved?:       boolean;
+      editedClientName?: string;
+      editedTopic?:    string;
+    }
+
+    interface ImportPreviewResponse {
+      total:           number;
+      filtered:        number;
+      alreadyImported: number;
+      events:          ImportEvent[];
+    }
+
+    interface ImportResultResponse {
+      imported: number;
+      skipped:  number;
+      errors:   { googleEventId: string; message: string }[];
+    }
+
+================================================================================
+EDGE CASES TO HANDLE
+================================================================================
+
+  E1 — Coach not connected to Google Calendar
+       If getOAuth2Client returns null, the preview endpoint returns 401.
+       Frontend: detect this error and show:
+         "Connect your Google Calendar first (Settings tab) before importing."
+
+  E2 — Calendar has 0 events in range
+       Return empty events array. Frontend shows:
+         "No coaching sessions found in this date range."
+       with suggestion to widen the date range.
+
+  E3 — Preview returns events but coach approves 0
+       "Import X Events" button stays disabled. No API call made.
+
+  E4 — Import partially fails (some events error)
+       Show DONE state with errors section. Do not block the successful imports.
+
+  E5 — Coach runs import twice (second run)
+       All events will have alreadyImported: true.
+       Preview shows: "0 pending — all sessions already imported."
+       Import button disabled.
+
+  E6 — Event has no attendee email (just Helena in the event)
+       clientEmail: null, clientName: derived from event title.
+       Show a warning icon on that row in the preview table:
+         "⚠ No client email found — session will import without email."
+
+  E7 — Very large calendar (200+ events)
+       Preview endpoint may take 5–10 seconds due to pagination.
+       Show "Fetching page X..." updates using SSE or just a static spinner.
+       Set axios/http timeout to 30 seconds for this endpoint.
+
+================================================================================
+DO NOT DO
+================================================================================
+
+  - Do not send confirmation or reminder emails for imported bookings
+  - Do not register Google Calendar webhooks during import
+  - Do not invalidate availability cache during import
+  - Do not create a separate route or page — this lives inside the dashboard
+  - Do not auto-import without coach review — preview + approve is mandatory
+
+================================================================================
+END OF PROMPT
+================================================================================

@@ -1,0 +1,513 @@
+================================================================================
+CLAUDE CODE PROMPT — Coaching Booking Module
+People Intelligence Platform (PIP) / Artes App
+HeadSoft Tech | headsoft.net
+================================================================================
+
+CONTEXT
+-------
+You are implementing a Calendly-equivalent appointment booking module for the
+Artes application (People Intelligence Platform). The target user is Helena, a
+PCC-certified executive coach. The module allows coaching clients to self-book
+sessions via a public link, with appointments written to a specific Google
+Calendar ("Coaching") — not her primary calendar.
+
+This is a lazy-loaded Angular module integrated into the existing Artes codebase.
+Do not create a standalone app.
+
+TECH STACK
+----------
+- Frontend:  Angular (latest in project), Angular Material, Luxon for dates
+- Backend:   Node.js / Express, existing middleware and auth patterns
+- Database:  MongoDB / Mongoose, scoped by coachId and tenantId
+- Auth:      Existing JWT middleware — reuse as-is for admin endpoints
+- Email:     AWS SES (existing SES setup in project)
+- External:  Google Calendar API v3 via googleapis npm package
+- Scheduler: node-cron for reminder jobs
+
+EXISTING CONVENTIONS TO FOLLOW
+-------------------------------
+- Check CLAUDE.md for project-specific instructions before writing any code
+- Match existing folder structure, naming conventions, and code style
+- Reuse existing: AuthGuard, TenantGuard, ApiService base class, error handling interceptor
+- All Mongoose models must include tenantId: { type: ObjectId, ref: 'Tenant', required: true }
+- Use environment.ts / environment.prod.ts for all config — no hardcoded values
+- Follow existing lazy-loading pattern in app-routing.module.ts
+
+================================================================================
+PHASE 1: BACKEND — Google OAuth & Token Service
+================================================================================
+
+TASK 1.1 — Install dependencies
+  npm install googleapis google-auth-library node-cron node-cache ical-generator express-rate-limit luxon
+
+TASK 1.2 — Create OAuthToken Mongoose model
+  File: src/models/oauth-token.model.js (or .ts matching project convention)
+
+  Fields:
+    coachId:      ObjectId, ref: 'User', required, unique
+    tenantId:     ObjectId, ref: 'Tenant', required
+    accessToken:  String, required  (store AES-256 encrypted)
+    refreshToken: String, required  (store AES-256 encrypted)
+    expiresAt:    Date, required
+    scope:        [String]
+    calendarList: [{ id: String, summary: String, primary: Boolean }]
+    timestamps:   true
+
+  Encryption: Use AES-256-GCM with key from process.env.OAUTH_TOKEN_ENCRYPTION_KEY
+  Create helpers: encryptToken(plaintext) and decryptToken(ciphertext)
+  Store as: iv:authTag:ciphertext (colon-separated hex strings)
+
+TASK 1.3 — Create Google OAuth service
+  File: src/services/google-oauth.service.js
+
+  Methods:
+    getAuthUrl(coachId)
+      - Returns Google OAuth2 authorization URL
+      - Scopes: calendar.readonly, calendar.events, calendar.calendarlist.readonly
+      - access_type: 'offline', prompt: 'consent'
+      - State param: sign JWT containing coachId (verify on callback)
+
+    handleCallback(code, state)
+      - Verify state JWT
+      - Exchange code for tokens via oauth2Client.getToken()
+      - Encrypt and save to OAuthToken collection
+      - Fetch and cache calendar list
+      - Return { success: true, coachId }
+
+    getOAuth2Client(coachId)
+      - Load OAuthToken for coachId
+      - Decrypt tokens
+      - Instantiate OAuth2Client with credentials
+      - If token expires within 5 minutes, call refreshTokens() first
+      - On 401 from any Google API call: attempt one refresh, then retry
+      - If refresh fails: mark coach disconnected (set token to null), throw error
+
+    refreshTokens(coachId)
+      - Use refresh_token to get new access_token
+      - Update OAuthToken with new accessToken and expiresAt
+
+    revokeAndDisconnect(coachId)
+      - Call oauth2Client.revokeToken()
+      - Delete OAuthToken document for coachId
+
+    listCalendars(coachId)
+      - Use authenticated client to call calendarList.list()
+      - Cache result in OAuthToken.calendarList
+      - Return array of { id, summary, primary }
+
+TASK 1.4 — Create booking router
+  File: src/routes/booking.routes.js
+
+  Mount at: /api/booking (admin, JWT-protected) and /api/public/booking (no auth)
+
+  Admin routes (require existing JWT auth middleware):
+    GET  /api/booking/oauth/connect          → redirect to Google auth URL
+    GET  /api/booking/oauth/callback         → handle OAuth callback
+    DELETE /api/booking/oauth/disconnect     → revoke tokens
+    GET  /api/booking/calendars              → list coach's Google Calendars
+    GET  /api/booking/config                 → get AvailabilityConfig
+    PUT  /api/booking/config                 → upsert AvailabilityConfig
+    GET  /api/booking/bookings               → list bookings (paginated)
+    GET  /api/booking/bookings/:id           → get booking detail
+    DELETE /api/booking/bookings/:id         → cancel booking
+
+  Public routes (no auth, rate-limited):
+    GET  /api/public/booking/:coachSlug/slots    → available slots
+    POST /api/public/booking/:coachSlug          → create booking
+    GET  /api/public/booking/:coachSlug/cancel/:token → client cancellation
+
+  Rate limiting on public routes: 30 req/15min per IP (use express-rate-limit)
+
+================================================================================
+PHASE 2: BACKEND — Data Models
+================================================================================
+
+TASK 2.1 — AvailabilityConfig Mongoose model
+  File: src/models/availability-config.model.js
+
+  Fields:
+    coachId:             ObjectId, ref: 'User', required, unique
+    tenantId:            ObjectId, ref: 'Tenant', required
+    coachSlug:           String, required, unique  (URL-safe, e.g. "helena-hlavenkova")
+    timezone:            String, required  (e.g. "America/Toronto")
+    appointmentDuration: Number, default: 60  (minutes)
+    bufferTime:          Number, default: 0   (minutes between slots)
+    maxBookingsPerDay:   Number, default: null
+    minNoticeHours:      Number, default: 24
+    maxAdvanceDays:      Number, default: 60
+    weeklySchedule:      [{
+                           dayOfWeek: { type: Number, min: 0, max: 6 },
+                           startTime: String,  // "HH:MM" in coach timezone
+                           endTime:   String,  // "HH:MM" in coach timezone
+                           enabled:   Boolean
+                         }]
+    dateOverrides:       [{
+                           date:          Date,
+                           startTime:     String,
+                           endTime:       String,
+                           isUnavailable: Boolean
+                         }]
+    targetCalendarId:    String, required  (Google Calendar ID)
+    conflictCalendarIds: [String]
+    googleMeetEnabled:   Boolean, default: true
+    bookingPageTitle:    String
+    bookingPageDesc:     String
+    isActive:            Boolean, default: true
+    timestamps:          true
+
+TASK 2.2 — Booking Mongoose model
+  File: src/models/booking.model.js
+
+  Fields:
+    coachId:         ObjectId, ref: 'User', required
+    tenantId:        ObjectId, ref: 'Tenant', required
+    clientName:      String, required
+    clientEmail:     String, required, lowercase, trim
+    clientPhone:     String
+    topic:           String
+    startTime:       Date, required  (UTC)
+    endTime:         Date, required  (UTC)
+    clientTimezone:  String
+    coachTimezone:   String
+    googleEventId:   String
+    googleMeetLink:  String
+    cancelToken:     String  (signed JWT, single-use, 7-day expiry)
+    status:          { type: String, enum: ['confirmed','cancelled','completed'], default: 'confirmed' }
+    cancelledAt:     Date
+    cancellationReason: String
+    remindersSent:   [{ type: String, sentAt: Date }]
+    timestamps:      true
+
+  Index: { coachId: 1, startTime: 1 }
+  Index: { clientEmail: 1, startTime: 1 }
+
+================================================================================
+PHASE 3: BACKEND — Availability Engine
+================================================================================
+
+TASK 3.1 — Create availability service
+  File: src/services/availability.service.js
+
+  Use luxon (DateTime) for all date/time operations. Never use moment.js.
+  Use node-cache for caching with 2-minute TTL.
+
+  Method: getAvailableSlots(coachSlug, fromDate, toDate, clientTimezone)
+
+  Algorithm:
+    1. Load AvailabilityConfig by coachSlug
+    2. Validate date range: max 60 days, from >= today + minNoticeHours
+    3. For each day in range:
+       a. Get weeklySchedule entry for that dayOfWeek (skip if !enabled)
+       b. Check dateOverrides: if isUnavailable → skip day entirely
+                               if override exists → use override times instead
+       c. Generate slots: from startTime to endTime, step = appointmentDuration + bufferTime
+       d. Enforce minNoticeHours: skip slots where startTime < now + minNoticeHours
+       e. Track bookingsThisDay; stop generating if maxBookingsPerDay reached
+    4. Collect all candidate slot start/end times (store as UTC)
+    5. Fetch busy periods from Google Calendar API (freebusy query):
+       - calendars: conflictCalendarIds + targetCalendarId
+       - timeMin: start of date range (UTC ISO)
+       - timeMax: end of date range (UTC ISO)
+    6. Also query MongoDB Booking collection for confirmed bookings in range
+       (handles case where Google event creation failed but booking was saved)
+    7. Remove any candidate slot that overlaps any busy period
+    8. Return slots as array of { startUtc, endUtc, startLocal, endLocal, label }
+       where local = converted to clientTimezone
+
+  Cache key: `slots:${coachSlug}:${fromDate}:${toDate}`
+  Invalidate cache: on config update, on new booking, on webhook received
+
+TASK 3.2 — Cache invalidation helper
+  File: src/services/cache.service.js
+  Simple wrapper around NodeCache with invalidateByPrefix(prefix) method
+
+================================================================================
+PHASE 4: BACKEND — Booking Service
+================================================================================
+
+TASK 4.1 — Create booking service
+  File: src/services/booking.service.js
+
+  Method: createBooking(coachSlug, bookingData)
+    1. Load AvailabilityConfig
+    2. Re-validate the requested slot is still available (race condition protection)
+       - Check Google Calendar freebusy for that exact slot
+       - Check Booking collection for any confirmed booking overlapping that slot
+       - If slot taken: throw SlotUnavailableError
+    3. Create Google Calendar event:
+       - calendar: targetCalendarId
+       - summary: `Coaching Session — ${clientName}`
+       - description: topic (if provided)
+       - start/end: slot times in coach timezone
+       - attendees: [{ email: clientEmail }, { email: coachEmail }]
+       - conferenceData: if googleMeetEnabled, add createRequest
+       - sendUpdates: 'none'  (we send our own emails)
+    4. Save Booking to MongoDB with googleEventId and googleMeetLink
+    5. Generate cancelToken: sign JWT { bookingId, type: 'cancel' }, 7-day expiry
+    6. Save cancelToken to Booking document
+    7. Send confirmation emails (coach + client) — see Notification service
+    8. Invalidate availability cache for coachSlug
+    9. Return booking document
+
+  Method: cancelBooking(bookingId, cancelledBy, reason)
+    1. Load booking, verify status === 'confirmed'
+    2. Update Google Calendar event: set status to 'cancelled' or delete event
+    3. Update Booking: status → 'cancelled', cancelledAt, cancellationReason
+    4. Send cancellation email to the other party
+    5. Invalidate cache
+
+================================================================================
+PHASE 5: BACKEND — Notification Service
+================================================================================
+
+TASK 5.1 — Create notification service
+  File: src/services/notification.service.js
+
+  Use existing AWS SES setup. Generate ICS attachment using ical-generator.
+
+  Methods to implement:
+    sendBookingConfirmation(booking, config)
+      - Send to client: date/time in their timezone, Meet link, cancel link
+      - Send to coach: client name, topic, date/time in coach timezone
+      - Attach ICS file to both emails
+
+    sendCancellationEmail(booking, cancelledBy)
+      - Notify the other party
+
+    sendReminder(booking, type)  // type: '24h' | '1h'
+      - Send reminder email with Meet link
+
+  Email template approach:
+    - Use simple HTML strings with inline CSS (no template engine needed for MVP)
+    - Brand colors: Navy #1B2A47, Blue #3A9FD6, Green #27C4A0
+    - Include HeadSoft/PIP branding in footer
+
+TASK 5.2 — Create reminder scheduler
+  File: src/jobs/reminder.job.js
+
+  Run every 15 minutes via node-cron: '*/15 * * * *'
+
+  Logic:
+    const now = new Date();
+    const in24h = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+    const in1h  = new Date(now.getTime() + 60 * 60 * 1000);
+    const window = 30 * 60 * 1000;  // 30-minute window
+
+    Query Booking collection:
+      status: 'confirmed'
+      startTime: { $gte: now }
+
+    For each booking:
+      - If startTime within [in24h - window, in24h + window] AND '24h' not in remindersSent:
+          sendReminder(booking, '24h')
+          push { type: '24h', sentAt: now } to remindersSent
+      - If startTime within [in1h - window, in1h + window] AND '1h' not in remindersSent:
+          sendReminder(booking, '1h')
+          push { type: '1h', sentAt: now } to remindersSent
+
+  Register job in main app entry point (app.js or server.js)
+
+================================================================================
+PHASE 6: BACKEND — Google Calendar Webhook
+================================================================================
+
+TASK 6.1 — Webhook handler
+  File: src/controllers/booking-webhook.controller.js
+
+  POST /api/booking/webhook/calendar
+    1. Validate X-Goog-Channel-Token header === process.env.GOOGLE_WEBHOOK_SECRET
+    2. Get coachId from X-Goog-Channel-ID (store mapping when registering)
+    3. Invalidate availability cache for that coach
+    4. Respond 200 immediately
+
+TASK 6.2 — Webhook registration service
+  File: src/services/webhook.service.js
+
+  Method: registerCalendarWatch(coachId)
+    - Call google calendar.events.watch() on targetCalendarId
+    - channelId: `coach-${coachId}-${Date.now()}`
+    - token: process.env.GOOGLE_WEBHOOK_SECRET
+    - address: process.env.API_BASE_URL + '/api/booking/webhook/calendar'
+    - Store expiration (max 7 days)
+
+  Cron job to re-register: run daily, re-register any channel expiring within 24h
+  Mount in app.js after OAuth connect completes
+
+================================================================================
+PHASE 7: FRONTEND — Angular Module
+================================================================================
+
+TASK 7.1 — Generate lazy-loaded module
+  ng generate module features/booking --routing
+  ng generate component features/booking/admin/booking-settings
+  ng generate component features/booking/admin/booking-dashboard
+  ng generate component features/booking/public/booking-page
+  ng generate component features/booking/public/booking-confirm
+  ng generate service features/booking/services/booking
+  ng generate service features/booking/services/public-booking
+  ng generate service features/booking/services/availability
+
+  Add to app-routing.module.ts:
+    {
+      path: 'booking',
+      loadChildren: () => import('./features/booking/booking.module').then(m => m.BookingModule),
+      canActivate: [AuthGuard]  // auth guard only on admin sub-routes
+    }
+
+  Public booking route must NOT require auth:
+    { path: 'book/:coachSlug', component: BookingPageComponent }
+
+TASK 7.2 — Booking Settings Component (Admin)
+  Route: /booking/settings (protected)
+
+  Template sections:
+    [1] Google Calendar Connection
+        - "Connect Google Calendar" button → GET /api/booking/oauth/connect
+        - Show connection status (connected / disconnected)
+        - Show connected Google account email when connected
+        - "Disconnect" button when connected
+
+    [2] Calendar Selection (visible only when connected)
+        - mat-select populated from GET /api/booking/calendars
+        - Label: "Appointments will be created in:"
+        - mat-select for conflict calendars (multi-select): "Check these calendars for conflicts:"
+
+    [3] Availability Schedule
+        - 7-row grid (Mon–Sun), each row: toggle (enabled), time-from, time-to mat-time pickers
+        - "Copy to all days" shortcut button
+
+    [4] Session Settings
+        - Duration: mat-select [30, 45, 60, 90, 'Custom'] (custom = number input)
+        - Buffer time between sessions: number input (minutes)
+        - Max bookings per day: number input (0 = unlimited)
+        - Minimum notice: number input (hours)
+        - Maximum advance booking: number input (days)
+
+    [5] Booking Page Info
+        - Page title: text input
+        - Description: textarea (shown on public booking page)
+        - Timezone: mat-select (populated with common timezones, default from browser)
+
+    [6] Your Booking Link
+        - Read-only URL display: https://app.yourdomain.com/book/{coachSlug}
+        - Copy-to-clipboard button
+
+    Save / Cancel buttons — call PUT /api/booking/config on save
+
+TASK 7.3 — Booking Dashboard Component (Admin)
+  Route: /booking/dashboard (protected)
+
+  Features:
+    - Tab bar: Upcoming | Past | Cancelled
+    - Table: Date, Time, Client Name, Email, Topic, Status, Actions
+    - Actions: View details (modal), Cancel booking
+    - Pagination (page size 20)
+    - Empty state with friendly message when no bookings
+
+TASK 7.4 — Public Booking Page Component
+  Route: /book/:coachSlug (NO auth required)
+
+  Load on init:
+    GET /api/public/booking/:coachSlug → coach name, title, description, duration
+    GET /api/public/booking/:coachSlug/slots?from=today&to=today+30days&tz=detected
+
+  Template layout (two-column on desktop, stacked on mobile):
+
+  LEFT PANEL — Calendar
+    - mat-calendar in month view
+    - Highlight dates that have available slots (custom dateClass)
+    - Disable dates with no slots
+    - On date select: populate right panel with that day's slots
+
+  RIGHT PANEL — Time Slots + Form
+    - Coach name + session title at top
+    - Detected timezone display + "Change timezone" link (mat-select dropdown)
+    - Slot buttons: display in client timezone, e.g. "2:00 PM – 3:00 PM"
+    - On slot click: expand inline booking form below
+    - Booking form fields:
+        First Name * | Last Name *
+        Email *
+        Phone (optional)
+        What would you like to discuss? (optional textarea)
+    - "Confirm Booking" button → POST /api/public/booking/:coachSlug
+    - Loading state on submit
+    - Disable form resubmit after click
+
+  Error handling:
+    - If slot taken (409 response): show "That time was just booked, please choose another"
+    - If server error: show generic error with retry option
+
+TASK 7.5 — Booking Confirm Component
+  Route: /book/:coachSlug/confirmed (navigated to after successful booking)
+
+  Display:
+    - Success checkmark icon
+    - "Your session is confirmed!" heading
+    - Date, time (in client timezone), duration
+    - Google Meet link (if available) — prominent button
+    - "Add to Calendar" links: Google Calendar, Outlook (.ics download), Apple Calendar (.ics)
+    - "You will receive a confirmation email at {email}"
+    - "Need to cancel? Use the link in your confirmation email."
+
+================================================================================
+ENVIRONMENT VARIABLES REQUIRED
+================================================================================
+
+Add to .env (and document in .env.example):
+
+  # Google OAuth
+  GOOGLE_CLIENT_ID=
+  GOOGLE_CLIENT_SECRET=
+  GOOGLE_REDIRECT_URI=https://yourdomain.com/api/booking/oauth/callback
+
+  # Security
+  OAUTH_TOKEN_ENCRYPTION_KEY=     # 32-byte hex string (generate with: openssl rand -hex 32)
+  GOOGLE_WEBHOOK_SECRET=           # random string for webhook validation
+  CANCEL_TOKEN_JWT_SECRET=         # separate secret for cancel link JWTs
+
+  # App
+  API_BASE_URL=https://yourdomain.com
+  FRONTEND_URL=https://app.yourdomain.com
+
+================================================================================
+TESTING CHECKLIST (verify before marking complete)
+================================================================================
+
+Backend:
+  [ ] OAuth connect flow works end-to-end in dev (use ngrok or similar for callback)
+  [ ] Token encryption/decryption round-trip verified
+  [ ] Token refresh fires correctly when accessToken is expired
+  [ ] Slot generation produces correct UTC times for Montreal/Eastern timezone
+  [ ] Slot generation correctly subtracts Google Calendar busy periods
+  [ ] Race condition protection: simultaneous booking of same slot → one succeeds, one gets 409
+  [ ] Confirmation email received by both coach and client
+  [ ] Reminder job fires for 24h and 1h windows without duplicates
+  [ ] Cancel link from email successfully cancels booking and updates Google Calendar
+
+Frontend:
+  [ ] Public booking page loads without auth token
+  [ ] Dates with no slots are correctly disabled on calendar
+  [ ] Timezone switching updates displayed slot times correctly
+  [ ] Form validation prevents submit without required fields
+  [ ] 409 error shows appropriate "slot taken" message
+  [ ] Confirm page shows correct Google Meet link
+
+================================================================================
+NOTES
+================================================================================
+
+- If the project uses NestJS instead of Express, adapt the route/controller
+  structure accordingly but keep all business logic in service files
+- Do not use any deprecated Google Calendar API methods — check googleapis
+  v9+ docs for current method signatures
+- The public booking page must be fully functional with JavaScript disabled
+  gracefully degraded — use server-side rendering if the project supports it,
+  otherwise ensure a clean no-JS fallback message
+- coachSlug should be generated from the coach's name on first config save,
+  URL-sanitized (lowercase, hyphens, no special chars), and never auto-changed
+  after that (breaking existing shared links)
+
+================================================================================
+END OF PROMPT
+================================================================================
