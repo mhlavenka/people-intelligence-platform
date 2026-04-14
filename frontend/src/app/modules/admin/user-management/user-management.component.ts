@@ -302,11 +302,15 @@ export class UserManagementComponent implements OnInit {
 
   columns = ['name', 'role', 'department', 'sponsor', 'status', 'lastLogin', 'created', 'actions'];
 
-  /** Resolve the sponsor's name from a populated or raw sponsorId field. */
+  /** Render the sponsor as "{company} / {name}". Falls back to whichever
+   *  field is present, or em-dash when the user has no sponsor. */
   sponsorName(u: OrgUser): string {
     const s = u.sponsorId;
-    if (s && typeof s === 'object' && 'name' in s && s.name) return s.name;
-    return '—';
+    if (!s || typeof s !== 'object') return '—';
+    const company = (s.organization ?? '').trim();
+    const name = (s.name ?? '').trim();
+    if (company && name) return `${company} / ${name}`;
+    return company || name || '—';
   }
 
   roleOptions = [

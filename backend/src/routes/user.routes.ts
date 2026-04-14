@@ -302,7 +302,7 @@ router.get(
     try {
       const users = await User.find({ organizationId: req.user!.organizationId })
         .select('-passwordHash')
-        .populate('sponsorId', 'name email');
+        .populate('sponsorId', 'name email organization');
       res.json(users);
     } catch (e) {
       next(e);

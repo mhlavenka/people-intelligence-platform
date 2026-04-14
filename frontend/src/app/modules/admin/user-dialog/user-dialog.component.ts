@@ -20,7 +20,7 @@ export interface OrgUser {
   lastName: string;
   role: string;
   department?: string;
-  sponsorId?: string | { _id: string; name?: string; email?: string };
+  sponsorId?: string | { _id: string; name?: string; email?: string; organization?: string };
   customRoleId?: string;
   profilePicture?: string;
   isActive: boolean;

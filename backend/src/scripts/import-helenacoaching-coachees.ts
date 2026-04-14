@@ -99,7 +99,6 @@ async function run(): Promise<void> {
         lastName: row.lastName,
         role: 'coachee',
         isActive: true,
-        mustChangePassword: true,
       });
       console.log(`[created] ${row.firstName} ${row.lastName} <${email}>`);
       created++;
@@ -116,7 +115,7 @@ async function run(): Promise<void> {
   console.log(`errors:  ${errors}`);
   console.log(`total rows: ${ROWS.length}`);
   console.log(`\nTemporary password for all new accounts: ${PLACEHOLDER_PASSWORD}`);
-  console.log(`Coachees will be prompted to change it on first login (mustChangePassword=true).`);
+  console.log(`Ask each coachee to change it via Profile → Change Password after logging in.`);
 
   await mongoose.disconnect();
 }

@@ -28,9 +28,6 @@ import { HttpErrorResponse } from '@angular/common/http';
           <h1>Sponsors</h1>
           <p>Manage who gets billed for coaching engagements.</p>
         </div>
-        <button mat-flat-button color="primary" (click)="newSponsor()">
-          <mat-icon>add</mat-icon> New sponsor
-        </button>
       </div>
 
       @if (loading()) {
@@ -96,6 +93,10 @@ import { HttpErrorResponse } from '@angular/common/http';
               </div>
             </div>
           }
+          <button type="button" class="card new-card" (click)="newSponsor()">
+            <mat-icon>add</mat-icon>
+            <span>New sponsor</span>
+          </button>
         </div>
       }
     </div>
@@ -122,6 +123,21 @@ import { HttpErrorResponse } from '@angular/common/http';
       background: #fff; border: 1px solid #eef2f7; border-radius: 12px;
       padding: 16px;
       &.inactive { opacity: 0.55; }
+    }
+    .card.new-card {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 10px; min-height: 180px; cursor: pointer;
+      border: 2px dashed #c3cfdd; background: #fafbfd; color: #5a6a7e;
+      font: inherit; font-size: 14px; font-weight: 500;
+      transition: all 0.15s;
+      mat-icon {
+        font-size: 36px; width: 36px; height: 36px;
+        color: #3A9FD6;
+      }
+      &:hover {
+        border-color: #3A9FD6; background: #EBF5FB; color: #1B2A47;
+        box-shadow: 0 4px 16px rgba(58,159,214,0.12);
+      }
     }
     .card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
     .ident { display: flex; gap: 12px; min-width: 0; }
