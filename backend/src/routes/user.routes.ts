@@ -300,9 +300,9 @@ router.get(
   requireRole('admin', 'hr_manager'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
-      const users = await User.find({ organizationId: req.user!.organizationId }).select(
-        '-passwordHash'
-      );
+      const users = await User.find({ organizationId: req.user!.organizationId })
+        .select('-passwordHash')
+        .populate('sponsorId', 'name email');
       res.json(users);
     } catch (e) {
       next(e);

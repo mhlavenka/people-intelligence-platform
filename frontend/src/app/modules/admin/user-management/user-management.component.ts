@@ -142,6 +142,13 @@ const ROLE_META: Record<string, { label: string; color: string }> = {
               </td>
             </ng-container>
 
+            <ng-container matColumnDef="sponsor">
+              <th mat-header-cell *matHeaderCellDef>Sponsor</th>
+              <td mat-cell *matCellDef="let u" class="meta-cell">
+                {{ sponsorName(u) }}
+              </td>
+            </ng-container>
+
             <!-- Status -->
             <ng-container matColumnDef="status">
               <th mat-header-cell *matHeaderCellDef>Status</th>
@@ -208,7 +215,7 @@ const ROLE_META: Record<string, { label: string; color: string }> = {
     </mat-menu>
   `,
   styles: [`
-    .users-page { padding: 32px; max-width: 1100px; }
+    .users-page { padding: 32px; width: 100%; max-width: 100%; box-sizing: border-box; }
 
     .page-header {
       display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24px;
@@ -293,7 +300,14 @@ export class UserManagementComponent implements OnInit {
   roleFilter = signal('all');
   searchQuery = signal('');
 
-  columns = ['name', 'role', 'department', 'status', 'lastLogin', 'created', 'actions'];
+  columns = ['name', 'role', 'department', 'sponsor', 'status', 'lastLogin', 'created', 'actions'];
+
+  /** Resolve the sponsor's name from a populated or raw sponsorId field. */
+  sponsorName(u: OrgUser): string {
+    const s = u.sponsorId;
+    if (s && typeof s === 'object' && 'name' in s && s.name) return s.name;
+    return '—';
+  }
 
   roleOptions = [
     { value: 'admin',      label: 'Admin' },
