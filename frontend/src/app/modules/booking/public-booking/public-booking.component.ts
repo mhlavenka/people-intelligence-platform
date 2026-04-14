@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, signal, computed, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -398,8 +398,15 @@ export class PublicBookingComponent implements OnInit {
     private auth: AuthService,
   ) {}
 
+  /** Optional inputs for dialog/host embedding — when set, skip route reads. */
+  @Input() coachSlugInput?: string;
+  /** When true, emit `booked` instead of navigating to the confirm route. */
+  @Input() dialogMode = false;
+  @Output() booked = new EventEmitter<BookingResult>();
+  @Output() cancelled = new EventEmitter<void>();
+
   ngOnInit(): void {
-    this.coachSlug = this.route.snapshot.params['coachSlug'];
+    this.coachSlug = this.coachSlugInput ?? this.route.snapshot.params['coachSlug'];
     this.loadCoachInfo();
 
     // Pre-fill the booking form when the visitor is an authenticated coachee.
@@ -494,7 +501,11 @@ export class PublicBookingComponent implements OnInit {
     }).subscribe({
       next: (result: BookingResult) => {
         this.submitting.set(false);
-        this.router.navigate(['/book', this.coachSlug, 'confirmed', result._id]);
+        if (this.dialogMode) {
+          this.booked.emit(result);
+        } else {
+          this.router.navigate(['/book', this.coachSlug, 'confirmed', result._id]);
+        }
       },
       error: (err: HttpErrorResponse) => {
         this.submitting.set(false);

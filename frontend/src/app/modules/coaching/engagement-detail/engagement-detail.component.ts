@@ -745,10 +745,15 @@ export class EngagementDetailComponent implements OnInit {
   }
 
   private openLandingDialog(slug: string): void {
-    this.dialog.open(CoachLandingComponent, {
+    const ref = this.dialog.open(CoachLandingComponent, {
       data: { slug },
-      width: '720px', maxWidth: '95vw', maxHeight: '92vh',
+      width: '880px', maxWidth: '95vw', maxHeight: '92vh',
       panelClass: 'coach-landing-dialog',
+    });
+    // Truthy result = a booking was completed in the dialog. Reload the
+    // engagement so the newly paired session shows up in the list/calendar.
+    ref.afterClosed().subscribe((result) => {
+      if (result) this.load();
     });
   }
 

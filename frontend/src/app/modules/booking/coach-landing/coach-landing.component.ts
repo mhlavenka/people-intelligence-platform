@@ -9,7 +9,10 @@ import {
   PublicBookingService,
   CoachLanding,
   CoachLandingEventType,
+  BookingResult,
 } from '../booking.service';
+import { PublicBookingComponent } from '../public-booking/public-booking.component';
+import { BookingConfirmComponent } from '../booking-confirm/booking-confirm.component';
 
 @Component({
   selector: 'app-coach-landing',
@@ -17,15 +20,36 @@ import {
   imports: [
     CommonModule,
     MatIconModule, MatButtonModule, MatProgressSpinnerModule,
+    PublicBookingComponent, BookingConfirmComponent,
   ],
   template: `
-    <div class="page" [class.dialog-mode]="isDialog">
+    <div class="page" [class.dialog-mode]="isDialog" [class.embedded-step]="step() !== 'list'">
       @if (isDialog) {
-        <button mat-icon-button class="close-btn" (click)="closeDialog()" aria-label="Close">
-          <mat-icon>close</mat-icon>
-        </button>
+        <div class="dialog-toolbar">
+          @if (step() !== 'list') {
+            <button mat-icon-button (click)="backToList()" aria-label="Back" class="back-btn">
+              <mat-icon>arrow_back</mat-icon>
+            </button>
+          }
+          <button mat-icon-button class="close-btn" (click)="closeDialog()" aria-label="Close">
+            <mat-icon>close</mat-icon>
+          </button>
+        </div>
       }
-      @if (loading()) {
+
+      @if (isDialog && step() === 'booking' && pickedEventType()) {
+        <app-public-booking
+          [coachSlugInput]="pickedEventType()!.coachSlug"
+          [dialogMode]="true"
+          (booked)="onBooked($event)"
+          (cancelled)="backToList()" />
+      } @else if (isDialog && step() === 'confirmed' && bookingResult()) {
+        <app-booking-confirm
+          [coachSlugInput]="bookedCoachSlug()"
+          [bookingIdInput]="bookingResult()!._id"
+          [dialogMode]="true"
+          (done)="closeDialog()" />
+      } @else if (loading()) {
         <div class="loading"><mat-spinner diameter="40" /></div>
       } @else if (notFound()) {
         <div class="error-state">
@@ -103,9 +127,29 @@ import {
     .page.dialog-mode {
       min-height: auto; padding: 32px 24px 24px;
     }
-    .close-btn {
-      position: absolute; top: 8px; right: 8px; z-index: 2;
+    .page.dialog-mode.embedded-step {
+      padding: 32px 0 0;
+      background: #fff;
     }
+    /* Collapse the embedded booking page's full-viewport chrome so it
+       sits cleanly inside the dialog. */
+    .page.dialog-mode ::ng-deep app-public-booking .booking-page,
+    .page.dialog-mode ::ng-deep app-booking-confirm .confirm-page {
+      min-height: auto !important;
+      background: transparent !important;
+      padding: 0 20px 20px !important;
+    }
+    .page.dialog-mode ::ng-deep app-booking-confirm .confirm-card {
+      box-shadow: none !important;
+    }
+    .dialog-toolbar {
+      position: absolute; top: 4px; right: 4px; left: 4px; z-index: 2;
+      display: flex; align-items: center; justify-content: space-between;
+      pointer-events: none;
+      button { pointer-events: auto; }
+    }
+    .close-btn { margin-left: auto; }
+    .back-btn { }
     .loading, .error-state {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       min-height: 60vh; gap: 12px;
@@ -203,6 +247,13 @@ export class CoachLandingComponent implements OnInit {
   notFound = signal(false);
   data = signal<CoachLanding | null>(null);
 
+  /** 3-step flow when opened as a dialog: list of event types → booking
+   *  form → confirmation. Stays 'list' on the public /c/:slug route. */
+  step = signal<'list' | 'booking' | 'confirmed'>('list');
+  pickedEventType = signal<CoachLandingEventType | null>(null);
+  bookingResult = signal<BookingResult | null>(null);
+  bookedCoachSlug = signal<string>('');
+
   isDialog = false;
 
   constructor(
@@ -241,14 +292,33 @@ export class CoachLandingComponent implements OnInit {
   }
 
   selectEventType(et: CoachLandingEventType): void {
+    // In dialog mode: stay in the same overlay and swap to the booking step.
+    // Outside the dialog (public /c/:slug page): navigate to the standalone
+    // booking page as before.
     if (this.isDialog) {
-      this.dialogRef?.close();
+      this.pickedEventType.set(et);
+      this.step.set('booking');
+      return;
     }
     this.router.navigate(['/book', et.coachSlug]);
   }
 
+  onBooked(result: BookingResult): void {
+    this.bookingResult.set(result);
+    const et = this.pickedEventType();
+    if (et) this.bookedCoachSlug.set(et.coachSlug);
+    this.step.set('confirmed');
+  }
+
+  backToList(): void {
+    this.step.set('list');
+    this.pickedEventType.set(null);
+  }
+
   closeDialog(): void {
-    this.dialogRef?.close();
+    // Pass the booking result (or null) so the opener can detect a
+    // successful booking and refresh its data.
+    this.dialogRef?.close(this.bookingResult());
   }
 
   trackEt = (_: number, et: CoachLandingEventType) => et._id;

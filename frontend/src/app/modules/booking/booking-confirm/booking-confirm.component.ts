@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
@@ -75,6 +75,12 @@ import { BookingResult, PublicBookingService } from '../booking.service';
           <p class="cancel-notice">
             Need to cancel? Use the link in your confirmation email.
           </p>
+
+          @if (dialogMode) {
+            <button mat-flat-button color="primary" class="done-btn" (click)="done.emit()">
+              Done
+            </button>
+          }
         </div>
       } @else {
         <div class="confirm-card">
@@ -274,6 +280,7 @@ import { BookingResult, PublicBookingService } from '../booking.service';
       font-size: 13px;
       margin: 0;
     }
+    .done-btn { margin-top: 16px; min-width: 140px; }
 
     /* ── Fallback state ─────────────────────── */
 
@@ -320,6 +327,12 @@ export class BookingConfirmComponent implements OnInit {
 
   private coachSlug = '';
 
+  /** Dialog-mode inputs: set these when hosting inline instead of via route. */
+  @Input() coachSlugInput?: string;
+  @Input() bookingIdInput?: string;
+  @Input() dialogMode = false;
+  @Output() done = new EventEmitter<void>();
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -327,8 +340,8 @@ export class BookingConfirmComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.coachSlug = this.route.snapshot.params['coachSlug'];
-    const bookingId = this.route.snapshot.params['bookingId'];
+    this.coachSlug = this.coachSlugInput ?? this.route.snapshot.params['coachSlug'];
+    const bookingId = this.bookingIdInput ?? this.route.snapshot.params['bookingId'];
 
     if (!bookingId) {
       this.loading.set(false);
@@ -386,6 +399,7 @@ export class BookingConfirmComponent implements OnInit {
   }
 
   goBack(): void {
+    if (this.dialogMode) { this.done.emit(); return; }
     this.router.navigate(['/book', this.coachSlug]);
   }
 }
