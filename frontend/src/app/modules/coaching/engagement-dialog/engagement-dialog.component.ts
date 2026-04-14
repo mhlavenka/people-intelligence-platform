@@ -193,7 +193,7 @@ export class EngagementDialogComponent implements OnInit {
       this.form.billingMode = this.data.billingMode || (this.form.sponsorId ? 'sponsor' : 'subscription');
       this.goalsRaw = (this.data.goals || []).join(', ');
     }
-    this.api.get<Coachee[]>('/users').subscribe({ next: (u) => this.coachees.set(u) });
+    this.api.get<Coachee[]>('/users/coachees').subscribe({ next: (u) => this.coachees.set(u) });
     this.sponsorSvc.list().subscribe({ next: (s) => this.sponsors.set(s) });
   }
 
