@@ -2,15 +2,28 @@ import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { forkJoin } from 'rxjs';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatTableModule } from '@angular/material/table';
 import { ApiService } from '../../../core/api.service';
 
 type EngagementStatus = 'prospect' | 'contracted' | 'active' | 'paused' | 'completed' | 'alumni';
+type FilterKey = 'all' | EngagementStatus | 'none';
+
+interface CoacheeUser {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  department?: string;
+  profilePicture?: string;
+  isActive?: boolean;
+}
 
 interface Engagement {
   _id: string;
@@ -18,47 +31,48 @@ interface Engagement {
   status: EngagementStatus;
   sessionsPurchased: number;
   sessionsUsed: number;
-  startDate?: string;
-  targetEndDate?: string;
   createdAt: string;
 }
 
-interface CoacheeRow {
+interface Row {
   _id: string;
   firstName: string;
   lastName: string;
   email: string;
   department?: string;
   profilePicture?: string;
+  /** Flattened list of engagements the current coach has with this coachee. */
   engagements: Engagement[];
-  /** Best/most-representative status (prefers active over completed/alumni). */
-  primaryStatus: EngagementStatus;
-  activeEngagementId?: string;
+  /** Best/most-current status — or 'none' when no engagements exist. */
+  primaryStatus: EngagementStatus | 'none';
+  /** The engagement that matches the primary status (for direct-open link). */
+  primaryEngagement?: Engagement;
+  sessionsUsed: number;
+  sessionsPurchased: number;
 }
 
-const STATUS_LABEL: Record<EngagementStatus, string> = {
+const STATUS_LABEL: Record<EngagementStatus | 'none', string> = {
   prospect:   'Prospect',
   contracted: 'Contracted',
   active:     'Active',
   paused:     'Paused',
   completed:  'Completed',
   alumni:     'Alumni',
+  none:       'No engagement',
 };
 
-const STATUS_COLOR: Record<EngagementStatus, string> = {
+const STATUS_COLOR: Record<EngagementStatus | 'none', string> = {
   prospect:   '#9aa5b4',
   contracted: '#3A9FD6',
   active:     '#27C4A0',
   paused:     '#f0a500',
   completed:  '#6b7c93',
   alumni:     '#b07cc6',
+  none:       '#c3cfdd',
 };
 
-// Priority order for picking a single status per coachee: the "most current"
-// engagement wins. Active > Contracted > Prospect > Paused > Completed > Alumni.
+// Priority order for picking a single status per coachee.
 const STATUS_PRIORITY: EngagementStatus[] = ['active', 'contracted', 'prospect', 'paused', 'completed', 'alumni'];
-
-type FilterKey = 'all' | EngagementStatus;
 
 @Component({
   selector: 'app-coachees-list',
@@ -66,27 +80,24 @@ type FilterKey = 'all' | EngagementStatus;
   imports: [
     CommonModule, RouterLink, FormsModule,
     MatIconModule, MatButtonModule, MatProgressSpinnerModule,
-    MatFormFieldModule, MatInputModule, MatTooltipModule,
+    MatFormFieldModule, MatInputModule, MatTooltipModule, MatTableModule,
   ],
   template: `
     <div class="page">
       <div class="page-header">
         <div>
           <h1>Coachees</h1>
-          <p>Everyone you're currently coaching or have coached.</p>
+          <p>Every active coachee in the organization. Filter by engagement status.</p>
         </div>
       </div>
 
       @if (loading()) {
         <div class="loading"><mat-spinner diameter="36" /></div>
-      } @else if (!allCoachees().length) {
+      } @else if (!allRows().length) {
         <div class="empty">
           <mat-icon>people_alt</mat-icon>
-          <h3>No coachees yet</h3>
-          <p>Create an engagement to start coaching someone.</p>
-          <a mat-flat-button color="primary" routerLink="/coaching">
-            <mat-icon>arrow_forward</mat-icon> Go to engagements
-          </a>
+          <h3>No active coachees</h3>
+          <p>Invite coachees from User Management to start coaching.</p>
         </div>
       } @else {
         <!-- Filter pills -->
@@ -116,35 +127,83 @@ type FilterKey = 'all' | EngagementStatus;
             <p>No coachees match the current filter.</p>
           </div>
         } @else {
-          <div class="grid">
-            @for (c of filtered(); track c._id) {
-              <div class="card" (click)="openCoachee(c)">
-                <div class="avatar">
-                  @if (c.profilePicture) {
-                    <img [src]="c.profilePicture" alt="" />
+          <div class="table-wrap">
+            <table mat-table [dataSource]="filtered()" class="coachees-table">
+
+              <ng-container matColumnDef="name">
+                <th mat-header-cell *matHeaderCellDef>Name</th>
+                <td mat-cell *matCellDef="let r">
+                  <div class="name-cell">
+                    <div class="avatar">
+                      @if (r.profilePicture) {
+                        <img [src]="r.profilePicture" alt="" />
+                      } @else {
+                        {{ initials(r) }}
+                      }
+                    </div>
+                    <div class="n-col">
+                      <strong>{{ r.firstName }} {{ r.lastName }}</strong>
+                      @if (r.department) { <span class="dept">{{ r.department }}</span> }
+                    </div>
+                  </div>
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="email">
+                <th mat-header-cell *matHeaderCellDef>Email</th>
+                <td mat-cell *matCellDef="let r" class="muted">{{ r.email }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="status">
+                <th mat-header-cell *matHeaderCellDef>Status</th>
+                <td mat-cell *matCellDef="let r">
+                  <span class="status-chip"
+                        [style.background]="statusColor(r.primaryStatus) + '22'"
+                        [style.color]="statusColor(r.primaryStatus)">
+                    {{ statusLabel(r.primaryStatus) }}
+                  </span>
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="engagement">
+                <th mat-header-cell *matHeaderCellDef>Active engagement</th>
+                <td mat-cell *matCellDef="let r">
+                  @if (activeEngagement(r); as e) {
+                    <a [routerLink]="['/coaching', e._id]" class="eng-link" (click)="$event.stopPropagation()">
+                      <mat-icon>play_circle</mat-icon>
+                      Open
+                    </a>
+                  } @else if (r.primaryEngagement) {
+                    <a [routerLink]="['/coaching', r.primaryEngagement._id]" class="eng-link muted-link"
+                       (click)="$event.stopPropagation()">
+                      <mat-icon>history</mat-icon>
+                      Last engagement
+                    </a>
                   } @else {
-                    {{ initials(c) }}
+                    <span class="muted">—</span>
                   }
-                </div>
-                <div class="body">
-                  <div class="name-row">
-                    <strong>{{ c.firstName }} {{ c.lastName }}</strong>
-                    <span class="status-chip" [style.background]="statusColor(c.primaryStatus) + '22'"
-                                              [style.color]="statusColor(c.primaryStatus)">
-                      {{ statusLabel(c.primaryStatus) }}
-                    </span>
-                  </div>
-                  <span class="email">{{ c.email }}</span>
-                  @if (c.department) { <span class="dept"><mat-icon>apartment</mat-icon>{{ c.department }}</span> }
-                  <div class="eng-meta">
-                    {{ c.engagements.length }} engagement{{ c.engagements.length === 1 ? '' : 's' }}
-                    @if (totalSessions(c); as s) {
-                      · {{ s.used }} / {{ s.purchased }} sessions
-                    }
-                  </div>
-                </div>
-              </div>
-            }
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="sessions">
+                <th mat-header-cell *matHeaderCellDef>Sessions</th>
+                <td mat-cell *matCellDef="let r">
+                  @if (r.sessionsPurchased) {
+                    <div class="sess-cell">
+                      <div class="sess-bar">
+                        <div class="sess-fill" [style.width.%]="sessPct(r)"></div>
+                      </div>
+                      <span class="sess-txt">{{ r.sessionsUsed }} / {{ r.sessionsPurchased }}</span>
+                    </div>
+                  } @else {
+                    <span class="muted">—</span>
+                  }
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="columns"></tr>
+              <tr mat-row *matRowDef="let row; columns: columns;"></tr>
+            </table>
           </div>
         }
       }
@@ -169,19 +228,14 @@ type FilterKey = 'all' | EngagementStatus;
     }
 
     /* Filter pills */
-    .pills {
-      display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px;
-    }
+    .pills { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
     .pill {
       display: inline-flex; align-items: center; gap: 6px;
       padding: 6px 14px; border-radius: 999px; cursor: pointer;
       background: #fff; border: 1px solid #dde5ee; color: #5a6a7e;
       font-size: 13px; font-weight: 500; font-family: inherit;
       transition: all 0.12s;
-      .dot {
-        width: 8px; height: 8px; border-radius: 50%;
-        background: var(--dot, #9aa5b4);
-      }
+      .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--dot, #9aa5b4); }
       .count {
         font-size: 11px; color: #9aa5b4; padding: 1px 7px;
         background: #f0f4f8; border-radius: 999px; font-weight: 600;
@@ -193,140 +247,168 @@ type FilterKey = 'all' | EngagementStatus;
       }
     }
 
-    .search { width: 360px; max-width: 100%; margin-bottom: 18px; display: block; }
+    .search { width: 360px; max-width: 100%; margin-bottom: 14px; display: block; }
 
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-      gap: 14px;
+    .table-wrap { background: #fff; border-radius: 12px; border: 1px solid #eef2f7; overflow: hidden; }
+    .coachees-table { width: 100%; }
+    .coachees-table th {
+      font-size: 11px; font-weight: 700; color: #9aa5b4;
+      text-transform: uppercase; letter-spacing: 0.3px;
     }
-    .card {
-      display: flex; gap: 12px; padding: 14px 16px;
-      background: #fff; border: 1px solid #eef2f7; border-radius: 12px;
-      cursor: pointer; transition: box-shadow 0.12s, transform 0.12s;
-      &:hover { box-shadow: 0 4px 14px rgba(27,42,71,0.08); transform: translateY(-1px); }
-    }
+    .coachees-table td { color: #1B2A47; font-size: 14px; }
+
+    .name-cell { display: flex; align-items: center; gap: 10px; }
     .avatar {
-      width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0;
+      width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
       display: flex; align-items: center; justify-content: center;
       background: linear-gradient(135deg, #3A9FD6, #27C4A0);
-      color: #fff; font-weight: 600; font-size: 14px; overflow: hidden;
+      color: #fff; font-weight: 600; font-size: 13px; overflow: hidden;
       img { width: 100%; height: 100%; object-fit: cover; }
     }
-    .body { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
-    .name-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-    .name-row strong { font-size: 14px; color: #1B2A47;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .email { font-size: 12px; color: #6b7c93;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .dept {
-      display: inline-flex; align-items: center; gap: 4px;
-      font-size: 11px; color: #9aa5b4;
-      mat-icon { font-size: 14px; width: 14px; height: 14px; }
-    }
-    .eng-meta { font-size: 12px; color: #5a6a7e; margin-top: 6px; }
+    .n-col { display: flex; flex-direction: column; gap: 2px; }
+    .n-col strong { color: #1B2A47; font-size: 14px; }
+    .n-col .dept { font-size: 12px; color: #9aa5b4; }
 
+    .muted { color: #9aa5b4; }
     .status-chip {
       font-size: 10px; font-weight: 700; text-transform: uppercase;
-      padding: 2px 8px; border-radius: 999px; flex-shrink: 0;
+      padding: 3px 10px; border-radius: 999px; display: inline-block;
     }
+
+    .eng-link {
+      display: inline-flex; align-items: center; gap: 4px;
+      color: #27C4A0; font-size: 13px; font-weight: 600; text-decoration: none;
+      mat-icon { font-size: 16px; width: 16px; height: 16px; }
+      &:hover { text-decoration: underline; }
+      &.muted-link { color: #6b7c93; mat-icon { color: #6b7c93; } }
+    }
+
+    .sess-cell { display: flex; align-items: center; gap: 10px; min-width: 140px; }
+    .sess-bar {
+      flex: 1; height: 6px; background: #eef2f7; border-radius: 999px; overflow: hidden;
+    }
+    .sess-fill { height: 100%; background: #27C4A0; transition: width 0.2s; }
+    .sess-txt { font-size: 12px; color: #5a6a7e; font-weight: 500; min-width: 46px; text-align: right; }
   `],
 })
 export class CoacheesListComponent implements OnInit {
   loading = signal(true);
+  coachees = signal<CoacheeUser[]>([]);
   engagements = signal<Engagement[]>([]);
   filter = signal<FilterKey>('active');
   search = signal('');
 
+  columns = ['name', 'email', 'status', 'engagement', 'sessions'];
+
   constructor(private api: ApiService, private router: Router) {}
 
   ngOnInit(): void {
-    this.api.get<Engagement[]>('/coaching/engagements').subscribe({
-      next: (list) => { this.engagements.set(list); this.loading.set(false); },
+    forkJoin({
+      coachees: this.api.get<CoacheeUser[]>('/users/coachees'),
+      engagements: this.api.get<Engagement[]>('/coaching/engagements'),
+    }).subscribe({
+      next: ({ coachees, engagements }) => {
+        this.coachees.set(coachees.filter((c) => c.isActive !== false));
+        this.engagements.set(engagements);
+        this.loading.set(false);
+      },
       error: () => this.loading.set(false),
     });
   }
 
-  /** Unique coachees grouped from the coach's engagement list. */
-  allCoachees = computed<CoacheeRow[]>(() => {
-    const map = new Map<string, CoacheeRow>();
+  /** Build one row per enabled coachee, merging in any engagements this
+   *  coach has with them. Coachees without engagements still appear. */
+  allRows = computed<Row[]>(() => {
+    const engByCoachee = new Map<string, Engagement[]>();
     for (const e of this.engagements()) {
       if (typeof e.coacheeId === 'string' || !e.coacheeId) continue;
-      const c = e.coacheeId;
-      const row = map.get(c._id) ?? {
-        _id: c._id,
-        firstName: c.firstName,
-        lastName: c.lastName,
-        email: c.email,
-        department: c.department,
-        profilePicture: c.profilePicture,
-        engagements: [],
-        primaryStatus: 'completed' as EngagementStatus,
-      };
-      row.engagements.push(e);
-      map.set(c._id, row);
+      const id = e.coacheeId._id;
+      const bucket = engByCoachee.get(id) ?? [];
+      bucket.push(e);
+      engByCoachee.set(id, bucket);
     }
-    // Derive primaryStatus + activeEngagementId per coachee.
-    for (const row of map.values()) {
-      let best: EngagementStatus = 'alumni';
-      let bestRank = STATUS_PRIORITY.length;
-      for (const e of row.engagements) {
-        const rank = STATUS_PRIORITY.indexOf(e.status);
-        if (rank !== -1 && rank < bestRank) { bestRank = rank; best = e.status; }
-      }
-      row.primaryStatus = best;
-      row.activeEngagementId = row.engagements.find((e) => e.status === best)?._id;
-    }
-    return [...map.values()].sort((a, b) => `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`));
+
+    return this.coachees()
+      .map((c) => {
+        const engs = engByCoachee.get(c._id) ?? [];
+        let primaryStatus: EngagementStatus | 'none' = 'none';
+        let primaryEngagement: Engagement | undefined;
+        if (engs.length) {
+          let bestRank = STATUS_PRIORITY.length;
+          for (const e of engs) {
+            const rank = STATUS_PRIORITY.indexOf(e.status);
+            if (rank !== -1 && rank < bestRank) {
+              bestRank = rank;
+              primaryStatus = e.status;
+              primaryEngagement = e;
+            }
+          }
+        }
+        const sessionsUsed = engs.reduce((sum, e) => sum + (e.sessionsUsed || 0), 0);
+        const sessionsPurchased = engs.reduce((sum, e) => sum + (e.sessionsPurchased || 0), 0);
+        return {
+          _id: c._id,
+          firstName: c.firstName,
+          lastName: c.lastName,
+          email: c.email,
+          department: c.department,
+          profilePicture: c.profilePicture,
+          engagements: engs,
+          primaryStatus,
+          primaryEngagement,
+          sessionsUsed,
+          sessionsPurchased,
+        } as Row;
+      })
+      .sort((a, b) => `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`));
   });
 
   pills = computed(() => {
-    const all = this.allCoachees();
-    const byStatus: Record<EngagementStatus, number> = {
-      prospect: 0, contracted: 0, active: 0, paused: 0, completed: 0, alumni: 0,
+    const all = this.allRows();
+    const by: Record<string, number> = {
+      active: 0, contracted: 0, prospect: 0, paused: 0, completed: 0, alumni: 0, none: 0,
     };
-    for (const c of all) byStatus[c.primaryStatus] += 1;
+    for (const r of all) by[r.primaryStatus] += 1;
     return [
-      { key: 'all' as FilterKey,     label: 'All',        count: all.length,           color: '#1B2A47' },
-      { key: 'active' as FilterKey,  label: 'Active',     count: byStatus.active,      color: STATUS_COLOR.active },
-      { key: 'contracted' as FilterKey, label: 'Contracted', count: byStatus.contracted, color: STATUS_COLOR.contracted },
-      { key: 'prospect' as FilterKey, label: 'Prospect',  count: byStatus.prospect,    color: STATUS_COLOR.prospect },
-      { key: 'paused' as FilterKey,  label: 'Paused',     count: byStatus.paused,      color: STATUS_COLOR.paused },
-      { key: 'completed' as FilterKey, label: 'Completed', count: byStatus.completed,  color: STATUS_COLOR.completed },
-      { key: 'alumni' as FilterKey,  label: 'Alumni',     count: byStatus.alumni,      color: STATUS_COLOR.alumni },
+      { key: 'all' as FilterKey,        label: 'All',          count: all.length,   color: '#1B2A47' },
+      { key: 'active' as FilterKey,     label: 'Active',       count: by['active'],     color: STATUS_COLOR.active },
+      { key: 'contracted' as FilterKey, label: 'Contracted',   count: by['contracted'], color: STATUS_COLOR.contracted },
+      { key: 'prospect' as FilterKey,   label: 'Prospect',     count: by['prospect'],   color: STATUS_COLOR.prospect },
+      { key: 'paused' as FilterKey,     label: 'Paused',       count: by['paused'],     color: STATUS_COLOR.paused },
+      { key: 'completed' as FilterKey,  label: 'Completed',    count: by['completed'],  color: STATUS_COLOR.completed },
+      { key: 'alumni' as FilterKey,     label: 'Alumni',       count: by['alumni'],     color: STATUS_COLOR.alumni },
+      { key: 'none' as FilterKey,       label: 'No engagement', count: by['none'],      color: STATUS_COLOR.none },
     ];
   });
 
-  filtered = computed<CoacheeRow[]>(() => {
+  filtered = computed<Row[]>(() => {
     const f = this.filter();
     const q = this.search().trim().toLowerCase();
-    return this.allCoachees().filter((c) => {
-      if (f !== 'all' && c.primaryStatus !== f) return false;
+    return this.allRows().filter((r) => {
+      if (f !== 'all' && r.primaryStatus !== f) return false;
       if (q) {
-        const hay = `${c.firstName} ${c.lastName} ${c.email} ${c.department ?? ''}`.toLowerCase();
+        const hay = `${r.firstName} ${r.lastName} ${r.email} ${r.department ?? ''}`.toLowerCase();
         if (!hay.includes(q)) return false;
       }
       return true;
     });
   });
 
-  statusLabel(s: EngagementStatus): string { return STATUS_LABEL[s] ?? s; }
-  statusColor(s: EngagementStatus): string { return STATUS_COLOR[s] ?? '#9aa5b4'; }
+  statusLabel(s: EngagementStatus | 'none'): string { return STATUS_LABEL[s] ?? s; }
+  statusColor(s: EngagementStatus | 'none'): string { return STATUS_COLOR[s] ?? '#9aa5b4'; }
 
-  initials(c: CoacheeRow): string {
-    return `${c.firstName[0] ?? ''}${c.lastName[0] ?? ''}`.toUpperCase();
+  initials(r: Row): string {
+    return `${r.firstName[0] ?? ''}${r.lastName[0] ?? ''}`.toUpperCase();
   }
 
-  totalSessions(c: CoacheeRow): { used: number; purchased: number } | null {
-    const used = c.engagements.reduce((sum, e) => sum + (e.sessionsUsed || 0), 0);
-    const purchased = c.engagements.reduce((sum, e) => sum + (e.sessionsPurchased || 0), 0);
-    if (!purchased) return null;
-    return { used, purchased };
+  /** Return the engagement whose status is literally 'active' (the one the
+   *  Open link should target). Falls back to primaryEngagement otherwise. */
+  activeEngagement(r: Row): Engagement | undefined {
+    return r.engagements.find((e) => e.status === 'active');
   }
 
-  /** Open the coachee's best-matching engagement. */
-  openCoachee(c: CoacheeRow): void {
-    const id = c.activeEngagementId ?? c.engagements[0]?._id;
-    if (id) this.router.navigate(['/coaching', id]);
+  sessPct(r: Row): number {
+    if (!r.sessionsPurchased) return 0;
+    return Math.min(100, Math.round((r.sessionsUsed / r.sessionsPurchased) * 100));
   }
 }

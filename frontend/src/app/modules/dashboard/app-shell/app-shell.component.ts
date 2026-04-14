@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
+import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs/operators';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatMenuModule } from '@angular/material/menu';
@@ -162,8 +163,8 @@ function isGroup(entry: NavEntry): entry is NavGroup {
                   <div class="submenu">
                     @for (child of entry.children; track child.route) {
                       <a [routerLink]="child.route"
-                         routerLinkActive="active"
-                         class="nav-item sub-item">
+                         class="nav-item sub-item"
+                         [class.active]="isChildActive(entry, child)">
                         <mat-icon>{{ child.icon }}</mat-icon>
                         <span class="nav-label">{{ child.label }}</span>
                       </a>
@@ -587,6 +588,7 @@ export class AppShellComponent implements OnInit, OnDestroy {
       module: 'coaching',
       children: [
         { label: 'Engagements', icon: 'groups_2',     route: '/coaching',  roles: ['admin', 'hr_manager', 'coach', 'coachee'] as AppRole[], module: 'coaching' },
+        { label: 'Coachees',    icon: 'people_alt',   route: '/coaching/coachees', roles: ['coach'] as AppRole[],                               module: 'coaching' },
         { label: 'Sponsors',    icon: 'account_balance', route: '/sponsors', roles: ['admin', 'hr_manager', 'coach'] as AppRole[],            module: 'coaching' },
         { label: 'My Journal',  icon: 'menu_book',    route: '/journal',   roles: ['admin', 'hr_manager', 'coach'] as AppRole[],            module: 'coaching' },
       ],
@@ -611,6 +613,7 @@ export class AppShellComponent implements OnInit, OnDestroy {
         { label: 'Role Permissions',  icon: 'policy',              route: '/admin/roles',          roles: ['admin', 'hr_manager'] },
         { label: 'EQi Assessments',    icon: 'psychology',          route: '/eq-import/records',    roles: ['admin'] },
         { label: 'Reports',           icon: 'assessment',          route: '/admin/reports',        roles: ['admin', 'hr_manager'] },
+        { label: 'Activity Log',      icon: 'history',             route: '/admin/activity',       roles: ['admin', 'hr_manager'] },
         { label: 'Billing',           icon: 'receipt_long',        route: '/billing',              roles: ['admin'] },
       ],
     },
@@ -668,7 +671,16 @@ export class AppShellComponent implements OnInit, OnDestroy {
 
   inactivityWarning = computed(() => this.authService.inactivityWarning());
 
+  /** Tracks the current URL so we can compute sub-item active state as
+   *  "longest matching sibling wins" (avoids Engagements lighting up when
+   *  Coachees is open, since /coaching is a prefix of /coaching/coachees). */
+  currentUrl = signal<string>(this.router.url.split('?')[0] ?? '/');
+
   ngOnInit(): void {
+    this.router.events.pipe(filter((e) => e instanceof NavigationEnd)).subscribe((e) => {
+      this.currentUrl.set((e as NavigationEnd).urlAfterRedirects.split('?')[0] ?? '/');
+    });
+
     // Coachees land on coaching (not dashboard)
     if (this.authService.currentUser()?.role === 'coachee' && this.router.url === '/dashboard') {
       this.router.navigate(['/coaching'], { replaceUrl: true });
@@ -725,6 +737,20 @@ export class AppShellComponent implements OnInit, OnDestroy {
     return group.children.some((c) => this.router.isActive(c.route, {
       paths: 'exact', queryParams: 'ignored', fragment: 'ignored', matrixParams: 'ignored',
     }));
+  }
+
+  /** True iff `child.route` is the longest matching prefix within the
+   *  group for the current URL. Prevents a shorter sibling (e.g. /coaching)
+   *  from lighting up when a deeper sibling (/coaching/coachees) matches. */
+  isChildActive(group: NavGroup, child: NavGroup['children'][number]): boolean {
+    const url = this.currentUrl();
+    const matches = (route: string) =>
+      url === route || url.startsWith(route + '/');
+    if (!matches(child.route)) return false;
+    const best = group.children
+      .filter((c) => matches(c.route))
+      .reduce((winner, c) => (c.route.length > winner.route.length ? c : winner), child);
+    return best.route === child.route;
   }
 
   logout(): void {

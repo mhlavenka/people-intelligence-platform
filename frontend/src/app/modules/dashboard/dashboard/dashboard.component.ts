@@ -6,22 +6,17 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { ApiService } from '../../../core/api.service';
 import { AuthService, AppRole } from '../../../core/auth.service';
 import { OrgContextService } from '../../../core/org-context.service';
+import { BookingService, BookingRecord } from '../../booking/booking.service';
 
 interface DashboardStats {
   conflict:       { value: number | null; label: string };
   neuroinclusion: { value: number | null; label: string };
   succession:     { value: number | null; label: string };
   surveys:        { responses: number; activeSurveys: number };
-}
-
-interface ActivityItem {
-  type: string;
-  label: string;
-  detail: string;
-  createdAt: string;
 }
 
 interface ModuleCard {
@@ -40,7 +35,7 @@ interface ModuleCard {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink, MatCardModule, MatIconModule, MatButtonModule, MatProgressBarModule, MatProgressSpinnerModule, DatePipe],
+  imports: [CommonModule, RouterLink, MatCardModule, MatIconModule, MatButtonModule, MatProgressBarModule, MatProgressSpinnerModule, MatTooltipModule, DatePipe],
   template: `
     <div class="dashboard-page">
       <div class="page-header">
@@ -91,39 +86,46 @@ interface ModuleCard {
         </div>
       }
 
-      <!-- Recent activity -->
-      @if (showActivity()) {
-      <div class="section-card">
-        <div class="section-header">
-          <h2>Recent Activity <span class="activity-count">{{ filteredActivity().length }}</span></h2>
-          <button mat-icon-button (click)="activityMinimized.set(!activityMinimized())">
-            <mat-icon>{{ activityMinimized() ? 'expand_more' : 'expand_less' }}</mat-icon>
-          </button>
-        </div>
-        @if (!activityMinimized()) {
-          @if (activityLoading()) {
-            <div class="activity-loading"><mat-spinner diameter="28" /></div>
-          } @else if (filteredActivity().length === 0) {
-            <div class="activity-empty">
-              <mat-icon>history</mat-icon>
-              <span>No activity yet. Activity will appear here as your team uses the platform.</span>
+      <!-- Upcoming events -->
+      @if (showUpcoming()) {
+        <div class="section-card">
+          <div class="section-header">
+            <h2><mat-icon class="sh-icon">event</mat-icon> Upcoming events</h2>
+            <a mat-button color="primary" routerLink="/booking">View all</a>
+          </div>
+          @if (upcomingLoading()) {
+            <div class="upcoming-loading"><mat-spinner diameter="28" /></div>
+          } @else if (!upcomingEvents().length) {
+            <div class="upcoming-empty">
+              <mat-icon>event_available</mat-icon>
+              <span>No upcoming sessions.</span>
             </div>
           } @else {
-            <div class="activity-list">
-              @for (item of filteredActivity(); track $index) {
-                <div class="activity-item">
-                  <mat-icon class="activity-icon" [class]="activityIconClass(item.type)">{{ activityIcon(item.type) }}</mat-icon>
-                  <div class="activity-content">
-                    <strong>{{ item.label }}</strong>
-                    <span>{{ item.detail }}</span>
+            <ul class="upcoming-list">
+              @for (b of upcomingEvents(); track b._id) {
+                <li class="upcoming-item">
+                  <div class="upcoming-date">
+                    <span class="upcoming-day">{{ b.startTime | date:'d' }}</span>
+                    <span class="upcoming-month">{{ b.startTime | date:'MMM' }}</span>
                   </div>
-                  <span class="activity-time">{{ item.createdAt | date:'MMM d, h:mm a' }}</span>
-                </div>
+                  <div class="upcoming-body">
+                    <div class="upcoming-title">{{ b.clientName }}</div>
+                    <div class="upcoming-meta">
+                      {{ b.startTime | date:'shortTime' }} &middot;
+                      <span class="upcoming-type">{{ b.eventTypeName || 'Session' }}</span>
+                    </div>
+                  </div>
+                  @if (b.googleMeetLink) {
+                    <a mat-icon-button [href]="b.googleMeetLink" target="_blank"
+                       matTooltip="Join Google Meet">
+                      <mat-icon>videocam</mat-icon>
+                    </a>
+                  }
+                </li>
               }
-            </div>
+            </ul>
           }
-        }
-      </div>
+        </div>
       }
     </div>
   `,
@@ -225,70 +227,56 @@ interface ModuleCard {
     .section-header {
       display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;
       h2 { font-size: 18px; color: #1B2A47; margin: 0; display: flex; align-items: center; gap: 8px; }
-      .activity-count {
-        font-size: 12px; background: #f0f4f8; color: #5a6a7e;
-        padding: 2px 8px; border-radius: 999px; font-weight: 500;
-      }
+      .sh-icon { color: #3A9FD6; font-size: 22px; width: 22px; height: 22px; }
     }
 
-    .activity-loading { display: flex; justify-content: center; padding: 32px; }
-
-    .activity-empty {
+    .upcoming-loading { display: flex; justify-content: center; padding: 28px; }
+    .upcoming-empty {
       display: flex; align-items: center; gap: 10px;
       padding: 24px; color: #9aa5b4; font-size: 14px;
-      mat-icon { font-size: 20px; width: 20px; height: 20px; }
+      mat-icon { font-size: 22px; width: 22px; height: 22px; color: #c8d3df; }
     }
-
-    .activity-list {
-      display: flex; flex-direction: column; gap: 8px;
+    .upcoming-list {
+      list-style: none; margin: 0; padding: 0;
       flex: 1; min-height: 0; overflow-y: auto;
       scrollbar-width: thin; scrollbar-color: #d1d5db transparent;
       &::-webkit-scrollbar { width: 6px; }
       &::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
     }
-
-    .activity-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 10px 12px;
-      border-radius: 8px;
-      background: #f8fafc;
-
-      .activity-icon {
-        width: 36px; height: 36px; min-width: 36px;
-        border-radius: 8px;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 20px;
-        &.survey        { color: #5a6a7e; background: rgba(90, 106, 126, 0.1); }
-        &.conflict      { color: #e86c3a; background: rgba(232, 108, 58, 0.1); }
-        &.succession    { color: #3A9FD6; background: rgba(58, 159, 214, 0.1); }
-        &.neuroinclusion{ color: #27C4A0; background: rgba(39, 196, 160, 0.1); }
-        &.coaching      { color: #7c5cbf; background: rgba(124, 92, 191, 0.1); }
-        &.journal       { color: #b07800; background: rgba(176, 120, 0, 0.1); }
-      }
-
-      .activity-content {
-        flex: 1; min-width: 0;
-        display: flex; flex-direction: column; gap: 2px;
-        strong { font-size: 13px; color: #1B2A47; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        span   { font-size: 12px; color: #5a6a7e; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-      }
-
-      .activity-time { font-size: 11px; color: #9aa5b4; white-space: nowrap; flex-shrink: 0; }
+    .upcoming-item {
+      display: flex; align-items: center; gap: 14px;
+      padding: 10px 4px;
+      border-bottom: 1px solid #f0f4f8;
+      &:last-child { border-bottom: none; }
     }
+    .upcoming-date {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      min-width: 48px; padding: 6px 4px; border-radius: 8px;
+      background: #EBF5FB; color: #1B2A47;
+      .upcoming-day   { font-size: 18px; font-weight: 700; line-height: 1; }
+      .upcoming-month { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; color: #3A9FD6; }
+    }
+    .upcoming-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+    .upcoming-title { font-size: 14px; font-weight: 600; color: #1B2A47;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .upcoming-meta { font-size: 12px; color: #5a6a7e; }
+    .upcoming-type { color: #3A9FD6; font-weight: 500; }
   `],
 })
 export class DashboardComponent implements OnInit {
   private authService = inject(AuthService);
   private api = inject(ApiService);
+  private bookingSvc = inject(BookingService);
   orgCtx = inject(OrgContextService);
 
   firstName = signal('');
-  activity = signal<ActivityItem[]>([]);
-  activityLoading = signal(true);
-  activityMinimized = signal(false);
-  showActivity = computed(() => {
+  upcomingEvents = signal<BookingRecord[]>([]);
+  upcomingLoading = signal(true);
+  /** Upcoming events are meaningful for anyone who can have bookings
+   *  (everyone except coachees, who already see their own sessions
+   *  elsewhere). The backend returns coach-scoped bookings, so admins /
+   *  HR see their own — typically empty and that's fine. */
+  showUpcoming = computed(() => {
     const role = this.authService.currentUser()?.role;
     return !!role && role !== 'coachee';
   });
@@ -308,55 +296,6 @@ export class DashboardComponent implements OnInit {
     });
   });
 
-  /** Activity items filtered to only show items from enabled modules. */
-  filteredActivity = computed(() => {
-    const items = this.activity();
-    const modules = this.orgCtx.modules();
-
-    const typeModuleMap: Record<string, string> = {
-      conflict_analysis: 'conflict',
-      neuroinclusion: 'neuroinclusion',
-      idp: 'succession',
-      coaching_engagement: 'coaching',
-      coaching_session: 'coaching',
-      journal_note: 'coaching',
-      journal_reflective: 'coaching',
-    };
-
-    return items.filter((item) => {
-      const mod = typeModuleMap[item.type];
-      if (!mod) return true;
-      return modules.includes(mod);
-    });
-  });
-
-  activityIcon(type: string): string {
-    const map: Record<string, string> = {
-      survey_response:     'assignment_turned_in',
-      conflict_analysis:   'warning_amber',
-      idp:                 'trending_up',
-      neuroinclusion:      'psychology',
-      coaching_engagement: 'psychology_alt',
-      coaching_session:    'event_note',
-      journal_note:        'auto_stories',
-      journal_reflective:  'edit_note',
-    };
-    return map[type] || 'circle';
-  }
-
-  activityIconClass(type: string): string {
-    const map: Record<string, string> = {
-      survey_response:     'survey',
-      conflict_analysis:   'conflict',
-      idp:                 'succession',
-      neuroinclusion:      'neuroinclusion',
-      coaching_engagement: 'coaching',
-      coaching_session:    'coaching',
-      journal_note:        'journal',
-      journal_reflective:  'journal',
-    };
-    return map[type] || 'survey';
-  }
 
   private defaultCards(): ModuleCard[] {
     return [
@@ -448,10 +387,16 @@ export class DashboardComponent implements OnInit {
     const user = this.authService.currentUser();
     if (user) this.firstName.set(user.firstName);
 
-    if (this.showActivity()) {
-      this.api.get<ActivityItem[]>('/dashboard/activity').subscribe({
-        next: (items) => { this.activity.set(items); this.activityLoading.set(false); },
-        error: () => this.activityLoading.set(false),
+    if (this.showUpcoming()) {
+      this.bookingSvc.getBookings('upcoming', 1, 10).subscribe({
+        next: (res) => {
+          const sorted = [...res.bookings].sort(
+            (a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime(),
+          );
+          this.upcomingEvents.set(sorted.slice(0, 8));
+          this.upcomingLoading.set(false);
+        },
+        error: () => this.upcomingLoading.set(false),
       });
     }
 

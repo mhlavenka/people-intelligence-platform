@@ -182,6 +182,14 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'coaching/coachees',
+        canActivate: [roleGuard(['coach'])],
+        loadComponent: () =>
+          import('./modules/coaching/coachees-list/coachees-list.component').then(
+            (m) => m.CoacheesListComponent
+          ),
+      },
+      {
         path: 'coaching/:id',
         canActivate: [roleGuard([...ADMIN_HR, 'coach', 'coachee'])],
         loadComponent: () =>
@@ -382,6 +390,14 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./modules/admin/reports/reports.component').then(
             (m) => m.OrgReportsComponent
+          ),
+      },
+      {
+        path: 'admin/activity',
+        canActivate: [roleGuard([...ADMIN_HR])],
+        loadComponent: () =>
+          import('./modules/admin/activity-log/activity-log.component').then(
+            (m) => m.ActivityLogComponent
           ),
       },
       {

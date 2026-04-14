@@ -215,7 +215,7 @@ Key implementation notes:
 - `rescheduleBooking(id, newStart, newEnd, triggeredBy)` supports `'admin'` (update GCal, email both) and `'coach_gcal'` (skip GCal update, email client only). `Booking.rescheduleHistory` records every change.
 - Reminder cron filters `startTime >= now` at the Mongo layer and has a per-loop defensive guard.
 - Google push-notification channels are registered via `registerGoogleWebhook(coachId)` after calendar select / settings save, stopped on disconnect, and renewed hourly when within 2 days of expiry. Notifications land on `POST /api/webhooks/gcal`; the handler validates `X-Goog-Channel-ID` / `X-Goog-Resource-ID` + the optional `X-Goog-Channel-Token` against `GOOGLE_WEBHOOK_SECRET`, then uses `calendar.events.list(updatedMin, showDeleted)` to diff changes. Activate with `BOOKING_WEBHOOKS_ENABLED=true` after the Apache vhost proxies `/api/webhooks/gcal` to PM2.
-- Full gap audit and implementation log in `docs/booking-sync-audit.md`.
+- Full gap audit and implementation log in `docs/prompts/booking-sync-audit.md`.
 - Integration tests at `backend/tests/behavior-*.test.ts` cover all 8 sync behaviors against a real in-memory MongoDB with googleapis/SES mocked. Run `npm test` from `/backend` (20 tests, ~40s).
 
 ## Booking ↔ Coaching Integration
