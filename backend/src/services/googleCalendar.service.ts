@@ -1,4 +1,5 @@
-import { google, calendar_v3 } from 'googleapis';
+import { calendar as calendarApi, calendar_v3 } from '@googleapis/calendar';
+import { OAuth2Client } from 'google-auth-library';
 import { config } from '../config/env';
 import { User } from '../models/User.model';
 
@@ -8,7 +9,7 @@ const SCOPES = [
 ];
 
 function createOAuth2Client() {
-  return new google.auth.OAuth2(
+  return new OAuth2Client(
     config.oauth.google.clientId,
     config.oauth.google.clientSecret,
     config.oauth.google.calendarRedirectUri,
@@ -71,7 +72,7 @@ async function getAuthenticatedClient(coachId: string) {
 /** List calendars the coach has access to (for the calendar picker). */
 export async function listCoachCalendars(coachId: string): Promise<{ id: string; summary: string }[]> {
   const { client } = await getAuthenticatedClient(coachId);
-  const calendar = google.calendar({ version: 'v3', auth: client });
+  const calendar = calendarApi({ version: 'v3', auth: client });
   const res = await calendar.calendarList.list({ minAccessRole: 'writer' });
   return (res.data.items ?? []).map((c) => ({
     id: c.id ?? '',
@@ -94,7 +95,7 @@ export async function createCalendarEvent(
 ): Promise<{ eventId: string; meetLink?: string }> {
   const { client, coach } = await getAuthenticatedClient(coachId);
   const calendarId = coach.googleCalendar!.calendarId || 'primary';
-  const calendar = google.calendar({ version: 'v3', auth: client });
+  const calendar = calendarApi({ version: 'v3', auth: client });
 
   const start = new Date(session.date);
   const end = new Date(start.getTime() + (session.duration || 60) * 60_000);
@@ -159,7 +160,7 @@ export async function updateCalendarEvent(
 ): Promise<void> {
   const { client, coach } = await getAuthenticatedClient(coachId);
   const calendarId = coach.googleCalendar!.calendarId || 'primary';
-  const calendar = google.calendar({ version: 'v3', auth: client });
+  const calendar = calendarApi({ version: 'v3', auth: client });
 
   const start = new Date(session.date);
   const end = new Date(start.getTime() + (session.duration || 60) * 60_000);
@@ -188,6 +189,6 @@ export async function updateCalendarEvent(
 export async function deleteCalendarEvent(coachId: string, googleEventId: string): Promise<void> {
   const { client, coach } = await getAuthenticatedClient(coachId);
   const calendarId = coach.googleCalendar!.calendarId || 'primary';
-  const calendar = google.calendar({ version: 'v3', auth: client });
+  const calendar = calendarApi({ version: 'v3', auth: client });
   await calendar.events.delete({ calendarId, eventId: googleEventId });
 }

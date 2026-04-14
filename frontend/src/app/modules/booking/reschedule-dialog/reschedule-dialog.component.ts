@@ -1,4 +1,4 @@
-import { Component, Inject, signal } from '@angular/core';
+import { Component, Inject, OnInit, signal, computed } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
@@ -9,10 +9,20 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { BookingRecord } from '../booking.service';
+import { AvailableSlot, BookingRecord, BookingService } from '../booking.service';
 
 export interface RescheduleDialogData {
   booking: BookingRecord;
+  /** When true, show a "Message to coach" textarea; the submitted note
+   *  is returned alongside the new start time. */
+  withNote?: boolean;
+  noteLabel?: string;
+  notePlaceholder?: string;
+}
+
+export interface RescheduleDialogResult {
+  newStartTime: string;
+  note?: string;
 }
 
 @Component({
@@ -36,17 +46,44 @@ export interface RescheduleDialogData {
       <div class="pickers">
         <mat-form-field appearance="outline" class="date-field">
           <mat-label>New date</mat-label>
-          <input matInput [matDatepicker]="picker" [(ngModel)]="newDate"
+          <input matInput [matDatepicker]="picker" [ngModel]="newDate"
+                 (ngModelChange)="onDateChange($event)"
                  [min]="minDate" required />
           <mat-datepicker-toggle matIconSuffix [for]="picker" />
           <mat-datepicker #picker />
         </mat-form-field>
-
-        <mat-form-field appearance="outline" class="time-field">
-          <mat-label>New time</mat-label>
-          <input matInput type="time" [(ngModel)]="newTime" required />
-        </mat-form-field>
       </div>
+
+      <div class="slots-section">
+        <div class="slots-label">
+          <mat-icon>schedule</mat-icon> Available times
+        </div>
+        @if (slotsLoading()) {
+          <div class="slots-loading"><mat-spinner diameter="22" /></div>
+        } @else if (!slotsForDay().length) {
+          <p class="no-slots">No available times on this day. Try another date.</p>
+        } @else {
+          <div class="slot-grid">
+            @for (slot of slotsForDay(); track slot.startUtc) {
+              <button type="button" class="slot-btn"
+                      [class.selected]="selectedSlot()?.startUtc === slot.startUtc"
+                      (click)="pickSlot(slot)">
+                {{ slot.startLocal | date:'shortTime' }}
+              </button>
+            }
+          </div>
+        }
+      </div>
+
+      @if (data.withNote) {
+        <mat-form-field appearance="outline" class="note-field">
+          <mat-label>{{ data.noteLabel || 'Message to coach (optional)' }}</mat-label>
+          <textarea matInput rows="3"
+                    [(ngModel)]="note"
+                    [placeholder]="data.notePlaceholder || 'Let the coach know why you\\'re rescheduling…'">
+          </textarea>
+        </mat-form-field>
+      }
 
       @if (errorMsg()) {
         <p class="error"><mat-icon>error_outline</mat-icon> {{ errorMsg() }}</p>
@@ -62,11 +99,36 @@ export interface RescheduleDialogData {
   `,
   styles: [`
     .intro { margin: 0 0 16px; color: #46546b; line-height: 1.5; }
-    .pickers {
-      display: grid; grid-template-columns: 1fr 140px; gap: 12px;
-    }
+    .pickers { display: block; }
     .date-field { width: 100%; }
-    .time-field { width: 100%; }
+    .note-field { width: 100%; margin-top: 12px; display: block; }
+
+    .slots-section { margin: 4px 0 12px; }
+    .slots-label {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 12px; font-weight: 600; color: #5a6a7e;
+      text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 8px;
+      mat-icon { font-size: 16px; width: 16px; height: 16px; color: #3A9FD6; }
+    }
+    .slots-loading { display: flex; justify-content: center; padding: 20px; }
+    .no-slots {
+      color: #9aa5b4; font-size: 13px; margin: 0; text-align: center;
+      padding: 16px; background: #f8fafc; border-radius: 8px;
+    }
+    .slot-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+      gap: 6px; max-height: 180px; overflow-y: auto;
+    }
+    .slot-btn {
+      padding: 8px 10px; border-radius: 6px; font-size: 13px; font-weight: 500;
+      background: #fff; border: 1px solid #dbe3ec; color: #1B2A47;
+      cursor: pointer; transition: all 0.12s;
+      font: inherit; font-size: 13px; font-weight: 500;
+    }
+    .slot-btn:hover { border-color: #3A9FD6; color: #3A9FD6; }
+    .slot-btn.selected {
+      background: #3A9FD6; color: #fff; border-color: #3A9FD6;
+    }
     .error {
       display: flex; align-items: center; gap: 6px;
       color: #dc2626; font-size: 13px; margin: 8px 0 0;
@@ -78,42 +140,86 @@ export interface RescheduleDialogData {
     }
   `],
 })
-export class RescheduleDialogComponent {
+export class RescheduleDialogComponent implements OnInit {
   minDate = new Date();
   newDate: Date;
-  newTime: string;
+  note = '';
   saving = signal(false);
   errorMsg = signal('');
+  slotsLoading = signal(false);
+  allSlots = signal<AvailableSlot[]>([]);
+  selectedSlot = signal<AvailableSlot | null>(null);
+  private clientTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+  slotsForDay = computed(() => {
+    const target = this.toDateKey(this.newDate);
+    return this.allSlots().filter((s) => this.toDateKey(new Date(s.startLocal)) === target);
+  });
 
   constructor(
     @Inject(MAT_DIALOG_DATA) public data: RescheduleDialogData,
-    private dialogRef: MatDialogRef<RescheduleDialogComponent, string | null>,
+    private dialogRef: MatDialogRef<RescheduleDialogComponent, RescheduleDialogResult | null>,
+    private bookingSvc: BookingService,
   ) {
     const d = new Date(data.booking.startTime);
     this.newDate = d;
-    this.newTime = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  }
+
+  ngOnInit(): void {
+    this.loadSlotsForRange(this.newDate);
   }
 
   isValid(): boolean {
-    return !!(this.newDate && this.newTime && this.composeStart() > new Date());
+    return !!this.selectedSlot();
   }
 
-  composeStart(): Date {
-    const [h, m] = (this.newTime || '00:00').split(':').map(Number);
-    const d = new Date(this.newDate);
-    d.setHours(h, m, 0, 0);
-    return d;
+  onDateChange(d: Date): void {
+    this.newDate = d;
+    this.selectedSlot.set(null);
+    this.loadSlotsForRange(d);
+  }
+
+  pickSlot(slot: AvailableSlot): void {
+    this.selectedSlot.set(slot);
+  }
+
+  /** Load a week window around the selected date so close-by days are
+   *  already populated if the coachee changes dates. */
+  private loadSlotsForRange(around: Date): void {
+    const from = new Date(around); from.setDate(from.getDate() - 1);
+    const to   = new Date(around); to.setDate(to.getDate() + 14);
+    this.slotsLoading.set(true);
+    this.bookingSvc.getBookingSlots(
+      this.data.booking._id,
+      from.toISOString().slice(0, 10),
+      to.toISOString().slice(0, 10),
+      this.clientTimezone,
+    ).subscribe({
+      next: (slots) => { this.allSlots.set(slots); this.slotsLoading.set(false); },
+      error: (err) => {
+        this.slotsLoading.set(false);
+        this.errorMsg.set(err?.error?.error || 'Could not load availability.');
+      },
+    });
+  }
+
+  private toDateKey(d: Date): string {
+    return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
   }
 
   cancel(): void { this.dialogRef.close(null); }
 
   save(): void {
-    const start = this.composeStart();
-    if (start <= new Date()) {
-      this.errorMsg.set('New time must be in the future.');
+    const slot = this.selectedSlot();
+    if (!slot) {
+      this.errorMsg.set('Please pick a time slot.');
       return;
     }
     this.errorMsg.set('');
-    this.dialogRef.close(start.toISOString());
+    const trimmed = this.note.trim();
+    this.dialogRef.close({
+      newStartTime: slot.startUtc,
+      ...(trimmed ? { note: trimmed } : {}),
+    });
   }
 }

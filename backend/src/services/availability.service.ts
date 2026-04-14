@@ -1,6 +1,7 @@
 import { DateTime, Interval } from 'luxon';
 import NodeCache from 'node-cache';
-import { google } from 'googleapis';
+import { calendar as calendarApi } from '@googleapis/calendar';
+import { OAuth2Client } from 'google-auth-library';
 import { AvailabilityConfig, IAvailabilityConfig } from '../models/AvailabilityConfig.model';
 import { BookingSettings, IBookingSettings } from '../models/BookingSettings.model';
 import { Booking } from '../models/Booking.model';
@@ -38,7 +39,7 @@ interface BusyPeriod {
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 function createOAuth2Client() {
-  return new google.auth.OAuth2(
+  return new OAuth2Client(
     config.oauth.google.clientId,
     config.oauth.google.clientSecret,
     config.oauth.google.calendarRedirectUri,
@@ -95,7 +96,7 @@ async function fetchGoogleBusyPeriods(
 
   try {
     const auth = await getAuthenticatedClient(coachId);
-    const calendar = google.calendar({ version: 'v3', auth });
+    const calendar = calendarApi({ version: 'v3', auth });
     const res = await calendar.freebusy.query({
       requestBody: {
         timeMin,

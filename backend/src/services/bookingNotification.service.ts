@@ -264,7 +264,8 @@ export async function sendRescheduleConfirmation(
   coachEmail: string,
   oldStartTime: Date,
   cancelUrl: string,
-  triggeredBy: 'coach_gcal' | 'admin' | 'coach',
+  triggeredBy: 'coach_gcal' | 'admin' | 'coach' | 'coachee',
+  note?: string,
 ): Promise<void> {
   const oldClientDt = DateTime.fromJSDate(oldStartTime).setZone(booking.clientTimezone);
   const newClientDt = DateTime.fromJSDate(booking.startTime).setZone(booking.clientTimezone);
@@ -320,16 +321,32 @@ export async function sendRescheduleConfirmation(
 
   if (triggeredBy === 'coach_gcal') return;
 
-  // Coach email (admin-triggered reschedules only)
+  // Coach email (admin or coachee triggered).
+  const rescheduledByLine = triggeredBy === 'coachee'
+    ? `<strong>${booking.clientName}</strong> has rescheduled their session.`
+    : `The session with <strong>${booking.clientName}</strong> has been moved.`;
+  const noteBlock = note && note.trim()
+    ? `<div style="background:#f3eeff;border-left:4px solid #7c5cbf;border-radius:6px;
+                   padding:12px 14px;margin:16px 0;">
+         <div style="font-size:11px;font-weight:700;color:#7c5cbf;
+                     text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">
+           Message from ${booking.clientName}
+         </div>
+         <div style="color:#1B2A47;font-size:14px;line-height:1.5;white-space:pre-wrap;">
+           ${note.trim()}
+         </div>
+       </div>`
+    : '';
   const coachHtml = bookingHtml('Session rescheduled', `
     <h2 style="color:#1B2A47;margin:0 0 12px;font-size:22px;">
       Session rescheduled
     </h2>
     <p style="color:#5a6a7e;margin:0 0 16px;line-height:1.6;">
-      The session with <strong>${booking.clientName}</strong> has been moved to
+      ${rescheduledByLine} The new time is
       <strong>${newCoachDt.toFormat('cccc, LLLL d, yyyy')}</strong> at
       <strong>${newCoachDt.toFormat('h:mm a')}</strong> (${booking.coachTimezone}).
     </p>
+    ${noteBlock}
     ${booking.topic ? `<p style="color:#5a6a7e;margin:0 0 8px;"><strong>Topic:</strong> ${booking.topic}</p>` : ''}
   `);
 

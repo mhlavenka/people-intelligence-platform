@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { DateTime } from 'luxon';
-import { google } from 'googleapis';
+import { calendar as calendarApi } from '@googleapis/calendar';
+import { OAuth2Client } from 'google-auth-library';
 import { config } from '../config/env';
 import { AvailabilityConfig } from '../models/AvailabilityConfig.model';
 import { BookingSettings } from '../models/BookingSettings.model';
@@ -20,7 +21,7 @@ import {
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 function createOAuth2Client() {
-  return new google.auth.OAuth2(
+  return new OAuth2Client(
     config.oauth.google.clientId,
     config.oauth.google.clientSecret,
     config.oauth.google.calendarRedirectUri,
@@ -88,7 +89,7 @@ async function isSlotFree(
   if (calendarIds.length) {
     try {
       const auth = await getAuthenticatedClient(coachId);
-      const calendar = google.calendar({ version: 'v3', auth });
+      const calendar = calendarApi({ version: 'v3', auth });
       const res = await calendar.freebusy.query({
         requestBody: {
           timeMin: start.toISOString(),
@@ -161,7 +162,7 @@ export async function createBooking(
   if (coach.googleCalendar?.connected && targetCalendarId) {
     try {
       const auth = await getAuthenticatedClient(cfg.coachId.toString());
-      const calendar = google.calendar({ version: 'v3', auth });
+      const calendar = calendarApi({ version: 'v3', auth });
 
       const event: Record<string, unknown> = {
         summary: `${cfg.name || 'Coaching Session'} — ${data.clientName}`,
@@ -279,7 +280,7 @@ export async function cancelBooking(
     if (coach?.googleCalendar?.connected && calId) {
       try {
         const auth = await getAuthenticatedClient(booking.coachId.toString());
-        const calendar = google.calendar({ version: 'v3', auth });
+        const calendar = calendarApi({ version: 'v3', auth });
         await calendar.events.delete({
           calendarId: calId,
           eventId: booking.googleEventId,
@@ -341,7 +342,8 @@ export async function rescheduleBooking(
   bookingId: string,
   newStartTime: Date,
   newEndTime: Date,
-  triggeredBy: 'coach_gcal' | 'admin',
+  triggeredBy: 'coach_gcal' | 'admin' | 'coachee',
+  note?: string,
 ): Promise<IBooking> {
   const booking = await Booking.findById(bookingId).setOptions({ bypassTenantCheck: true });
   if (!booking) throw Object.assign(new Error('Booking not found'), { statusCode: 404 });
@@ -371,7 +373,7 @@ export async function rescheduleBooking(
     if (coach?.googleCalendar?.connected && calId) {
       try {
         const auth = await getAuthenticatedClient(booking.coachId.toString());
-        const calendar = google.calendar({ version: 'v3', auth });
+        const calendar = calendarApi({ version: 'v3', auth });
         await calendar.events.patch({
           calendarId: calId,
           eventId: booking.googleEventId,
@@ -432,7 +434,7 @@ export async function rescheduleBooking(
     const cancelUrl =
       `${config.frontendUrl}/book/${cfg.coachSlug}/cancel/${booking._id}/${newCancelToken}`;
     sendRescheduleConfirmation(
-      booking, coachName, coach.email, oldStartTime, cancelUrl, triggeredBy,
+      booking, coachName, coach.email, oldStartTime, cancelUrl, triggeredBy, note,
     ).catch((err) => console.error('[Booking] Failed to send reschedule email:', err));
   }
 

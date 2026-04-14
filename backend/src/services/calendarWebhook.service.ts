@@ -1,5 +1,6 @@
 import crypto from 'crypto';
-import { google } from 'googleapis';
+import { calendar as calendarApi } from '@googleapis/calendar';
+import { OAuth2Client } from 'google-auth-library';
 import { config } from '../config/env';
 import { User } from '../models/User.model';
 import { BookingSettings } from '../models/BookingSettings.model';
@@ -13,7 +14,7 @@ import { invalidateSlotCache } from './availability.service';
 // Kept local to avoid a circular import back into booking.service.
 
 function createOAuth2Client() {
-  return new google.auth.OAuth2(
+  return new OAuth2Client(
     config.oauth.google.clientId,
     config.oauth.google.clientSecret,
     config.oauth.google.calendarRedirectUri,
@@ -93,7 +94,7 @@ export async function registerGoogleWebhook(coachId: string): Promise<void> {
   await stopGoogleWebhook(coachId, { silent: true });
 
   const auth = await getAuthenticatedClient(coachId);
-  const calendar = google.calendar({ version: 'v3', auth });
+  const calendar = calendarApi({ version: 'v3', auth });
 
   const channelId = `artes-${coachId}-${crypto.randomBytes(8).toString('hex')}`;
   const token = config.booking.webhookSecret || undefined;
@@ -153,7 +154,7 @@ export async function stopGoogleWebhook(
   if (config.booking.webhooksEnabled) {
     try {
       const auth = await getAuthenticatedClient(coachId);
-      const calendar = google.calendar({ version: 'v3', auth });
+      const calendar = calendarApi({ version: 'v3', auth });
       await calendar.channels.stop({
         requestBody: { id: state.channelId, resourceId: state.resourceId },
       });
@@ -252,7 +253,7 @@ export async function handleGoogleNotification(headers: {
 
   try {
     const auth = await getAuthenticatedClient(coachId);
-    const calendar = google.calendar({ version: 'v3', auth });
+    const calendar = calendarApi({ version: 'v3', auth });
     const res = await calendar.events.list({
       calendarId: state.calendarId,
       updatedMin,

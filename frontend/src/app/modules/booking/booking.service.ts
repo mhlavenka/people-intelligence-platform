@@ -168,11 +168,17 @@ export class BookingService {
     return this.api.delete<BookingRecord>(`/booking/bookings/${id}`, { body: { reason } });
   }
 
-  rescheduleBooking(id: string, newStartTime: string): Observable<BookingRecord> {
+  rescheduleBooking(id: string, newStartTime: string, note?: string): Observable<BookingRecord> {
     return this.api.patch<BookingRecord>(
       `/booking/bookings/${id}/reschedule`,
-      { newStartTime },
+      { newStartTime, ...(note ? { note } : {}) },
     );
+  }
+
+  /** Available slots for rescheduling this booking, using the same
+   *  availability engine as the public booking flow. */
+  getBookingSlots(bookingId: string, from: string, to: string, tz: string): Observable<AvailableSlot[]> {
+    return this.api.get<AvailableSlot[]>(`/booking/bookings/${bookingId}/slots`, { from, to, tz });
   }
 
   // ── Google Calendar import ───────────────────────────────────────────────

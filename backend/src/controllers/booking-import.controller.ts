@@ -1,5 +1,5 @@
 import { Response, NextFunction } from 'express';
-import { google, calendar_v3 } from 'googleapis';
+import { calendar as calendarApi, calendar_v3 } from '@googleapis/calendar';
 import { AuthRequest } from '../middleware/auth.middleware';
 import { AvailabilityConfig } from '../models/AvailabilityConfig.model';
 import { BookingSettings } from '../models/BookingSettings.model';
@@ -204,7 +204,7 @@ export async function preview(req: AuthRequest, res: Response, next: NextFunctio
     }
 
     const { from, to } = parseRange(req.query as { from?: string; to?: string });
-    const calendar = google.calendar({ version: 'v3', auth });
+    const calendar = calendarApi({ version: 'v3', auth });
 
     // Load matching reference data up-front so per-event matching is O(1).
     const [coacheeDocs, eventTypeDocs] = await Promise.all([
@@ -338,7 +338,7 @@ export async function execute(req: AuthRequest, res: Response, next: NextFunctio
       res.status(401).json({ error: 'Google Calendar not connected.' });
       return;
     }
-    const calendar = google.calendar({ version: 'v3', auth });
+    const calendar = calendarApi({ version: 'v3', auth });
 
     // Build coach-email set from the coach's own Google profile if possible.
     const coachEmails = new Set<string>();

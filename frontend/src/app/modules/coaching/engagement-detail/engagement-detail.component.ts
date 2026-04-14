@@ -15,6 +15,9 @@ import { CoachPickerDialogComponent, CoachPick } from '../coach-picker-dialog/co
 import { CoachLandingComponent } from '../../booking/coach-landing/coach-landing.component';
 import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog.component';
 import { JournalService, SessionNote } from '../../journal/journal.service';
+import { RescheduleDialogComponent, RescheduleDialogResult } from '../../booking/reschedule-dialog/reschedule-dialog.component';
+import { CancelDialogComponent, CancelDialogResult } from '../../booking/cancel-dialog/cancel-dialog.component';
+import { BookingService, BookingRecord } from '../../booking/booking.service';
 
 interface Session {
   _id: string;
@@ -32,6 +35,7 @@ interface Session {
   googleMeetLink?: string;
   createdAt: string;
   createdVia?: 'coach' | 'coachee_booking';
+  bookingId?: string;
 }
 
 @Component({
@@ -208,6 +212,16 @@ interface Session {
                       @if (canManage()) {
                         <button mat-icon-button matTooltip="Edit" (click)="editSession(s)"><mat-icon>edit</mat-icon></button>
                         <button mat-icon-button matTooltip="Delete" class="del-btn" (click)="deleteSession(s)"><mat-icon>delete_outline</mat-icon></button>
+                      }
+                      @if (canCoacheeManage(s)) {
+                        <button mat-icon-button matTooltip="Reschedule"
+                                (click)="coacheeReschedule(s)">
+                          <mat-icon>event_repeat</mat-icon>
+                        </button>
+                        <button mat-icon-button matTooltip="Cancel" class="del-btn"
+                                (click)="coacheeCancel(s)">
+                          <mat-icon>event_busy</mat-icon>
+                        </button>
                       }
                     </div>
 
@@ -414,7 +428,7 @@ interface Session {
 
     .session-layout { display: flex; }
     .session-left { flex: 1; padding: 18px; min-width: 0; }
-    .session-right { width: 450px; flex-shrink: 0; border-left: 1px solid #f0f4f8; background: #faf8f2; }
+    .session-right { width: 450px; flex-shrink: 0; border-left: 1px solid #f0f4f8; background: beige; }
 
     .journal-panel {
       padding: 14px; height: 100%; display: flex; flex-direction: column;
@@ -639,9 +653,20 @@ export class EngagementDetailComponent implements OnInit {
     private dialog: MatDialog,
     private snack: MatSnackBar,
     private journal: JournalService,
+    private bookingSvc: BookingService,
   ) {}
 
   canManage = () => ['admin', 'hr_manager', 'coach'].includes(this.auth.currentUser()?.role ?? '');
+
+  /** A coachee can reschedule/cancel a session only if it is still scheduled
+   *  (not already cancelled or completed), has a paired Booking row, and
+   *  the starting time is in the future. */
+  canCoacheeManage(s: Session): boolean {
+    if (this.auth.currentUser()?.role !== 'coachee') return false;
+    if (!s.bookingId) return false;
+    if (s.status !== 'scheduled') return false;
+    return new Date(s.date).getTime() > Date.now();
+  }
 
   prevMonth(): void { const d = new Date(this.currentMonth()); d.setMonth(d.getMonth() - 1); this.currentMonth.set(d); }
   nextMonth(): void { const d = new Date(this.currentMonth()); d.setMonth(d.getMonth() + 1); this.currentMonth.set(d); }
@@ -788,6 +813,72 @@ export class EngagementDetailComponent implements OnInit {
     ref.afterClosed().subscribe((confirmed) => {
       if (!confirmed) return;
       this.api.delete(`/coaching/sessions/${s._id}`).subscribe({ next: () => this.load() });
+    });
+  }
+
+  /** Coachee → cancel the Booking (and, via propagation, the paired session). */
+  coacheeCancel(s: Session): void {
+    if (!s.bookingId) return;
+    const coach = this.engagement()?.coachId;
+    const coachName = coach && typeof coach === 'object'
+      ? `${coach.firstName} ${coach.lastName}`.trim() : '';
+    const ref = this.dialog.open(CancelDialogComponent, {
+      width: '480px',
+      data: {
+        title: 'Cancel session',
+        startTime: s.date,
+        coachName,
+        confirmLabel: 'Cancel session',
+      },
+    });
+    ref.afterClosed().subscribe((result: CancelDialogResult | null | undefined) => {
+      if (!result) return;
+      this.bookingSvc.cancelBooking(s.bookingId!, result.reason).subscribe({
+        next: () => {
+          this.snack.open('Session cancelled. Your coach has been notified.', 'OK', { duration: 3000 });
+          this.load();
+        },
+        error: (err) => {
+          const msg = err?.error?.error || 'Failed to cancel.';
+          this.snack.open(msg, 'OK', { duration: 4000 });
+        },
+      });
+    });
+  }
+
+  /** Coachee → reschedule the Booking (paired session date follows). */
+  coacheeReschedule(s: Session): void {
+    if (!s.bookingId) return;
+    // The reschedule dialog wants a BookingRecord — build a minimal shim
+    // with just the fields it reads (clientName + startTime).
+    const shim: BookingRecord = {
+      _id: s.bookingId,
+      coachId: '',
+      clientName: 'this session',
+      clientEmail: '',
+      startTime: s.date,
+      endTime: new Date(new Date(s.date).getTime() + (s.duration || 60) * 60000).toISOString(),
+      clientTimezone: 'UTC',
+      coachTimezone: 'UTC',
+      status: 'confirmed',
+      createdAt: '',
+    };
+    const ref = this.dialog.open(RescheduleDialogComponent, {
+      width: '480px',
+      data: { booking: shim, withNote: true },
+    });
+    ref.afterClosed().subscribe((result: RescheduleDialogResult | null | undefined) => {
+      if (!result) return;
+      this.bookingSvc.rescheduleBooking(s.bookingId!, result.newStartTime, result.note).subscribe({
+        next: () => {
+          this.snack.open('Session rescheduled. Your coach has been notified.', 'OK', { duration: 3000 });
+          this.load();
+        },
+        error: (err) => {
+          const msg = err?.error?.error || 'Failed to reschedule.';
+          this.snack.open(msg, 'OK', { duration: 4000 });
+        },
+      });
     });
   }
 }

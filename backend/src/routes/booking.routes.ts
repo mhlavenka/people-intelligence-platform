@@ -4,7 +4,7 @@ import {
   authenticateToken, optionalAuth, requireRole, AuthRequest,
 } from '../middleware/auth.middleware';
 import { tenantResolver } from '../middleware/tenant.middleware';
-import { AvailabilityConfig } from '../models/AvailabilityConfig.model';
+import { AvailabilityConfig, IAvailabilityConfig } from '../models/AvailabilityConfig.model';
 import { BookingSettings } from '../models/BookingSettings.model';
 import { Booking } from '../models/Booking.model';
 import { User } from '../models/User.model';
@@ -528,10 +528,12 @@ router.get(
   },
 );
 
-// Cancel booking (coach-side)
-router.delete(
-  '/bookings/:id',
-  requireRole('coach', 'admin'),
+// Available reschedule slots for an existing booking — uses the same
+// availability engine as the public flow, gated to participants in the
+// booking. Coachees may only query their own bookings.
+router.get(
+  '/bookings/:id/slots',
+  requireRole('coach', 'admin', 'hr_manager', 'coachee'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const booking = await Booking.findOne({
@@ -540,9 +542,66 @@ router.delete(
       });
       if (!booking) { res.status(404).json({ error: 'Booking not found' }); return; }
 
+      if (req.user!.role === 'coachee') {
+        if (!booking.coacheeId || String(booking.coacheeId) !== String(req.user!.userId)) {
+          res.status(403).json({ error: 'Not your booking.' });
+          return;
+        }
+      }
+
+      // Prefer the event type the booking was made against; fall back to the
+      // coach's primary AvailabilityConfig.
+      let cfg: IAvailabilityConfig | null = null;
+      if (booking.eventTypeId) {
+        cfg = await AvailabilityConfig.findOne({ _id: booking.eventTypeId })
+          .setOptions({ bypassTenantCheck: true });
+      }
+      if (!cfg) {
+        cfg = await AvailabilityConfig.findOne({
+          coachId: booking.coachId,
+          organizationId: booking.organizationId,
+          isActive: true,
+        }).setOptions({ bypassTenantCheck: true });
+      }
+      if (!cfg) { res.status(404).json({ error: 'No availability found for this coach.' }); return; }
+
+      const from = req.query['from'] as string;
+      const to   = req.query['to']   as string;
+      const tz   = (req.query['tz'] as string) || 'UTC';
+      if (!from || !to) { res.status(400).json({ error: 'from and to query params required' }); return; }
+
+      const slots = await getAvailableSlots(cfg.coachSlug, from, to, tz);
+      res.json(slots);
+    } catch (e) { next(e); }
+  },
+);
+
+// Cancel booking — coach/admin can cancel any booking in their org; a
+// coachee may only cancel a booking linked to them (booking.coacheeId === me).
+router.delete(
+  '/bookings/:id',
+  requireRole('coach', 'admin', 'coachee'),
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const booking = await Booking.findOne({
+        _id: req.params['id'],
+        organizationId: req.user!.organizationId,
+      });
+      if (!booking) { res.status(404).json({ error: 'Booking not found' }); return; }
+
+      if (req.user!.role === 'coachee') {
+        if (!booking.coacheeId || String(booking.coacheeId) !== String(req.user!.userId)) {
+          res.status(403).json({ error: 'You can only cancel your own bookings.' });
+          return;
+        }
+      }
+
+      const cancelledBy: 'client' | 'coach' =
+        req.user!.role === 'coachee' ? 'client' : 'coach';
+
       const result = await cancelBooking(
         req.params['id'],
-        'coach',
+        cancelledBy,
         req.body?.reason,
       );
       res.json(result);
@@ -550,13 +609,15 @@ router.delete(
   },
 );
 
-// Reschedule booking (coach/admin-side)
+// Reschedule booking — coach/admin can reschedule any booking in their
+// org; coachees may only reschedule their own. Optional note flows into
+// the reschedule confirmation email.
 router.patch(
   '/bookings/:id/reschedule',
-  requireRole('coach', 'admin'),
+  requireRole('coach', 'admin', 'coachee'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
-      const { newStartTime } = req.body as { newStartTime?: string };
+      const { newStartTime, note } = req.body as { newStartTime?: string; note?: string };
       if (!newStartTime) {
         res.status(400).json({ error: 'newStartTime is required' }); return;
       }
@@ -571,11 +632,21 @@ router.patch(
       });
       if (!booking) { res.status(404).json({ error: 'Booking not found' }); return; }
 
+      if (req.user!.role === 'coachee') {
+        if (!booking.coacheeId || String(booking.coacheeId) !== String(req.user!.userId)) {
+          res.status(403).json({ error: 'You can only reschedule your own bookings.' });
+          return;
+        }
+      }
+
       const durationMs = booking.endTime.getTime() - booking.startTime.getTime();
       const newEnd = new Date(newStart.getTime() + durationMs);
 
+      const triggeredBy: 'admin' | 'coachee' =
+        req.user!.role === 'coachee' ? 'coachee' : 'admin';
+
       const updated = await rescheduleBooking(
-        req.params['id'], newStart, newEnd, 'admin',
+        req.params['id'], newStart, newEnd, triggeredBy, note,
       );
       res.json(updated);
     } catch (e) { next(e); }
