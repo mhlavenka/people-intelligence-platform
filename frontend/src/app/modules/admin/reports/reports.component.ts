@@ -38,7 +38,7 @@ interface SurveyReport {
 }
 
 const ROLE_LABELS: Record<string, string> = {
-  admin: 'Admin', hr_manager: 'HR Manager', manager: 'Manager', coach: 'Coach', coachee: 'Employee',
+  admin: 'Admin', hr_manager: 'HR Manager', manager: 'Manager', coach: 'Coach', coachee: 'Coachee',
 };
 
 @Component({

@@ -85,7 +85,7 @@ const BASE_ROLES = [
   { value: 'hr_manager', label: 'HR Manager', description: 'HR operations and people analytics' },
   { value: 'manager',    label: 'Manager',    description: 'Team-level analytics and escalation' },
   { value: 'coach',      label: 'Coach',      description: 'Interview, coaching, and succession' },
-  { value: 'coachee',    label: 'Employee',   description: 'Survey participation and own IDP' },
+  { value: 'coachee',    label: 'Coachee',    description: 'Survey participation and own IDP' },
 ];
 
 const PRESET_COLORS = [

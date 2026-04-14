@@ -40,7 +40,7 @@ const ROLES = [
   { value: 'hr_manager',  label: 'HR Manager' },
   { value: 'manager',     label: 'Manager' },
   { value: 'coach',       label: 'Coach' },
-  { value: 'coachee',     label: 'Coachee / Employee' },
+  { value: 'coachee',     label: 'Coachee' },
 ];
 
 @Component({
@@ -141,17 +141,19 @@ const ROLES = [
           </mat-select>
         </mat-form-field>
 
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Sponsor (optional)</mat-label>
-          <mat-select formControlName="sponsorId">
-            <mat-option value="">— None —</mat-option>
-            @for (s of sponsors(); track s._id) {
-              <mat-option [value]="s._id">
-                {{ s.name }} <span class="muted">— {{ s.email }}</span>
-              </mat-option>
-            }
-          </mat-select>
-        </mat-form-field>
+        @if (form.get('role')?.value === 'coachee') {
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Sponsor (optional)</mat-label>
+            <mat-select formControlName="sponsorId">
+              <mat-option value="">— None —</mat-option>
+              @for (s of sponsors(); track s._id) {
+                <mat-option [value]="s._id">
+                  {{ s.name }} <span class="muted">— {{ s.email }}</span>
+                </mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+        }
 
         @if (!isEdit()) {
           <mat-form-field appearance="outline" class="full-width">
@@ -254,7 +256,7 @@ export class UserDialogComponent implements OnInit {
 
   private readonly BASE_LABELS: Record<string, string> = {
     admin: 'Admin', hr_manager: 'HR Manager', manager: 'Manager',
-    coach: 'Coach', coachee: 'Employee',
+    coach: 'Coach', coachee: 'Coachee',
   };
 
   isEdit = () => !!this.existingUser;
@@ -328,6 +330,8 @@ export class UserDialogComponent implements OnInit {
     // Send null to clear custom role / sponsor when empty string selected
     if (!payload.customRoleId) { payload.customRoleId = null; }
     if (!payload.sponsorId)    { payload.sponsorId = null; }
+    // Sponsor only applies to coachees; strip it for any other role.
+    if (payload.role !== 'coachee') { payload.sponsorId = null; }
 
     const request = this.isEdit()
       ? this.api.put(`/users/${this.existingUser!._id}`, payload)

@@ -23,7 +23,7 @@ const ROLE_META: Record<string, { label: string; color: string }> = {
   hr_manager: { label: 'HR Manager', color: '#2080b0' },
   manager:    { label: 'Manager',    color: '#b07800' },
   coach:      { label: 'Coach',      color: '#1a9678' },
-  coachee:    { label: 'Employee',   color: '#5a6a7e' },
+  coachee:    { label: 'Coachee',    color: '#5a6a7e' },
 };
 
 @Component({
@@ -300,7 +300,7 @@ export class UserManagementComponent implements OnInit {
     { value: 'hr_manager', label: 'HR Manager' },
     { value: 'manager',    label: 'Manager' },
     { value: 'coach',      label: 'Coach' },
-    { value: 'coachee',    label: 'Employee' },
+    { value: 'coachee',    label: 'Coachee' },
   ];
 
   filtered = computed(() => {
@@ -322,7 +322,7 @@ export class UserManagementComponent implements OnInit {
       { label: 'Active',     count: all.filter((u) => u.isActive).length },
       { label: 'Admins',     count: all.filter((u) => u.role === 'admin').length },
       { label: 'Managers',   count: all.filter((u) => u.role === 'manager' || u.role === 'hr_manager').length },
-      { label: 'Employees',  count: all.filter((u) => u.role === 'coachee').length },
+      { label: 'Coachees',   count: all.filter((u) => u.role === 'coachee').length },
     ];
   });
 

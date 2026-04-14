@@ -48,7 +48,7 @@ const ROLES = [
   { key: 'hr_manager', label: 'HR Manager', color: '#2080b0', icon: 'manage_accounts' },
   { key: 'manager',    label: 'Manager',    color: '#b07800', icon: 'supervisor_account' },
   { key: 'coach',      label: 'Coach',      color: '#1a9678', icon: 'psychology_alt' },
-  { key: 'coachee',    label: 'Employee',   color: '#5a6a7e', icon: 'person' },
+  { key: 'coachee',    label: 'Coachee',    color: '#5a6a7e', icon: 'person' },
 ];
 
 interface SystemRoleData { permissions: string[]; isOverridden: boolean; }
@@ -400,7 +400,7 @@ export class RoleManagementComponent implements OnInit {
     hr_manager: { label: 'HR Manager', color: '#2080b0' },
     manager:    { label: 'Manager',    color: '#b07800' },
     coach:      { label: 'Coach',      color: '#1a9678' },
-    coachee:    { label: 'Employee',   color: '#5a6a7e' },
+    coachee:    { label: 'Coachee',    color: '#5a6a7e' },
   };
 
   ngOnInit(): void {
