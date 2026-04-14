@@ -17,6 +17,7 @@ import {
   createBooking, cancelBooking, clientCancelBooking, rescheduleBooking,
 } from '../services/booking.service';
 import { registerGoogleWebhook } from '../services/calendarWebhook.service';
+import * as bookingImport from '../controllers/booking-import.controller';
 import {
   linkBookingToCoaching,
   precheckBookingQuota,
@@ -580,5 +581,9 @@ router.patch(
     } catch (e) { next(e); }
   },
 );
+
+// ── Calendar import ────────────────────────────────────────────────────────
+router.get('/import/preview',  requireRole('coach', 'admin'), bookingImport.preview);
+router.post('/import/execute', requireRole('coach', 'admin'), bookingImport.execute);
 
 export default router;

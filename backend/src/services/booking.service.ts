@@ -27,7 +27,7 @@ function createOAuth2Client() {
   );
 }
 
-async function getAuthenticatedClient(coachId: string) {
+export async function getAuthenticatedClient(coachId: string) {
   const coach = await User.findById(coachId).select(
     '+googleCalendar.accessToken +googleCalendar.refreshToken',
   );

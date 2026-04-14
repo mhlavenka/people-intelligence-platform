@@ -2,8 +2,12 @@ import { Response, NextFunction } from 'express';
 import { google, calendar_v3 } from 'googleapis';
 import { AuthRequest } from '../middleware/auth.middleware';
 import { AvailabilityConfig } from '../models/AvailabilityConfig.model';
+import { BookingSettings } from '../models/BookingSettings.model';
 import { Booking } from '../models/Booking.model';
+import { User } from '../models/User.model';
+import { CoachingSession } from '../models/CoachingSession.model';
 import { getAuthenticatedClient } from '../services/booking.service';
+import { linkBookingToCoaching } from '../services/bookingCoachingSync.service';
 
 interface PreviewEvent {
   googleEventId: string;
@@ -25,6 +29,26 @@ interface PreviewEvent {
     self: boolean;
     organizer: boolean;
   }>;
+  /** Best guess for which Artes coachee user this event is for, matched
+   *  by attendee email. null when no attendee matches a known coachee. */
+  suggestedCoacheeId: string | null;
+  /** Best guess for which AvailabilityConfig (event type) applies, matched
+   *  by substring against the event title/description. null when no match. */
+  suggestedEventTypeId: string | null;
+}
+
+interface CoacheeLite {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+}
+
+interface EventTypeLite {
+  _id: string;
+  name: string;
+  color: string;
+  appointmentDuration: number;
 }
 
 const DEFAULT_LOOKBACK_YEARS = 2;
@@ -78,6 +102,59 @@ function isImportable(event: calendar_v3.Schema$Event): boolean {
   return true;
 }
 
+/** Resolve the calendar the app is connected to for this coach. The
+ *  canonical value lives on BookingSettings (one per coach); an event
+ *  type may override it via AvailabilityConfig.targetCalendarId. Same
+ *  order of precedence the booking service uses everywhere else. */
+async function resolveTargetCalendarId(
+  coachId: string,
+  organizationId: string,
+): Promise<{ calendarId: string | null; fallbackTz: string }> {
+  const shared = await BookingSettings.findOne({ coachId, organizationId });
+  if (shared?.targetCalendarId) {
+    return { calendarId: shared.targetCalendarId, fallbackTz: shared.timezone };
+  }
+  const cfg = await AvailabilityConfig.findOne({ coachId, organizationId });
+  return {
+    calendarId: cfg?.targetCalendarId || null,
+    fallbackTz: shared?.timezone ?? cfg?.timezone ?? 'UTC',
+  };
+}
+
+/** Pick the first coachee whose email matches any attendee on the event. */
+function matchCoachee(
+  event: calendar_v3.Schema$Event,
+  emailToCoacheeId: Map<string, string>,
+): string | null {
+  for (const a of event.attendees ?? []) {
+    if (a.self || !a.email) continue;
+    const hit = emailToCoacheeId.get(a.email.toLowerCase());
+    if (hit) return hit;
+  }
+  return null;
+}
+
+/** Choose the best AvailabilityConfig whose name appears as a substring
+ *  of the event title + description. Longest matching name wins. */
+function matchEventType(
+  event: calendar_v3.Schema$Event,
+  types: EventTypeLite[],
+): string | null {
+  const hay = `${event.summary ?? ''} ${event.description ?? ''}`.toLowerCase();
+  if (!hay.trim()) return null;
+  let best: string | null = null;
+  let bestLen = 0;
+  for (const t of types) {
+    const name = t.name.trim().toLowerCase();
+    if (!name) continue;
+    if (hay.includes(name) && name.length > bestLen) {
+      best = t._id;
+      bestLen = name.length;
+    }
+  }
+  return best;
+}
+
 /** Paginate calendar.events.list until no nextPageToken. */
 async function listAllEvents(
   calendar: calendar_v3.Calendar,
@@ -110,14 +187,13 @@ export async function preview(req: AuthRequest, res: Response, next: NextFunctio
     const coachId = req.user!.userId;
     const organizationId = req.user!.organizationId;
 
-    // Pick the coach's primary AvailabilityConfig — any one will do for
-    // targetCalendarId (all event types share the same Google calendar).
-    const cfg = await AvailabilityConfig.findOne({ coachId, organizationId });
-    if (!cfg) {
-      res.status(400).json({ error: 'No booking configuration found. Create an event type first.' });
+    const { calendarId } = await resolveTargetCalendarId(coachId, organizationId);
+    if (!calendarId) {
+      res.status(400).json({
+        error: 'No booking calendar selected. Open Booking → Settings and pick the calendar this app syncs with before importing.',
+      });
       return;
     }
-    const calendarId = cfg.targetCalendarId || 'primary';
 
     let auth;
     try {
@@ -129,6 +205,30 @@ export async function preview(req: AuthRequest, res: Response, next: NextFunctio
 
     const { from, to } = parseRange(req.query as { from?: string; to?: string });
     const calendar = google.calendar({ version: 'v3', auth });
+
+    // Load matching reference data up-front so per-event matching is O(1).
+    const [coacheeDocs, eventTypeDocs] = await Promise.all([
+      User.find({ organizationId, role: 'coachee', isActive: true })
+        .select('_id firstName lastName email'),
+      AvailabilityConfig.find({ coachId, organizationId })
+        .select('_id name color appointmentDuration'),
+    ]);
+    const coachees: CoacheeLite[] = coacheeDocs.map((c) => ({
+      _id: String(c._id),
+      firstName: c.firstName,
+      lastName: c.lastName,
+      email: c.email,
+    }));
+    const eventTypes: EventTypeLite[] = eventTypeDocs.map((t) => ({
+      _id: String(t._id),
+      name: t.name,
+      color: t.color,
+      appointmentDuration: t.appointmentDuration,
+    }));
+    const emailToCoacheeId = new Map<string, string>();
+    for (const c of coachees) {
+      if (c.email) emailToCoacheeId.set(c.email.toLowerCase(), c._id);
+    }
 
     const rawEvents = await listAllEvents(calendar, calendarId, from, to);
     const coachEmails = new Set<string>();
@@ -176,6 +276,8 @@ export async function preview(req: AuthRequest, res: Response, next: NextFunctio
           self: !!a.self,
           organizer: !!a.organizer,
         })),
+        suggestedCoacheeId:   matchCoachee(e, emailToCoacheeId),
+        suggestedEventTypeId: matchEventType(e, eventTypes),
       };
     });
 
@@ -184,6 +286,8 @@ export async function preview(req: AuthRequest, res: Response, next: NextFunctio
       filtered: out.length,
       alreadyImported: out.filter((e) => e.alreadyImported).length,
       events: out,
+      coachees,
+      eventTypes,
     });
   } catch (e) { next(e); }
 }
@@ -191,27 +295,41 @@ export async function preview(req: AuthRequest, res: Response, next: NextFunctio
 // ── POST /api/booking/import/execute ───────────────────────────────────────
 interface ExecuteBody {
   approvedEventIds: string[];
-  /** Optional client-edited overrides keyed by googleEventId. */
-  overrides?: Record<string, { clientName?: string; topic?: string | null }>;
+  /** Optional client-edited overrides keyed by googleEventId. A null value
+   *  explicitly unsets (e.g. user cleared the auto-suggestion). undefined
+   *  means "use whatever the preview suggested". */
+  overrides?: Record<string, {
+    clientName?: string;
+    topic?: string | null;
+    coacheeId?: string | null;
+    eventTypeId?: string | null;
+  }>;
+  /** The preview's per-event suggestions, echoed back so execute doesn't
+   *  have to re-run the match. Keyed by googleEventId. */
+  suggestions?: Record<string, {
+    suggestedCoacheeId?: string | null;
+    suggestedEventTypeId?: string | null;
+  }>;
 }
 
 export async function execute(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
   try {
     const coachId = req.user!.userId;
     const organizationId = req.user!.organizationId;
-    const { approvedEventIds, overrides } = req.body as ExecuteBody;
+    const { approvedEventIds, overrides, suggestions } = req.body as ExecuteBody;
 
     if (!Array.isArray(approvedEventIds) || approvedEventIds.length === 0) {
       res.status(400).json({ error: 'approvedEventIds must be a non-empty array.' });
       return;
     }
 
-    const cfg = await AvailabilityConfig.findOne({ coachId, organizationId });
-    if (!cfg) {
-      res.status(400).json({ error: 'No booking configuration found.' });
+    const { calendarId, fallbackTz } = await resolveTargetCalendarId(coachId, organizationId);
+    if (!calendarId) {
+      res.status(400).json({
+        error: 'No booking calendar selected. Open Booking → Settings and pick the calendar this app syncs with before importing.',
+      });
       return;
     }
-    const calendarId = cfg.targetCalendarId || 'primary';
 
     let auth;
     try {
@@ -247,23 +365,57 @@ export async function execute(req: AuthRequest, res: Response, next: NextFunctio
 
         const { clientName, clientEmail } = pickClient(event, coachEmails);
         const override = overrides?.[id];
-        const finalName = override?.clientName?.trim() || clientName;
+        const suggestion = suggestions?.[id];
+
+        // Resolve final coachee: explicit null overrides the suggestion,
+        // explicit id wins, otherwise use the preview's suggestion.
+        const resolvedCoacheeId =
+          override?.coacheeId === null ? null
+          : (override?.coacheeId ?? suggestion?.suggestedCoacheeId ?? null);
+
+        // Same precedence for event type.
+        const resolvedEventTypeId =
+          override?.eventTypeId === null ? null
+          : (override?.eventTypeId ?? suggestion?.suggestedEventTypeId ?? null);
+
+        // If a coachee was linked, prefer their name/email over whatever
+        // was pulled from the calendar attendee list.
+        let finalName = override?.clientName?.trim() || clientName;
+        let finalEmail: string | null = clientEmail;
+        let eventTypeName: string | undefined;
+        if (resolvedCoacheeId) {
+          const coachee = await User.findById(resolvedCoacheeId)
+            .select('firstName lastName email organizationId role');
+          if (coachee && coachee.role === 'coachee'
+              && String(coachee.organizationId) === String(organizationId)) {
+            finalName = `${coachee.firstName} ${coachee.lastName}`.trim() || finalName;
+            finalEmail = coachee.email ?? finalEmail;
+          }
+        }
+        if (resolvedEventTypeId) {
+          const et = await AvailabilityConfig.findById(resolvedEventTypeId).select('name coachId');
+          if (et && String(et.coachId) === String(coachId)) eventTypeName = et.name;
+          else { /* ignore foreign event type id */ }
+        }
+
         const finalTopic = override?.topic !== undefined ? override.topic : (event.description ?? null);
         const startTime = new Date(event.start.dateTime);
         const endTime   = new Date(event.end.dateTime);
         const completed = endTime.getTime() < Date.now();
 
-        await Booking.create({
+        const booking = await Booking.create({
           coachId,
           organizationId,
+          eventTypeId: resolvedEventTypeId ?? undefined,
+          eventTypeName,
           clientName: finalName,
-          clientEmail: clientEmail ?? '',
+          clientEmail: finalEmail ?? '',
           clientPhone: undefined,
           topic: finalTopic ?? undefined,
           startTime,
           endTime,
-          clientTimezone: event.start.timeZone ?? cfg.timezone,
-          coachTimezone: cfg.timezone,
+          clientTimezone: event.start.timeZone ?? fallbackTz,
+          coachTimezone: fallbackTz,
           googleEventId: event.id,
           googleMeetLink: meetLinkOf(event) ?? undefined,
           cancelToken: undefined,
@@ -272,6 +424,27 @@ export async function execute(req: AuthRequest, res: Response, next: NextFunctio
           importedAt: new Date(),
           importSource: 'gcal_import_ui',
         });
+
+        // If a coachee was linked, mirror into the coaching model: find or
+        // create an active engagement and create a paired session. Exactly
+        // the same helper the public booking flow uses.
+        if (resolvedCoacheeId) {
+          try {
+            await linkBookingToCoaching(booking, resolvedCoacheeId);
+            // linkBookingToCoaching hardcodes session.status='scheduled',
+            // but for past events we want 'completed' so the session doesn't
+            // linger in the coach's upcoming list.
+            if (completed && booking.sessionId) {
+              await CoachingSession.findByIdAndUpdate(booking.sessionId, { status: 'completed' });
+            }
+          } catch (linkErr) {
+            // Don't fail the whole import if linking misfires — the booking
+            // is already saved, the coach can re-link manually.
+            const msg = linkErr instanceof Error ? linkErr.message : String(linkErr);
+            console.warn(`[import] linkBookingToCoaching failed for ${id}: ${msg}`);
+          }
+        }
+
         imported++;
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);

@@ -61,6 +61,8 @@ export interface BookingRecord {
   cancelledAt?: string;
   cancelledBy?: string;
   cancellationReason?: string;
+  importedAt?: string;
+  importSource?: string;
   createdAt: string;
 }
 
@@ -172,6 +174,94 @@ export class BookingService {
       { newStartTime },
     );
   }
+
+  // ── Google Calendar import ───────────────────────────────────────────────
+  previewImport(from: string, to: string): Observable<ImportPreviewResponse> {
+    return this.api.get<ImportPreviewResponse>('/booking/import/preview', { from, to });
+  }
+
+  executeImport(
+    approvedEventIds: string[],
+    overrides?: Record<string, {
+      clientName?: string;
+      topic?: string | null;
+      coacheeId?: string | null;
+      eventTypeId?: string | null;
+    }>,
+    suggestions?: Record<string, {
+      suggestedCoacheeId?: string | null;
+      suggestedEventTypeId?: string | null;
+    }>,
+  ): Observable<ImportResultResponse> {
+    return this.api.post<ImportResultResponse>('/booking/import/execute', {
+      approvedEventIds,
+      overrides,
+      suggestions,
+    });
+  }
+}
+
+// ─── Import types ────────────────────────────────────────────────────────────
+
+export interface ImportAttendee {
+  email: string;
+  displayName: string | null;
+  self: boolean;
+  organizer: boolean;
+}
+
+export interface ImportEvent {
+  googleEventId: string;
+  title: string;
+  startTime: string;
+  endTime: string;
+  durationMinutes: number;
+  clientName: string;
+  clientEmail: string | null;
+  topic: string | null;
+  googleMeetLink: string | null;
+  status: 'upcoming' | 'completed';
+  alreadyImported: boolean;
+  rawSummary: string;
+  attendees: ImportAttendee[];
+  suggestedCoacheeId: string | null;
+  suggestedEventTypeId: string | null;
+  // UI-local state (not from API):
+  approved?: boolean;
+  editedTopic?: string;
+  /** null = explicitly unlinked, undefined = use suggestion, string = picked. */
+  pickedCoacheeId?: string | null;
+  pickedEventTypeId?: string | null;
+  expanded?: boolean;
+}
+
+export interface ImportCoachee {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+}
+
+export interface ImportEventType {
+  _id: string;
+  name: string;
+  color: string;
+  appointmentDuration: number;
+}
+
+export interface ImportPreviewResponse {
+  total: number;
+  filtered: number;
+  alreadyImported: number;
+  events: ImportEvent[];
+  coachees: ImportCoachee[];
+  eventTypes: ImportEventType[];
+}
+
+export interface ImportResultResponse {
+  imported: number;
+  skipped: number;
+  errors: Array<{ googleEventId: string; message: string }>;
 }
 
 // ─── Public Booking Service (no auth) ────────────────────────────────────────

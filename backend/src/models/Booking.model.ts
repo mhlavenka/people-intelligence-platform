@@ -41,6 +41,8 @@ export interface IBooking extends Document {
   rescheduledAt?: Date;
   rescheduledBy?: string;
   rescheduleHistory: IRescheduleRecord[];
+  importedAt?: Date;
+  importSource?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -98,6 +100,8 @@ const BookingSchema = new Schema<IBooking>(
     rescheduledAt:       { type: Date },
     rescheduledBy:       { type: String },
     rescheduleHistory:   { type: [RescheduleRecordSchema], default: [] },
+    importedAt:          { type: Date, default: null },
+    importSource:        { type: String, default: null },
   },
   { timestamps: true },
 );

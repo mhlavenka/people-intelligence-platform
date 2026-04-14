@@ -14,7 +14,9 @@ import { MatExpansionModule } from '@angular/material/expansion';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import {
   BookingService,
+  ImportCoachee,
   ImportEvent,
+  ImportEventType,
   ImportResultResponse,
 } from '../booking.service';
 
@@ -112,8 +114,10 @@ type State = 'idle' | 'loading' | 'preview' | 'importing' | 'done';
               <div class="th">
                 <div class="col-check"></div>
                 <div class="col-when">Date &amp; time</div>
-                <div class="col-client">Client</div>
+                <div class="col-client">Attendee</div>
+                <div class="col-coachee">Coachee</div>
                 <div class="col-topic">Topic</div>
+                <div class="col-evtype">Event type</div>
                 <div class="col-dur">Duration</div>
                 <div class="col-status">Status</div>
               </div>
@@ -133,19 +137,29 @@ type State = 'idle' | 'loading' | 'preview' | 'importing' | 'done';
                   </div>
 
                   <div class="col-client">
-                    @if (isEditing('name', ev)) {
-                      <input class="edit-input" [(ngModel)]="editBuffer"
-                             (blur)="commitEdit('name', ev)"
-                             (keydown.enter)="commitEdit('name', ev)" autofocus />
-                    } @else {
-                      <div class="client-name" (click)="beginEdit('name', ev)">
-                        {{ ev.editedClientName ?? ev.clientName }}
-                        @if (ev.editedClientName) { <mat-icon class="edit-mark">edit</mat-icon> }
-                        @if (!ev.clientEmail) {
-                          <mat-icon class="warn-mark" matTooltip="No client email found — will import without an email">warning</mat-icon>
-                        }
-                      </div>
-                      @if (ev.clientEmail) { <div class="client-email">{{ ev.clientEmail }}</div> }
+                    <div class="client-name">
+                      {{ ev.clientName }}
+                      @if (!ev.clientEmail) {
+                        <mat-icon class="warn-mark" matTooltip="No client email on this event">warning</mat-icon>
+                      }
+                    </div>
+                    @if (ev.clientEmail) { <div class="client-email">{{ ev.clientEmail }}</div> }
+                  </div>
+
+                  <div class="col-coachee">
+                    <select class="native-select"
+                            [value]="resolvedCoachee(ev) ?? ''"
+                            (change)="setCoachee(ev, $any($event.target).value || null)"
+                            [disabled]="ev.alreadyImported">
+                      <option value="">— No coachee —</option>
+                      @for (c of coachees(); track c._id) {
+                        <option [value]="c._id">
+                          {{ c.firstName }} {{ c.lastName }} — {{ c.email }}
+                        </option>
+                      }
+                    </select>
+                    @if (ev.suggestedCoacheeId && ev.pickedCoacheeId === undefined) {
+                      <span class="match-badge">Matched by email</span>
                     }
                   </div>
 
@@ -159,6 +173,21 @@ type State = 'idle' | 'loading' | 'preview' | 'importing' | 'done';
                         {{ (ev.editedTopic ?? ev.topic) || '—' }}
                         @if (ev.editedTopic) { <mat-icon class="edit-mark">edit</mat-icon> }
                       </div>
+                    }
+                  </div>
+
+                  <div class="col-evtype">
+                    <select class="native-select"
+                            [value]="resolvedEventType(ev) ?? ''"
+                            (change)="setEventType(ev, $any($event.target).value || null)"
+                            [disabled]="ev.alreadyImported">
+                      <option value="">— No type —</option>
+                      @for (t of eventTypes(); track t._id) {
+                        <option [value]="t._id">{{ t.name }}</option>
+                      }
+                    </select>
+                    @if (ev.suggestedEventTypeId && ev.pickedEventTypeId === undefined) {
+                      <span class="match-badge">Matched by title</span>
                     }
                   </div>
 
@@ -266,7 +295,7 @@ type State = 'idle' | 'loading' | 'preview' | 'importing' | 'done';
     </div>
   `,
   styles: [`
-    .import-wrap { padding: 8px 4px 16px; }
+    .import-wrap { padding: 16px 4px 24px; width: 100%; box-sizing: border-box; }
 
     /* ─ IDLE ─ */
     .idle { max-width: 720px; margin: 0 auto; padding: 24px; }
@@ -317,10 +346,58 @@ type State = 'idle' | 'loading' | 'preview' | 'importing' | 'done';
     }
     .th, .tr {
       display: grid;
-      grid-template-columns: 40px 140px 1fr 1fr 90px 90px 40px;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 14px;
+      grid-template-columns:
+        40px         /* check */
+        110px        /* date/time */
+        minmax(160px, 1.2fr)  /* attendee */
+        minmax(200px, 1.4fr)  /* coachee picker */
+        minmax(180px, 1.5fr)  /* topic (editable) */
+        minmax(200px, 1.4fr)  /* event type picker */
+        70px         /* duration */
+        80px         /* status */
+        36px;        /* expand */
+      align-items: start;
+      gap: 12px;
+      padding: 12px 16px;
+    }
+    .th { align-items: center; }
+
+    /* Plain native select, styled to match the table. Avoids Angular Material's
+       form-field chrome which can't be reliably collapsed below ~56px. */
+    .native-select {
+      width: 100%;
+      height: 30px;
+      padding: 4px 26px 4px 10px;
+      border: 1px solid #dbe3ec;
+      border-radius: 6px;
+      background: #fff;
+      color: #1B2A47;
+      font: inherit;
+      font-size: 12px;
+      line-height: 1.2;
+      cursor: pointer;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='%235a6a7e'><path d='M7 10l5 5 5-5z'/></svg>");
+      background-repeat: no-repeat;
+      background-position: right 8px center;
+      background-size: 14px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+    .native-select:hover:not(:disabled) { border-color: #9aa5b4; }
+    .native-select:focus {
+      outline: none; border-color: #3A9FD6;
+      box-shadow: 0 0 0 2px rgba(58,159,214,0.18);
+    }
+    .native-select:disabled { background: #f4f6fa; color: #9aa5b4; cursor: not-allowed; }
+    .opt-email { color: #9aa5b4; font-size: 12px; margin-left: 4px; }
+    .match-badge {
+      display: block; font-size: 10px; color: #1a9678;
+      margin-top: 4px; padding-left: 4px;
+      &::before { content: '✓ '; }
     }
     .th {
       font-size: 11px; font-weight: 700; color: #9aa5b4;
@@ -346,10 +423,14 @@ type State = 'idle' | 'loading' | 'preview' | 'importing' | 'done';
     .client-email { font-size: 12px; color: #6b7c93; }
     .topic {
       font-size: 13px; color: #1B2A47; cursor: pointer;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-      display: flex; align-items: center; gap: 4px;
+      line-height: 1.45; word-break: break-word;
+      display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
+      overflow: hidden;
       &:hover { text-decoration: underline dashed #9aa5b4; text-underline-offset: 2px; }
-      .edit-mark { font-size: 14px; width: 14px; height: 14px; color: #3A9FD6; }
+      .edit-mark {
+        font-size: 14px; width: 14px; height: 14px; color: #3A9FD6;
+        vertical-align: middle; margin-left: 2px;
+      }
     }
     .edit-input {
       width: 100%; border: 1px solid #3A9FD6; border-radius: 6px;
@@ -425,6 +506,8 @@ export class BookingImportComponent {
 
   state = signal<State>('idle');
   events = signal<ImportEvent[]>([]);
+  coachees = signal<ImportCoachee[]>([]);
+  eventTypes = signal<ImportEventType[]>([]);
   error = signal<string>('');
   result = signal<ImportResultResponse | null>(null);
 
@@ -432,8 +515,8 @@ export class BookingImportComponent {
   fromDate: Date = new Date(Date.now() - 2 * 365 * 24 * 60 * 60 * 1000);
   toDate:   Date = new Date(Date.now() + 1 * 365 * 24 * 60 * 60 * 1000);
 
-  // Inline-edit state.
-  editingField: 'name' | 'topic' | null = null;
+  // Inline-edit state (topic only now).
+  editingField: 'topic' | null = null;
   editingId: string | null = null;
   editBuffer = '';
 
@@ -453,6 +536,8 @@ export class BookingImportComponent {
         // Default: approve every non-imported event.
         const list = res.events.map((e) => ({ ...e, approved: !e.alreadyImported }));
         this.events.set(list);
+        this.coachees.set(res.coachees);
+        this.eventTypes.set(res.eventTypes);
         this.state.set('preview');
       },
       error: (err) => {
@@ -476,27 +561,22 @@ export class BookingImportComponent {
     this.events.update((list) => list.map((e) => e.alreadyImported ? e : { ...e, approved: false }));
   }
 
-  // ── Inline edit ─────────────────────────────────────────────────────────
-  isEditing(field: 'name' | 'topic', ev: ImportEvent): boolean {
+  // ── Inline edit (topic only) ────────────────────────────────────────────
+  isEditing(field: 'topic', ev: ImportEvent): boolean {
     return this.editingField === field && this.editingId === ev.googleEventId;
   }
 
-  beginEdit(field: 'name' | 'topic', ev: ImportEvent): void {
+  beginEdit(field: 'topic', ev: ImportEvent): void {
     if (ev.alreadyImported) return;
     this.editingField = field;
     this.editingId = ev.googleEventId;
-    this.editBuffer = field === 'name'
-      ? (ev.editedClientName ?? ev.clientName)
-      : (ev.editedTopic ?? ev.topic ?? '');
+    this.editBuffer = ev.editedTopic ?? ev.topic ?? '';
   }
 
-  commitEdit(field: 'name' | 'topic', ev: ImportEvent): void {
+  commitEdit(_field: 'topic', ev: ImportEvent): void {
     const v = this.editBuffer.trim();
     this.events.update((list) => list.map((e) => {
       if (e.googleEventId !== ev.googleEventId) return e;
-      if (field === 'name') {
-        return { ...e, editedClientName: v && v !== e.clientName ? v : undefined };
-      }
       return { ...e, editedTopic: v && v !== (e.topic ?? '') ? v : undefined };
     }));
     this.editingField = null;
@@ -504,8 +584,34 @@ export class BookingImportComponent {
     this.editBuffer = '';
   }
 
+  // ── Coachee + event-type pickers ────────────────────────────────────────
+  /** Current effective coachee id: picked override || suggestion || null. */
+  resolvedCoachee(ev: ImportEvent): string | null {
+    if (ev.pickedCoacheeId !== undefined) return ev.pickedCoacheeId;
+    return ev.suggestedCoacheeId ?? null;
+  }
+
+  setCoachee(ev: ImportEvent, id: string | null): void {
+    this.events.update((list) => list.map((e) =>
+      e.googleEventId === ev.googleEventId ? { ...e, pickedCoacheeId: id } : e,
+    ));
+  }
+
+  resolvedEventType(ev: ImportEvent): string | null {
+    if (ev.pickedEventTypeId !== undefined) return ev.pickedEventTypeId;
+    return ev.suggestedEventTypeId ?? null;
+  }
+
+  setEventType(ev: ImportEvent, id: string | null): void {
+    this.events.update((list) => list.map((e) =>
+      e.googleEventId === ev.googleEventId ? { ...e, pickedEventTypeId: id } : e,
+    ));
+  }
+
   cancelPreview(): void {
     this.events.set([]);
+    this.coachees.set([]);
+    this.eventTypes.set([]);
     this.result.set(null);
     this.state.set('idle');
   }
@@ -514,18 +620,35 @@ export class BookingImportComponent {
     const selected = this.events().filter((e) => e.approved && !e.alreadyImported);
     if (!selected.length) return;
 
-    const overrides: Record<string, { clientName?: string; topic?: string | null }> = {};
+    const overrides: Record<string, {
+      topic?: string | null;
+      coacheeId?: string | null;
+      eventTypeId?: string | null;
+    }> = {};
+    const suggestions: Record<string, {
+      suggestedCoacheeId?: string | null;
+      suggestedEventTypeId?: string | null;
+    }> = {};
+
     for (const e of selected) {
-      if (e.editedClientName || e.editedTopic !== undefined) {
+      if (e.editedTopic !== undefined
+          || e.pickedCoacheeId !== undefined
+          || e.pickedEventTypeId !== undefined) {
         overrides[e.googleEventId] = {
-          ...(e.editedClientName ? { clientName: e.editedClientName } : {}),
           ...(e.editedTopic !== undefined ? { topic: e.editedTopic } : {}),
+          ...(e.pickedCoacheeId !== undefined ? { coacheeId: e.pickedCoacheeId } : {}),
+          ...(e.pickedEventTypeId !== undefined ? { eventTypeId: e.pickedEventTypeId } : {}),
         };
       }
+      // Always echo the preview suggestions so execute doesn't re-match.
+      suggestions[e.googleEventId] = {
+        suggestedCoacheeId: e.suggestedCoacheeId,
+        suggestedEventTypeId: e.suggestedEventTypeId,
+      };
     }
 
     this.state.set('importing');
-    this.bookingSvc.executeImport(selected.map((e) => e.googleEventId), overrides).subscribe({
+    this.bookingSvc.executeImport(selected.map((e) => e.googleEventId), overrides, suggestions).subscribe({
       next: (res) => {
         this.result.set(res);
         this.state.set('done');
@@ -540,6 +663,8 @@ export class BookingImportComponent {
 
   resetToIdle(): void {
     this.events.set([]);
+    this.coachees.set([]);
+    this.eventTypes.set([]);
     this.result.set(null);
     this.state.set('idle');
   }

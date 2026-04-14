@@ -7,7 +7,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatTabsModule } from '@angular/material/tabs';
+import { MatTabsModule, MatTabGroup } from '@angular/material/tabs';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatMenuModule } from '@angular/material/menu';
@@ -22,6 +22,8 @@ import { Subscription, forkJoin } from 'rxjs';
 import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog.component';
 import { RescheduleDialogComponent } from '../reschedule-dialog/reschedule-dialog.component';
 import { BookingService, BookingRecord, AvailabilityConfig } from '../booking.service';
+import { BookingImportComponent } from '../booking-import/booking-import.component';
+import { AuthService } from '../../../core/auth.service';
 
 type DayBuckets = {
   upcoming: BookingRecord[];
@@ -39,6 +41,7 @@ type DayBuckets = {
     MatTooltipModule, MatDialogModule, MatChipsModule,
     MatSelectModule, MatFormFieldModule,
     MatDatepickerModule, MatNativeDateModule,
+    BookingImportComponent,
   ],
   template: `
     <div class="dashboard-container">
@@ -77,7 +80,7 @@ type DayBuckets = {
 
       <div class="dashboard-grid">
         <div class="main-column">
-          <mat-tab-group (selectedTabChange)="onTabChange($event.index)" animationDuration="200ms">
+          <mat-tab-group #tabGroup (selectedTabChange)="onTabChange($event.index)" animationDuration="200ms">
             <mat-tab label="Upcoming">
               <ng-template matTabContent>
                 <ng-container *ngTemplateOutlet="bookingList" />
@@ -91,6 +94,20 @@ type DayBuckets = {
             <mat-tab label="Cancelled">
               <ng-template matTabContent>
                 <ng-container *ngTemplateOutlet="bookingList" />
+              </ng-template>
+            </mat-tab>
+            <mat-tab>
+              <ng-template mat-tab-label>
+                <span class="import-tab-label">
+                  <mat-icon>cloud_download</mat-icon>
+                  Import from Calendar
+                  @if (!hasImported()) { <span class="import-badge"></span> }
+                </span>
+              </ng-template>
+              <ng-template matTabContent>
+                <app-booking-import
+                  (viewDashboard)="switchToUpcomingTab()"
+                  (imported)="markImported()" />
               </ng-template>
             </mat-tab>
           </mat-tab-group>
@@ -236,13 +253,23 @@ type DayBuckets = {
     </div>
   `,
   styles: [`
+    .import-tab-label {
+      display: inline-flex; align-items: center; gap: 6px; position: relative;
+      mat-icon { font-size: 18px; width: 18px; height: 18px; }
+    }
+    .import-badge {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: #e53e3e; margin-left: 2px;
+      box-shadow: 0 0 0 2px rgba(229,62,62,0.15);
+    }
+
     .dashboard-container {
-      max-width: 1800px; width: 100%; margin: 0 auto; padding: 24px;
+      width: 100%; max-width: 100%; margin: 0; padding: 24px 32px;
       box-sizing: border-box;
     }
     .dashboard-grid {
       display: grid;
-      grid-template-columns: minmax(0, 2fr) minmax(320px, 1fr);
+      grid-template-columns: minmax(0, 1fr) 300px;
       gap: 24px;
       align-items: start;
     }
@@ -426,7 +453,8 @@ export class BookingDashboardComponent implements OnInit, AfterViewInit, OnDestr
   loading = signal(true);
   bookings = signal<BookingRecord[]>([]);
   eventTypes = signal<AvailabilityConfig[]>([]);
-  activeTab = signal<'upcoming' | 'past' | 'cancelled'>('upcoming');
+  activeTab = signal<'upcoming' | 'past' | 'cancelled' | 'import'>('upcoming');
+  hasImported = signal<boolean>(this.readImportedFlag());
   currentPage = signal(1);
   totalPages = signal(1);
   selectedEventTypeId = '';
@@ -439,6 +467,7 @@ export class BookingDashboardComponent implements OnInit, AfterViewInit, OnDestr
 
   @ViewChild('calContainer') calContainerRef?: ElementRef<HTMLElement>;
   @ViewChild(MatCalendar) calendar?: MatCalendar<Date>;
+  @ViewChild('tabGroup') tabGroup?: MatTabGroup;
   private calSub?: Subscription;
 
   dateClass: (d: Date) => string[] = this.buildDateClass();
@@ -455,14 +484,40 @@ export class BookingDashboardComponent implements OnInit, AfterViewInit, OnDestr
     };
   }
 
-  private readonly tabs: ('upcoming' | 'past' | 'cancelled')[] = ['upcoming', 'past', 'cancelled'];
+  private readonly tabs: ('upcoming' | 'past' | 'cancelled' | 'import')[] = ['upcoming', 'past', 'cancelled', 'import'];
   private eventTypeMap = new Map<string, AvailabilityConfig>();
 
   constructor(
     private bookingSvc: BookingService,
     private snackBar: MatSnackBar,
     private dialog: MatDialog,
+    private auth: AuthService,
   ) {}
+
+  /** localStorage key scoped per coach so the badge state isn't shared. */
+  private importedKey(): string {
+    const id = this.auth.currentUser()?.id ?? 'unknown';
+    return `booking.import.completed.${id}`;
+  }
+
+  private readImportedFlag(): boolean {
+    try { return localStorage.getItem(this.importedKey()) === '1'; } catch { return false; }
+  }
+
+  markImported(): void {
+    try { localStorage.setItem(this.importedKey(), '1'); } catch { /* ignore */ }
+    this.hasImported.set(true);
+    // Reload the bookings list so newly imported events appear.
+    this.load();
+    this.loadCalendarData();
+  }
+
+  switchToUpcomingTab(): void {
+    if (this.tabGroup) this.tabGroup.selectedIndex = 0;
+    this.activeTab.set('upcoming');
+    this.currentPage.set(1);
+    this.load();
+  }
 
   ngOnInit(): void {
     this.bookingSvc.getEventTypes().subscribe({
@@ -584,7 +639,10 @@ export class BookingDashboardComponent implements OnInit, AfterViewInit, OnDestr
   }
 
   onTabChange(index: number): void {
-    this.activeTab.set(this.tabs[index]);
+    const next = this.tabs[index];
+    this.activeTab.set(next);
+    // The import tab doesn't paginate bookings — skip the list reload.
+    if (next === 'import') return;
     this.currentPage.set(1);
     this.load();
   }
@@ -595,9 +653,12 @@ export class BookingDashboardComponent implements OnInit, AfterViewInit, OnDestr
   }
 
   load(): void {
+    // The import tab doesn't read bookings; ignore any accidental trigger.
+    const tab = this.activeTab();
+    if (tab === 'import') return;
     this.loading.set(true);
     this.bookingSvc.getBookings(
-      this.activeTab(),
+      tab,
       this.currentPage(),
       20,
       this.selectedEventTypeId || undefined,
