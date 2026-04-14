@@ -20,7 +20,6 @@ import {
 import {
   BookingService,
   AvailabilityConfig,
-  EVENT_TYPE_COLORS,
 } from '../booking.service';
 
 @Component({
@@ -39,10 +38,6 @@ import {
           <h1>Event Types</h1>
           <p>Create booking pages for different session types — each with its own link, duration, and schedule.</p>
         </div>
-        <button mat-flat-button color="primary" (click)="createEventType()" [disabled]="creating()">
-          @if (creating()) { <mat-spinner diameter="18" /> }
-          <mat-icon>add</mat-icon> New Event Type
-        </button>
       </div>
 
       <!-- Public coach landing page -->
@@ -139,6 +134,10 @@ import {
               </div>
             </div>
           }
+          <button type="button" class="event-type-card new-card" (click)="createEventType()">
+            <mat-icon>add</mat-icon>
+            <span>New event type</span>
+          </button>
         </div>
       }
     </div>
@@ -181,6 +180,21 @@ import {
       overflow: hidden; transition: box-shadow 0.15s;
       &:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
       &.inactive { opacity: 0.6; }
+    }
+    .event-type-card.new-card {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 10px; min-height: 180px; cursor: pointer;
+      border: 2px dashed #c3cfdd; background: #fafbfd; color: #5a6a7e;
+      font: inherit; font-size: 14px; font-weight: 500;
+      transition: all 0.15s;
+      mat-icon {
+        font-size: 36px; width: 36px; height: 36px;
+        color: #3A9FD6;
+      }
+      &:hover {
+        border-color: #3A9FD6; background: #EBF5FB; color: #1B2A47;
+        box-shadow: 0 4px 16px rgba(58,159,214,0.12);
+      }
     }
     .card-color-bar { height: 4px; }
     .card-body { padding: 20px; }
@@ -307,36 +321,9 @@ export class BookingSettingsComponent implements OnInit {
   }
 
   createEventType(): void {
-    this.creating.set(true);
-    const colorIndex = this.eventTypes().length % EVENT_TYPE_COLORS.length;
-    const defaults: Partial<AvailabilityConfig> = {
-      name: 'Coaching Session',
-      color: EVENT_TYPE_COLORS[colorIndex],
-      appointmentDuration: 60,
-      bufferTime: 0,
-      minNoticeHours: 24,
-      maxAdvanceDays: 60,
-      googleMeetEnabled: true,
-      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-      weeklySchedule: Array.from({ length: 7 }, (_, i) => ({
-        dayOfWeek: i,
-        startTime: '09:00',
-        endTime: '17:00',
-        enabled: i >= 1 && i <= 5,
-      })),
-      isActive: true,
-    };
-
-    this.bookingSvc.createEventType(defaults).subscribe({
-      next: (created: AvailabilityConfig) => {
-        this.creating.set(false);
-        this.router.navigate(['/booking/event-types', created._id]);
-      },
-      error: () => {
-        this.creating.set(false);
-        this.snackBar.open('Failed to create event type', 'OK', { duration: 3000 });
-      },
-    });
+    // Don't persist anything yet — the editor handles "new" mode locally and
+    // only POSTs on save. This way Cancel leaves nothing behind.
+    this.router.navigate(['/booking/event-types', 'new']);
   }
 
   toggleActive(et: AvailabilityConfig): void {

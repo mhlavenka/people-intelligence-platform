@@ -363,11 +363,13 @@ router.post(
       const coachId = req.user!.userId;
       const organizationId = req.user!.organizationId;
 
+      // Slug format: "{coach-name}-{event-name}" so links stay readable and
+      // self-identifying. Event-name portion is regenerated on rename.
       const coach = await User.findById(coachId).select('firstName lastName');
       const coachNameSlug = coach
         ? slugify(`${coach.firstName}-${coach.lastName}`)
         : 'coach';
-      const eventNameSlug = slugify(req.body.name || 'session');
+      const eventNameSlug = slugify(req.body.name || 'session') || 'session';
       const baseSlug = `${coachNameSlug}-${eventNameSlug}`;
       const coachSlug = await generateUniqueSlug(baseSlug);
 
@@ -395,15 +397,32 @@ router.put(
       });
       if (!cfg) { res.status(404).json({ error: 'Event type not found' }); return; }
 
-      // Don't change slug (would break shared links)
+      // Slug is managed server-side (derived from name). Strip client-supplied
+      // values so a stale UI can't force a conflicting slug.
       const updateData = { ...req.body };
       delete updateData.coachSlug;
       delete updateData.coachId;
       delete updateData.organizationId;
 
+      const oldSlug = cfg.coachSlug;
+
+      // Regenerate slug when the event-type name changes so the shared link
+      // always reflects the current name. This intentionally invalidates any
+      // previously-shared link for this event type.
+      if (updateData.name && slugify(updateData.name) !== slugify(cfg.name)) {
+        const coach = await User.findById(cfg.coachId).select('firstName lastName');
+        const coachNameSlug = coach
+          ? slugify(`${coach.firstName}-${coach.lastName}`)
+          : 'coach';
+        const eventNameSlug = slugify(updateData.name) || 'session';
+        const baseSlug = `${coachNameSlug}-${eventNameSlug}`;
+        updateData.coachSlug = await generateUniqueSlug(baseSlug, String(cfg._id));
+      }
+
       Object.assign(cfg, updateData);
       await cfg.save();
-      invalidateSlotCache(cfg.coachSlug);
+      invalidateSlotCache(oldSlug);
+      if (cfg.coachSlug !== oldSlug) invalidateSlotCache(cfg.coachSlug);
       res.json(cfg);
     } catch (e) { next(e); }
   },
