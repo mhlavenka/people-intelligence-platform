@@ -19,7 +19,14 @@ export function tenantFilterPlugin(schema: Schema): void {
     }
     const filter = this.getFilter();
     if (!filter['organizationId']) {
-      console.warn('[TenantFilter] Query without organizationId detected:', filter);
+      // Pure _id lookups are already uniquely scoped (an ObjectId guarantees the
+      // referring document's tenant was responsible for linking it). Mongoose
+      // populate() fires many of these internally; don't warn on them.
+      const keys = Object.keys(filter);
+      const isIdOnlyLookup = keys.length === 1 && keys[0] === '_id';
+      if (!isIdOnlyLookup) {
+        console.warn('[TenantFilter] Query without organizationId detected:', filter);
+      }
     }
     next();
   };
