@@ -228,14 +228,20 @@ router.get(
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const organizationId = req.user!.organizationId;
+      const templateId = req.params['templateId'];
+
+      const template = await SurveyTemplate.findById(templateId).setOptions({ bypassTenantCheck: true });
+      const isSurvey = !template || template.intakeType === 'survey';
+      const minRequired = template?.minResponsesForAnalysis ?? (isSurvey ? MIN_GROUP_SIZE : 1);
+
       const count = await SurveyResponse.countDocuments({
         organizationId,
-        templateId: req.params['templateId'],
+        templateId,
       });
 
-      if (count < MIN_GROUP_SIZE) {
+      if (count < minRequired) {
         res.status(403).json({
-          error: `Minimum ${MIN_GROUP_SIZE} responses required before viewing results. Current: ${count}`,
+          error: `Minimum ${minRequired} response${minRequired > 1 ? 's' : ''} required before viewing results. Current: ${count}`,
         });
         return;
       }

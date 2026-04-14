@@ -25,7 +25,7 @@ export async function analyzeConflict(
 
     const template = await SurveyTemplate.findById(templateId).setOptions({ bypassTenantCheck: true });
     const isSurvey = !template || template.intakeType === 'survey';
-    const minRequired = isSurvey ? MIN_GROUP_SIZE : 1;
+    const minRequired = template?.minResponsesForAnalysis ?? (isSurvey ? MIN_GROUP_SIZE : 1);
     if (responses.length < minRequired) {
       res.status(400).json({
         error: `Minimum ${minRequired} response${minRequired > 1 ? 's' : ''} required for analysis. Current: ${responses.length}`,

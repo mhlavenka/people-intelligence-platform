@@ -19,6 +19,8 @@ export interface SurveyTemplate {
   _id: string;
   title: string;
   moduleType: string;
+  intakeType?: 'survey' | 'interview' | 'assessment';
+  minResponsesForAnalysis?: number;
   questions: Question[];
 }
 
@@ -88,8 +90,8 @@ interface DeptBreakdown { dept: string; count: number; pct: number; }
         <div class="center-state">
           <div class="lock-circle"><mat-icon>lock</mat-icon></div>
           <h3>Not enough responses yet</h3>
-          <p>A minimum of <strong>5 responses</strong> is required to protect individual privacy.</p>
-          <div class="count-pill">{{ actualCount() }} / 5 responses collected</div>
+          <p>A minimum of <strong>{{ minRequired() }} response{{ minRequired() === 1 ? '' : 's' }}</strong> is required before results are shown.</p>
+          <div class="count-pill">{{ actualCount() }} / {{ minRequired() }} responses collected</div>
         </div>
       }
 
@@ -371,6 +373,7 @@ export class SurveyResponsesDialogComponent implements OnInit {
   tooFew    = signal(false);
   errorMsg  = signal('');
   actualCount = signal(0);
+  minRequired = signal(5);
   totalCount  = signal(0);
   dateRange   = signal('');
   stats       = signal<QuestionStats[]>([]);
@@ -383,6 +386,10 @@ export class SurveyResponsesDialogComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.minRequired.set(
+      this.template.minResponsesForAnalysis
+        ?? (this.template.intakeType && this.template.intakeType !== 'survey' ? 1 : 5),
+    );
     this.api.get<{ count: number; responses: RawResponse[] }>(
       `/surveys/responses/${this.template._id}`
     ).subscribe({

@@ -34,6 +34,7 @@ interface SurveyTemplate {
   level_of_analysis?: string;
   aggregation_method?: string;
   minimum_respondents_per_team?: number;
+  minResponsesForAnalysis?: number;
   scoring?: {
     method: string;
     subscales?: string[];
@@ -158,11 +159,22 @@ interface SurveyTemplate {
 
                 <mat-form-field appearance="outline" class="half-width">
                   <mat-label>Intake Type</mat-label>
-                  <mat-select formControlName="intakeType">
+                  <mat-select formControlName="intakeType" (selectionChange)="onIntakeTypeChange($event.value)">
                     <mat-option value="survey">Survey — self-completed</mat-option>
                     <mat-option value="interview">Interview — coach-led</mat-option>
                     <mat-option value="assessment">Assessment — coach-administered</mat-option>
                   </mat-select>
+                </mat-form-field>
+              </div>
+
+              <div class="form-row">
+                <mat-form-field appearance="outline" class="half-width">
+                  <mat-label>Min responses to show results &amp; run AI</mat-label>
+                  <input matInput type="number" min="1" formControlName="minResponsesForAnalysis" />
+                  <mat-hint>
+                    Results and AI analysis are blocked until this many responses exist.
+                    Default: 5 for surveys (protects anonymity), 1 for interviews &amp; assessments.
+                  </mat-hint>
                 </mat-form-field>
               </div>
 
@@ -804,6 +816,11 @@ export class SurveyTemplateDialogComponent implements OnInit {
       moduleType:        [d?.moduleType ?? 'conflict', Validators.required],
       intakeType:        [d?.intakeType ?? 'survey', Validators.required],
       isActive:          [d?.isActive ?? true],
+      minResponsesForAnalysis: [
+        d?.minResponsesForAnalysis
+          ?? (d?.intakeType && d.intakeType !== 'survey' ? 1 : 5),
+        [Validators.required, Validators.min(1)],
+      ],
 
       // Measurement — scoring
       scoringMethod:           [d?.scoring?.method ?? ''],
@@ -902,6 +919,17 @@ export class SurveyTemplateDialogComponent implements OnInit {
     try { return JSON.parse(str); } catch { return null; }
   }
 
+  /** Reset the min-responses default when the intake type changes, but only
+   *  if the field is still at a previous default (don't clobber custom values). */
+  onIntakeTypeChange(newType: 'survey' | 'interview' | 'assessment'): void {
+    const ctrl = this.form.get('minResponsesForAnalysis');
+    if (!ctrl) return;
+    const current = Number(ctrl.value);
+    if (current === 1 || current === 5) {
+      ctrl.setValue(newType === 'survey' ? 5 : 1);
+    }
+  }
+
   save(): void {
     if (this.form.invalid) { this.form.markAllAsTouched(); return; }
     this.saving.set(true);
@@ -957,6 +985,7 @@ export class SurveyTemplateDialogComponent implements OnInit {
       moduleType: v.moduleType,
       intakeType: v.intakeType,
       isActive:   v.isActive,
+      minResponsesForAnalysis: Number(v.minResponsesForAnalysis) || 1,
       questions,
     };
 

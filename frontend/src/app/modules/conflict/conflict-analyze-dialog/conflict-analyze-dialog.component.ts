@@ -15,6 +15,7 @@ interface SurveyTemplate {
   title: string;
   moduleType: string;
   intakeType: 'survey' | 'interview' | 'assessment';
+  minResponsesForAnalysis?: number;
   questions: unknown[];
 }
 
@@ -86,11 +87,11 @@ interface OrgResponse {
             <mat-hint>Label this analysis period for reporting</mat-hint>
           </mat-form-field>
 
-          @if (selectedIntakeType() === 'survey') {
+          @if (selectedMinRequired() > 1) {
             <div class="info-box">
               <mat-icon>shield</mat-icon>
-              <p>Analysis requires a minimum of <strong>5 responses</strong> to protect individual
-              privacy. Results are aggregated — no individual data is shown.</p>
+              <p>Analysis requires a minimum of <strong>{{ selectedMinRequired() }} responses</strong>
+              to protect individual privacy. Results are aggregated — no individual data is shown.</p>
             </div>
           }
         </form>
@@ -152,6 +153,11 @@ export class ConflictAnalyzeDialogComponent implements OnInit {
   selectedIntakeType = computed(() => {
     const t = this.templates().find((t) => t._id === this.selectedTemplateId());
     return t?.intakeType ?? 'survey';
+  });
+  selectedMinRequired = computed(() => {
+    const t = this.templates().find((t) => t._id === this.selectedTemplateId());
+    if (!t) return 5;
+    return t.minResponsesForAnalysis ?? (t.intakeType === 'survey' ? 5 : 1);
   });
   loadingTemplates = signal(true);
   analyzing = signal(false);

@@ -166,6 +166,13 @@ export interface ISurveyTemplate extends Document {
     aggregation_method?: 'rwg' | 'icc1' | 'team_mean';
     minimum_respondents_per_team?: number;
 
+    // Minimum number of responses required before results are displayed
+    // and AI analysis can be run. Defaults per intakeType:
+    //   survey     -> 5 (protects individual anonymity in aggregated reports)
+    //   interview  -> 1 (coach-led, single-subject by design)
+    //   assessment -> 1 (coach-administered, single-subject by design)
+    minResponsesForAnalysis?: number;
+
     // Scoring
     scoring?: IScoringConfig;
 
@@ -325,6 +332,7 @@ const SurveyTemplateSchema = new Schema<ISurveyTemplate>(
 
         aggregation_method:           { type: String, enum: ['rwg', 'icc1', 'team_mean'] },
         minimum_respondents_per_team: { type: Number, min: 1 },
+        minResponsesForAnalysis:      { type: Number, min: 1 },
 
         scoring:    { type: ScoringConfigSchema },
         rater_type: { type: String, enum: ['self', 'multi_rater'] },
