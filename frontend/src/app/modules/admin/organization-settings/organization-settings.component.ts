@@ -46,6 +46,7 @@ interface Organization {
   industry?: string;
   coachingRebill?: boolean;
   defaultCoachRate?: number;
+  coacheeCanChooseCoach?: boolean;
   theme?: OrgTheme;
   logoUrl?: string;
   createdAt: string;
@@ -614,6 +615,25 @@ const RADIUS_OPTIONS = [
                       </button>
                     </div>
                   }
+                </div>
+
+                <mat-divider />
+                <div class="toggle-row">
+                  <div class="module-icon" style="background: rgba(58,159,214,0.12); color: #3A9FD6;">
+                    <mat-icon>person_search</mat-icon>
+                  </div>
+                  <div class="module-info">
+                    <span class="module-name">Coachees can choose their own coach</span>
+                    <span class="module-status">
+                      {{ (org()?.coacheeCanChooseCoach !== false)
+                          ? 'Coachees see a picker when booking'
+                          : 'Booking is locked to the assigned coach' }}
+                    </span>
+                  </div>
+                  <mat-slide-toggle color="primary"
+                    [checked]="org()?.coacheeCanChooseCoach !== false"
+                    (change)="toggleCoacheeCanChooseCoach($event.checked)"
+                    [disabled]="savingModules()" />
                 </div>
               }
             </div>
@@ -1211,6 +1231,24 @@ export class OrganizationSettingsComponent implements OnInit {
         this.org.set(org);
         this.savingModules.set(false);
         this.snackBar.open(`Coachee rebilling ${checked ? 'enabled' : 'disabled'}`, 'Close', { duration: 2500 });
+      },
+      error: () => {
+        this.savingModules.set(false);
+        this.snackBar.open('Update failed', 'Close', { duration: 2500 });
+      },
+    });
+  }
+
+  toggleCoacheeCanChooseCoach(checked: boolean): void {
+    this.savingModules.set(true);
+    this.api.put<any>('/organizations/me', { coacheeCanChooseCoach: checked }).subscribe({
+      next: (org) => {
+        this.org.set(org);
+        this.savingModules.set(false);
+        this.snackBar.open(
+          checked ? 'Coachees can choose their own coach' : 'Coachees can no longer choose their coach',
+          'Close', { duration: 2500 },
+        );
       },
       error: () => {
         this.savingModules.set(false);

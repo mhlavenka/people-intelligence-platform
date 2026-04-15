@@ -960,6 +960,28 @@ export class EngagementDetailComponent implements OnInit {
           this.snack.open('No coaches available for booking yet.', 'OK', { duration: 3000 });
           return;
         }
+
+        // When the coachee isn't allowed to choose, skip the picker and
+        // route straight to their engagement's assigned coach.
+        const me = this.auth.currentUser();
+        const isCoachee = me?.role === 'coachee' || me?.isCoachee === true;
+        const lockedToAssigned = isCoachee && me?.canChooseCoach === false;
+
+        if (lockedToAssigned) {
+          const engCoach = this.engagement()?.coachId;
+          const engCoachId = engCoach && typeof engCoach === 'object' ? engCoach._id : engCoach;
+          const assigned = withSlug.find((c) => c._id === engCoachId);
+          if (assigned) {
+            this.openLandingDialog(assigned.publicSlug);
+          } else {
+            this.snack.open(
+              'Your coach is not currently available for booking. Please contact your admin.',
+              'OK', { duration: 4000 },
+            );
+          }
+          return;
+        }
+
         if (withSlug.length === 1) {
           this.openLandingDialog(withSlug[0].publicSlug);
           return;

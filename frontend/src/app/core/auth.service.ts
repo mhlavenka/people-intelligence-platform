@@ -19,6 +19,7 @@ export interface User {
   customRoleName?: string;
   profilePicture?: string;
   isCoachee?: boolean;
+  canChooseCoach?: boolean;
 }
 
 export interface AuthResponse {

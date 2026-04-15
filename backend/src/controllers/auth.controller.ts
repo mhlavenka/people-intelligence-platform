@@ -30,6 +30,16 @@ export function generateTokens(payload: TokenPayload): { accessToken: string; re
   return { accessToken, refreshToken };
 }
 
+/** Effective "coachee can choose their own coach when booking": user override
+ *  beats org default; undefined on User means inherit. */
+export async function resolveCanChooseCoach(user: IUser): Promise<boolean> {
+  if (typeof user.canChooseCoach === 'boolean') return user.canChooseCoach;
+  const org = await Organization.findById(user.organizationId)
+    .select('coacheeCanChooseCoach')
+    .setOptions({ bypassTenantCheck: true });
+  return org?.coacheeCanChooseCoach !== false;
+}
+
 /** Build the JWT payload for a user, resolving custom role permissions if set. */
 export async function buildPayload(user: IUser): Promise<TokenPayload> {
   const base: TokenPayload = {
@@ -110,6 +120,7 @@ export async function register(req: Request, res: Response, next: NextFunction):
         organizationId: org._id,
         profilePicture: user.profilePicture,
         isCoachee: user.isCoachee === true,
+        canChooseCoach: true,
       },
     });
   } catch (error) {
@@ -164,6 +175,7 @@ export async function login(req: Request, res: Response, next: NextFunction): Pr
         organizationId: user.organizationId,
         profilePicture: user.profilePicture,
         isCoachee: user.isCoachee === true,
+        canChooseCoach: await resolveCanChooseCoach(user),
       },
     });
   } catch (error) {
@@ -245,6 +257,7 @@ export async function verify2fa(req: Request, res: Response, next: NextFunction)
         organizationId: user.organizationId,
         profilePicture: user.profilePicture,
         isCoachee: user.isCoachee === true,
+        canChooseCoach: await resolveCanChooseCoach(user),
       },
     });
   } catch (error) {

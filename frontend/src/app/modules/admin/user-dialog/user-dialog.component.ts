@@ -26,6 +26,7 @@ export interface OrgUser {
   profilePicture?: string;
   isActive: boolean;
   isCoachee?: boolean;
+  canChooseCoach?: boolean | null;
   lastLoginAt?: string;
   createdAt: string;
 }
@@ -168,6 +169,18 @@ const ROLES = [
               </div>
             </div>
           </label>
+        }
+
+        @if (form.get('role')?.value === 'coachee' || form.get('isCoachee')?.value) {
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Can choose their own coach when booking</mat-label>
+            <mat-select formControlName="canChooseCoach">
+              <mat-option [value]="null"><em>Inherit org default</em></mat-option>
+              <mat-option [value]="true">Allowed</mat-option>
+              <mat-option [value]="false">Blocked — force their assigned coach</mat-option>
+            </mat-select>
+            <mat-hint>Overrides the org-wide setting for this coachee only.</mat-hint>
+          </mat-form-field>
         }
 
         @if (!isEdit()) {
@@ -316,6 +329,11 @@ export class UserDialogComponent implements OnInit {
       department:   [this.existingUser?.department ?? ''],
       sponsorId:    [this.normalizeSponsorId(this.existingUser?.sponsorId) ?? ''],
       isCoachee:    [this.existingUser?.isCoachee === true],
+      canChooseCoach: [
+        typeof this.existingUser?.canChooseCoach === 'boolean'
+          ? this.existingUser!.canChooseCoach
+          : null,
+      ],
       ...(this.isEdit() ? {} : {
         password: ['', [Validators.required, Validators.minLength(8)]],
       }),
