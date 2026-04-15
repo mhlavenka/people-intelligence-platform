@@ -239,15 +239,20 @@ router.get(
     try {
       const organizationId = req.user!.organizationId;
       const templateId = req.params['templateId'];
+      const sessionId = typeof req.query['sessionId'] === 'string' ? req.query['sessionId'] : undefined;
 
       const template = await SurveyTemplate.findById(templateId).setOptions({ bypassTenantCheck: true });
       const isSurvey = !template || template.intakeType === 'survey';
-      const minRequired = template?.minResponsesForAnalysis ?? (isSurvey ? MIN_GROUP_SIZE : 1);
+      // When scoped to a single session the aggregation floor doesn't apply —
+      // there's exactly one known respondent and anonymity is not at stake.
+      const minRequired = sessionId
+        ? 1
+        : template?.minResponsesForAnalysis ?? (isSurvey ? MIN_GROUP_SIZE : 1);
 
-      const count = await SurveyResponse.countDocuments({
-        organizationId,
-        templateId,
-      });
+      const filter: Record<string, unknown> = { organizationId, templateId };
+      if (sessionId) filter['sessionId'] = sessionId;
+
+      const count = await SurveyResponse.countDocuments(filter);
 
       if (count < minRequired) {
         res.status(403).json({
@@ -256,11 +261,12 @@ router.get(
         return;
       }
 
-      // Return responses without respondentId to protect anonymity
-      const responses = await SurveyResponse.find({
-        organizationId,
-        templateId: req.params['templateId'],
-      }).select('-respondentId');
+      // Return responses without respondentId to protect anonymity — except
+      // when scoped to a single session, where the response is already
+      // coachee-attributed by design.
+      const query = SurveyResponse.find(filter);
+      if (!sessionId) query.select('-respondentId');
+      const responses = await query;
 
       res.json({ count, responses });
     } catch (e) {

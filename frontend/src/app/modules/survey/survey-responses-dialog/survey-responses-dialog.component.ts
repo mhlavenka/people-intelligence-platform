@@ -24,6 +24,12 @@ export interface SurveyTemplate {
   questions: Question[];
 }
 
+/** When opened from a specific session (pre-session intake), scope the
+ *  aggregation to that one response instead of the whole org. */
+export type SurveyResponsesDialogData =
+  | SurveyTemplate
+  | { template: SurveyTemplate; sessionId?: string };
+
 interface RawResponse {
   departmentId?: string;
   responses: { questionId: string; value: string | number | boolean }[];
@@ -380,20 +386,34 @@ export class SurveyResponsesDialogComponent implements OnInit {
   stats       = signal<QuestionStats[]>([]);
   deptBreakdown = signal<DeptBreakdown[]>([]);
 
+  template!: SurveyTemplate;
+  sessionId?: string;
+
   constructor(
-    @Inject(MAT_DIALOG_DATA) public template: SurveyTemplate,
+    @Inject(MAT_DIALOG_DATA) private data: SurveyResponsesDialogData,
     public dialogRef: MatDialogRef<SurveyResponsesDialogComponent>,
     private api: ApiService,
-  ) {}
+  ) {
+    if ('template' in (this.data as { template?: SurveyTemplate })) {
+      const wrapped = this.data as { template: SurveyTemplate; sessionId?: string };
+      this.template = wrapped.template;
+      this.sessionId = wrapped.sessionId;
+    } else {
+      this.template = this.data as SurveyTemplate;
+    }
+  }
 
   ngOnInit(): void {
     this.minRequired.set(
-      this.template.minResponsesForAnalysis
-        ?? (this.template.intakeType && this.template.intakeType !== 'survey' ? 1 : 5),
+      this.sessionId
+        ? 1
+        : this.template.minResponsesForAnalysis
+          ?? (this.template.intakeType && this.template.intakeType !== 'survey' ? 1 : 5),
     );
-    this.api.get<{ count: number; responses: RawResponse[] }>(
-      `/surveys/responses/${this.template._id}`
-    ).subscribe({
+    const url = this.sessionId
+      ? `/surveys/responses/${this.template._id}?sessionId=${encodeURIComponent(this.sessionId)}`
+      : `/surveys/responses/${this.template._id}`;
+    this.api.get<{ count: number; responses: RawResponse[] }>(url).subscribe({
       next: (data) => {
         this.totalCount.set(data.count);
         this.dateRange.set(this.buildDateRange(data.responses));

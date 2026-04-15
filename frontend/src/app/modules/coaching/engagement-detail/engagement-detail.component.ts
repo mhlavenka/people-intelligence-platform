@@ -18,6 +18,7 @@ import { JournalService, SessionNote } from '../../journal/journal.service';
 import { RescheduleDialogComponent, RescheduleDialogResult } from '../../booking/reschedule-dialog/reschedule-dialog.component';
 import { CancelDialogComponent, CancelDialogResult } from '../../booking/cancel-dialog/cancel-dialog.component';
 import { BookingService, BookingRecord } from '../../booking/booking.service';
+import { SurveyResponsesDialogComponent, SurveyTemplate as IntakeTemplate } from '../../survey/survey-responses-dialog/survey-responses-dialog.component';
 
 interface Session {
   _id: string;
@@ -308,6 +309,12 @@ interface Session {
                             </div>
                             <div class="intake-sub">{{ intakeTitle }}</div>
                           </div>
+                          @if (s.preSessionIntakeCompleted && canManage()) {
+                            <button mat-stroked-button class="intake-view-btn"
+                                    (click)="viewIntakeResponse(s)">
+                              <mat-icon>visibility</mat-icon> View results
+                            </button>
+                          }
                         </div>
                       }
                     }
@@ -691,6 +698,15 @@ interface Session {
       }
     }
 
+    .intake-view-btn {
+      flex-shrink: 0;
+      font-size: 12px; font-weight: 600; line-height: 1;
+      padding: 4px 12px; min-width: 0; border-radius: 999px;
+      color: #5e3fa8; border-color: rgba(124,92,191,0.4);
+      mat-icon { font-size: 15px; width: 15px; height: 15px; margin-right: 4px; color: #7c5cbf; }
+      &:hover { background: rgba(124,92,191,0.08); }
+    }
+
     .intake-card {
       display: flex; align-items: center; gap: 12px;
       padding: 12px 14px; border-radius: 10px;
@@ -841,6 +857,24 @@ export class EngagementDetailComponent implements OnInit {
     const tpl = s.preSessionIntakeTemplateId;
     if (!tpl) return null;
     return typeof tpl === 'string' ? tpl : tpl._id;
+  }
+
+  viewIntakeResponse(s: Session): void {
+    const templateId = this.preSessionIntakeTemplateId(s);
+    if (!templateId) return;
+
+    // The session list endpoint only populates a lightweight summary; fetch
+    // the full template (questions, intakeType) before opening the dialog.
+    this.api.get<IntakeTemplate>(`/surveys/templates/${templateId}`).subscribe({
+      next: (template) => {
+        this.dialog.open(SurveyResponsesDialogComponent, {
+          width: '760px',
+          maxHeight: '90vh',
+          data: { template, sessionId: s._id },
+        });
+      },
+      error: () => this.snack.open('Failed to load intake', 'Close', { duration: 3000 }),
+    });
   }
 
   prevMonth(): void { const d = new Date(this.currentMonth()); d.setMonth(d.getMonth() - 1); this.currentMonth.set(d); }
