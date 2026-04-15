@@ -389,6 +389,7 @@ interface CoachingSession {
 export class CoacheeJournalComponent implements OnInit {
   loading = signal(true);
   sessions = signal<CoachingSession[]>([]);
+  private allSessions: CoachingSession[] = [];
   private notesBySession = new Map<string, SessionNote>();
   engagementId = '';
   /** If present via ?sessionId=..., the page filters down to just that
@@ -427,8 +428,23 @@ export class CoacheeJournalComponent implements OnInit {
 
   ngOnInit(): void {
     this.engagementId = this.route.snapshot.params['engagementId'];
-    this.focusSessionId = this.route.snapshot.queryParamMap.get('sessionId');
     this.load();
+    // Re-apply the filter whenever ?sessionId= changes so the
+    // "Show all sessions" link works without a full page reload
+    // (Angular reuses the same component instance when only query
+    // params change).
+    this.route.queryParamMap.subscribe((params) => {
+      this.focusSessionId = params.get('sessionId');
+      this.applyFocusFilter();
+    });
+  }
+
+  private applyFocusFilter(): void {
+    if (!this.allSessions.length) return;
+    const filtered = this.focusSessionId
+      ? this.allSessions.filter((s) => s._id === this.focusSessionId)
+      : this.allSessions;
+    this.sessions.set(filtered);
   }
 
   noteForSession(sessionId: string): SessionNote | undefined {
@@ -440,17 +456,17 @@ export class CoacheeJournalComponent implements OnInit {
       this.api.get<CoachingSession[]>(`/coaching/sessions?engagementId=${this.engagementId}`).toPromise(),
       this.journal.getEngagementNotes(this.engagementId).toPromise().catch(() => [] as SessionNote[]),
     ]).then(([sessions, notes]) => {
-      let sorted = (sessions || []).slice().sort(
+      const sorted = (sessions || []).slice().sort(
         (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
       );
-      if (this.focusSessionId) {
-        sorted = sorted.filter((s) => s._id === this.focusSessionId);
-      }
-      this.sessions.set(sorted);
+      this.allSessions = sorted;
       this.notesBySession.clear();
       for (const n of notes || []) {
         if (n.sessionId) this.notesBySession.set(n.sessionId, n);
       }
+      // Initialise the form for EVERY session so that when the focus
+      // filter is later cleared via "Show all sessions", the template
+      // bindings (forms[s._id].pre...) still resolve.
       for (const s of sorted) {
         const n = this.notesBySession.get(s._id);
         this.forms[s._id] = {
@@ -476,6 +492,7 @@ export class CoacheeJournalComponent implements OnInit {
           saving: false,
         };
       }
+      this.applyFocusFilter();
       this.loading.set(false);
     }).catch(() => this.loading.set(false));
   }
