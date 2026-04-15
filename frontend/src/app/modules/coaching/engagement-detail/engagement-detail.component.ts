@@ -179,16 +179,46 @@ interface Session {
 
           <!-- Sessions timeline -->
           <div class="sessions-col">
-            <h3>Sessions <span class="session-count">{{ sessions().length }}</span></h3>
+            <h3>
+              Sessions
+              <span class="session-count">{{ filteredSessions().length }}</span>
+              @if (filteredSessions().length !== sessions().length) {
+                <span class="session-count-muted">of {{ sessions().length }}</span>
+              }
+            </h3>
+
+            @if (sessions().length > 0) {
+              <div class="session-filter-pills">
+                @for (p of statusPills; track p.key) {
+                  <button type="button" class="pill"
+                          [class.active]="isStatusActive(p.key)"
+                          (click)="toggleStatus(p.key)">
+                    <mat-icon>{{ p.icon }}</mat-icon>
+                    {{ p.label }}
+                    <span class="pill-count">{{ statusCount(p.key) }}</span>
+                  </button>
+                }
+                @if (hasFilterChanges()) {
+                  <button type="button" class="pill pill-reset" (click)="resetStatusFilter()">
+                    <mat-icon>close</mat-icon> Reset
+                  </button>
+                }
+              </div>
+            }
 
             @if (sessions().length === 0) {
               <div class="empty-sessions">
                 <mat-icon>event_note</mat-icon>
                 <p>No sessions recorded yet.</p>
               </div>
+            } @else if (filteredSessions().length === 0) {
+              <div class="empty-sessions">
+                <mat-icon>filter_alt_off</mat-icon>
+                <p>No sessions match the selected filters.</p>
+              </div>
             }
 
-            @for (s of sessions(); track s._id) {
+            @for (s of filteredSessions(); track s._id) {
               <div class="session-card" [class]="'status-' + s.status">
                 <div class="session-layout">
                   <!-- Left: session details -->
@@ -631,6 +661,36 @@ interface Session {
       .upcoming-dur { color: #9aa5b4; font-size: 11px; }
     }
 
+    .session-count-muted {
+      font-size: 12px; font-weight: 500; color: #9aa5b4; margin-left: 2px;
+    }
+    .session-filter-pills {
+      display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 16px;
+      .pill {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 5px 10px 5px 8px; border-radius: 999px;
+        border: 1px solid #e8edf4; background: #ffffff;
+        color: #5a6a7e; font-size: 12px; font-weight: 600;
+        cursor: pointer; transition: all 0.12s;
+        mat-icon { font-size: 15px; width: 15px; height: 15px; }
+        .pill-count {
+          background: #f0f4f8; color: #5a6a7e; padding: 1px 7px;
+          border-radius: 999px; font-size: 11px; font-weight: 700;
+        }
+        &:hover { border-color: #3A9FD6; color: #1B2A47; }
+        &.active {
+          background: #EBF5FB; border-color: #3A9FD6; color: #1B2A47;
+          mat-icon { color: #3A9FD6; }
+          .pill-count { background: #3A9FD6; color: #ffffff; }
+        }
+      }
+      .pill-reset {
+        color: #9aa5b4; font-weight: 500;
+        mat-icon { color: #9aa5b4; }
+        &:hover { color: #1B2A47; border-color: #9aa5b4; mat-icon { color: #1B2A47; } }
+      }
+    }
+
     .intake-card {
       display: flex; align-items: center; gap: 12px;
       padding: 12px 14px; border-radius: 10px;
@@ -694,6 +754,47 @@ export class EngagementDetailComponent implements OnInit {
     }
     return days;
   });
+
+  // Session status filter pills. Default: hide completed + cancelled so
+  // the coach sees an actionable list of upcoming / open sessions first.
+  private readonly DEFAULT_STATUSES: ReadonlySet<string> = new Set(['scheduled', 'no_show']);
+  activeStatuses = signal<Set<string>>(new Set(this.DEFAULT_STATUSES));
+
+  readonly statusPills: { key: string; label: string; icon: string }[] = [
+    { key: 'scheduled', label: 'Scheduled', icon: 'event' },
+    { key: 'completed', label: 'Completed', icon: 'check_circle' },
+    { key: 'cancelled', label: 'Cancelled', icon: 'event_busy' },
+    { key: 'no_show',   label: 'No-show',   icon: 'report' },
+  ];
+
+  filteredSessions = computed(() => {
+    const active = this.activeStatuses();
+    return this.sessions().filter((s) => active.has(s.status));
+  });
+
+  isStatusActive = (key: string): boolean => this.activeStatuses().has(key);
+
+  statusCount = (key: string): number =>
+    this.sessions().filter((s) => s.status === key).length;
+
+  toggleStatus(key: string): void {
+    this.activeStatuses.update((set) => {
+      const next = new Set(set);
+      if (next.has(key)) next.delete(key); else next.add(key);
+      return next;
+    });
+  }
+
+  resetStatusFilter(): void {
+    this.activeStatuses.set(new Set(this.DEFAULT_STATUSES));
+  }
+
+  hasFilterChanges(): boolean {
+    const active = this.activeStatuses();
+    if (active.size !== this.DEFAULT_STATUSES.size) return true;
+    for (const s of active) if (!this.DEFAULT_STATUSES.has(s)) return true;
+    return false;
+  }
 
   upcomingSessions = computed(() => {
     const now = new Date();
