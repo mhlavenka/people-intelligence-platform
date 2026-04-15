@@ -359,7 +359,9 @@ interface Session {
                               <mat-icon>open_in_new</mat-icon>
                             </a>
                           } @else {
-                            <a mat-icon-button [routerLink]="'/my-journal/engagement/' + engId" matTooltip="Open my journal" class="journal-open-btn">
+                            <a mat-icon-button [routerLink]="'/my-journal/engagement/' + engId"
+                               [queryParams]="{ sessionId: s._id }"
+                               matTooltip="Open this session's journal" class="journal-open-btn">
                               <mat-icon>open_in_new</mat-icon>
                             </a>
                           }
@@ -420,7 +422,8 @@ interface Session {
                             <mat-icon>add</mat-icon> Add Note
                           </a>
                         } @else {
-                          <a class="add-journal-link" [routerLink]="'/my-journal/engagement/' + engId">
+                          <a class="add-journal-link" [routerLink]="'/my-journal/engagement/' + engId"
+                             [queryParams]="{ sessionId: s._id }">
                             <mat-icon>add</mat-icon> Open journal
                           </a>
                         }

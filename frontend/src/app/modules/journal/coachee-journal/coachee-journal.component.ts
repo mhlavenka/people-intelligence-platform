@@ -41,7 +41,12 @@ interface CoachingSession {
     <div class="page">
       <div class="header">
         <a mat-icon-button [routerLink]="['/coaching', engagementId]"><mat-icon>arrow_back</mat-icon></a>
-        <h1>My session journal</h1>
+        <h1>{{ focusSessionId ? "This session's journal" : 'My session journal' }}</h1>
+        @if (focusSessionId) {
+          <a class="show-all-link" [routerLink]="['/my-journal/engagement', engagementId]">
+            Show all sessions
+          </a>
+        }
       </div>
 
       @if (loading()) {
@@ -271,6 +276,11 @@ interface CoachingSession {
     .header {
       display: flex; align-items: center; gap: 8px; margin-bottom: 16px;
       h1 { margin: 0; color: #1B2A47; font-size: 22px; }
+      .show-all-link {
+        margin-left: auto; color: #3A9FD6; font-size: 13px; font-weight: 500;
+        text-decoration: none;
+        &:hover { text-decoration: underline; }
+      }
     }
     .loading { display: flex; justify-content: center; padding: 60px 0; }
     .empty {
@@ -381,6 +391,9 @@ export class CoacheeJournalComponent implements OnInit {
   sessions = signal<CoachingSession[]>([]);
   private notesBySession = new Map<string, SessionNote>();
   engagementId = '';
+  /** If present via ?sessionId=..., the page filters down to just that
+   *  session. Otherwise the full engagement journal is shown. */
+  focusSessionId: string | null = null;
 
   forms: Record<string, {
     pre: {
@@ -414,6 +427,7 @@ export class CoacheeJournalComponent implements OnInit {
 
   ngOnInit(): void {
     this.engagementId = this.route.snapshot.params['engagementId'];
+    this.focusSessionId = this.route.snapshot.queryParamMap.get('sessionId');
     this.load();
   }
 
@@ -426,9 +440,12 @@ export class CoacheeJournalComponent implements OnInit {
       this.api.get<CoachingSession[]>(`/coaching/sessions?engagementId=${this.engagementId}`).toPromise(),
       this.journal.getEngagementNotes(this.engagementId).toPromise().catch(() => [] as SessionNote[]),
     ]).then(([sessions, notes]) => {
-      const sorted = (sessions || []).slice().sort(
+      let sorted = (sessions || []).slice().sort(
         (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
       );
+      if (this.focusSessionId) {
+        sorted = sorted.filter((s) => s._id === this.focusSessionId);
+      }
       this.sessions.set(sorted);
       this.notesBySession.clear();
       for (const n of notes || []) {
