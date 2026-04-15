@@ -182,8 +182,10 @@ export class BookingService {
   }
 
   // ── Google Calendar import ───────────────────────────────────────────────
-  previewImport(from: string, to: string): Observable<ImportPreviewResponse> {
-    return this.api.get<ImportPreviewResponse>('/booking/import/preview', { from, to });
+  previewImport(from: string, to: string, calendarId?: string): Observable<ImportPreviewResponse> {
+    const params: Record<string, string> = { from, to };
+    if (calendarId) params['calendarId'] = calendarId;
+    return this.api.get<ImportPreviewResponse>('/booking/import/preview', params);
   }
 
   executeImport(
@@ -198,11 +200,13 @@ export class BookingService {
       suggestedCoacheeId?: string | null;
       suggestedEventTypeId?: string | null;
     }>,
+    calendarId?: string,
   ): Observable<ImportResultResponse> {
     return this.api.post<ImportResultResponse>('/booking/import/execute', {
       approvedEventIds,
       overrides,
       suggestions,
+      ...(calendarId ? { calendarId } : {}),
     });
   }
 }

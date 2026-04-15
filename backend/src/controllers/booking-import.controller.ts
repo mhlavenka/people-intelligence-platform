@@ -187,7 +187,11 @@ export async function preview(req: AuthRequest, res: Response, next: NextFunctio
     const coachId = req.user!.userId;
     const organizationId = req.user!.organizationId;
 
-    const { calendarId } = await resolveTargetCalendarId(coachId, organizationId);
+    const overrideCalendarId = (req.query['calendarId'] as string | undefined)?.trim();
+    let calendarId: string | null = overrideCalendarId || null;
+    if (!calendarId) {
+      ({ calendarId } = await resolveTargetCalendarId(coachId, organizationId));
+    }
     if (!calendarId) {
       res.status(400).json({
         error: 'No booking calendar selected. Open Booking → Settings and pick the calendar this app syncs with before importing.',
@@ -295,6 +299,9 @@ export async function preview(req: AuthRequest, res: Response, next: NextFunctio
 // ── POST /api/booking/import/execute ───────────────────────────────────────
 interface ExecuteBody {
   approvedEventIds: string[];
+  /** Optional override for the source calendar; falls back to the coach's
+   *  configured booking calendar when omitted. */
+  calendarId?: string;
   /** Optional client-edited overrides keyed by googleEventId. A null value
    *  explicitly unsets (e.g. user cleared the auto-suggestion). undefined
    *  means "use whatever the preview suggested". */
@@ -316,14 +323,16 @@ export async function execute(req: AuthRequest, res: Response, next: NextFunctio
   try {
     const coachId = req.user!.userId;
     const organizationId = req.user!.organizationId;
-    const { approvedEventIds, overrides, suggestions } = req.body as ExecuteBody;
+    const { approvedEventIds, overrides, suggestions, calendarId: bodyCalendarId } = req.body as ExecuteBody;
 
     if (!Array.isArray(approvedEventIds) || approvedEventIds.length === 0) {
       res.status(400).json({ error: 'approvedEventIds must be a non-empty array.' });
       return;
     }
 
-    const { calendarId, fallbackTz } = await resolveTargetCalendarId(coachId, organizationId);
+    const resolved = await resolveTargetCalendarId(coachId, organizationId);
+    const calendarId = bodyCalendarId?.trim() || resolved.calendarId;
+    const fallbackTz = resolved.fallbackTz;
     if (!calendarId) {
       res.status(400).json({
         error: 'No booking calendar selected. Open Booking → Settings and pick the calendar this app syncs with before importing.',

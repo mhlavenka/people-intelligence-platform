@@ -106,22 +106,28 @@ const FRAMEWORKS = [
         </div>
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Pre-Session Assessment (optional)</mat-label>
-          <mat-select [(ngModel)]="form.preSessionIntakeTemplateId">
+          <mat-select [(ngModel)]="form.preSessionIntakeTemplateId"
+                      [disabled]="intakeStatus() === 'completed'">
             <mat-option [value]="null">— None —</mat-option>
             @for (t of assessmentTemplates(); track t._id) {
               <mat-option [value]="t._id">{{ t.title }}</mat-option>
             }
           </mat-select>
-          <mat-hint>Only assessment-type templates appear here.</mat-hint>
+          <mat-hint>
+            {{ intakeStatus() === 'completed'
+                ? 'Locked — the coachee has already completed this intake.'
+                : 'Only assessment-type templates appear here.' }}
+          </mat-hint>
         </mat-form-field>
-        @if (intakeStatus()) {
-          <div class="intake-status" [class.completed]="intakeStatus() === 'completed'">
-            <mat-icon>{{ intakeStatus() === 'completed' ? 'check_circle' : 'schedule' }}</mat-icon>
-            <span>
-              {{ intakeStatus() === 'completed'
-                  ? 'Coachee completed the pre-session intake.'
-                  : 'Waiting for the coachee to complete the pre-session intake.' }}
-            </span>
+        @if (intakeStatus() === 'completed') {
+          <div class="intake-status completed">
+            <mat-icon>check_circle</mat-icon>
+            <span>Coachee completed the pre-session intake.</span>
+          </div>
+        } @else if (intakeStatus() === 'pending') {
+          <div class="intake-status">
+            <mat-icon>schedule</mat-icon>
+            <span>Waiting for the coachee to complete the pre-session intake.</span>
           </div>
         }
 
@@ -264,11 +270,12 @@ export class SessionDialogComponent implements OnInit {
       }
 
       if (this.form.preSessionIntakeTemplateId) {
-        this.intakeStatus.set(
-          (this.data as { preSessionIntakeResponse?: unknown }).preSessionIntakeResponse
-            ? 'completed'
-            : 'pending',
-        );
+        const d = this.data as {
+          preSessionIntakeResponse?: unknown;
+          preSessionIntakeCompleted?: boolean;
+        };
+        const completed = !!d.preSessionIntakeResponse || d.preSessionIntakeCompleted === true;
+        this.intakeStatus.set(completed ? 'completed' : 'pending');
       }
     }
     this.topicsRaw = (this.form.topics || []).join(', ');

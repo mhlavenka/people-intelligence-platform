@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output, signal, computed } from '@angular/core';
+import { Component, EventEmitter, OnInit, Output, signal, computed } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
@@ -6,6 +6,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatCheckboxModule } from '@angular/material/checkbox';
@@ -19,6 +20,10 @@ import {
   ImportEventType,
   ImportResultResponse,
 } from '../booking.service';
+import {
+  CalendarIntegrationService,
+  GoogleCalendar,
+} from '../../coaching/calendar-integration/calendar-integration.service';
 
 type State = 'idle' | 'loading' | 'preview' | 'importing' | 'done';
 
@@ -28,7 +33,8 @@ type State = 'idle' | 'loading' | 'preview' | 'importing' | 'done';
   imports: [
     CommonModule, DatePipe, FormsModule,
     MatIconModule, MatButtonModule, MatProgressSpinnerModule,
-    MatFormFieldModule, MatInputModule, MatDatepickerModule, MatNativeDateModule,
+    MatFormFieldModule, MatInputModule, MatSelectModule,
+    MatDatepickerModule, MatNativeDateModule,
     MatCheckboxModule, MatTooltipModule, MatExpansionModule, MatSnackBarModule,
   ],
   template: `
@@ -45,6 +51,27 @@ type State = 'idle' | 'loading' | 'preview' | 'importing' | 'done';
               this booking dashboard. Every event is previewed first — you approve
               each one before anything is imported.
             </p>
+          </div>
+
+          <div class="calendar-row">
+            <mat-form-field appearance="outline" class="calendar-field">
+              <mat-label>Source Calendar</mat-label>
+              <mat-select [(ngModel)]="selectedCalendarId" [disabled]="loadingCalendars()">
+                @for (c of calendars(); track c.id) {
+                  <mat-option [value]="c.id">
+                    {{ c.summary }}
+                    @if (c.id === defaultCalendarId()) {
+                      <span class="default-tag">— default</span>
+                    }
+                  </mat-option>
+                }
+              </mat-select>
+              @if (loadingCalendars()) {
+                <mat-hint>Loading calendars…</mat-hint>
+              } @else {
+                <mat-hint>Defaults to your booking-sync calendar — change to import from another.</mat-hint>
+              }
+            </mat-form-field>
           </div>
 
           <div class="date-row">
@@ -305,6 +332,9 @@ type State = 'idle' | 'loading' | 'preview' | 'importing' | 'done';
       h2 { margin: 8px 0 4px; color: #1B2A47; font-size: 20px; }
       p  { margin: 0 auto; max-width: 520px; color: #6b7c93; font-size: 14px; line-height: 1.5; }
     }
+    .calendar-row { display: flex; justify-content: center; margin-bottom: 4px; }
+    .calendar-field { width: 100%; max-width: 460px; }
+    .default-tag { color: #9aa5b4; font-size: 12px; margin-left: 6px; }
     .date-row { display: flex; gap: 12px; justify-content: center; margin-bottom: 16px; }
     .idle > button { display: block; margin: 0 auto; min-width: 200px; }
     .error-banner {
@@ -500,7 +530,7 @@ type State = 'idle' | 'loading' | 'preview' | 'importing' | 'done';
     .done-actions { display: flex; gap: 10px; justify-content: center; }
   `],
 })
-export class BookingImportComponent {
+export class BookingImportComponent implements OnInit {
   @Output() viewDashboard = new EventEmitter<void>();
   @Output() imported = new EventEmitter<void>();
 
@@ -511,16 +541,50 @@ export class BookingImportComponent {
   error = signal<string>('');
   result = signal<ImportResultResponse | null>(null);
 
-  // Defaults: 2 years ago → 1 year ahead.
-  fromDate: Date = new Date(Date.now() - 2 * 365 * 24 * 60 * 60 * 1000);
-  toDate:   Date = new Date(Date.now() + 1 * 365 * 24 * 60 * 60 * 1000);
+  // Calendar picker state.
+  calendars = signal<GoogleCalendar[]>([]);
+  defaultCalendarId = signal<string | null>(null);
+  loadingCalendars = signal<boolean>(true);
+  selectedCalendarId: string | null = null;
+
+  // Defaults: current month, 1st → last day.
+  fromDate: Date = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+  toDate:   Date = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
 
   // Inline-edit state (topic only now).
   editingField: 'topic' | null = null;
   editingId: string | null = null;
   editBuffer = '';
 
-  constructor(private bookingSvc: BookingService, private snack: MatSnackBar) {}
+  constructor(
+    private bookingSvc: BookingService,
+    private calendarSvc: CalendarIntegrationService,
+    private snack: MatSnackBar,
+  ) {}
+
+  ngOnInit(): void {
+    this.loadingCalendars.set(true);
+    this.calendarSvc.getStatus().subscribe({
+      next: (status) => {
+        this.defaultCalendarId.set(status.calendarId);
+        this.selectedCalendarId = status.calendarId;
+        this.calendarSvc.listCalendars().subscribe({
+          next: (list) => {
+            this.calendars.set(list);
+            // Make sure the default is in the list (it should be) so the
+            // mat-select shows a value rather than blank.
+            if (this.selectedCalendarId
+                && !list.find((c) => c.id === this.selectedCalendarId)) {
+              this.selectedCalendarId = list[0]?.id ?? null;
+            }
+            this.loadingCalendars.set(false);
+          },
+          error: () => this.loadingCalendars.set(false),
+        });
+      },
+      error: () => this.loadingCalendars.set(false),
+    });
+  }
 
   alreadyImportedCount = computed(() => this.events().filter((e) => e.alreadyImported).length);
   pendingCount         = computed(() => this.events().filter((e) => !e.alreadyImported).length);
@@ -531,7 +595,7 @@ export class BookingImportComponent {
     this.state.set('loading');
     const from = this.fromDate.toISOString();
     const to = this.toDate.toISOString();
-    this.bookingSvc.previewImport(from, to).subscribe({
+    this.bookingSvc.previewImport(from, to, this.selectedCalendarId ?? undefined).subscribe({
       next: (res) => {
         // Default: approve every non-imported event.
         const list = res.events.map((e) => ({ ...e, approved: !e.alreadyImported }));
@@ -648,7 +712,12 @@ export class BookingImportComponent {
     }
 
     this.state.set('importing');
-    this.bookingSvc.executeImport(selected.map((e) => e.googleEventId), overrides, suggestions).subscribe({
+    this.bookingSvc.executeImport(
+      selected.map((e) => e.googleEventId),
+      overrides,
+      suggestions,
+      this.selectedCalendarId ?? undefined,
+    ).subscribe({
       next: (res) => {
         this.result.set(res);
         this.state.set('done');
