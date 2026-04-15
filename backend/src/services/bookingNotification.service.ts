@@ -1,5 +1,5 @@
 import { DateTime } from 'luxon';
-import ical, { ICalCalendarMethod } from 'ical-generator';
+import ical, { ICalCalendarMethod, ICalEventStatus } from 'ical-generator';
 import { SESClient, SendRawEmailCommand } from '@aws-sdk/client-ses';
 import { config } from '../config/env';
 import { IBooking } from '../models/Booking.model';
@@ -23,15 +23,28 @@ const isDev = config.nodeEnv !== 'production';
 
 // ─── ICS generation ─────────────────────────────────────────────────────────
 
-function generateICS(booking: IBooking, coachName: string, coachEmail: string): string {
+function bookingUid(booking: IBooking): string {
+  return `booking-${booking._id}@artes`;
+}
+
+function generateICS(
+  booking: IBooking,
+  coachName: string,
+  coachEmail: string,
+  method: ICalCalendarMethod = ICalCalendarMethod.REQUEST,
+  sequence = 0,
+): string {
   const cal = ical({ name: 'Coaching Session' });
-  cal.method(ICalCalendarMethod.REQUEST);
+  cal.method(method);
   cal.createEvent({
+    id: bookingUid(booking),
+    sequence,
     start: booking.startTime,
     end: booking.endTime,
     summary: `Coaching Session — ${coachName}`,
     description: booking.topic || 'Coaching session',
     location: booking.googleMeetLink || undefined,
+    status: method === ICalCalendarMethod.CANCEL ? ICalEventStatus.CANCELLED : undefined,
     organizer: { name: coachName, email: coachEmail },
     attendees: [
       { name: booking.clientName, email: booking.clientEmail, rsvp: true },
@@ -84,12 +97,16 @@ async function sendRawEmailWithICS(params: {
   subject: string;
   html: string;
   icsContent: string;
+  icsMethod?: 'REQUEST' | 'CANCEL';
+  icsFilename?: string;
 }): Promise<void> {
   if (isDev && !config.aws.sesFromEmail) {
     console.log(`[BookingEmail] DEV — would send "${params.subject}" to ${params.to}`);
     return;
   }
 
+  const method = params.icsMethod || 'REQUEST';
+  const filename = params.icsFilename || 'invite.ics';
   const boundary = `----=_Part_${Date.now()}`;
   const rawMessage = [
     `From: ${FROM}`,
@@ -105,9 +122,9 @@ async function sendRawEmailWithICS(params: {
     params.html,
     '',
     `--${boundary}`,
-    'Content-Type: text/calendar; charset=UTF-8; method=REQUEST',
+    `Content-Type: text/calendar; charset=UTF-8; method=${method}`,
     'Content-Transfer-Encoding: 7bit',
-    'Content-Disposition: attachment; filename="invite.ics"',
+    `Content-Disposition: attachment; filename="${filename}"`,
     '',
     params.icsContent,
     '',
@@ -221,14 +238,13 @@ export async function sendCancellationEmail(
 ): Promise<void> {
   const clientDt = DateTime.fromJSDate(booking.startTime).setZone(booking.clientTimezone);
   const coachDt = DateTime.fromJSDate(booking.startTime).setZone(booking.coachTimezone);
-
-  const recipientEmail = cancelledBy === 'client' ? coachEmail : booking.clientEmail;
-  const recipientName = cancelledBy === 'client' ? coachName : booking.clientName;
   const byWhom = cancelledBy === 'client' ? booking.clientName : coachName;
-  const dt = cancelledBy === 'client' ? coachDt : clientDt;
-  const tz = cancelledBy === 'client' ? booking.coachTimezone : booking.clientTimezone;
 
-  const html = bookingHtml('Session Cancelled', `
+  // METHOD:CANCEL ICS with sequence=1 so calendar clients supersede the
+  // original REQUEST invite and remove the event from attendee calendars.
+  const cancelIcs = generateICS(booking, coachName, coachEmail, ICalCalendarMethod.CANCEL, 1);
+
+  const renderHtml = (dt: DateTime, tz: string) => bookingHtml('Session Cancelled', `
     <h2 style="color:#dc2626;margin:0 0 12px;font-size:22px;">
       Session Cancelled
     </h2>
@@ -241,21 +257,29 @@ export async function sendCancellationEmail(
     ${booking.cancellationReason ? `<p style="color:#5a6a7e;margin:0 0 16px;"><strong>Reason:</strong> ${booking.cancellationReason}</p>` : ''}
   `);
 
-  if (isDev && !config.aws.sesFromEmail) {
-    console.log(`[BookingEmail] DEV — would send cancellation to ${recipientEmail}`);
-    return;
-  }
+  const subjectFor = (dt: DateTime) =>
+    `Cancelled: Coaching Session on ${dt.toFormat('LLL d')}`;
 
-  const { SendEmailCommand } = await import('@aws-sdk/client-ses');
-  const command = new SendEmailCommand({
-    Source: FROM,
-    Destination: { ToAddresses: [recipientEmail] },
-    Message: {
-      Subject: { Data: `Cancelled: Coaching Session on ${dt.toFormat('LLL d')}`, Charset: 'UTF-8' },
-      Body: { Html: { Data: html, Charset: 'UTF-8' } },
-    },
+  // Email both parties so each calendar client removes its copy. The side
+  // that triggered the cancellation still gets a confirmation — matches how
+  // confirmation emails are sent on booking.
+  await sendRawEmailWithICS({
+    to: booking.clientEmail,
+    subject: subjectFor(clientDt),
+    html: renderHtml(clientDt, booking.clientTimezone),
+    icsContent: cancelIcs,
+    icsMethod: 'CANCEL',
+    icsFilename: 'cancel.ics',
   });
-  await ses.send(command);
+
+  await sendRawEmailWithICS({
+    to: coachEmail,
+    subject: subjectFor(coachDt),
+    html: renderHtml(coachDt, booking.coachTimezone),
+    icsContent: cancelIcs,
+    icsMethod: 'CANCEL',
+    icsFilename: 'cancel.ics',
+  });
 }
 
 export async function sendRescheduleConfirmation(

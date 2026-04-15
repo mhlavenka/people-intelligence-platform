@@ -284,7 +284,7 @@ export async function cancelBooking(
         await calendar.events.delete({
           calendarId: calId,
           eventId: booking.googleEventId,
-          sendUpdates: 'none',
+          sendUpdates: 'all',
         });
       } catch (err) {
         const code = (err as { code?: number })?.code;
