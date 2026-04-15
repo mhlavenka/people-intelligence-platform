@@ -23,6 +23,7 @@ interface CoacheeUser {
   department?: string;
   profilePicture?: string;
   isActive?: boolean;
+  sponsorId?: string | { _id: string; name?: string; email?: string; organization?: string } | null;
 }
 
 interface Engagement {
@@ -41,6 +42,8 @@ interface Row {
   email: string;
   department?: string;
   profilePicture?: string;
+  sponsorName?: string;
+  sponsorOrg?: string;
   /** Flattened list of engagements the current coach has with this coachee. */
   engagements: Engagement[];
   /** Best/most-current status — or 'none' when no engagements exist. */
@@ -162,6 +165,20 @@ const STATUS_PRIORITY: EngagementStatus[] = ['active', 'contracted', 'prospect',
                         [style.color]="statusColor(r.primaryStatus)">
                     {{ statusLabel(r.primaryStatus) }}
                   </span>
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="sponsor">
+                <th mat-header-cell *matHeaderCellDef>Sponsor</th>
+                <td mat-cell *matCellDef="let r">
+                  @if (r.sponsorName) {
+                    <div class="sponsor-cell">
+                      <strong>{{ r.sponsorName }}</strong>
+                      @if (r.sponsorOrg) { <span class="sponsor-org">{{ r.sponsorOrg }}</span> }
+                    </div>
+                  } @else {
+                    <span class="muted">—</span>
+                  }
                 </td>
               </ng-container>
 
@@ -289,6 +306,10 @@ const STATUS_PRIORITY: EngagementStatus[] = ['active', 'contracted', 'prospect',
     }
     .sess-fill { height: 100%; background: #27C4A0; transition: width 0.2s; }
     .sess-txt { font-size: 12px; color: #5a6a7e; font-weight: 500; min-width: 46px; text-align: right; }
+
+    .sponsor-cell { display: flex; flex-direction: column; gap: 2px; }
+    .sponsor-cell strong { font-size: 13px; color: #1B2A47; font-weight: 600; }
+    .sponsor-org { font-size: 11px; color: #9aa5b4; }
   `],
 })
 export class CoacheesListComponent implements OnInit {
@@ -298,7 +319,7 @@ export class CoacheesListComponent implements OnInit {
   filter = signal<FilterKey>('active');
   search = signal('');
 
-  columns = ['name', 'email', 'status', 'engagement', 'sessions'];
+  columns = ['name', 'email', 'sponsor', 'status', 'engagement', 'sessions'];
 
   constructor(private api: ApiService, private router: Router) {}
 
@@ -346,6 +367,7 @@ export class CoacheesListComponent implements OnInit {
         }
         const sessionsUsed = engs.reduce((sum, e) => sum + (e.sessionsUsed || 0), 0);
         const sessionsPurchased = engs.reduce((sum, e) => sum + (e.sessionsPurchased || 0), 0);
+        const sponsor = typeof c.sponsorId === 'object' && c.sponsorId ? c.sponsorId : null;
         return {
           _id: c._id,
           firstName: c.firstName,
@@ -353,6 +375,8 @@ export class CoacheesListComponent implements OnInit {
           email: c.email,
           department: c.department,
           profilePicture: c.profilePicture,
+          sponsorName: sponsor?.name,
+          sponsorOrg: sponsor?.organization,
           engagements: engs,
           primaryStatus,
           primaryEngagement,

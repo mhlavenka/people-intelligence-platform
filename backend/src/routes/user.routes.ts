@@ -270,7 +270,8 @@ router.get(
         filter['role'] = { $nin: ['coach', 'admin', 'system_admin'] };
       }
       const users = await User.find(filter)
-        .select('_id firstName lastName email department role isCoachee');
+        .select('_id firstName lastName email department role isCoachee sponsorId profilePicture isActive')
+        .populate('sponsorId', 'name email organization');
       res.json(users);
     } catch (e) { next(e); }
   }
