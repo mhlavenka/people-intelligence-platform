@@ -41,6 +41,12 @@ import { startTrialRevertJob } from './jobs/trialRevert.job';
 
 const app = express();
 
+// Apache proxies all traffic to this process on localhost, so without
+// `trust proxy` Express sees every req.ip as 127.0.0.1 and the rate-limiter
+// buckets all users into a single shared counter — which fills fast and
+// returns 429 on /login, /refresh, and everything else until PM2 restart.
+app.set('trust proxy', 1);
+
 // Security middleware
 app.use(helmet());
 app.use(

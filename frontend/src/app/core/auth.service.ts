@@ -38,7 +38,12 @@ export interface LoginResponse {
 
 const INACTIVITY_MS = 30 * 60 * 1000;       // 30 minutes
 const WARN_BEFORE_MS = 2 * 60 * 1000;        // warn 2 minutes before logout
-const ACTIVITY_EVENTS = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll'];
+// Scroll + touchmove don't bubble from inner containers, so listeners are
+// registered with { capture: true } to pick them up in the capture phase.
+const ACTIVITY_EVENTS = [
+  'mousemove', 'mousedown', 'keydown', 'touchstart', 'touchmove', 'wheel', 'scroll',
+];
+const ACTIVITY_THROTTLE_MS = 1_000;
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -52,7 +57,11 @@ export class AuthService {
   private inactivityTimer: ReturnType<typeof setTimeout> | null = null;
   private warnTimer: ReturnType<typeof setTimeout> | null = null;
   private refreshTimer: ReturnType<typeof setTimeout> | null = null;
-  private boundReset!: () => void;
+  private boundLocalActivity!: () => void;
+  private boundStorage!: (ev: StorageEvent) => void;
+  private boundVisibility!: () => void;
+  private lastActivityWrite = 0;
+  private readonly ACTIVITY_KEY = 'pip_last_activity';
 
   constructor(
     private http: HttpClient,
@@ -62,29 +71,75 @@ export class AuthService {
   ) {}
 
   startActivityTracking(): void {
-    this.boundReset = () => this.resetInactivityTimer();
-    ACTIVITY_EVENTS.forEach((e) => document.addEventListener(e, this.boundReset, { passive: true }));
-    this.resetInactivityTimer();
+    this.boundLocalActivity = () => this.onLocalActivity();
+    // capture: true so scroll/wheel/touchmove on inner scrollable containers
+    // (which don't bubble) still register as activity.
+    ACTIVITY_EVENTS.forEach((e) =>
+      document.addEventListener(e, this.boundLocalActivity, { passive: true, capture: true }),
+    );
+
+    // Cross-tab activity sync: any tab's activity resets every tab's timer,
+    // so a background tab can't log the user out while they work in another.
+    this.boundStorage = (ev: StorageEvent) => {
+      if (ev.key === this.ACTIVITY_KEY) this.armInactivityTimer();
+    };
+    window.addEventListener('storage', this.boundStorage);
+
+    // Pause the local timer while the tab is hidden; re-arm on visible.
+    this.boundVisibility = () => {
+      if (document.hidden) this.clearTimers();
+      else this.armInactivityTimer();
+    };
+    document.addEventListener('visibilitychange', this.boundVisibility);
+
+    this.onLocalActivity();
   }
 
   stopActivityTracking(): void {
-    if (this.boundReset) {
-      ACTIVITY_EVENTS.forEach((e) => document.removeEventListener(e, this.boundReset));
+    if (this.boundLocalActivity) {
+      ACTIVITY_EVENTS.forEach((e) =>
+        document.removeEventListener(e, this.boundLocalActivity, { capture: true } as EventListenerOptions),
+      );
     }
+    if (this.boundStorage)    window.removeEventListener('storage', this.boundStorage);
+    if (this.boundVisibility) document.removeEventListener('visibilitychange', this.boundVisibility);
     this.clearTimers();
   }
 
-  private resetInactivityTimer(): void {
+  /** Local activity: throttle writes, then re-arm based on shared timestamp. */
+  private onLocalActivity(): void {
+    const now = Date.now();
+    if (now - this.lastActivityWrite >= ACTIVITY_THROTTLE_MS) {
+      this.lastActivityWrite = now;
+      localStorage.setItem(this.ACTIVITY_KEY, String(now));
+    }
+    this.armInactivityTimer();
+  }
+
+  /** Arm the warn + logout timers based on the shared last-activity timestamp.
+   *  Skipped while the tab is hidden — visibilitychange will re-arm. */
+  private armInactivityTimer(): void {
     this.clearTimers();
     this.inactivityWarning.set(false);
-    this.ngZone.runOutsideAngular(() => {
-      this.warnTimer = setTimeout(() => {
-        this.ngZone.run(() => this.inactivityWarning.set(true));
-      }, INACTIVITY_MS - WARN_BEFORE_MS);
+    if (document.hidden) return;
 
+    const last = Number(localStorage.getItem(this.ACTIVITY_KEY)) || Date.now();
+    const elapsed = Date.now() - last;
+    const remaining = INACTIVITY_MS - elapsed;
+    if (remaining <= 0) { this.logout(); return; }
+
+    const untilWarn = Math.max(remaining - WARN_BEFORE_MS, 0);
+    this.ngZone.runOutsideAngular(() => {
+      if (untilWarn > 0) {
+        this.warnTimer = setTimeout(() => {
+          this.ngZone.run(() => this.inactivityWarning.set(true));
+        }, untilWarn);
+      } else {
+        this.ngZone.run(() => this.inactivityWarning.set(true));
+      }
       this.inactivityTimer = setTimeout(() => {
         this.ngZone.run(() => this.logout());
-      }, INACTIVITY_MS);
+      }, remaining);
     });
   }
 
@@ -172,6 +227,7 @@ export class AuthService {
     localStorage.removeItem(this.TOKEN_KEY);
     localStorage.removeItem(this.REFRESH_KEY);
     localStorage.removeItem(this.USER_KEY);
+    localStorage.removeItem(this.ACTIVITY_KEY);
     this.currentUser.set(null);
     this.themeService.reset();
     this.router.navigate(['/auth/login']);
