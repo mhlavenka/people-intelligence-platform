@@ -181,6 +181,17 @@ export class BookingService {
     return this.api.get<AvailableSlot[]>(`/booking/bookings/${bookingId}/slots`, { from, to, tz });
   }
 
+  // ── Public holidays ──────────────────────────────────────────────────────
+  getHolidays(year: number, country?: string): Observable<HolidaysResponse> {
+    const params: Record<string, string> = { year: String(year) };
+    if (country) params['country'] = country;
+    return this.api.get<HolidaysResponse>('/booking/holidays', params);
+  }
+
+  getHolidayCountries(): Observable<HolidayCountry[]> {
+    return this.api.get<HolidayCountry[]>('/booking/holidays/countries');
+  }
+
   // ── Google Calendar import ───────────────────────────────────────────────
   previewImport(from: string, to: string, calendarId?: string): Observable<ImportPreviewResponse> {
     const params: Record<string, string> = { from, to };
@@ -209,6 +220,25 @@ export class BookingService {
       ...(calendarId ? { calendarId } : {}),
     });
   }
+}
+
+// ─── Holidays ────────────────────────────────────────────────────────────────
+
+export interface HolidayItem {
+  date: string;   // YYYY-MM-DD
+  name: string;
+  type: 'public' | 'bank' | string;
+}
+
+export interface HolidaysResponse {
+  country: string;
+  year: number;
+  holidays: HolidayItem[];
+}
+
+export interface HolidayCountry {
+  code: string;   // ISO 3166-1 alpha-2
+  name: string;   // English country name
 }
 
 // ─── Import types ────────────────────────────────────────────────────────────

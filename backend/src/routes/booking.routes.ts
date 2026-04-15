@@ -18,6 +18,8 @@ import {
 } from '../services/booking.service';
 import { registerGoogleWebhook } from '../services/calendarWebhook.service';
 import * as bookingImport from '../controllers/booking-import.controller';
+import Holidays from 'date-holidays';
+import { Organization } from '../models/Organization.model';
 import {
   linkBookingToCoaching,
   precheckBookingQuota,
@@ -317,6 +319,63 @@ router.put(
         }
         res.status(201).json(settings);
       }
+    } catch (e) { next(e); }
+  },
+);
+
+// List the countries the holiday library can produce dates for. Used to
+// populate the country picker in the date-exclusions UI.
+router.get(
+  '/holidays/countries',
+  requireRole('coach', 'admin', 'hr_manager'),
+  async (_req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const hd = new Holidays();
+      const map = hd.getCountries() as Record<string, string>;
+      const items = Object.entries(map).map(([code, name]) => ({ code, name }));
+      items.sort((a, b) => a.name.localeCompare(b.name));
+      res.json(items);
+    } catch (e) { next(e); }
+  },
+);
+
+// ── Public-holiday lookup (for the date-exclusion picker) ──────────────────
+// Returns ISO `YYYY-MM-DD` dates + names for the given country / year. When
+// no `country` query param is passed we fall back to the org's billing
+// country. Returns 400 if neither is available so the UI can prompt the
+// admin to fill it in.
+router.get(
+  '/holidays',
+  requireRole('coach', 'admin', 'hr_manager'),
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const yearStr = (req.query['year'] as string | undefined) ?? '';
+      const year = parseInt(yearStr, 10) || new Date().getFullYear();
+      let country = ((req.query['country'] as string | undefined) ?? '').trim().toUpperCase();
+
+      if (!country) {
+        const org = await Organization.findById(req.user!.organizationId).select('billingAddress');
+        country = (org?.billingAddress?.country ?? '').toUpperCase();
+      }
+      if (!country) {
+        res.status(400).json({
+          error: 'No country available — set the organization billing country, or pass ?country=XX (ISO-3166 alpha-2).',
+        });
+        return;
+      }
+
+      const hd = new Holidays(country);
+      const items = (hd.getHolidays(year) ?? [])
+        // Public + bank holidays only — skip "observance" / "optional" entries
+        // that aren't normally days off.
+        .filter((h) => h.type === 'public' || h.type === 'bank')
+        .map((h) => ({
+          date: h.date.slice(0, 10),  // YYYY-MM-DD (drop the time portion)
+          name: h.name,
+          type: h.type,
+        }));
+
+      res.json({ country, year, holidays: items });
     } catch (e) { next(e); }
   },
 );
