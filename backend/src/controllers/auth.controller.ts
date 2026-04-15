@@ -109,6 +109,7 @@ export async function register(req: Request, res: Response, next: NextFunction):
         customRoleName: payload.customRoleName,
         organizationId: org._id,
         profilePicture: user.profilePicture,
+        isCoachee: user.isCoachee === true,
       },
     });
   } catch (error) {
@@ -162,6 +163,7 @@ export async function login(req: Request, res: Response, next: NextFunction): Pr
         customRoleName: payload.customRoleName,
         organizationId: user.organizationId,
         profilePicture: user.profilePicture,
+        isCoachee: user.isCoachee === true,
       },
     });
   } catch (error) {
@@ -242,6 +244,7 @@ export async function verify2fa(req: Request, res: Response, next: NextFunction)
         customRoleName: payload.customRoleName,
         organizationId: user.organizationId,
         profilePicture: user.profilePicture,
+        isCoachee: user.isCoachee === true,
       },
     });
   } catch (error) {

@@ -575,9 +575,9 @@ export class AppShellComponent implements OnInit, OnDestroy {
       icon: 'warning_amber',
       module: 'conflict',
       children: [
-        { label: 'Analysis',           icon: 'analytics',   route: '/conflict/analysis',           roles: ['admin', 'hr_manager', 'manager'] as AppRole[], module: 'conflict' },
-        { label: 'Conflict IDPs',      icon: 'psychology',  route: '/conflict/skill-development',  roles: ['admin', 'hr_manager', 'manager'] as AppRole[], module: 'conflict' },
-        { label: 'Knowledge Building', icon: 'school',      route: '/conflict/skill-building',     roles: ['admin', 'hr_manager', 'manager'] as AppRole[], module: 'conflict' },
+        { label: 'Analysis',           icon: 'analytics',   route: '/conflict/analysis',           roles: ['admin', 'hr_manager', 'manager', 'coach'] as AppRole[], module: 'conflict' },
+        { label: 'Conflict IDPs',      icon: 'psychology',  route: '/conflict/skill-development',  roles: ['admin', 'hr_manager', 'manager', 'coach'] as AppRole[], module: 'conflict' },
+        { label: 'Knowledge Building', icon: 'school',      route: '/conflict/skill-building',     roles: ['admin', 'hr_manager', 'manager', 'coach'] as AppRole[], module: 'conflict' },
       ],
     },
     { label: 'Neuro-Inclusion',         icon: 'psychology',   route: '/neuroinclusion', roles: ['admin', 'hr_manager', 'manager'],               module: 'neuroinclusion' },

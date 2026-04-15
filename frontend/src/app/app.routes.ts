@@ -52,7 +52,7 @@ export const routes: Routes = [
       // ── Operations modules: admin, hr_manager, manager ────────────────────
       {
         path: 'conflict',
-        canActivate: [roleGuard([...OPS])],
+        canActivate: [roleGuard([...OPS, 'coach'])],
         loadComponent: () =>
           import('./modules/conflict/conflict-shell/conflict-shell.component').then(
             (m) => m.ConflictShellComponent

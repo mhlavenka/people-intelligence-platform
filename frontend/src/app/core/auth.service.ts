@@ -18,6 +18,7 @@ export interface User {
   customRoleId?: string;
   customRoleName?: string;
   profilePicture?: string;
+  isCoachee?: boolean;
 }
 
 export interface AuthResponse {

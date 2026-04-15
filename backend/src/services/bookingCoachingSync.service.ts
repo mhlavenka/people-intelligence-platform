@@ -46,8 +46,12 @@ export async function precheckBookingQuota(
     .setOptions({ bypassTenantCheck: true });
   if (!cfg) return { allowed: true }; // route will 404 anyway
 
-  const coachee = await User.findById(coacheeId).select('_id organizationId role');
-  if (!coachee || coachee.role !== 'coachee') return { allowed: true };
+  const coachee = await User.findById(coacheeId).select('_id organizationId role isCoachee');
+  if (!coachee) return { allowed: true };
+  // Anyone who's flagged as a coachee, or whose role is literally 'coachee',
+  // counts — the flag covers internal users (manager/hr_manager/etc.) being
+  // coached, role='coachee' covers the legacy external-only path.
+  if (!coachee.isCoachee && coachee.role !== 'coachee') return { allowed: true };
   if (coachee.organizationId.toString() !== cfg.organizationId.toString()) return { allowed: true };
 
   const engagement = await CoachingEngagement.findOne({
@@ -92,10 +96,10 @@ export async function linkBookingToCoaching(
   coacheeId: string,
 ): Promise<void> {
   const coachee = await User.findById(coacheeId).select(
-    '_id organizationId role firstName lastName email',
+    '_id organizationId role isCoachee firstName lastName email',
   );
   if (!coachee) return;
-  if (coachee.role !== 'coachee') return;
+  if (!coachee.isCoachee && coachee.role !== 'coachee') return;
   if (coachee.organizationId.toString() !== booking.organizationId.toString()) return;
 
   // Find or create the engagement.

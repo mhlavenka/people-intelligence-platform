@@ -49,6 +49,7 @@ export interface IUser extends Document {
   bio?: string;
   publicSlug?: string;
   sponsorId?: mongoose.Types.ObjectId;     // who pays for this user's coaching
+  isCoachee: boolean;                       // true when this user is (or has been) in a coaching engagement — independent of their org role. An hr_manager being coached is role='hr_manager' + isCoachee=true; a purely external client is role='coachee' + isCoachee=true.
   googleCalendar?: IGoogleCalendar;
   createdAt: Date;
   updatedAt: Date;
@@ -97,6 +98,7 @@ const UserSchema = new Schema<IUser>(
     bio:              { type: String, trim: true },
     publicSlug:       { type: String, trim: true, lowercase: true, index: true, sparse: true, unique: true },
     sponsorId:        { type: Schema.Types.ObjectId, ref: 'Sponsor', index: true },
+    isCoachee:        { type: Boolean, default: false, index: true },
     twoFactorSecret:  { type: String, select: false },
     twoFactorEnabled: { type: Boolean, default: false },
     passkeys:      [PasskeyCredentialSchema],

@@ -720,7 +720,11 @@ export class EngagementDetailComponent implements OnInit {
    *  (not already cancelled or completed), has a paired Booking row, and
    *  the starting time is in the future. */
   canCoacheeManage(s: Session): boolean {
-    if (this.auth.currentUser()?.role !== 'coachee') return false;
+    // An engagement's coachee can self-service reschedule/cancel — covers
+    // both external (role='coachee') and internal (isCoachee=true) users.
+    const me = this.auth.currentUser();
+    const isCoachee = me?.role === 'coachee' || me?.isCoachee === true;
+    if (!isCoachee) return false;
     if (!s.bookingId) return false;
     if (s.status !== 'scheduled') return false;
     return new Date(s.date).getTime() > Date.now();

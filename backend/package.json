@@ -10,6 +10,7 @@
     "seed:admin": "ts-node --project tsconfig.json src/scripts/seed-admin.ts",
     "seed:surveys": "ts-node --project tsconfig.json src/scripts/seed-surveys.ts",
     "seed:plans": "ts-node --project tsconfig.json src/scripts/seed-plans.ts",
+    "backfill:isCoachee": "ts-node --project tsconfig.json src/scripts/backfill-isCoachee.ts",
     "deploy": "npm run build && pm2 restart ecosystem.config.js --env production"
   },
   "dependencies": {

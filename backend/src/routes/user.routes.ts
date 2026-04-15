@@ -254,10 +254,23 @@ router.get(
   requireRole('admin', 'hr_manager', 'coach'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
-      const users = await User.find({
+      // A coachee is anyone already flagged, or anyone in the org who is a
+      // legal candidate to be coached — i.e. not a coach/admin/system_admin.
+      // Toggled via `?onlyActive=true` when the caller wants only flagged
+      // coachees (e.g. the "Coachees" list view); default returns the pool
+      // that a coach can pick from when attaching an engagement.
+      const onlyActive = req.query['onlyActive'] === 'true';
+      const filter: Record<string, unknown> = {
         organizationId: req.user!.organizationId,
-        role: 'coachee',
-      }).select('_id firstName lastName email department');
+        isActive: true,
+      };
+      if (onlyActive) {
+        filter['isCoachee'] = true;
+      } else {
+        filter['role'] = { $nin: ['coach', 'admin', 'system_admin'] };
+      }
+      const users = await User.find(filter)
+        .select('_id firstName lastName email department role isCoachee');
       res.json(users);
     } catch (e) { next(e); }
   }

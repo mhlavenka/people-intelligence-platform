@@ -309,7 +309,7 @@ export class DashboardComponent implements OnInit {
         metricLabel: 'active analyses',
         status: 'active',
         module: 'conflict',
-        roles: ['admin', 'hr_manager', 'manager'],
+        roles: ['admin', 'hr_manager', 'manager', 'coach'],
       },
       {
         title: 'Neuro-Inclusion Compass\u2122',
