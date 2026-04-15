@@ -8,6 +8,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { ApiService } from '../../../core/api.service';
 import { AuthService } from '../../../core/auth.service';
 import { environment } from '../../../../environments/environment';
@@ -24,6 +25,7 @@ export interface OrgUser {
   customRoleId?: string;
   profilePicture?: string;
   isActive: boolean;
+  isCoachee?: boolean;
   lastLoginAt?: string;
   createdAt: string;
 }
@@ -56,6 +58,7 @@ const ROLES = [
     MatSelectModule,
     MatIconModule,
     MatProgressSpinnerModule,
+    MatCheckboxModule,
   ],
   template: `
     <h2 mat-dialog-title>
@@ -155,6 +158,18 @@ const ROLES = [
           </mat-form-field>
         }
 
+        @if (form.get('role')?.value !== 'coachee') {
+          <label class="coachee-toggle">
+            <mat-checkbox formControlName="isCoachee" color="primary" />
+            <div class="coachee-toggle-text">
+              <div class="coachee-toggle-title">This user is also a coachee</div>
+              <div class="coachee-toggle-hint">
+                Enable for internal employees who are receiving coaching in addition to their org role.
+              </div>
+            </div>
+          </label>
+        }
+
         @if (!isEdit()) {
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>Password</mat-label>
@@ -234,6 +249,21 @@ const ROLES = [
       mat-icon { color: white; font-size: 20px; width: 20px; height: 20px; }
     }
     .avatar-hint { font-size: 12px; color: #9aa5b4; }
+
+    .coachee-toggle {
+      display: flex; align-items: flex-start; gap: 10px; cursor: pointer;
+      padding: 10px 12px; border-radius: 8px; border: 1px solid #e8edf4;
+      background: rgba(124,92,191,0.05); margin: 4px 0 8px;
+      transition: background 0.15s, border-color 0.15s;
+      &:hover { background: rgba(124,92,191,0.10); border-color: rgba(124,92,191,0.3); }
+    }
+    .coachee-toggle-text { flex: 1; }
+    .coachee-toggle-title {
+      font-size: 13px; font-weight: 600; color: #1B2A47;
+    }
+    .coachee-toggle-hint {
+      font-size: 11px; color: #5a6a7e; margin-top: 2px; line-height: 1.4;
+    }
   `],
 })
 export class UserDialogComponent implements OnInit {
@@ -285,6 +315,7 @@ export class UserDialogComponent implements OnInit {
       customRoleId: [this.existingUser?.customRoleId ?? ''],
       department:   [this.existingUser?.department ?? ''],
       sponsorId:    [this.normalizeSponsorId(this.existingUser?.sponsorId) ?? ''],
+      isCoachee:    [this.existingUser?.isCoachee === true],
       ...(this.isEdit() ? {} : {
         password: ['', [Validators.required, Validators.minLength(8)]],
       }),
@@ -332,6 +363,9 @@ export class UserDialogComponent implements OnInit {
     if (!payload.sponsorId)    { payload.sponsorId = null; }
     // Sponsor only applies to coachees; strip it for any other role.
     if (payload.role !== 'coachee') { payload.sponsorId = null; }
+    // role='coachee' is implicitly a coachee — normalise the flag so the
+    // list view and the post-save hook see a consistent value.
+    if (payload.role === 'coachee') { payload.isCoachee = true; }
 
     const request = this.isEdit()
       ? this.api.put(`/users/${this.existingUser!._id}`, payload)

@@ -134,6 +134,20 @@ const ROLE_META: Record<string, { label: string; color: string }> = {
               </td>
             </ng-container>
 
+            <!-- Coachee flag -->
+            <ng-container matColumnDef="coachee">
+              <th mat-header-cell *matHeaderCellDef matTooltip="Receiving coaching">Coachee</th>
+              <td mat-cell *matCellDef="let u">
+                <mat-slide-toggle
+                  [checked]="u.isCoachee === true || u.role === 'coachee'"
+                  [disabled]="u.role === 'coachee'"
+                  (change)="toggleIsCoachee(u, $event.checked)"
+                  [matTooltip]="coacheeTooltip(u)"
+                  color="primary"
+                />
+              </td>
+            </ng-container>
+
             <!-- Department -->
             <ng-container matColumnDef="department">
               <th mat-header-cell *matHeaderCellDef>Department</th>
@@ -300,7 +314,7 @@ export class UserManagementComponent implements OnInit {
   roleFilter = signal('all');
   searchQuery = signal('');
 
-  columns = ['name', 'role', 'department', 'sponsor', 'status', 'lastLogin', 'created', 'actions'];
+  columns = ['name', 'role', 'coachee', 'department', 'sponsor', 'status', 'lastLogin', 'created', 'actions'];
 
   /** Render the sponsor as "{company} / {name}". Falls back to whichever
    *  field is present, or em-dash when the user has no sponsor. */
@@ -382,6 +396,27 @@ export class UserManagementComponent implements OnInit {
         );
         this.snackBar.open(
           `${user.firstName} ${!user.isActive ? 'activated' : 'deactivated'}`,
+          'Close', { duration: 2500 }
+        );
+      },
+      error: () => this.snackBar.open('Update failed', 'Close', { duration: 2500 }),
+    });
+  }
+
+  coacheeTooltip(u: OrgUser): string {
+    if (u.role === 'coachee') return 'External coachees are always flagged (role=coachee).';
+    return u.isCoachee ? 'Receiving coaching — click to stop flagging' : 'Not a coachee — click to flag';
+  }
+
+  toggleIsCoachee(user: OrgUser, checked: boolean): void {
+    if (user.role === 'coachee') return; // disabled in template, guard anyway
+    this.api.put(`/users/${user._id}`, { isCoachee: checked }).subscribe({
+      next: () => {
+        this.users.update((list) =>
+          list.map((u) => u._id === user._id ? { ...u, isCoachee: checked } : u)
+        );
+        this.snackBar.open(
+          `${user.firstName} ${checked ? 'flagged as coachee' : 'no longer flagged as coachee'}`,
           'Close', { duration: 2500 }
         );
       },
