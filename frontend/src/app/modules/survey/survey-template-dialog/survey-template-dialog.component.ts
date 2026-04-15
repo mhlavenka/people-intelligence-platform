@@ -20,7 +20,7 @@ import { ApiService } from '../../../core/api.service';
 interface SurveyTemplate {
   _id: string;
   title: string;
-  moduleType: 'conflict' | 'neuroinclusion' | 'succession';
+  moduleType: 'conflict' | 'neuroinclusion' | 'succession' | 'coaching';
   intakeType: 'survey' | 'interview' | 'assessment';
   isActive: boolean;
   isGlobal?: boolean;
@@ -154,6 +154,7 @@ interface SurveyTemplate {
                     <mat-option value="conflict">Conflict Intelligence</mat-option>
                     <mat-option value="neuroinclusion">Neuro-Inclusion Compass</mat-option>
                     <mat-option value="succession">Leadership &amp; Succession</mat-option>
+                    <mat-option value="coaching">Coaching</mat-option>
                   </mat-select>
                 </mat-form-field>
 

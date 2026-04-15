@@ -3,6 +3,8 @@ import { authenticateToken, requireRole, AuthRequest } from '../middleware/auth.
 import { tenantResolver } from '../middleware/tenant.middleware';
 import { CoachingEngagement } from '../models/CoachingEngagement.model';
 import { CoachingSession } from '../models/CoachingSession.model';
+import { SurveyTemplate } from '../models/SurveyTemplate.model';
+import { SurveyResponse } from '../models/SurveyResponse.model';
 import { User } from '../models/User.model';
 import * as gcal from '../services/googleCalendar.service';
 import {
@@ -26,6 +28,33 @@ async function resolveCoachee(coacheeId: string): Promise<{ name: string; email?
 async function isCalendarConnected(coachId: string): Promise<boolean> {
   const coach = await User.findById(coachId).select('googleCalendar.connected');
   return coach?.googleCalendar?.connected === true;
+}
+
+/** Validate that a pre-session intake template reference is legal for this org.
+ *  Must be an active assessment-type template, either global or in the org. */
+async function assertValidPreSessionIntake(
+  templateId: unknown,
+  organizationId: string,
+): Promise<void> {
+  if (!templateId) return;
+  const tpl = await SurveyTemplate.findById(templateId as string)
+    .setOptions({ bypassTenantCheck: true });
+  if (!tpl) {
+    throw Object.assign(new Error('Pre-session intake template not found'), { statusCode: 400 });
+  }
+  const sameOrg = tpl.organizationId?.toString() === organizationId;
+  if (!tpl.isGlobal && !sameOrg) {
+    throw Object.assign(new Error('Pre-session intake template not accessible'), { statusCode: 400 });
+  }
+  if (!tpl.isActive) {
+    throw Object.assign(new Error('Pre-session intake template is inactive'), { statusCode: 400 });
+  }
+  if (tpl.intakeType !== 'assessment') {
+    throw Object.assign(
+      new Error('Pre-session intake must be an assessment-type template'),
+      { statusCode: 400 },
+    );
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -179,8 +208,28 @@ router.get('/sessions', async (req: AuthRequest, res: Response, next: NextFuncti
       .select(selectFields as string)
       .populate('coacheeId', 'firstName lastName profilePicture')
       .populate('coachId', 'firstName lastName email profilePicture')
+      .populate('preSessionIntakeTemplateId', 'title moduleType intakeType')
       .sort({ date: -1 });
-    res.json(sessions);
+
+    // Annotate each session with whether the coachee has submitted the
+    // pre-session intake, so coach + coachee UIs can show the right status.
+    const sessionIds = sessions
+      .filter((s) => s.preSessionIntakeTemplateId)
+      .map((s) => s._id);
+    const completedIds = sessionIds.length
+      ? new Set(
+          (await SurveyResponse.find({
+            sessionId: { $in: sessionIds },
+            organizationId: req.user!.organizationId,
+          }).select('sessionId').lean()).map((r) => r.sessionId?.toString()),
+        )
+      : new Set<string>();
+
+    const result = sessions.map((s) => ({
+      ...s.toObject(),
+      preSessionIntakeCompleted: completedIds.has((s._id as { toString(): string }).toString()),
+    }));
+    res.json(result);
   } catch (e) { next(e); }
 });
 
@@ -193,9 +242,20 @@ router.get('/sessions/:id', async (req: AuthRequest, res: Response, next: NextFu
     )
       .select(selectFields as string)
       .populate('coacheeId', 'firstName lastName profilePicture')
-      .populate('coachId', 'firstName lastName email profilePicture');
+      .populate('coachId', 'firstName lastName email profilePicture')
+      .populate('preSessionIntakeTemplateId', 'title moduleType intakeType questions description instructions');
     if (!session) { res.status(404).json({ error: 'Session not found' }); return; }
-    res.json(session);
+
+    // Attach the coachee's pre-session intake response (if any) so the coach
+    // sees completion status and the coachee sees "already submitted".
+    let preSessionIntakeResponse = null;
+    if (session.preSessionIntakeTemplateId) {
+      preSessionIntakeResponse = await SurveyResponse.findOne({
+        sessionId: session._id,
+        organizationId: req.user!.organizationId,
+      }).lean();
+    }
+    res.json({ ...session.toObject(), preSessionIntakeResponse });
   } catch (e) { next(e); }
 });
 
@@ -205,6 +265,10 @@ router.post(
   requireRole('admin', 'hr_manager', 'coach'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
+      await assertValidPreSessionIntake(
+        req.body.preSessionIntakeTemplateId,
+        req.user!.organizationId,
+      );
       const session = await CoachingSession.create({
         ...req.body,
         organizationId: req.user!.organizationId,
@@ -262,6 +326,16 @@ router.put(
         organizationId: req.user!.organizationId,
       });
       if (!existing) { res.status(404).json({ error: 'Session not found' }); return; }
+
+      if (
+        req.body.preSessionIntakeTemplateId
+        && req.body.preSessionIntakeTemplateId !== existing.preSessionIntakeTemplateId?.toString()
+      ) {
+        await assertValidPreSessionIntake(
+          req.body.preSessionIntakeTemplateId,
+          req.user!.organizationId,
+        );
+      }
 
       const wasNotCompleted = existing.status !== 'completed';
       const prev = { date: existing.date, status: existing.status };

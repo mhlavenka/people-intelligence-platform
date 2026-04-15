@@ -19,7 +19,7 @@ import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-d
 interface SurveyTemplate {
   _id: string;
   title: string;
-  moduleType: 'conflict' | 'neuroinclusion' | 'succession';
+  moduleType: 'conflict' | 'neuroinclusion' | 'succession' | 'coaching';
   intakeType: 'survey' | 'interview' | 'assessment';
   questions: { id: string; text: string; type: string; category: string }[];
   isActive: boolean;
@@ -340,6 +340,7 @@ interface SurveyTemplate {
       &.conflict       { background: rgba(232,108,58,0.12); color: #c04a14; }
       &.neuroinclusion { background: rgba(39,196,160,0.12);  color: #1a9678; }
       &.succession     { background: rgba(58,159,214,0.12);  color: #2080b0; }
+      &.coaching       { background: rgba(124,92,191,0.12);  color: #5e3fa8; }
     }
     .intake-type-badge {
       &.survey     { background: rgba(124,92,191,0.12); color: #6135b3; }
@@ -391,6 +392,7 @@ export class SurveyManagementComponent implements OnInit {
     { key: 'conflict',       label: 'Conflict',       icon: 'warning_amber' },
     { key: 'neuroinclusion', label: 'Neuro-Inclusion', icon: 'psychology' },
     { key: 'succession',     label: 'Succession',     icon: 'trending_up' },
+    { key: 'coaching',       label: 'Coaching',       icon: 'self_improvement' },
   ];
 
   intakeTypeTabs = [
@@ -427,10 +429,16 @@ export class SurveyManagementComponent implements OnInit {
       : this.templates().filter((t) => (t.intakeType ?? 'survey') === key).length;
 
   moduleIcon = (type: string) =>
-    type === 'conflict' ? 'warning_amber' : type === 'neuroinclusion' ? 'psychology' : 'trending_up';
+    type === 'conflict' ? 'warning_amber'
+    : type === 'neuroinclusion' ? 'psychology'
+    : type === 'coaching' ? 'self_improvement'
+    : 'trending_up';
 
   moduleLabel = (type: string) =>
-    type === 'conflict' ? 'Conflict' : type === 'neuroinclusion' ? 'Neuro-Inclusion' : 'Succession';
+    type === 'conflict' ? 'Conflict'
+    : type === 'neuroinclusion' ? 'Neuro-Inclusion'
+    : type === 'coaching' ? 'Coaching'
+    : 'Succession';
 
   intakeTypeIcon = (type: string) =>
     type === 'interview' ? 'record_voice_over' : type === 'assessment' ? 'fact_check' : 'poll';

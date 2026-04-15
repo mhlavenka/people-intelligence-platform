@@ -395,6 +395,7 @@ const FORMAT_OPTIONS: { key: SessionFormat; label: string; icon: string; hint: s
       &.conflict       { background: rgba(232,108,58,0.1); color: #c04a14; }
       &.neuroinclusion { background: rgba(39,196,160,0.1); color: #1a9678; }
       &.succession     { background: rgba(58,159,214,0.1); color: #2080b0; }
+      &.coaching       { background: rgba(124,92,191,0.1); color: #5e3fa8; }
     }
 
     /* Format cards */
@@ -597,7 +598,7 @@ export class CoachInterviewComponent implements OnInit {
 
   moduleLabelFor(moduleType: string): string {
     const map: Record<string, string> = {
-      conflict: 'Conflict', neuroinclusion: 'Neuro-Inclusion', succession: 'Succession',
+      conflict: 'Conflict', neuroinclusion: 'Neuro-Inclusion', succession: 'Succession', coaching: 'Coaching',
     };
     return map[moduleType] ?? moduleType;
   }

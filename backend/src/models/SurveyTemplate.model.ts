@@ -132,7 +132,7 @@ export interface IScoringConfig {
 // ── Survey template ───────────────────────────────────────────────────────────
 export interface ISurveyTemplate extends Document {
     organizationId?: mongoose.Types.ObjectId;
-    moduleType: 'conflict' | 'neuroinclusion' | 'succession';
+    moduleType: 'conflict' | 'neuroinclusion' | 'succession' | 'coaching';
     intakeType: 'survey' | 'interview' | 'assessment';
 
     // Instrument identity
@@ -307,7 +307,7 @@ const SurveyTemplateSchema = new Schema<ISurveyTemplate>(
         },
         moduleType: {
             type: String,
-            enum: ['conflict', 'neuroinclusion', 'succession'],
+            enum: ['conflict', 'neuroinclusion', 'succession', 'coaching'],
             required: true,
         },
         intakeType: {

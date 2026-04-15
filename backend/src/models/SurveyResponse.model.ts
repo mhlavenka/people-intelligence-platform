@@ -13,7 +13,8 @@ export interface ISurveyResponse extends Document {
   coachId?: mongoose.Types.ObjectId;      // set when a coach conducts on behalf of a coachee
   sessionFormat?: 'individual' | 'team' | 'group';
   targetName?: string;                    // free-text target identifier for coach-led sessions
-  submissionToken: string;               // SHA-256(userId + templateId) — used for dedup
+  sessionId?: mongoose.Types.ObjectId;    // linked CoachingSession when this response is a pre-session intake
+  submissionToken: string;               // SHA-256(userId + templateId [+ sessionId]) — used for dedup
   departmentId?: string;
   responses: IResponseItem[];
   submittedAt: Date;
@@ -43,6 +44,7 @@ const SurveyResponseSchema = new Schema<ISurveyResponse>(
     coachId: { type: Schema.Types.ObjectId, ref: 'User' },      // set for coach-led sessions
     sessionFormat: { type: String, enum: ['individual', 'team', 'group'] },
     targetName: { type: String },
+    sessionId: { type: Schema.Types.ObjectId, ref: 'CoachingSession', index: true },
     submissionToken: { type: String, required: true },          // one-way hash, always present
     departmentId: { type: String },
     responses: [ResponseItemSchema],

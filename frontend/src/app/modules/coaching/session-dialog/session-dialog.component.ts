@@ -21,7 +21,7 @@ const GROW_PHASES = [
 ];
 
 const FRAMEWORKS = [
-  'GROW', 'Solution-Focused', 'Cognitive-Behavioral', 'Positive Psychology',
+  'GROW', 'LUMINA Spark', 'Solution-Focused', 'Cognitive-Behavioral', 'Positive Psychology',
   'Gestalt', 'Narrative', 'Systemic', 'Transactional Analysis',
 ];
 
@@ -99,6 +99,32 @@ const FRAMEWORKS = [
           </mat-select>
         </mat-form-field>
 
+        <div class="section-label">Pre-Session Intake</div>
+        <div class="intake-hint">
+          <mat-icon>assignment_turned_in</mat-icon>
+          <span>Attach an assessment for the coachee to complete before the session.</span>
+        </div>
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Pre-Session Assessment (optional)</mat-label>
+          <mat-select [(ngModel)]="form.preSessionIntakeTemplateId">
+            <mat-option [value]="null">— None —</mat-option>
+            @for (t of assessmentTemplates(); track t._id) {
+              <mat-option [value]="t._id">{{ t.title }}</mat-option>
+            }
+          </mat-select>
+          <mat-hint>Only assessment-type templates appear here.</mat-hint>
+        </mat-form-field>
+        @if (intakeStatus()) {
+          <div class="intake-status" [class.completed]="intakeStatus() === 'completed'">
+            <mat-icon>{{ intakeStatus() === 'completed' ? 'check_circle' : 'schedule' }}</mat-icon>
+            <span>
+              {{ intakeStatus() === 'completed'
+                  ? 'Coachee completed the pre-session intake.'
+                  : 'Waiting for the coachee to complete the pre-session intake.' }}
+            </span>
+          </div>
+        }
+
         <div class="section-label">Notes</div>
         <div class="notes-warning">
           <mat-icon>visibility</mat-icon>
@@ -164,6 +190,21 @@ const FRAMEWORKS = [
     }
     .star-value { font-size: 13px; color: #5a6a7e; font-weight: 600; margin-left: 8px; }
 
+    .intake-hint {
+      display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 8px;
+      background: rgba(124,92,191,0.08); border: 1px solid rgba(124,92,191,0.24);
+      margin-bottom: 8px; font-size: 12px; color: #5e3fa8;
+      mat-icon { font-size: 16px; color: #7c5cbf; }
+    }
+    .intake-status {
+      display: flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 8px;
+      background: #fff8f0; border: 1px solid #fde0c2; font-size: 12px; color: #b07800;
+      margin: -4px 0 8px;
+      mat-icon { font-size: 16px; color: #f0a500; }
+      &.completed { background: #f0f9f4; border-color: #b9e6d0; color: #1a9678;
+        mat-icon { color: #27C4A0; } }
+    }
+
     .notes-warning {
       display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 8px;
       background: #f0f9ff; border: 1px solid #bae6fd; margin-bottom: 8px;
@@ -199,7 +240,11 @@ export class SessionDialogComponent implements OnInit {
     growFocus: [] as string[], frameworks: [] as string[], coachNotes: '', sharedNotes: '',
     preSessionRating: null as number | null, postSessionRating: null as number | null,
     topics: [] as string[], engagementId: '', coacheeId: '',
+    preSessionIntakeTemplateId: null as string | null,
   };
+
+  assessmentTemplates = signal<{ _id: string; title: string; moduleType: string }[]>([]);
+  intakeStatus = signal<'pending' | 'completed' | null>(null);
 
   ngOnInit(): void {
     if (this.data?._id) {
@@ -209,8 +254,37 @@ export class SessionDialogComponent implements OnInit {
       const h = this.form.date.getHours().toString().padStart(2, '0');
       const m = this.form.date.getMinutes().toString().padStart(2, '0');
       this.startTime = `${h}:${m}`;
+
+      // preSessionIntakeTemplateId may arrive populated — normalise to id string
+      const tpl = (this.data as { preSessionIntakeTemplateId?: unknown }).preSessionIntakeTemplateId;
+      if (tpl && typeof tpl === 'object' && tpl !== null && '_id' in tpl) {
+        this.form.preSessionIntakeTemplateId = String((tpl as { _id: unknown })._id);
+      } else if (typeof tpl === 'string') {
+        this.form.preSessionIntakeTemplateId = tpl;
+      }
+
+      if (this.form.preSessionIntakeTemplateId) {
+        this.intakeStatus.set(
+          (this.data as { preSessionIntakeResponse?: unknown }).preSessionIntakeResponse
+            ? 'completed'
+            : 'pending',
+        );
+      }
     }
     this.topicsRaw = (this.form.topics || []).join(', ');
+    this.loadAssessmentTemplates();
+  }
+
+  private loadAssessmentTemplates(): void {
+    this.api.get<{ _id: string; title: string; moduleType: string; intakeType?: string; isActive?: boolean }[]>('/surveys/templates')
+      .subscribe((list) => {
+        const filtered = (list || [])
+          .filter((t) => t.isActive !== false && t.intakeType === 'assessment')
+          .map((t) => ({ _id: t._id, title: t.title, moduleType: t.moduleType }))
+          // coaching templates first
+          .sort((a, b) => (a.moduleType === 'coaching' ? -1 : 0) - (b.moduleType === 'coaching' ? -1 : 0));
+        this.assessmentTemplates.set(filtered);
+      });
   }
 
   isGrowChecked(key: string): boolean { return (this.form.growFocus || []).includes(key); }

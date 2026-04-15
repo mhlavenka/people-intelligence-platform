@@ -36,6 +36,8 @@ interface Session {
   createdAt: string;
   createdVia?: 'coach' | 'coachee_booking';
   bookingId?: string;
+  preSessionIntakeTemplateId?: { _id: string; title: string; moduleType?: string } | string | null;
+  preSessionIntakeCompleted?: boolean;
 }
 
 @Component({
@@ -250,6 +252,34 @@ interface Session {
                         <span class="notes-label"><mat-icon>visibility</mat-icon> Shared Notes</span>
                         <p>{{ s.sharedNotes }}</p>
                       </div>
+                    }
+
+                    @if (preSessionIntakeTitle(s); as intakeTitle) {
+                      @if (!canManage() && !s.preSessionIntakeCompleted && s.status === 'scheduled') {
+                        <a class="intake-card coachee-action"
+                           [routerLink]="['/intake', preSessionIntakeTemplateId(s)]"
+                           [queryParams]="{ sessionId: s._id }">
+                          <mat-icon>assignment</mat-icon>
+                          <div class="intake-body">
+                            <div class="intake-title">Complete your pre-session reflection</div>
+                            <div class="intake-sub">{{ intakeTitle }}</div>
+                          </div>
+                          <mat-icon class="chev">chevron_right</mat-icon>
+                        </a>
+                      } @else {
+                        <div class="intake-card status"
+                             [class.completed]="s.preSessionIntakeCompleted">
+                          <mat-icon>{{ s.preSessionIntakeCompleted ? 'check_circle' : 'schedule' }}</mat-icon>
+                          <div class="intake-body">
+                            <div class="intake-title">
+                              {{ s.preSessionIntakeCompleted
+                                ? 'Pre-session intake completed'
+                                : 'Pre-session intake pending' }}
+                            </div>
+                            <div class="intake-sub">{{ intakeTitle }}</div>
+                          </div>
+                        </div>
+                      }
                     }
 
                     @if (s.coachNotes && canManage()) {
@@ -601,6 +631,34 @@ interface Session {
       .upcoming-dur { color: #9aa5b4; font-size: 11px; }
     }
 
+    .intake-card {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 14px; border-radius: 10px;
+      margin: 8px 0;
+      text-decoration: none;
+      background: rgba(124,92,191,0.08);
+      border: 1px solid rgba(124,92,191,0.22);
+      color: #5e3fa8;
+      mat-icon { color: #7c5cbf; }
+      .intake-body { flex: 1; min-width: 0; }
+      .intake-title { font-weight: 600; font-size: 14px; color: #1B2A47; }
+      .intake-sub { font-size: 12px; color: #5a6a7e; margin-top: 2px; }
+      .chev { color: #9aa5b4; }
+      &.coachee-action {
+        cursor: pointer;
+        transition: all 0.15s;
+        &:hover { background: rgba(124,92,191,0.14); border-color: #7c5cbf; }
+      }
+      &.status {
+        background: #fff8f0; border-color: #fde0c2; color: #b07800;
+        mat-icon { color: #f0a500; }
+        &.completed {
+          background: #f0f9f4; border-color: #b9e6d0; color: #1a9678;
+          mat-icon { color: #27C4A0; }
+        }
+      }
+    }
+
     @media (max-width: 768px) { .detail-layout { grid-template-columns: 1fr; } .info-card { position: static; } .sidebar-col { position: static; } }
   `],
 })
@@ -666,6 +724,18 @@ export class EngagementDetailComponent implements OnInit {
     if (!s.bookingId) return false;
     if (s.status !== 'scheduled') return false;
     return new Date(s.date).getTime() > Date.now();
+  }
+
+  preSessionIntakeTitle(s: Session): string | null {
+    const tpl = s.preSessionIntakeTemplateId;
+    if (!tpl) return null;
+    return typeof tpl === 'string' ? 'Pre-session intake' : (tpl.title || 'Pre-session intake');
+  }
+
+  preSessionIntakeTemplateId(s: Session): string | null {
+    const tpl = s.preSessionIntakeTemplateId;
+    if (!tpl) return null;
+    return typeof tpl === 'string' ? tpl : tpl._id;
   }
 
   prevMonth(): void { const d = new Date(this.currentMonth()); d.setMonth(d.getMonth() - 1); this.currentMonth.set(d); }

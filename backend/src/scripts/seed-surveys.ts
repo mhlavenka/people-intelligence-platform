@@ -324,6 +324,47 @@ const successionBench: { title: string; moduleType: 'succession'; questions: IQu
   ],
 };
 
+const coachingPreSession: {
+  title: string;
+  moduleType: 'coaching';
+  intakeType: 'assessment';
+  description: string;
+  instructions: string;
+  questions: IQuestion[];
+} = {
+  title: 'Coaching — Pre-Session Reflection',
+  moduleType: 'coaching',
+  intakeType: 'assessment',
+  description:
+    'A short reflection for the coachee to complete in the hours before a coaching session. ' +
+    'Helps the coach prepare and ensures the session time focuses on what matters most.',
+  instructions:
+    'Take 5–10 minutes before your session to reflect on the prompts below. ' +
+    'There are no right or wrong answers — your honesty gives the session its direction.',
+  questions: [
+    { id: 'cps01', category: 'Current State', type: 'scale',
+      text: 'How would you rate your energy level right now? (1 = depleted, 5 = energised)' },
+    { id: 'cps02', category: 'Current State', type: 'scale',
+      text: 'How emotionally ready do you feel to explore challenging topics today? (1 = not ready, 5 = fully ready)' },
+    { id: 'cps03', category: 'Focus', type: 'text',
+      text: 'What is the single most important topic you want to bring to this session?' },
+    { id: 'cps04', category: 'Focus', type: 'text',
+      text: 'What would make this session a success for you? What do you want to walk away with?' },
+    { id: 'cps05', category: 'Since Last Session', type: 'text',
+      text: 'What has been most on your mind since we last spoke?' },
+    { id: 'cps06', category: 'Since Last Session', type: 'scale',
+      text: 'How would you rate your progress on the commitments or actions from your last session? (1 = no progress, 5 = fully delivered)' },
+    { id: 'cps07', category: 'Since Last Session', type: 'text',
+      text: 'Describe one event, conversation, or insight from the last week or two that feels significant.' },
+    { id: 'cps08', category: 'Obstacles', type: 'text',
+      text: 'What, if anything, is getting in the way of what you want to achieve right now?' },
+    { id: 'cps09', category: 'Support', type: 'text',
+      text: 'What kind of support would be most useful from me as your coach today? (e.g. challenge, listening, structure, accountability)' },
+    { id: 'cps10', category: 'Boundaries', type: 'text',
+      text: 'Is there anything you would prefer not to discuss in this session? (Optional)' },
+  ],
+};
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Seeder
 // ─────────────────────────────────────────────────────────────────────────────
@@ -335,12 +376,20 @@ async function seed(): Promise<void> {
   await mongoose.connect(uri);
   console.log('Connected to MongoDB');
 
-  const templates = [
+  const templates: Array<{
+    title: string;
+    moduleType: 'conflict' | 'neuroinclusion' | 'succession' | 'coaching';
+    intakeType?: 'survey' | 'interview' | 'assessment';
+    description?: string;
+    instructions?: string;
+    questions: IQuestion[];
+  }> = [
     conflictPulse,
     conflictDeepDive,
     neuroinclMaturity,
     leadershipReadiness,
     successionBench,
+    coachingPreSession,
   ];
 
   // Remove any old org-scoped copies created by a previous seed run
@@ -369,7 +418,10 @@ async function seed(): Promise<void> {
 
     await SurveyTemplate.create({
       moduleType: tpl.moduleType,
+      intakeType: tpl.intakeType ?? 'survey',
       title: tpl.title,
+      description: tpl.description,
+      instructions: tpl.instructions,
       questions: tpl.questions,
       isActive: true,
       isGlobal: true,

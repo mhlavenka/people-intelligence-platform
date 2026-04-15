@@ -245,6 +245,7 @@ interface DeptBreakdown { dept: string; count: number; pct: number; }
       &.conflict       { background: rgba(232,108,58,0.12); color: #c04a14; }
       &.neuroinclusion { background: rgba(39,196,160,0.12);  color: #1a9678; }
       &.succession     { background: rgba(58,159,214,0.12);  color: #2080b0; }
+      &.coaching       { background: rgba(124,92,191,0.12);  color: #5e3fa8; }
     }
 
     mat-dialog-content {

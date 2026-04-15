@@ -5,8 +5,9 @@ import { tenantResolver } from '../middleware/tenant.middleware';
 import { SurveyTemplate } from '../models/SurveyTemplate.model';
 import { SurveyResponse } from '../models/SurveyResponse.model';
 
-function makeSubmissionToken(userId: string, templateId: string): string {
-  return createHash('sha256').update(`${userId}:${templateId}`).digest('hex');
+function makeSubmissionToken(userId: string, templateId: string, sessionId?: string): string {
+  const payload = sessionId ? `${userId}:${templateId}:${sessionId}` : `${userId}:${templateId}`;
+  return createHash('sha256').update(payload).digest('hex');
 }
 
 const router = Router();
@@ -137,9 +138,11 @@ router.delete(
 // Check if the authenticated user already submitted a response for this template
 router.get('/check/:templateId', async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
+    const sessionId = typeof req.query['sessionId'] === 'string' ? req.query['sessionId'] : undefined;
     const token = makeSubmissionToken(
       req.user!.userId.toString(),
-      req.params['templateId']
+      req.params['templateId'],
+      sessionId,
     );
     const existing = await SurveyResponse.findOne({ submissionToken: token }).setOptions({ bypassTenantCheck: true });
     res.json({ alreadySubmitted: !!existing });
@@ -150,11 +153,16 @@ router.get('/check/:templateId', async (req: AuthRequest, res: Response, next: N
 
 router.post('/respond', async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const { templateId, isAnonymous = true, departmentId, responses, coacheeId, sessionFormat, targetName } = req.body;
+    const {
+      templateId, isAnonymous = true, departmentId, responses,
+      coacheeId, sessionFormat, targetName, sessionId,
+    } = req.body;
 
-    // When a coach submits on behalf of a coachee, de-duplicate by coachee+template
+    // When a coach submits on behalf of a coachee, de-duplicate by coachee+template.
+    // When the response is tied to a coaching session, include the sessionId so
+    // the same template can be reused across multiple sessions for the same coachee.
     const tokenSubject = coacheeId ? coacheeId.toString() : req.user!.userId.toString();
-    const submissionToken = makeSubmissionToken(tokenSubject, templateId);
+    const submissionToken = makeSubmissionToken(tokenSubject, templateId, sessionId);
 
     // Duplicate check — DB unique index is the safety net, but give a friendly error here
     const existing = await SurveyResponse.findOne({ submissionToken }).setOptions({ bypassTenantCheck: true });
@@ -172,6 +180,8 @@ router.post('/respond', async (req: AuthRequest, res: Response, next: NextFuncti
       isAnonymous: coacheeId ? false : isAnonymous,
       submittedAt: new Date(),
     };
+
+    if (sessionId) doc['sessionId'] = sessionId;
 
     // Coach-led submission: attribute to the coachee
     if (coacheeId) {

@@ -23,6 +23,7 @@ export interface ICoachingSession extends Document {
   googleMeetLink?: string;
   bookingId?: mongoose.Types.ObjectId;  // paired Booking row, if any
   createdVia: 'coach' | 'coachee_booking';
+  preSessionIntakeTemplateId?: mongoose.Types.ObjectId;  // SurveyTemplate (intakeType=assessment) attached for the coachee to complete
   createdAt: Date;
   updatedAt: Date;
 }
@@ -56,6 +57,7 @@ const CoachingSessionSchema = new Schema<ICoachingSession>(
       enum: ['coach', 'coachee_booking'],
       default: 'coach',
     },
+    preSessionIntakeTemplateId: { type: Schema.Types.ObjectId, ref: 'SurveyTemplate' },
   },
   { timestamps: true }
 );

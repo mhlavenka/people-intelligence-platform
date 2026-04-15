@@ -316,6 +316,7 @@ const DEPARTMENTS = [
         &.conflict      { background: rgba(232,108,58,0.12); color: #c04a14; mat-icon { font-size: 16px; } }
         &.neuroinclusion{ background: rgba(39,196,160,0.12); color: #1a9678; mat-icon { font-size: 16px; } }
         &.succession    { background: rgba(58,159,214,0.12); color: #2080b0; mat-icon { font-size: 16px; } }
+        &.coaching      { background: rgba(124,92,191,0.12); color: #5e3fa8; mat-icon { font-size: 16px; } }
       }
 
       h1 { font-size: 22px; color: #1B2A47; margin: 0 0 8px; line-height: 1.3; }
@@ -483,12 +484,18 @@ export class SurveyTakeComponent implements OnInit {
 
   moduleIcon = () => {
     const m = this.template()?.moduleType;
-    return m === 'conflict' ? 'warning_amber' : m === 'neuroinclusion' ? 'psychology' : 'trending_up';
+    return m === 'conflict' ? 'warning_amber'
+      : m === 'neuroinclusion' ? 'psychology'
+      : m === 'coaching' ? 'self_improvement'
+      : 'trending_up';
   };
 
   moduleLabel = () => {
     const m = this.template()?.moduleType;
-    return m === 'conflict' ? 'Conflict Intelligence' : m === 'neuroinclusion' ? 'Neuro-Inclusion' : 'Succession';
+    return m === 'conflict' ? 'Conflict Intelligence'
+      : m === 'neuroinclusion' ? 'Neuro-Inclusion'
+      : m === 'coaching' ? 'Coaching'
+      : 'Succession';
   };
 
   scaleMin = (q: Question) => q.scale_range?.min ?? 1;
@@ -525,11 +532,18 @@ export class SurveyTakeComponent implements OnInit {
     private api: ApiService
   ) {}
 
+  sessionId: string | null = null;
+
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
+    this.sessionId = this.route.snapshot.queryParamMap.get('sessionId');
     if (!id) { this.loading.set(false); return; }
 
-    this.api.get<{ alreadySubmitted: boolean }>(`/surveys/check/${id}`).subscribe({
+    const checkUrl = this.sessionId
+      ? `/surveys/check/${id}?sessionId=${encodeURIComponent(this.sessionId)}`
+      : `/surveys/check/${id}`;
+
+    this.api.get<{ alreadySubmitted: boolean }>(checkUrl).subscribe({
       next: (result) => {
         if (result.alreadySubmitted) {
           this.alreadySubmitted.set(true);
@@ -544,7 +558,15 @@ export class SurveyTakeComponent implements OnInit {
 
   private loadTemplate(id: string): void {
     this.api.get<SurveyTemplate>(`/surveys/templates/${id}`).subscribe({
-      next: (t) => { this.template.set(t); this.loading.set(false); },
+      next: (t) => {
+        this.template.set(t);
+        this.loading.set(false);
+        // Session-linked intakes skip the anonymous-dept step — the response is
+        // tied to the coachee via their auth + the sessionId.
+        if (this.sessionId) {
+          this.phase.set(t.instructions ? 'instructions' : 'questions');
+        }
+      },
       error: (err) => {
         if (err.status === 410) { this.surveyInactive.set(true); }
         this.loading.set(false);
@@ -596,12 +618,19 @@ export class SurveyTakeComponent implements OnInit {
       value,
     }));
 
-    this.api.post('/surveys/respond', {
+    const body: Record<string, unknown> = {
       templateId: t._id,
-      departmentId: this.selectedDept || undefined,
-      isAnonymous: true,
       responses,
-    }).subscribe({
+    };
+    if (this.sessionId) {
+      body['sessionId'] = this.sessionId;
+      body['isAnonymous'] = false;
+    } else {
+      body['departmentId'] = this.selectedDept || undefined;
+      body['isAnonymous'] = true;
+    }
+
+    this.api.post('/surveys/respond', body).subscribe({
       next: () => { this.submitting.set(false); this.submitted.set(true); },
       error: (err) => {
         this.submitting.set(false);
