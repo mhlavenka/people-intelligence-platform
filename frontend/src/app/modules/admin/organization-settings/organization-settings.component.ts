@@ -565,77 +565,77 @@ const RADIUS_OPTIONS = [
               <p class="modules-hint">Toggle which modules are active for your organization.</p>
               <div class="modules-list">
                 @for (mod of allModules(); track mod.key) {
-                  <div class="module-row" [class.enabled]="isModuleEnabled(mod.key)">
-                    <div class="module-icon" [style.background]="mod.color + '18'"
-                                             [style.color]="mod.color">
-                      <mat-icon>{{ mod.icon }}</mat-icon>
+                  <div class="module-block">
+                    <div class="module-row" [class.enabled]="isModuleEnabled(mod.key)">
+                      <div class="module-icon" [style.background]="mod.color + '18'"
+                                               [style.color]="mod.color">
+                        <mat-icon>{{ mod.icon }}</mat-icon>
+                      </div>
+                      <div class="module-info">
+                        <span class="module-name">{{ mod.label }}</span>
+                        <span class="module-status">{{ isModuleEnabled(mod.key) ? 'Active' : 'Inactive' }}</span>
+                      </div>
+                      <button mat-stroked-button
+                              [color]="isModuleEnabled(mod.key) ? 'warn' : 'primary'"
+                              (click)="toggleModule(mod.key)"
+                              [disabled]="savingModules()">
+                        {{ isModuleEnabled(mod.key) ? 'Disable' : 'Enable' }}
+                      </button>
                     </div>
-                    <div class="module-info">
-                      <span class="module-name">{{ mod.label }}</span>
-                      <span class="module-status">{{ isModuleEnabled(mod.key) ? 'Active' : 'Inactive' }}</span>
-                    </div>
-                    <button mat-stroked-button
-                            [color]="isModuleEnabled(mod.key) ? 'warn' : 'primary'"
-                            (click)="toggleModule(mod.key)"
-                            [disabled]="savingModules()">
-                      {{ isModuleEnabled(mod.key) ? 'Disable' : 'Enable' }}
-                    </button>
+
+                    @if (mod.key === 'coaching' && isModuleEnabled('coaching')) {
+                      <div class="module-sub-settings">
+                        <div class="sub-row">
+                          <div class="sub-icon" style="background: rgba(124,92,191,0.12); color: #7c5cbf;">
+                            <mat-icon>receipt_long</mat-icon>
+                          </div>
+                          <div class="module-info">
+                            <span class="module-name">Rebill Coachees</span>
+                            <span class="module-status">{{ org()?.coachingRebill ? 'Coachees will be billed for sessions' : 'Coachee billing is off' }}</span>
+                          </div>
+                          <mat-slide-toggle color="primary"
+                            [checked]="org()?.coachingRebill ?? false"
+                            (change)="toggleCoachingRebill($event.checked)"
+                            [disabled]="savingModules()" />
+                        </div>
+                        @if (org()?.coachingRebill) {
+                          <div class="default-rate-row">
+                            <mat-form-field appearance="outline" class="rate-field">
+                              <mat-label>Default Hourly Rate ($)</mat-label>
+                              <input matInput type="number" min="0" step="0.01"
+                                     [ngModel]="org()?.defaultCoachRate ?? ''"
+                                     (ngModelChange)="pendingRate = $event" />
+                              <mat-icon matPrefix>attach_money</mat-icon>
+                            </mat-form-field>
+                            <button mat-stroked-button color="primary"
+                                    (click)="saveDefaultRate()" [disabled]="savingModules()">
+                              Save Rate
+                            </button>
+                          </div>
+                        }
+
+                        <div class="sub-row">
+                          <div class="sub-icon" style="background: rgba(58,159,214,0.12); color: #3A9FD6;">
+                            <mat-icon>person_search</mat-icon>
+                          </div>
+                          <div class="module-info">
+                            <span class="module-name">Coachees can choose their own coach</span>
+                            <span class="module-status">
+                              {{ (org()?.coacheeCanChooseCoach !== false)
+                                  ? 'Coachees see a picker when booking'
+                                  : 'Booking is locked to the assigned coach' }}
+                            </span>
+                          </div>
+                          <mat-slide-toggle color="primary"
+                            [checked]="org()?.coacheeCanChooseCoach !== false"
+                            (change)="toggleCoacheeCanChooseCoach($event.checked)"
+                            [disabled]="savingModules()" />
+                        </div>
+                      </div>
+                    }
                   </div>
                 }
               </div>
-
-              @if (isModuleEnabled('coaching')) {
-                <mat-divider />
-                <div class="coaching-rebill-section">
-                  <div class="toggle-row">
-                    <div class="module-icon" style="background: rgba(124,92,191,0.12); color: #7c5cbf;">
-                      <mat-icon>receipt_long</mat-icon>
-                    </div>
-                    <div class="module-info">
-                      <span class="module-name">Rebill Coachees</span>
-                      <span class="module-status">{{ org()?.coachingRebill ? 'Coachees will be billed for sessions' : 'Coachee billing is off' }}</span>
-                    </div>
-                    <mat-slide-toggle color="primary"
-                      [checked]="org()?.coachingRebill ?? false"
-                      (change)="toggleCoachingRebill($event.checked)"
-                      [disabled]="savingModules()" />
-                  </div>
-                  @if (org()?.coachingRebill) {
-                    <div class="default-rate-row">
-                      <mat-form-field appearance="outline" class="rate-field">
-                        <mat-label>Default Hourly Rate ($)</mat-label>
-                        <input matInput type="number" min="0" step="0.01"
-                               [ngModel]="org()?.defaultCoachRate ?? ''"
-                               (ngModelChange)="pendingRate = $event" />
-                        <mat-icon matPrefix>attach_money</mat-icon>
-                      </mat-form-field>
-                      <button mat-stroked-button color="primary"
-                              (click)="saveDefaultRate()" [disabled]="savingModules()">
-                        Save Rate
-                      </button>
-                    </div>
-                  }
-                </div>
-
-                <mat-divider />
-                <div class="toggle-row">
-                  <div class="module-icon" style="background: rgba(58,159,214,0.12); color: #3A9FD6;">
-                    <mat-icon>person_search</mat-icon>
-                  </div>
-                  <div class="module-info">
-                    <span class="module-name">Coachees can choose their own coach</span>
-                    <span class="module-status">
-                      {{ (org()?.coacheeCanChooseCoach !== false)
-                          ? 'Coachees see a picker when booking'
-                          : 'Booking is locked to the assigned coach' }}
-                    </span>
-                  </div>
-                  <mat-slide-toggle color="primary"
-                    [checked]="org()?.coacheeCanChooseCoach !== false"
-                    (change)="toggleCoacheeCanChooseCoach($event.checked)"
-                    [disabled]="savingModules()" />
-                </div>
-              }
             </div>
           </div>
 
@@ -780,9 +780,30 @@ const RADIUS_OPTIONS = [
       .module-status { font-size: 12px; color: #9aa5b4; }
     }
 
-    .coaching-rebill-section { padding: 0 16px 8px; }
+    .module-block {
+      display: flex; flex-direction: column;
+    }
+    .module-sub-settings {
+      margin: -4px 0 0 20px;
+      padding: 4px 12px 10px 20px;
+      border-left: 2px solid #d1e9f5;
+      display: flex; flex-direction: column; gap: 10px;
+      background: linear-gradient(180deg, rgba(240,249,255,0.4) 0%, transparent 100%);
+      border-bottom-left-radius: 8px;
+    }
+    .sub-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 14px; border-radius: 10px;
+      background: #ffffff; border: 1px solid #e8edf4;
+    }
+    .sub-icon {
+      width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      mat-icon { font-size: 18px; width: 18px; height: 18px; }
+    }
+
     .default-rate-row {
-      display: flex; align-items: center; gap: 12px; margin-top: 8px; padding-left: 56px;
+      display: flex; align-items: center; gap: 12px; margin-top: -4px; padding: 0 14px 4px 54px;
       .rate-field { width: 200px; margin-bottom: -1.25em; }
     }
 
