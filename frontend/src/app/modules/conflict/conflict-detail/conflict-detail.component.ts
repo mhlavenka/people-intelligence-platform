@@ -26,6 +26,7 @@ interface ConflictAnalysis {
   conflictTypes: string[];
   aiNarrative: string;
   managerScript: string;
+  recommendedActions?: RecommendedActions;
   escalationRequested: boolean;
   focusConflictType?: string;
   parentId?: string;
@@ -608,6 +609,7 @@ export class ConflictDetailComponent implements OnInit {
     this.api.get<ConflictAnalysis>(`/conflict/analyses/${id}`).subscribe({
       next: (a) => {
         this.analysis.set(a);
+        if (a.recommendedActions) this.recommendedActions.set(a.recommendedActions);
         this.loading.set(false);
         this.loadSubAnalyses(a._id);
       },

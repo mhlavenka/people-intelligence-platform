@@ -16,6 +16,12 @@ export interface IConflictAnalysis extends Document {
   conflictTypes: string[];
   aiNarrative: string;
   managerScript: string;
+  recommendedActions?: {
+    immediateActions?: { title: string; description: string; owner: string; priority: string }[];
+    shortTermActions?: { title: string; description: string; owner: string; priority: string; timeframe?: string }[];
+    longTermActions?: { title: string; description: string; owner: string; priority: string; timeframe?: string }[];
+    preventiveMeasures?: string[];
+  };
   escalationRequested: boolean;
   escalationStatus?: EscalationStatus;
   createdAt: Date;
@@ -40,6 +46,7 @@ const ConflictAnalysisSchema = new Schema<IConflictAnalysis>(
     conflictTypes: [{ type: String }],
     aiNarrative: { type: String, required: true },
     managerScript: { type: String, required: true },
+    recommendedActions: { type: Schema.Types.Mixed },
     escalationRequested: { type: Boolean, default: false },
     escalationStatus: {
       type: String,

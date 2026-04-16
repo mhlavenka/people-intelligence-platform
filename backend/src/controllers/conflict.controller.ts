@@ -2,7 +2,7 @@ import { Response, NextFunction } from 'express';
 import { AuthRequest } from '../middleware/auth.middleware';
 import { SurveyResponse } from '../models/SurveyResponse.model';
 import { SurveyTemplate } from '../models/SurveyTemplate.model';
-import { ConflictAnalysis } from '../models/ConflictAnalysis.model';
+import { ConflictAnalysis, IConflictAnalysis } from '../models/ConflictAnalysis.model';
 import { Organization } from '../models/Organization.model';
 import { buildConflictAnalysisPrompt, buildConflictSubAnalysisPrompt, buildConflictRecommendedActionsPrompt, callClaude } from '../services/ai.service';
 
@@ -298,6 +298,9 @@ export async function generateRecommendedActions(
     } catch {
       parsed = { immediateActions: [], shortTermActions: [], longTermActions: [], preventiveMeasures: [aiResponse] };
     }
+
+    analysis.recommendedActions = parsed as IConflictAnalysis['recommendedActions'];
+    await analysis.save();
 
     res.json(parsed);
   } catch (error) {
