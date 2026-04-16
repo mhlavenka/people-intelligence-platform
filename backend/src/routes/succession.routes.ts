@@ -1,5 +1,5 @@
 import { Router, Response, NextFunction } from 'express';
-import { authenticateToken, requireRole, AuthRequest } from '../middleware/auth.middleware';
+import { authenticateToken, requirePermission, AuthRequest } from '../middleware/auth.middleware';
 import { tenantResolver } from '../middleware/tenant.middleware';
 import { DevelopmentPlan } from '../models/DevelopmentPlan.model';
 import { User } from '../models/User.model';
@@ -12,7 +12,7 @@ router.use(authenticateToken, tenantResolver);
 
 router.post(
   '/idp/generate',
-  requireRole('admin', 'hr_manager', 'coach'),
+  requirePermission('GENERATE_IDP'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const organizationId = req.user!.organizationId;
@@ -93,7 +93,7 @@ router.post(
 /** Generate an IDP from a conflict analysis — used by the Conflict Intelligence "Skill Development" section. */
 router.post(
   '/idp/generate-from-conflict',
-  requireRole('admin', 'hr_manager', 'coach', 'manager'),
+  requirePermission('GENERATE_IDP'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const organizationId = req.user!.organizationId;
@@ -216,7 +216,7 @@ router.get('/idps', async (req: AuthRequest, res: Response, next: NextFunction) 
 
 router.post(
   '/idps/:id/regenerate',
-  requireRole('admin', 'hr_manager', 'coach'),
+  requirePermission('GENERATE_IDP'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const organizationId = req.user!.organizationId;
@@ -318,7 +318,7 @@ router.put('/idps/:id/milestone', async (req: AuthRequest, res: Response, next: 
 /** Update IDP status (e.g. draft → active, active → completed). */
 router.put(
   '/idps/:id/status',
-  requireRole('admin', 'hr_manager', 'coach'),
+  requirePermission('UPDATE_IDP_MILESTONES'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const { status } = req.body;
@@ -338,7 +338,7 @@ router.put(
 /** Delete an IDP — only drafts can be deleted. */
 router.delete(
   '/idps/:id',
-  requireRole('admin', 'hr_manager', 'coach'),
+  requirePermission('GENERATE_IDP'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const idp = await DevelopmentPlan.findOne({ _id: req.params['id'], organizationId: req.user!.organizationId });

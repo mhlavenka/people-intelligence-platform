@@ -6,7 +6,7 @@ import path from 'path';
 const { authenticator } = require('otplib') as typeof import('otplib');
 import QRCode from 'qrcode';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
-import { authenticateToken, requireRole, AuthRequest } from '../middleware/auth.middleware';
+import { authenticateToken, requirePermission, AuthRequest } from '../middleware/auth.middleware';
 import { tenantResolver } from '../middleware/tenant.middleware';
 import { User } from '../models/User.model';
 import { sendEmail } from '../services/email.service';
@@ -114,7 +114,7 @@ router.post('/me/avatar', avatarUpload.single('avatar'), async (req: AuthRequest
 /** Upload profile picture for any user (admin/HR). */
 router.post(
   '/:id/avatar',
-  requireRole('admin', 'hr_manager'),
+  requirePermission('MANAGE_USERS'),
   avatarUpload.single('avatar'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
@@ -251,7 +251,7 @@ router.post('/me/test-email', async (req: AuthRequest, res: Response, next: Next
 
 router.get(
   '/coachees',
-  requireRole('admin', 'hr_manager', 'coach'),
+  requirePermission('MANAGE_COACHING'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       // A coachee is anyone already flagged, or anyone in the org who is a
@@ -311,7 +311,7 @@ router.get(
 
 router.get(
   '/',
-  requireRole('admin', 'hr_manager'),
+  requirePermission('VIEW_ALL_USERS'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const users = await User.find({ organizationId: req.user!.organizationId })
@@ -326,7 +326,7 @@ router.get(
 
 router.post(
   '/',
-  requireRole('admin', 'hr_manager'),
+  requirePermission('MANAGE_USERS'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const { email, password, firstName, lastName, role, department, customRoleId, isCoachee, canChooseCoach } = req.body;
@@ -358,7 +358,7 @@ router.post(
 
 router.put(
   '/:id',
-  requireRole('admin', 'hr_manager'),
+  requirePermission('MANAGE_USERS'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       // Never allow passwordHash to be set via this endpoint
@@ -382,7 +382,7 @@ router.put(
 
 router.delete(
   '/:id',
-  requireRole('admin'),
+  requirePermission('MANAGE_USERS'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       if (req.params['id'] === req.user!.userId.toString()) {

@@ -1,6 +1,6 @@
 import { Router, Response, NextFunction } from 'express';
 import { createHash } from 'crypto';
-import { authenticateToken, requireRole, AuthRequest } from '../middleware/auth.middleware';
+import { authenticateToken, requirePermission, AuthRequest } from '../middleware/auth.middleware';
 import { tenantResolver } from '../middleware/tenant.middleware';
 import { SurveyTemplate } from '../models/SurveyTemplate.model';
 import { SurveyResponse } from '../models/SurveyResponse.model';
@@ -32,7 +32,7 @@ router.use(authenticateToken, tenantResolver);
 
 router.post(
   '/templates',
-  requireRole('admin', 'hr_manager', 'coach'),
+  requirePermission('MANAGE_INTAKE_TEMPLATES'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const template = await SurveyTemplate.create({
@@ -112,7 +112,7 @@ router.get(
 
 router.put(
   '/templates/:id',
-  requireRole('admin', 'hr_manager', 'coach'),
+  requirePermission('MANAGE_INTAKE_TEMPLATES'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const template = await SurveyTemplate.findOneAndUpdate(
@@ -133,7 +133,7 @@ router.put(
 
 router.delete(
   '/templates/:id',
-  requireRole('admin', 'hr_manager', 'coach'),
+  requirePermission('MANAGE_INTAKE_TEMPLATES'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const template = await SurveyTemplate.findOneAndDelete({
@@ -234,7 +234,7 @@ router.post('/respond', async (req: AuthRequest, res: Response, next: NextFuncti
 
 router.get(
   '/responses/:templateId/count',
-  requireRole('admin', 'hr_manager', 'manager', 'coach'),
+  requirePermission('VIEW_CONFLICT_RESPONSES'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const count = await SurveyResponse.countDocuments({
@@ -250,7 +250,7 @@ router.get(
 
 router.delete(
   '/responses/:templateId',
-  requireRole('admin', 'hr_manager'),
+  requirePermission('MANAGE_INTAKE_TEMPLATES'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const result = await SurveyResponse.deleteMany({
@@ -266,7 +266,7 @@ router.delete(
 
 router.get(
   '/responses/:templateId',
-  requireRole('admin', 'hr_manager', 'manager', 'coach'),
+  requirePermission('VIEW_CONFLICT_RESPONSES'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const organizationId = req.user!.organizationId;

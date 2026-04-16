@@ -1,5 +1,5 @@
 import { Router, Response, NextFunction } from 'express';
-import { authenticateToken, requireRole, AuthRequest } from '../middleware/auth.middleware';
+import { authenticateToken, requirePermission, AuthRequest } from '../middleware/auth.middleware';
 import { tenantResolver } from '../middleware/tenant.middleware';
 import { NeuroinclustionAssessment } from '../models/NeuroinclustionAssessment.model';
 import { Organization } from '../models/Organization.model';
@@ -92,7 +92,7 @@ router.get('/assessments/latest', async (req: AuthRequest, res: Response, next: 
 
 router.get(
   '/assessments',
-  requireRole('admin', 'hr_manager'),
+  requirePermission('VIEW_NEUROINCLUSION_RESULTS'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const assessments = await NeuroinclustionAssessment.find({

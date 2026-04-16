@@ -1,5 +1,5 @@
 import { Router, Response, NextFunction } from 'express';
-import { authenticateToken, requireRole, AuthRequest } from '../middleware/auth.middleware';
+import { authenticateToken, requirePermission, AuthRequest } from '../middleware/auth.middleware';
 import { callClaude } from '../services/ai.service';
 
 const router = Router();
@@ -7,7 +7,7 @@ router.use(authenticateToken);
 
 router.post(
   '/analyze',
-  requireRole('admin', 'hr_manager'),
+  requirePermission('RUN_CONFLICT_ANALYSIS'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const { prompt, systemPrompt } = req.body;

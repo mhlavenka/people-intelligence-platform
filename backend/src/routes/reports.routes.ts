@@ -1,6 +1,6 @@
 import { Router, Response, NextFunction } from 'express';
 import mongoose from 'mongoose';
-import { authenticateToken, requireRole, AuthRequest } from '../middleware/auth.middleware';
+import { authenticateToken, requireRole, requirePermission, AuthRequest } from '../middleware/auth.middleware';
 import { tenantResolver } from '../middleware/tenant.middleware';
 import { Invoice } from '../models/Invoice.model';
 import { Organization } from '../models/Organization.model';
@@ -183,7 +183,7 @@ sysRouter.get('/org-summary', async (_req: AuthRequest, res: Response, next: Nex
 // ═══════════════════════════════════════════════════════════════════════════
 
 const orgRouter = Router();
-orgRouter.use(authenticateToken, tenantResolver, requireRole('admin', 'hr_manager'));
+orgRouter.use(authenticateToken, tenantResolver, requirePermission('VIEW_REPORTS'));
 
 /** Org engagement report — user activity summary. */
 orgRouter.get('/engagement', async (req: AuthRequest, res: Response, next: NextFunction) => {

@@ -1,5 +1,5 @@
 import { Router, Response, NextFunction } from 'express';
-import { authenticateToken, requireRole, AuthRequest } from '../middleware/auth.middleware';
+import { authenticateToken, requirePermission, AuthRequest } from '../middleware/auth.middleware';
 import { tenantResolver } from '../middleware/tenant.middleware';
 import { CustomRole } from '../models/CustomRole.model';
 import { SystemRoleOverride } from '../models/SystemRoleOverride.model';
@@ -39,7 +39,7 @@ router.get('/system-roles', async (req: AuthRequest, res: Response, next: NextFu
 /** Update permissions for a system role (org-level override). */
 router.put(
   '/system-roles/:role',
-  requireRole('admin'),
+  requirePermission('MANAGE_ROLES'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const orgId = req.user!.organizationId;
@@ -65,7 +65,7 @@ router.put(
 /** Reset a system role to defaults (remove override). */
 router.delete(
   '/system-roles/:role',
-  requireRole('admin'),
+  requirePermission('MANAGE_ROLES'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const orgId = req.user!.organizationId;
@@ -103,7 +103,7 @@ router.get('/:id', async (req: AuthRequest, res: Response, next: NextFunction) =
 /** Create a custom role. Admin and HR Manager only. */
 router.post(
   '/',
-  requireRole('admin', 'hr_manager'),
+  requirePermission('MANAGE_ROLES'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const role = await CustomRole.create({
@@ -121,7 +121,7 @@ router.post(
 /** Update a custom role. Admin and HR Manager only. */
 router.put(
   '/:id',
-  requireRole('admin', 'hr_manager'),
+  requirePermission('MANAGE_ROLES'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const role = await CustomRole.findOneAndUpdate(
@@ -140,7 +140,7 @@ router.put(
 /** Delete a custom role. Admin only. */
 router.delete(
   '/:id',
-  requireRole('admin'),
+  requirePermission('MANAGE_ROLES'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const role = await CustomRole.findOneAndDelete({

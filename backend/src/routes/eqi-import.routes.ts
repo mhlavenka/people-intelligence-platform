@@ -1,6 +1,6 @@
 import { Router, Response, NextFunction } from 'express';
 import multer from 'multer';
-import { authenticateToken, requireRole, AuthRequest } from '../middleware/auth.middleware';
+import { authenticateToken, requirePermission, AuthRequest } from '../middleware/auth.middleware';
 import { tenantResolver } from '../middleware/tenant.middleware';
 import { eqiParser } from '../services/eqi-pdf-parser.service';
 import { eqiImportService, ImportOptions } from '../services/eqi-import.service';
@@ -8,7 +8,7 @@ import { EqiImportAudit } from '../models/EqiImportAudit.model';
 import { EqiScoreRecord } from '../models/EqiScoreRecord.model';
 
 const router = Router();
-router.use(authenticateToken, tenantResolver, requireRole('admin', 'hr_manager', 'coach'));
+router.use(authenticateToken, tenantResolver, requirePermission('IMPORT_EQI'));
 
 const upload = multer({
   storage: multer.memoryStorage(),

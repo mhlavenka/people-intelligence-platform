@@ -1,5 +1,5 @@
 import { Router, Response, NextFunction } from 'express';
-import { authenticateToken, requireRole, AuthRequest } from '../middleware/auth.middleware';
+import { authenticateToken, requirePermission, AuthRequest } from '../middleware/auth.middleware';
 import { tenantResolver } from '../middleware/tenant.middleware';
 import { ConflictAnalysis } from '../models/ConflictAnalysis.model';
 import {
@@ -16,17 +16,17 @@ const router = Router();
 
 router.use(authenticateToken, tenantResolver);
 
-router.post('/analyze', requireRole('admin', 'hr_manager'), analyzeConflict);
-router.get('/analyses', getAnalyses);
-router.get('/analyses/:id', getAnalysis);
-router.get('/analyses/:id/sub-analyses', getSubAnalyses);
-router.post('/analyses/:id/sub-analyses', requireRole('admin', 'hr_manager', 'manager'), createSubAnalysis);
-router.post('/analyses/:id/recommended-actions', requireRole('admin', 'hr_manager', 'manager', 'coach'), generateRecommendedActions);
-router.post('/escalate/:id', requireRole('admin', 'hr_manager', 'manager'), escalateConflict);
+router.post('/analyze', requirePermission('RUN_CONFLICT_ANALYSIS'), analyzeConflict);
+router.get('/analyses', requirePermission('VIEW_CONFLICT_DASHBOARD'), getAnalyses);
+router.get('/analyses/:id', requirePermission('VIEW_CONFLICT_DASHBOARD'), getAnalysis);
+router.get('/analyses/:id/sub-analyses', requirePermission('VIEW_CONFLICT_DASHBOARD'), getSubAnalyses);
+router.post('/analyses/:id/sub-analyses', requirePermission('RUN_CONFLICT_ANALYSIS'), createSubAnalysis);
+router.post('/analyses/:id/recommended-actions', requirePermission('RUN_CONFLICT_ANALYSIS'), generateRecommendedActions);
+router.post('/escalate/:id', requirePermission('ESCALATE_CONFLICT'), escalateConflict);
 
 router.delete(
   '/analyses/:id',
-  requireRole('admin', 'hr_manager'),
+  requirePermission('RUN_CONFLICT_ANALYSIS'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const analysis = await ConflictAnalysis.findOneAndDelete({

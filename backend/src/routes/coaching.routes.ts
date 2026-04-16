@@ -1,5 +1,5 @@
 import { Router, Response, NextFunction } from 'express';
-import { authenticateToken, requireRole, AuthRequest } from '../middleware/auth.middleware';
+import { authenticateToken, requirePermission, AuthRequest } from '../middleware/auth.middleware';
 import { tenantResolver } from '../middleware/tenant.middleware';
 import { CoachingEngagement } from '../models/CoachingEngagement.model';
 import { CoachingSession } from '../models/CoachingSession.model';
@@ -236,7 +236,7 @@ router.get('/engagements/:id', async (req: AuthRequest, res: Response, next: Nex
 /** Create engagement. */
 router.post(
   '/engagements',
-  requireRole('admin', 'hr_manager', 'coach'),
+  requirePermission('MANAGE_COACHING'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const engagement = await CoachingEngagement.create({
@@ -256,7 +256,7 @@ router.post(
 /** Update engagement. */
 router.put(
   '/engagements/:id',
-  requireRole('admin', 'hr_manager', 'coach'),
+  requirePermission('MANAGE_COACHING'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const engagement = await CoachingEngagement.findOneAndUpdate(
@@ -276,7 +276,7 @@ router.put(
 /** Delete engagement (admin/hr_manager any; coach only their own). */
 router.delete(
   '/engagements/:id',
-  requireRole('admin', 'hr_manager', 'coach'),
+  requirePermission('MANAGE_COACHING'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const filter: Record<string, unknown> = {
@@ -403,7 +403,7 @@ router.get('/sessions/:id', async (req: AuthRequest, res: Response, next: NextFu
 /** Create session. */
 router.post(
   '/sessions',
-  requireRole('admin', 'hr_manager', 'coach'),
+  requirePermission('MANAGE_COACHING'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       await assertValidPreSessionIntake(
@@ -459,7 +459,7 @@ router.post(
 /** Update session (notes, status, ratings). */
 router.put(
   '/sessions/:id',
-  requireRole('admin', 'hr_manager', 'coach'),
+  requirePermission('MANAGE_COACHING'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const existing = await CoachingSession.findOne({
@@ -536,7 +536,7 @@ router.put(
  *  SurveyTemplate, link it to the session, and email the coachee. */
 router.post(
   '/sessions/:id/post-session-form',
-  requireRole('admin', 'hr_manager', 'coach'),
+  requirePermission('MANAGE_COACHING'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const session = await CoachingSession.findOne({
@@ -647,7 +647,7 @@ router.post(
 /** Delete session. */
 router.delete(
   '/sessions/:id',
-  requireRole('admin', 'hr_manager', 'coach'),
+  requirePermission('MANAGE_COACHING'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const session = await CoachingSession.findOneAndDelete({
@@ -737,7 +737,7 @@ router.get('/dashboard', async (req: AuthRequest, res: Response, next: NextFunct
 /** Billing summary for a coachee across all rebillable engagements. */
 router.get(
   '/billing/coachee/:coacheeId',
-  requireRole('admin', 'hr_manager', 'coach'),
+  requirePermission('MANAGE_COACHING'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const orgId = req.user!.organizationId;

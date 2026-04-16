@@ -1,6 +1,6 @@
 import { Router, Response, NextFunction } from 'express';
 import mongoose from 'mongoose';
-import { authenticateToken, requireRole, AuthRequest } from '../middleware/auth.middleware';
+import { authenticateToken, requirePermission, AuthRequest } from '../middleware/auth.middleware';
 import { tenantResolver } from '../middleware/tenant.middleware';
 import { Sponsor } from '../models/Sponsor.model';
 import { CoachingEngagement } from '../models/CoachingEngagement.model';
@@ -36,7 +36,7 @@ async function sponsorIdsForCoach(coachId: string, orgId: string): Promise<mongo
 // against the :id parameter and never reaches this handler.
 router.get(
   '/tax-rates',
-  requireRole('admin', 'hr_manager', 'coach'),
+  requirePermission('MANAGE_SPONSORS'),
   async (_req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const provinces = CANADIAN_PROVINCES.map((p) => ({
@@ -52,7 +52,7 @@ router.get(
 // every sponsor in their org.
 router.get(
   '/',
-  requireRole('admin', 'hr_manager', 'coach'),
+  requirePermission('MANAGE_SPONSORS'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const orgId = req.user!.organizationId;
@@ -95,7 +95,7 @@ router.get(
 // ─── Get one ────────────────────────────────────────────────────────────────
 router.get(
   '/:id',
-  requireRole('admin', 'hr_manager', 'coach'),
+  requirePermission('MANAGE_SPONSORS'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const sponsor = await Sponsor.findOne({
@@ -111,7 +111,7 @@ router.get(
 // ─── Create ─────────────────────────────────────────────────────────────────
 router.post(
   '/',
-  requireRole('admin', 'hr_manager', 'coach'),
+  requirePermission('MANAGE_SPONSORS'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const { name, email, organization, phone, billingAddress, defaultHourlyRate, notes, coacheeId } = req.body;
@@ -141,7 +141,7 @@ router.post(
 // Self-pay shortcut: create a Sponsor record for an existing coachee user.
 router.post(
   '/from-coachee/:coacheeId',
-  requireRole('admin', 'hr_manager', 'coach'),
+  requirePermission('MANAGE_SPONSORS'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const coachee = await User.findOne({
@@ -173,7 +173,7 @@ router.post(
 // ─── Update ─────────────────────────────────────────────────────────────────
 router.put(
   '/:id',
-  requireRole('admin', 'hr_manager', 'coach'),
+  requirePermission('MANAGE_SPONSORS'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const update = { ...req.body };
@@ -201,7 +201,7 @@ router.put(
 // ─── Delete ─────────────────────────────────────────────────────────────────
 router.delete(
   '/:id',
-  requireRole('admin', 'hr_manager', 'coach'),
+  requirePermission('MANAGE_SPONSORS'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       // Block delete when active engagements still reference this sponsor.
@@ -229,7 +229,7 @@ router.delete(
 // ─── Billing summary for one sponsor ────────────────────────────────────────
 router.get(
   '/:id/billing',
-  requireRole('admin', 'hr_manager', 'coach'),
+  requirePermission('MANAGE_SPONSORS'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const orgId = req.user!.organizationId;
@@ -345,7 +345,7 @@ router.get(
 // from the existing invoice flow.
 router.post(
   '/:id/invoice',
-  requireRole('admin', 'hr_manager', 'coach'),
+  requirePermission('MANAGE_SPONSORS'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const orgId = req.user!.organizationId;
@@ -507,7 +507,7 @@ router.post(
 // ─── View one sponsor invoice (full details, used by print/view page) ───────
 router.get(
   '/:id/invoices/:invoiceId',
-  requireRole('admin', 'hr_manager', 'coach'),
+  requirePermission('MANAGE_SPONSORS'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const orgId = req.user!.organizationId;
@@ -529,7 +529,7 @@ router.get(
 // ─── Edit a sponsor invoice (only while draft) ──────────────────────────────
 router.put(
   '/:id/invoices/:invoiceId',
-  requireRole('admin', 'hr_manager', 'coach'),
+  requirePermission('MANAGE_SPONSORS'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const orgId = req.user!.organizationId;
@@ -576,7 +576,7 @@ router.put(
 // ─── Send a sponsor invoice (status draft -> sent + email) ──────────────────
 router.post(
   '/:id/invoices/:invoiceId/send',
-  requireRole('admin', 'hr_manager', 'coach'),
+  requirePermission('MANAGE_SPONSORS'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const orgId = req.user!.organizationId;
@@ -652,7 +652,7 @@ router.post(
 // Voiding releases its engagements so they become billable again.
 router.patch(
   '/:id/invoices/:invoiceId/void',
-  requireRole('admin', 'hr_manager', 'coach'),
+  requirePermission('MANAGE_SPONSORS'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const orgId = req.user!.organizationId;
@@ -670,7 +670,7 @@ router.patch(
 // ─── Delete a sponsor invoice (only when draft or void) ─────────────────────
 router.delete(
   '/:id/invoices/:invoiceId',
-  requireRole('admin', 'hr_manager', 'coach'),
+  requirePermission('MANAGE_SPONSORS'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const orgId = req.user!.organizationId;

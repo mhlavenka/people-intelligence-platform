@@ -1,6 +1,6 @@
 import { Router, Response, NextFunction } from 'express';
 import mongoose from 'mongoose';
-import { authenticateToken, requireRole, AuthRequest } from '../middleware/auth.middleware';
+import { authenticateToken, requirePermission, AuthRequest } from '../middleware/auth.middleware';
 import { tenantResolver } from '../middleware/tenant.middleware';
 import { User } from '../models/User.model';
 
@@ -10,7 +10,7 @@ router.use(authenticateToken, tenantResolver);
 /** GET /api/org-chart — all active users in the org with their managerId */
 router.get(
   '/',
-  requireRole('admin', 'hr_manager'),
+  requirePermission('VIEW_ORG_CHART'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       // Exclude external coachees (role='coachee') — they are coaching-only
@@ -35,7 +35,7 @@ router.get(
 /** PUT /api/org-chart — bulk-update managerId for multiple users */
 router.put(
   '/',
-  requireRole('admin', 'hr_manager'),
+  requirePermission('VIEW_ORG_CHART'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const orgId = req.user!.organizationId;

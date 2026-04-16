@@ -1,5 +1,5 @@
 import { Router, Response, NextFunction, Request } from 'express';
-import { authenticateToken, requireRole, AuthRequest } from '../middleware/auth.middleware';
+import { authenticateToken, requirePermission, AuthRequest } from '../middleware/auth.middleware';
 import { tenantResolver } from '../middleware/tenant.middleware';
 import { config } from '../config/env';
 import { User } from '../models/User.model';
@@ -39,7 +39,7 @@ router.use(authenticateToken, tenantResolver);
 /** Generate Google OAuth consent URL. */
 router.get(
   '/auth/google',
-  requireRole('coach'),
+  requirePermission('MANAGE_CALENDAR'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const url = getAuthUrl(req.user!.userId);
@@ -51,7 +51,7 @@ router.get(
 /** List the coach's Google calendars (for the calendar picker). */
 router.get(
   '/calendars',
-  requireRole('coach'),
+  requirePermission('MANAGE_CALENDAR'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const calendars = await listCoachCalendars(req.user!.userId);
@@ -63,7 +63,7 @@ router.get(
 /** Save the selected calendar. */
 router.post(
   '/select',
-  requireRole('coach'),
+  requirePermission('MANAGE_CALENDAR'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const { calendarId, calendarName } = req.body;
@@ -90,7 +90,7 @@ router.post(
 /** Disconnect Google Calendar — remove tokens. */
 router.delete(
   '/disconnect',
-  requireRole('coach'),
+  requirePermission('MANAGE_CALENDAR'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       // Stop the push-notification channel before we lose the tokens.
@@ -114,7 +114,7 @@ router.delete(
 /** Return the coach's calendar connection status. */
 router.get(
   '/status',
-  requireRole('coach'),
+  requirePermission('MANAGE_CALENDAR'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const user = await User.findById(req.user!.userId).select('googleCalendar');

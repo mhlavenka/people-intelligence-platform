@@ -1,7 +1,7 @@
 import { Router, Response, NextFunction, Request } from 'express';
 import rateLimit from 'express-rate-limit';
 import {
-  authenticateToken, optionalAuth, requireRole, AuthRequest,
+  authenticateToken, optionalAuth, requirePermission, AuthRequest,
 } from '../middleware/auth.middleware';
 import { tenantResolver } from '../middleware/tenant.middleware';
 import { AvailabilityConfig, IAvailabilityConfig } from '../models/AvailabilityConfig.model';
@@ -254,7 +254,7 @@ router.use(authenticateToken, tenantResolver);
 // Get shared settings
 router.get(
   '/settings',
-  requireRole('coach', 'admin', 'hr_manager'),
+  requirePermission('VIEW_BOOKINGS'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const settings = await BookingSettings.findOne({
@@ -269,7 +269,7 @@ router.get(
 // Upsert shared settings
 router.put(
   '/settings',
-  requireRole('coach', 'admin'),
+  requirePermission('MANAGE_BOOKING'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const coachId = req.user!.userId;
@@ -327,7 +327,7 @@ router.put(
 // populate the country picker in the date-exclusions UI.
 router.get(
   '/holidays/countries',
-  requireRole('coach', 'admin', 'hr_manager'),
+  requirePermission('MANAGE_BOOKING'),
   async (_req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const hd = new Holidays();
@@ -346,7 +346,7 @@ router.get(
 // admin to fill it in.
 router.get(
   '/holidays',
-  requireRole('coach', 'admin', 'hr_manager'),
+  requirePermission('MANAGE_BOOKING'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const yearStr = (req.query['year'] as string | undefined) ?? '';
@@ -385,7 +385,7 @@ router.get(
 // List all event types for the coach
 router.get(
   '/event-types',
-  requireRole('coach', 'admin', 'hr_manager'),
+  requirePermission('VIEW_BOOKINGS'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const eventTypes = await AvailabilityConfig.find({
@@ -400,7 +400,7 @@ router.get(
 // Get single event type
 router.get(
   '/event-types/:id',
-  requireRole('coach', 'admin', 'hr_manager'),
+  requirePermission('VIEW_BOOKINGS'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const cfg = await AvailabilityConfig.findOne({
@@ -417,7 +417,7 @@ router.get(
 // Create new event type
 router.post(
   '/event-types',
-  requireRole('coach', 'admin'),
+  requirePermission('MANAGE_BOOKING'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const coachId = req.user!.userId;
@@ -447,7 +447,7 @@ router.post(
 // Update event type
 router.put(
   '/event-types/:id',
-  requireRole('coach', 'admin'),
+  requirePermission('MANAGE_BOOKING'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const cfg = await AvailabilityConfig.findOne({
@@ -491,7 +491,7 @@ router.put(
 // Delete event type
 router.delete(
   '/event-types/:id',
-  requireRole('coach', 'admin'),
+  requirePermission('MANAGE_BOOKING'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const cfg = await AvailabilityConfig.findOne({
@@ -527,7 +527,7 @@ router.delete(
 // List bookings (paginated)
 router.get(
   '/bookings',
-  requireRole('coach', 'admin', 'hr_manager'),
+  requirePermission('VIEW_BOOKINGS'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const page = parseInt(req.query['page'] as string) || 1;
@@ -574,7 +574,7 @@ router.get(
 // Get single booking
 router.get(
   '/bookings/:id',
-  requireRole('coach', 'admin', 'hr_manager'),
+  requirePermission('VIEW_BOOKINGS'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const booking = await Booking.findOne({
@@ -592,7 +592,7 @@ router.get(
 // booking. Coachees may only query their own bookings.
 router.get(
   '/bookings/:id/slots',
-  requireRole('coach', 'admin', 'hr_manager', 'coachee'),
+  requirePermission('VIEW_BOOKINGS'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const booking = await Booking.findOne({
@@ -639,7 +639,7 @@ router.get(
 // coachee may only cancel a booking linked to them (booking.coacheeId === me).
 router.delete(
   '/bookings/:id',
-  requireRole('coach', 'admin', 'coachee'),
+  requirePermission('VIEW_BOOKINGS'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const booking = await Booking.findOne({
@@ -673,7 +673,7 @@ router.delete(
 // the reschedule confirmation email.
 router.patch(
   '/bookings/:id/reschedule',
-  requireRole('coach', 'admin', 'coachee'),
+  requirePermission('VIEW_BOOKINGS'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const { newStartTime, note } = req.body as { newStartTime?: string; note?: string };
@@ -713,7 +713,7 @@ router.patch(
 );
 
 // ── Calendar import ────────────────────────────────────────────────────────
-router.get('/import/preview',  requireRole('coach', 'admin'), bookingImport.preview);
-router.post('/import/execute', requireRole('coach', 'admin'), bookingImport.execute);
+router.get('/import/preview',  requirePermission('MANAGE_BOOKING'), bookingImport.preview);
+router.post('/import/execute', requirePermission('MANAGE_BOOKING'), bookingImport.execute);
 
 export default router;

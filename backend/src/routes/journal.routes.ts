@@ -1,5 +1,5 @@
 import { Router, Response, NextFunction } from 'express';
-import { authenticateToken, requireRole, AuthRequest } from '../middleware/auth.middleware';
+import { authenticateToken, requirePermission, AuthRequest } from '../middleware/auth.middleware';
 import { tenantResolver } from '../middleware/tenant.middleware';
 import { JournalSessionNote } from '../models/JournalSessionNote.model';
 import { JournalReflectiveEntry } from '../models/JournalReflectiveEntry.model';
@@ -16,9 +16,8 @@ const router = Router();
 router.use(authenticateToken, tenantResolver);
 
 // Read access: coach, admin, hr_manager, AND coachee (filtered to their own).
-const journalReadAccess = requireRole('admin', 'hr_manager', 'coach', 'coachee');
-// Coach-only operations (create / delete / AI / coach-side fields).
-const journalAccess = requireRole('admin', 'hr_manager', 'coach');
+const journalReadAccess = requirePermission('VIEW_JOURNAL');
+const journalAccess = requirePermission('MANAGE_JOURNAL');
 
 /** Build a per-role engagement filter for journal queries. */
 function journalScope(req: AuthRequest): Record<string, unknown> {
