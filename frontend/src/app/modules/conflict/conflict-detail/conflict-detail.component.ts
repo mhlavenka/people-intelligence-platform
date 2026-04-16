@@ -9,6 +9,8 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatExpansionModule } from '@angular/material/expansion';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { ApiService } from '../../../core/api.service';
 
 type ScriptSection =
@@ -55,7 +57,7 @@ interface RecommendedActions {
     CommonModule, RouterLink,
     MatButtonModule, MatIconModule, MatTabsModule,
     MatChipsModule, MatDividerModule, MatProgressSpinnerModule,
-    MatTooltipModule, MatSnackBarModule,
+    MatTooltipModule, MatSnackBarModule, MatExpansionModule, MatCheckboxModule,
   ],
   template: `
     @if (loading()) {
@@ -255,68 +257,94 @@ interface RecommendedActions {
               }
 
               @if (recommendedActions(); as ra) {
-                @if (ra.immediateActions?.length) {
-                  <div class="actions-section">
-                    <h3><mat-icon>priority_high</mat-icon> Immediate Actions <span class="timeframe-tag urgent">This week</span></h3>
-                    <div class="action-cards">
-                      @for (a of ra.immediateActions; track $index) {
-                        <div class="action-card" [class]="'priority-' + a.priority">
-                          <div class="action-header">
-                            <span class="action-title">{{ a.title }}</span>
-                            <span class="priority-badge" [class]="a.priority">{{ a.priority }}</span>
+                <mat-accordion class="actions-accordion">
+                  @if (ra.immediateActions?.length) {
+                    <mat-expansion-panel [expanded]="expandedPanel() === 'immediate'" (opened)="expandedPanel.set('immediate')">
+                      <mat-expansion-panel-header>
+                        <mat-panel-title>
+                          <mat-icon>priority_high</mat-icon>
+                          Immediate Actions
+                          <span class="timeframe-tag urgent">This week</span>
+                          <span class="completion-count">{{ completedCount('immediate', ra.immediateActions!) }}/{{ ra.immediateActions!.length }}</span>
+                        </mat-panel-title>
+                      </mat-expansion-panel-header>
+                      <div class="action-cards">
+                        @for (a of ra.immediateActions; track $index) {
+                          <div class="action-card" [class]="'priority-' + a.priority" [class.completed]="isCompleted('immediate', $index)">
+                            <div class="action-header">
+                              <mat-checkbox [checked]="isCompleted('immediate', $index)" (change)="toggleCompleted('immediate', $index)" />
+                              <span class="action-title">{{ a.title }}</span>
+                              <span class="priority-badge" [class]="a.priority">{{ a.priority }}</span>
+                            </div>
+                            <p class="action-desc">{{ a.description }}</p>
+                            <div class="action-owner"><mat-icon>person</mat-icon> {{ a.owner }}</div>
                           </div>
-                          <p class="action-desc">{{ a.description }}</p>
-                          <div class="action-owner"><mat-icon>person</mat-icon> {{ a.owner }}</div>
-                        </div>
-                      }
-                    </div>
-                  </div>
-                }
+                        }
+                      </div>
+                    </mat-expansion-panel>
+                  }
 
-                @if (ra.shortTermActions?.length) {
-                  <div class="actions-section">
-                    <h3><mat-icon>schedule</mat-icon> Short-Term Actions <span class="timeframe-tag">2–4 weeks</span></h3>
-                    <div class="action-cards">
-                      @for (a of ra.shortTermActions; track $index) {
-                        <div class="action-card" [class]="'priority-' + a.priority">
-                          <div class="action-header">
-                            <span class="action-title">{{ a.title }}</span>
-                            <span class="priority-badge" [class]="a.priority">{{ a.priority }}</span>
+                  @if (ra.shortTermActions?.length) {
+                    <mat-expansion-panel [expanded]="expandedPanel() === 'short'" (opened)="expandedPanel.set('short')">
+                      <mat-expansion-panel-header>
+                        <mat-panel-title>
+                          <mat-icon>schedule</mat-icon>
+                          Short-Term Actions
+                          <span class="timeframe-tag">2–4 weeks</span>
+                          <span class="completion-count">{{ completedCount('short', ra.shortTermActions!) }}/{{ ra.shortTermActions!.length }}</span>
+                        </mat-panel-title>
+                      </mat-expansion-panel-header>
+                      <div class="action-cards">
+                        @for (a of ra.shortTermActions; track $index) {
+                          <div class="action-card" [class]="'priority-' + a.priority" [class.completed]="isCompleted('short', $index)">
+                            <div class="action-header">
+                              <mat-checkbox [checked]="isCompleted('short', $index)" (change)="toggleCompleted('short', $index)" />
+                              <span class="action-title">{{ a.title }}</span>
+                              <span class="priority-badge" [class]="a.priority">{{ a.priority }}</span>
+                            </div>
+                            <p class="action-desc">{{ a.description }}</p>
+                            <div class="action-footer">
+                              <span class="action-owner"><mat-icon>person</mat-icon> {{ a.owner }}</span>
+                              @if (a.timeframe) { <span class="action-timeframe"><mat-icon>event</mat-icon> {{ a.timeframe }}</span> }
+                            </div>
                           </div>
-                          <p class="action-desc">{{ a.description }}</p>
-                          <div class="action-footer">
-                            <span class="action-owner"><mat-icon>person</mat-icon> {{ a.owner }}</span>
-                            @if (a.timeframe) { <span class="action-timeframe"><mat-icon>event</mat-icon> {{ a.timeframe }}</span> }
-                          </div>
-                        </div>
-                      }
-                    </div>
-                  </div>
-                }
+                        }
+                      </div>
+                    </mat-expansion-panel>
+                  }
 
-                @if (ra.longTermActions?.length) {
-                  <div class="actions-section">
-                    <h3><mat-icon>trending_up</mat-icon> Long-Term Actions <span class="timeframe-tag">1–3 months</span></h3>
-                    <div class="action-cards">
-                      @for (a of ra.longTermActions; track $index) {
-                        <div class="action-card" [class]="'priority-' + a.priority">
-                          <div class="action-header">
-                            <span class="action-title">{{ a.title }}</span>
-                            <span class="priority-badge" [class]="a.priority">{{ a.priority }}</span>
+                  @if (ra.longTermActions?.length) {
+                    <mat-expansion-panel [expanded]="expandedPanel() === 'long'" (opened)="expandedPanel.set('long')">
+                      <mat-expansion-panel-header>
+                        <mat-panel-title>
+                          <mat-icon>trending_up</mat-icon>
+                          Long-Term Actions
+                          <span class="timeframe-tag">1–3 months</span>
+                          <span class="completion-count">{{ completedCount('long', ra.longTermActions!) }}/{{ ra.longTermActions!.length }}</span>
+                        </mat-panel-title>
+                      </mat-expansion-panel-header>
+                      <div class="action-cards">
+                        @for (a of ra.longTermActions; track $index) {
+                          <div class="action-card" [class]="'priority-' + a.priority" [class.completed]="isCompleted('long', $index)">
+                            <div class="action-header">
+                              <mat-checkbox [checked]="isCompleted('long', $index)" (change)="toggleCompleted('long', $index)" />
+                              <span class="action-title">{{ a.title }}</span>
+                              <span class="priority-badge" [class]="a.priority">{{ a.priority }}</span>
+                            </div>
+                            <p class="action-desc">{{ a.description }}</p>
+                            <div class="action-footer">
+                              <span class="action-owner"><mat-icon>person</mat-icon> {{ a.owner }}</span>
+                              @if (a.timeframe) { <span class="action-timeframe"><mat-icon>event</mat-icon> {{ a.timeframe }}</span> }
+                            </div>
                           </div>
-                          <p class="action-desc">{{ a.description }}</p>
-                          <div class="action-footer">
-                            <span class="action-owner"><mat-icon>person</mat-icon> {{ a.owner }}</span>
-                            @if (a.timeframe) { <span class="action-timeframe"><mat-icon>event</mat-icon> {{ a.timeframe }}</span> }
-                          </div>
-                        </div>
-                      }
-                    </div>
-                  </div>
-                }
+                        }
+                      </div>
+                    </mat-expansion-panel>
+                  }
+                </mat-accordion>
 
                 @if (ra.preventiveMeasures?.length) {
-                  <div class="actions-section">
+                  <div class="actions-section preventive-section">
                     <h3><mat-icon>shield</mat-icon> Preventive Measures</h3>
                     <ul class="preventive-list">
                       @for (m of ra.preventiveMeasures; track $index) {
@@ -519,26 +547,33 @@ interface RecommendedActions {
       p { max-width: 460px; line-height: 1.6; font-size: 14px; margin: 0 0 12px; }
       .gen-hint { font-size: 12px; color: #9aa5b4; }
     }
-    .actions-section {
-      margin-bottom: 24px;
-      h3 {
-        display: flex; align-items: center; gap: 6px;
-        font-size: 15px; font-weight: 600; color: #1B2A47; margin: 0 0 12px;
+    .actions-accordion {
+      display: block; margin-bottom: 16px;
+      ::ng-deep .mat-expansion-panel { border-radius: 12px !important; margin-bottom: 8px; box-shadow: none !important; border: 1px solid #e8edf4; }
+      ::ng-deep .mat-expansion-panel-header { padding: 0 20px; height: 52px; }
+      ::ng-deep .mat-expansion-panel-body { padding: 0 20px 16px; }
+      ::ng-deep mat-panel-title {
+        display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; color: #1B2A47;
         mat-icon { font-size: 18px; width: 18px; height: 18px; color: #3A9FD6; }
       }
     }
+    .completion-count {
+      margin-left: auto; font-size: 12px; font-weight: 600; color: #9aa5b4;
+      padding: 2px 8px; border-radius: 999px; background: #f0f4f8;
+    }
     .timeframe-tag {
       font-size: 11px; font-weight: 600; padding: 2px 10px; border-radius: 999px;
-      background: #eef2f7; color: #5a6a7e; margin-left: 8px;
+      background: #eef2f7; color: #5a6a7e; margin-left: 4px;
       &.urgent { background: rgba(239, 68, 68, 0.1); color: #b91c1c; }
     }
     .action-cards { display: flex; flex-direction: column; gap: 10px; }
     .action-card {
       background: #f8fafc; border-radius: 10px; padding: 14px 16px;
-      border-left: 4px solid #e8edf4;
+      border-left: 4px solid #e8edf4; transition: opacity 0.2s;
       &.priority-high     { border-left-color: #e86c3a; }
       &.priority-medium   { border-left-color: #f0a500; }
       &.priority-low      { border-left-color: #27C4A0; }
+      &.completed { opacity: 0.55; .action-title { text-decoration: line-through; } }
     }
     .action-header { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
     .action-title { font-size: 14px; font-weight: 600; color: #1B2A47; flex: 1; }
@@ -554,6 +589,14 @@ interface RecommendedActions {
     .action-owner, .action-timeframe {
       display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: #5a6a7e;
       mat-icon { font-size: 14px; width: 14px; height: 14px; color: #9aa5b4; }
+    }
+    .preventive-section {
+      margin-top: 16px;
+      h3 {
+        display: flex; align-items: center; gap: 6px;
+        font-size: 15px; font-weight: 600; color: #1B2A47; margin: 0 0 12px;
+        mat-icon { font-size: 18px; width: 18px; height: 18px; color: #3A9FD6; }
+      }
     }
     .preventive-list {
       margin: 0; padding-left: 20px;
@@ -602,6 +645,27 @@ export class ConflictDetailComponent implements OnInit {
   // AI Recommended Actions
   recommendedActions = signal<RecommendedActions | null>(null);
   generatingActions = signal(false);
+  expandedPanel = signal<string>('immediate');
+  completedActions = signal<Record<string, Set<number>>>({});
+
+  isCompleted(section: string, index: number): boolean {
+    return this.completedActions()[section]?.has(index) ?? false;
+  }
+
+  toggleCompleted(section: string, index: number): void {
+    this.completedActions.update(map => {
+      const updated = { ...map };
+      const set = new Set(updated[section] ?? []);
+      if (set.has(index)) { set.delete(index); } else { set.add(index); }
+      updated[section] = set;
+      return updated;
+    });
+  }
+
+  completedCount(section: string, items: unknown[]): number {
+    const set = this.completedActions()[section];
+    return set ? [...set].filter(i => i < items.length).length : 0;
+  }
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
