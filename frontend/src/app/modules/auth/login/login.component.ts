@@ -414,7 +414,8 @@ const MODULE_SLIDES: ModuleSlide[] = [
     .info-panel {
       flex: 0 0 55%; display: flex; flex-direction: column;
       background: linear-gradient(160deg, #1B2A47 0%, #223554 40%, #2a4270 100%);
-      padding: 40px 48px; color: white; position: relative; overflow-y: auto; overflow-x: hidden;
+      padding: 40px 48px; color: white; position: relative; overflow: hidden;
+      height: 100vh;
     }
     .info-panel::after {
       content: ''; position: absolute; top: -30%; right: -20%;
@@ -429,7 +430,7 @@ const MODULE_SLIDES: ModuleSlide[] = [
       pointer-events: none;
     }
 
-    .info-top { position: relative; z-index: 1; margin-bottom: 28px; }
+    .info-top { position: relative; z-index: 1; margin-bottom: 28px; flex-shrink: 0; }
     .info-logo { height: 100px; width: auto; margin-bottom: 20px; }
     .info-tagline {
       font-size: 28px; font-weight: 700; line-height: 1.3; margin: 0 0 12px;
@@ -439,14 +440,17 @@ const MODULE_SLIDES: ModuleSlide[] = [
     .info-sub { font-size: 15px; color: rgba(255,255,255,0.7); line-height: 1.6; margin: 0; max-width: 480px; }
 
     /* Module carousel */
-    .module-carousel { flex: 1; position: relative; z-index: 1; display: flex; flex-direction: column; }
+    .module-carousel { flex: 3; position: relative; z-index: 1; display: flex; flex-direction: column; min-height: 0; }
 
     .module-slide {
       display: none; flex-direction: column; gap: 0;
       background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
       border-radius: 16px; padding: 24px; backdrop-filter: blur(8px);
       animation: slideIn 0.5s ease;
+      flex: 1; min-height: 0; overflow-y: auto;
       &.active { display: flex; }
+      &::-webkit-scrollbar { width: 4px; }
+      &::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
     }
 
     @keyframes slideIn {
@@ -469,12 +473,12 @@ const MODULE_SLIDES: ModuleSlide[] = [
     }
 
     .slide-body {
-      margin-bottom: 16px;
+      margin-bottom: 46px;
       p { font-size: 12.5px; color: rgba(255,255,255,0.68); line-height: 1.65; margin: 0 0 8px; &:last-child { margin-bottom: 0; } }
     }
 
     .slide-workflow {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 46px;
     }
     .wf-step { display: flex; gap: 10px; align-items: flex-start; }
     .wf-icon {
@@ -492,7 +496,7 @@ const MODULE_SLIDES: ModuleSlide[] = [
       span { font-size: 10.5px; color: rgba(255,255,255,0.55); line-height: 1.4; }
     }
 
-    .slide-features { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 14px; }
+    .slide-features { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 46px; }
     .feature-chip {
       display: inline-flex; align-items: center; gap: 3px;
       font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 999px;
@@ -502,19 +506,23 @@ const MODULE_SLIDES: ModuleSlide[] = [
     }
 
     .slide-stats {
-      display: flex; gap: 24px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.08);
+      display: flex; gap: 24px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.08); justify-content: center;
     }
     .stat { display: flex; flex-direction: column; align-items: center; }
     .stat-val { font-size: 20px; font-weight: 800; }
     .stat-label { font-size: 9px; color: rgba(255,255,255,0.5); text-align: center; max-width: 100px; }
 
     .carousel-dots {
-      display: flex; gap: 8px; justify-content: center; margin-top: 20px;
+      display: flex; gap: 8px; justify-content: center; margin-top: 16px; flex-shrink: 0;
     }
+    .dot {
+      width: 10px; height: 10px; border-radius: 50%; border: none; cursor: pointer;
+      background: rgba(255,255,255,0.25); transition: all 0.2s;
+      &.active { width: 28px; border-radius: 5px; }
       &:hover:not(.active) { background: rgba(255,255,255,0.4); }
     }
 
-    .info-bottom { position: relative; z-index: 1; margin-top: 24px; }
+    .info-bottom { position: relative; z-index: 1; margin-top: 24px; flex-shrink: 0; }
     .trust-bar {
       display: flex; align-items: center; gap: 8px; font-size: 13px; color: rgba(255,255,255,0.45);
       a { color: rgba(255,255,255,0.7); text-decoration: none; &:hover { color: white; } }
