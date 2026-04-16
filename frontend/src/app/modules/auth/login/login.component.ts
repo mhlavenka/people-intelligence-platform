@@ -27,6 +27,7 @@ interface ModuleSlide {
   title: string;
   subtitle: string;
   color: string;
+  heroImage?: string;
   paragraphs: string[];
   workflow: WorkflowStep[];
   features: string[];
@@ -39,6 +40,7 @@ const MODULE_SLIDES: ModuleSlide[] = [
     title: 'Conflict Intelligence\u2122',
     subtitle: 'Predict. Prevent. Resolve.',
     color: '#e86c3a',
+    heroImage: 'assets/module_conflict.png',
     paragraphs: [
       'Built on the Harvard Negotiation Project\u2019s interest-based negotiation framework \u2014 the methodology behind Getting to Yes (Fisher, Ury & Patton) and Difficult Conversations (Stone, Patton & Heen). Every layer of the module is designed to surface underlying interests, not just manage surface-level positions.',
       'The AI analysis maps anonymous survey data to the Three Conversations framework: the \u201cWhat Happened\u201d conversation (divergent narratives), the Feelings conversation (suppressed emotions driving escalation), and the Identity conversation (threats to self-image causing rigidity). This multi-layer diagnosis enables interventions that address the full depth of conflict.',
@@ -58,6 +60,7 @@ const MODULE_SLIDES: ModuleSlide[] = [
     title: 'Coaching & Development',
     subtitle: 'From Engagement to Transformation.',
     color: '#27C4A0',
+    heroImage: 'assets/module_coaching.png',
     paragraphs: [
       'A complete coaching practice management platform built on the GROW Model (Goal, Reality, Options, Will) and aligned with ICF Core Competencies. Coaches manage the full engagement lifecycle \u2014 from discovery and chemistry matching through structured sessions to final assessment and alumni follow-up.',
       'Every session is enriched with AI-powered documentation, pre/post session intake forms, and EQ-i 2.0 psychometric integration (5 composites, 15 subscales). Coaches can generate AI-driven debrief narratives from assessment data, automatically populate session plans, and track coaching arcs across engagements.',
@@ -77,6 +80,7 @@ const MODULE_SLIDES: ModuleSlide[] = [
     title: 'Neuro-Inclusion',
     subtitle: 'Build a Truly Inclusive Workplace.',
     color: '#7c5cbf',
+    heroImage: 'assets/module_neuro.png',
     paragraphs: [
       'Assess your organisation\u2019s neuroinclusion maturity across multiple dimensions with structured assessments designed for neurodivergent employees and the teams that support them. The module moves beyond awareness training to measurable, actionable inclusion strategies.',
       'AI-driven gap analysis benchmarks your scores against dimension-level targets, identifies the highest-impact areas for improvement, and generates targeted action plans. Progress is tracked over time, allowing organisations to demonstrate measurable inclusion gains to leadership, boards, and external stakeholders.',
@@ -96,6 +100,7 @@ const MODULE_SLIDES: ModuleSlide[] = [
     title: 'Leadership & Succession',
     subtitle: 'Develop Tomorrow\u2019s Leaders Today.',
     color: '#3A9FD6',
+    heroImage: 'assets/module_leadership.png',
     paragraphs: [
       'Build a measurable leadership pipeline with AI-generated Individual Development Plans using the GROW coaching model. The module synthesises inputs from EQ-i 2.0 assessments, conflict analysis data, competency gap evaluations, and coach observations to create evidence-based development roadmaps.',
       'Each IDP includes structured goals, reality assessments, options for development, and concrete action commitments \u2014 with milestones that can be tracked to completion. The AI doesn\u2019t just generate a plan; it contextualises development priorities against the individual\u2019s assessment profile and organisational needs.',
@@ -115,6 +120,7 @@ const MODULE_SLIDES: ModuleSlide[] = [
     title: 'Booking & Scheduling',
     subtitle: 'Effortless Scheduling, Zero Friction.',
     color: '#2080b0',
+    heroImage: 'assets/module_booking.png',
     paragraphs: [
       'Professional booking pages for every coach with real-time availability, timezone-aware slot generation, and configurable rules for buffer times, advance notice, and daily limits. Clients access a public, shareable link \u2014 no login required \u2014 and book in seconds.',
       'Google Calendar two-way sync means bookings automatically create calendar events with Google Meet links, and changes in either direction (reschedule, cancel, decline) propagate instantly via webhook. Date exclusions, country holidays, and special availability rules ensure coaches maintain full control over their schedule.',
@@ -196,6 +202,13 @@ const MODULE_SLIDES: ModuleSlide[] = [
                   <span class="slide-subtitle">{{ m.subtitle }}</span>
                 </div>
               </div>
+
+              <!-- Hero image -->
+              @if (m.heroImage) {
+                <div class="slide-hero">
+                  <img [src]="m.heroImage" [alt]="m.title" />
+                </div>
+              }
 
               <!-- Paragraphs -->
               <div class="slide-body">
@@ -470,6 +483,12 @@ const MODULE_SLIDES: ModuleSlide[] = [
     .slide-title-block {
       h3 { font-size: 19px; font-weight: 700; margin: 0 0 2px; }
       .slide-subtitle { font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.5px; }
+    }
+
+    .slide-hero {
+      margin-bottom: 16px; border-radius: 10px; overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.1);
+      img { width: 100%; height: auto; display: block; }
     }
 
     .slide-body {
