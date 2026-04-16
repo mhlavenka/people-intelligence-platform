@@ -620,17 +620,13 @@ const MODULE_SLIDES: ModuleSlide[] = [
 
     /* ── Responsive: mobile ──────────────────────────────────────── */
     @media (max-width: 768px) {
-      .auth-page { flex-direction: column; background: linear-gradient(160deg, #1B2A47 0%, #223554 30%, #f0f4f8 30%); }
+      .auth-page { flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(160deg, #1B2A47 0%, #223554 100%); }
       .info-panel { display: none; }
-      .mobile-brand {
-        display: flex; flex-direction: column; align-items: center;
-        padding: 32px 24px 20px; text-align: center;
-      }
-      .mobile-logo { height: 40px; width: auto; margin-bottom: 8px; }
-      .mobile-tagline { font-size: 14px; color: rgba(255,255,255,0.8); margin: 0; font-weight: 500; }
+      .mobile-brand { display: none; }
       .auth-card {
-        background: white; border-radius: 20px 20px 0 0; padding: 32px 24px;
-        flex: 1; max-width: 100%; box-shadow: 0 -4px 24px rgba(0,0,0,0.08);
+        background: white; border-radius: 16px; padding: 32px 24px;
+        flex: none; max-width: 400px; width: calc(100% - 32px);
+        box-shadow: 0 8px 32px rgba(0,0,0,0.25);
       }
       .card-header { margin-bottom: 20px; h2 { font-size: 20px; } }
       .mobile-only { display: block; }
