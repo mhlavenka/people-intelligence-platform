@@ -12,6 +12,7 @@ import {
   propagateSessionUpdate,
 } from '../services/bookingCoachingSync.service';
 import { cancelBooking } from '../services/booking.service';
+import { BookingSettings } from '../models/BookingSettings.model';
 import { buildPostSessionReflectionPrompt, callClaude } from '../services/ai.service';
 import { sendEmail } from '../services/email.service';
 import { config } from '../config/env';
@@ -220,7 +221,15 @@ router.get('/engagements/:id', async (req: AuthRequest, res: Response, next: Nex
       .populate('coachId', 'firstName lastName email profilePicture')
       .populate('sponsorId', 'name email organization');
     if (!engagement) { res.status(404).json({ error: 'Engagement not found' }); return; }
-    res.json(engagement);
+
+    const coachSettings = await BookingSettings.findOne({ coachId: engagement.coachId })
+      .select('rescheduleDeadlineHours')
+      .setOptions({ bypassTenantCheck: true });
+    const result = {
+      ...engagement.toObject(),
+      rescheduleDeadlineHours: coachSettings?.rescheduleDeadlineHours ?? 24,
+    };
+    res.json(result);
   } catch (e) { next(e); }
 });
 

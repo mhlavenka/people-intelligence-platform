@@ -22,6 +22,8 @@ webhookRouter.post('/gcal', (req: Request, res: Response) => {
     channelToken: req.header('X-Goog-Channel-Token') || undefined,
   };
 
+  console.info(`[Webhook] Incoming: state=${headers.resourceState} channel=${headers.channelId?.slice(-12)}`);
+
   // Acknowledge immediately; process out-of-band.
   res.status(200).end();
 

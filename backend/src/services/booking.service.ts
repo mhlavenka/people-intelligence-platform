@@ -17,6 +17,21 @@ import {
   propagateBookingCancel,
   propagateBookingReschedule,
 } from './bookingCoachingSync.service';
+import { CoachingSession } from '../models/CoachingSession.model';
+
+const DEFAULT_RESCHEDULE_DEADLINE_HOURS = 24;
+
+async function getDeadlineHours(coachId: string): Promise<number> {
+  const settings = await BookingSettings.findOne({ coachId })
+    .select('rescheduleDeadlineHours')
+    .setOptions({ bypassTenantCheck: true });
+  return settings?.rescheduleDeadlineHours ?? DEFAULT_RESCHEDULE_DEADLINE_HOURS;
+}
+
+function isWithinDeadline(startTime: Date, deadlineHours: number): boolean {
+  const hoursUntil = (startTime.getTime() - Date.now()) / (60 * 60 * 1000);
+  return hoursUntil < deadlineHours;
+}
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -306,10 +321,23 @@ export async function cancelBooking(
   booking.cancellationReason = reason;
   await booking.save();
 
-  // Mirror cancel into the linked CoachingSession (if any)
-  await propagateBookingCancel(booking).catch((err) =>
-    console.error('[BookingSync] Failed to propagate cancel:', err),
-  );
+  // Mirror cancel into the linked CoachingSession (if any).
+  // Late cancellations (by client, within the reschedule deadline) still
+  // count against the coachee's session allotment.
+  const isLate = cancelledBy === 'client'
+    && isWithinDeadline(booking.startTime, await getDeadlineHours(booking.coachId.toString()));
+
+  if (booking.sessionId) {
+    const update: Record<string, unknown> = { status: 'cancelled' };
+    if (isLate) update['lateCancellation'] = true;
+    await CoachingSession.findByIdAndUpdate(booking.sessionId, update)
+      .setOptions({ bypassTenantCheck: true })
+      .catch((err) => console.error('[BookingSync] Failed to propagate cancel:', err));
+  } else {
+    await propagateBookingCancel(booking).catch((err) =>
+      console.error('[BookingSync] Failed to propagate cancel:', err),
+    );
+  }
 
   // Invalidate cache
   const cfg = await AvailabilityConfig.findOne({ coachId: booking.coachId })
@@ -355,6 +383,16 @@ export async function rescheduleBooking(
   }
   if (newEndTime.getTime() <= newStartTime.getTime()) {
     throw Object.assign(new Error('End time must be after start time'), { statusCode: 400 });
+  }
+
+  if (triggeredBy === 'coachee') {
+    const deadlineHours = await getDeadlineHours(booking.coachId.toString());
+    if (isWithinDeadline(booking.startTime, deadlineHours)) {
+      throw Object.assign(
+        new Error(`Rescheduling is no longer available — the ${deadlineHours}-hour deadline has passed. You may cancel, but the session will count toward your allotment.`),
+        { statusCode: 403 },
+      );
+    }
   }
 
   const oldStartTime = booking.startTime;

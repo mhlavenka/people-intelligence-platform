@@ -248,14 +248,24 @@ interface Session {
                       }
                       @if (canManage()) {
                         <button mat-icon-button matTooltip="Edit" (click)="editSession(s)"><mat-icon>edit</mat-icon></button>
+                        @if (s.status === 'scheduled' && s.bookingId) {
+                          <button mat-icon-button matTooltip="Cancel session" class="del-btn"
+                                  (click)="coachCancelSession(s)">
+                            <mat-icon>event_busy</mat-icon>
+                          </button>
+                        }
                         <button mat-icon-button matTooltip="Delete" class="del-btn" (click)="deleteSession(s)"><mat-icon>delete_outline</mat-icon></button>
                       }
                       @if (canCoacheeManage(s)) {
-                        <button mat-icon-button matTooltip="Reschedule"
-                                (click)="coacheeReschedule(s)">
-                          <mat-icon>event_repeat</mat-icon>
-                        </button>
-                        <button mat-icon-button matTooltip="Cancel" class="del-btn"
+                        @if (canCoacheeReschedule(s)) {
+                          <button mat-icon-button matTooltip="Reschedule"
+                                  (click)="coacheeReschedule(s)">
+                            <mat-icon>event_repeat</mat-icon>
+                          </button>
+                        }
+                        <button mat-icon-button
+                                [matTooltip]="isLateCancellation(s) ? 'Cancel (counts as used session)' : 'Cancel'"
+                                class="del-btn"
                                 (click)="coacheeCancel(s)">
                           <mat-icon>event_busy</mat-icon>
                         </button>
@@ -921,15 +931,29 @@ export class EngagementDetailComponent implements OnInit {
   /** A coachee can reschedule/cancel a session only if it is still scheduled
    *  (not already cancelled or completed), has a paired Booking row, and
    *  the starting time is in the future. */
+  private get deadlineHours(): number {
+    return (this.engagement() as any)?.rescheduleDeadlineHours ?? 24;
+  }
+
+  private hoursUntilSession(s: Session): number {
+    return (new Date(s.date).getTime() - Date.now()) / (60 * 60 * 1000);
+  }
+
   canCoacheeManage(s: Session): boolean {
-    // An engagement's coachee can self-service reschedule/cancel — covers
-    // both external (role='coachee') and internal (isCoachee=true) users.
     const me = this.auth.currentUser();
     const isCoachee = me?.role === 'coachee' || me?.isCoachee === true;
     if (!isCoachee) return false;
     if (!s.bookingId) return false;
     if (s.status !== 'scheduled') return false;
     return new Date(s.date).getTime() > Date.now();
+  }
+
+  canCoacheeReschedule(s: Session): boolean {
+    return this.hoursUntilSession(s) >= this.deadlineHours;
+  }
+
+  isLateCancellation(s: Session): boolean {
+    return this.hoursUntilSession(s) < this.deadlineHours;
   }
 
   preSessionIntakeTitle(s: Session): string | null {
@@ -1197,19 +1221,60 @@ export class EngagementDetailComponent implements OnInit {
     });
   }
 
+  coachCancelSession(s: Session): void {
+    const coachee = this.engagement()?.coacheeId;
+    const coacheeName = coachee && typeof coachee === 'object'
+      ? `${coachee.firstName} ${coachee.lastName}`.trim() : '';
+    const ref = this.dialog.open(CancelDialogComponent, {
+      width: '480px',
+      data: {
+        title: 'Cancel session',
+        startTime: s.date,
+        coachName: coacheeName,
+        noteLabel: 'Message to coachee (optional)',
+        notePlaceholder: 'Let the coachee know why you\'re cancelling…',
+        confirmLabel: 'Cancel session',
+      },
+    });
+    ref.afterClosed().subscribe((result: CancelDialogResult | null | undefined) => {
+      if (!result) return;
+      if (s.bookingId) {
+        this.bookingSvc.cancelBooking(s.bookingId, result.reason).subscribe({
+          next: () => {
+            this.snack.open('Session cancelled. The coachee has been notified.', 'OK', { duration: 3000 });
+            this.load();
+          },
+          error: (err: any) => this.snack.open(err?.error?.error || 'Cancel failed', 'OK', { duration: 3000 }),
+        });
+      } else {
+        this.api.put(`/coaching/sessions/${s._id}`, { status: 'cancelled' }).subscribe({
+          next: () => {
+            this.snack.open('Session cancelled.', 'OK', { duration: 3000 });
+            this.load();
+          },
+          error: (err: any) => this.snack.open(err?.error?.error || 'Cancel failed', 'OK', { duration: 3000 }),
+        });
+      }
+    });
+  }
+
   /** Coachee → cancel the Booking (and, via propagation, the paired session). */
   coacheeCancel(s: Session): void {
     if (!s.bookingId) return;
+    const late = this.isLateCancellation(s);
     const coach = this.engagement()?.coachId;
     const coachName = coach && typeof coach === 'object'
       ? `${coach.firstName} ${coach.lastName}`.trim() : '';
     const ref = this.dialog.open(CancelDialogComponent, {
       width: '480px',
       data: {
-        title: 'Cancel session',
+        title: late ? 'Late cancellation' : 'Cancel session',
         startTime: s.date,
         coachName,
-        confirmLabel: 'Cancel session',
+        confirmLabel: late ? 'Cancel anyway (counts as used)' : 'Cancel session',
+        warning: late
+          ? `This session is within ${this.deadlineHours} hours. Cancelling now will count as a used session from your allotment. You will need to book a new session.`
+          : undefined,
       },
     });
     ref.afterClosed().subscribe((result: CancelDialogResult | null | undefined) => {

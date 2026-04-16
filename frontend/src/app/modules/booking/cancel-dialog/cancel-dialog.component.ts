@@ -19,6 +19,8 @@ export interface CancelDialogData {
   notePlaceholder?: string;
   /** Button copy. */
   confirmLabel?: string;
+  /** Warning banner shown above the textarea for late cancellations etc. */
+  warning?: string;
 }
 
 export interface CancelDialogResult {
@@ -45,6 +47,13 @@ export interface CancelDialogResult {
         </p>
       }
 
+      @if (data.warning) {
+        <div class="warning-banner">
+          <mat-icon>warning</mat-icon>
+          <span>{{ data.warning }}</span>
+        </div>
+      }
+
       <mat-form-field appearance="outline" class="note-field">
         <mat-label>{{ data.noteLabel || 'Message to coach (optional)' }}</mat-label>
         <textarea matInput rows="4"
@@ -63,6 +72,13 @@ export interface CancelDialogResult {
   `,
   styles: [`
     .intro { margin: 0 0 16px; color: #46546b; line-height: 1.5; }
+    .warning-banner {
+      display: flex; align-items: flex-start; gap: 8px;
+      background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c;
+      padding: 12px 14px; border-radius: 8px; margin-bottom: 16px;
+      font-size: 13px; line-height: 1.5;
+      mat-icon { color: #ef4444; flex-shrink: 0; font-size: 18px; width: 18px; height: 18px; margin-top: 1px; }
+    }
     .note-field { width: 100%; display: block; }
     mat-spinner { display: inline-block; margin-right: 6px; }
     mat-dialog-content { min-width: 360px; }

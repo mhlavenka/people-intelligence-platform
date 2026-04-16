@@ -270,12 +270,17 @@ export async function handleGoogleNotification(headers: {
     return;
   }
 
+  console.info(`[Webhook] Processing ${changed.length} changed event(s) for coach ${coachId} (since ${updatedMin})`);
+
   for (const evt of changed) {
     if (!evt.id) continue;
 
     const booking = await Booking.findOne({ googleEventId: evt.id })
       .setOptions({ bypassTenantCheck: true });
-    if (!booking) continue; // not one of ours
+    if (!booking) {
+      console.info(`[Webhook] Event ${evt.id} (status=${evt.status}) — no matching booking, skipping`);
+      continue;
+    }
 
     try {
       if (evt.status === 'cancelled') {

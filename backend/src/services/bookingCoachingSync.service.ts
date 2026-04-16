@@ -66,10 +66,13 @@ export async function precheckBookingQuota(
   // 0 means unlimited — same semantics as the engagement editor's hint.
   if (!engagement.sessionsPurchased) return { allowed: true };
 
-  // Count sessions that count against quota: scheduled + completed.
+  // Count sessions against quota: scheduled + completed + late cancellations.
   const used = await CoachingSession.countDocuments({
     engagementId: engagement._id,
-    status: { $in: ['scheduled', 'completed'] },
+    $or: [
+      { status: { $in: ['scheduled', 'completed'] } },
+      { status: 'cancelled', lateCancellation: true },
+    ],
   }).setOptions({ bypassTenantCheck: true });
 
   if (used >= engagement.sessionsPurchased) {

@@ -27,6 +27,7 @@ export interface ICoachingSession extends Document {
   preSessionIntakeSentAt?: Date;
   postSessionIntakeTemplateId?: mongoose.Types.ObjectId;
   postSessionIntakeSentAt?: Date;
+  lateCancellation?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -64,6 +65,7 @@ const CoachingSessionSchema = new Schema<ICoachingSession>(
     preSessionIntakeSentAt: { type: Date },
     postSessionIntakeTemplateId: { type: Schema.Types.ObjectId, ref: 'SurveyTemplate' },
     postSessionIntakeSentAt: { type: Date },
+    lateCancellation: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

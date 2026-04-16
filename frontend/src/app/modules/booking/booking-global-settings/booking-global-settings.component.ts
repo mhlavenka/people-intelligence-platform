@@ -190,6 +190,33 @@ const COMMON_TIMEZONES = [
         </div>
       </section>
 
+      <!-- Cancellation & Reschedule Policy -->
+      <section class="card">
+        <div class="card-header">
+          <mat-icon>policy</mat-icon>
+          <div>
+            <h2>Cancellation &amp; Reschedule Policy</h2>
+            <p>Set the minimum notice period for coachees to reschedule. Late cancellations count as used sessions.</p>
+          </div>
+        </div>
+        <mat-divider />
+        <div class="card-body">
+          <mat-form-field appearance="outline" class="deadline-field">
+            <mat-label>Reschedule deadline</mat-label>
+            <mat-select [(ngModel)]="rescheduleDeadlineHours" (ngModelChange)="scheduleSave()">
+              <mat-option [value]="12">12 hours before</mat-option>
+              <mat-option [value]="24">24 hours before</mat-option>
+              <mat-option [value]="48">48 hours before</mat-option>
+              <mat-option [value]="72">72 hours before</mat-option>
+            </mat-select>
+            <mat-hint>
+              Coachees can reschedule freely before this deadline. After the deadline,
+              they can still cancel but the session counts toward their allotment.
+            </mat-hint>
+          </mat-form-field>
+        </div>
+      </section>
+
       <!-- Date Exclusions -->
       <section class="card">
         <div class="card-header">
@@ -371,6 +398,8 @@ const COMMON_TIMEZONES = [
     }
     .unavailable-label { color: #9aa5b4; font-style: italic; font-size: 14px; }
 
+    .deadline-field { width: 280px; }
+
     .exclusions-layout {
       display: grid; grid-template-columns: minmax(280px, 360px) 1fr; gap: 24px;
     }
@@ -474,6 +503,7 @@ export class BookingGlobalSettingsComponent implements OnInit, OnDestroy {
   timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   targetCalendarId = '';
   conflictCalendarIds: string[] = [];
+  rescheduleDeadlineHours = 24;
 
   // Date exclusions (whole-day "isUnavailable" overrides).
   dateOverrides = signal<DateOverride[]>([]);
@@ -558,6 +588,7 @@ export class BookingGlobalSettingsComponent implements OnInit, OnDestroy {
           this.timezone = settings.timezone || this.timezone;
           this.targetCalendarId = settings.targetCalendarId || '';
           this.conflictCalendarIds = settings.conflictCalendarIds || [];
+          this.rescheduleDeadlineHours = settings.rescheduleDeadlineHours ?? 24;
           this.dateOverrides.set(settings.dateOverrides ?? []);
         }
         this.loading.set(false);
@@ -821,6 +852,7 @@ export class BookingGlobalSettingsComponent implements OnInit, OnDestroy {
       weeklySchedule: this.weeklySchedule,
       targetCalendarId: this.targetCalendarId,
       conflictCalendarIds: this.conflictCalendarIds,
+      rescheduleDeadlineHours: this.rescheduleDeadlineHours,
       dateOverrides: this.dateOverrides().map((o) => ({
         ...o,
         date: this.toIso(o.date),

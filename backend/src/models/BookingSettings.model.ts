@@ -10,6 +10,7 @@ export interface IBookingSettings extends Document {
   dateOverrides: IDateOverride[];
   targetCalendarId: string;
   conflictCalendarIds: string[];
+  rescheduleDeadlineHours: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -47,6 +48,7 @@ const BookingSettingsSchema = new Schema<IBookingSettings>(
     dateOverrides:       [DateOverrideSchema],
     targetCalendarId:    { type: String, default: '' },
     conflictCalendarIds: [{ type: String }],
+    rescheduleDeadlineHours: { type: Number, default: 24, min: 0 },
   },
   { timestamps: true },
 );

@@ -108,6 +108,7 @@ export interface BookingSettingsData {
   dateOverrides: DateOverride[];
   targetCalendarId: string;
   conflictCalendarIds: string[];
+  rescheduleDeadlineHours?: number;
 }
 
 // ─── Event type colors ──────────────────────────────────────────────────────
