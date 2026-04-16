@@ -163,18 +163,23 @@ const COMMON_TIMEZONES = [
                   {{ dayName(slot.dayOfWeek) }}
                 </mat-slide-toggle>
                 @if (slot.enabled) {
-                  <div class="time-inputs">
-                    <mat-form-field appearance="outline" class="time-field">
+                  <div class="time-inputs" [class.invalid]="!isTimeRangeValid(slot)">
+                    <mat-form-field appearance="outline" class="time-field" subscriptSizing="dynamic">
                       <mat-label>From</mat-label>
                       <input matInput type="time" [(ngModel)]="slot.startTime"
-                             (ngModelChange)="scheduleSave()" />
+                             (ngModelChange)="onTimeChange(slot)" />
                     </mat-form-field>
                     <span class="time-sep">&ndash;</span>
-                    <mat-form-field appearance="outline" class="time-field">
+                    <mat-form-field appearance="outline" class="time-field" subscriptSizing="dynamic">
                       <mat-label>To</mat-label>
                       <input matInput type="time" [(ngModel)]="slot.endTime"
-                             (ngModelChange)="scheduleSave()" />
+                             (ngModelChange)="onTimeChange(slot)" />
                     </mat-form-field>
+                    @if (!isTimeRangeValid(slot)) {
+                      <span class="time-error" role="alert">
+                        <mat-icon>error_outline</mat-icon> End must be after start
+                      </span>
+                    }
                   </div>
                 } @else {
                   <span class="unavailable-label">Unavailable</span>
@@ -353,9 +358,17 @@ const COMMON_TIMEZONES = [
       &.disabled { opacity: 0.6; }
     }
     .day-toggle { min-width: 140px; }
-    .time-inputs { display: flex; align-items: center; gap: 8px; }
+    .time-inputs { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
     .time-field { width: 140px; }
     .time-sep { color: #6b7c93; font-size: 18px; }
+    .time-error {
+      display: inline-flex; align-items: center; gap: 4px;
+      color: #b91c1c; font-size: 12px; font-weight: 500;
+      mat-icon { font-size: 16px; width: 16px; height: 16px; color: #ef4444; }
+    }
+    .time-inputs.invalid ::ng-deep .mdc-notched-outline > * {
+      border-color: rgba(239, 68, 68, 0.6) !important;
+    }
     .unavailable-label { color: #9aa5b4; font-style: italic; font-size: 14px; }
 
     .exclusions-layout {
@@ -409,7 +422,7 @@ const COMMON_TIMEZONES = [
       mat-icon { color: #c8d3df; }
     }
     .excl-item {
-      display: flex; align-items: center; gap: 10px; padding: 6px 8px;
+      display: flex; align-items: center; gap: 10px; padding: 0;
       border-radius: 8px;
       &:hover { background: rgba(239, 68, 68, 0.04); }
     }
@@ -635,6 +648,25 @@ export class BookingGlobalSettingsComponent implements OnInit, OnDestroy {
     this.scheduleSave();
   }
 
+  /** Per-row validation: <input type="time"> uses HH:mm strings which sort
+   *  lexicographically, so a string compare is sufficient. */
+  isTimeRangeValid(slot: WeeklySlot): boolean {
+    if (!slot.enabled) return true;
+    if (!slot.startTime || !slot.endTime) return true;  // half-typed input — don't yell yet
+    return slot.endTime > slot.startTime;
+  }
+
+  hasAnyInvalidRange(): boolean {
+    return this.weeklySchedule.some((s) => !this.isTimeRangeValid(s));
+  }
+
+  /** Called from a time field's (ngModelChange). Save only if every row is
+   *  valid; otherwise the inline error stays visible until the user fixes it. */
+  onTimeChange(_slot: WeeklySlot): void {
+    if (this.hasAnyInvalidRange()) return;
+    this.scheduleSave();
+  }
+
   // ── Date exclusions ──────────────────────────────────────────────────────
   /** Convert any Date or YYYY-MM-DD string to a normalized ISO date string. */
   private toIso(d: Date | string): string {
@@ -776,6 +808,12 @@ export class BookingGlobalSettingsComponent implements OnInit, OnDestroy {
 
   private flushSave(): void {
     this.saveTimer = null;
+    // Don't persist a schedule with an inverted time range — the inline error
+    // is already visible and the user needs to fix it before we save.
+    if (this.hasAnyInvalidRange()) {
+      this.saveState.set('error');
+      return;
+    }
     this.saveState.set('saving');
 
     const payload: Partial<BookingSettingsData> = {
