@@ -128,7 +128,11 @@ interface RecommendedActions {
             <div class="tab-body">
               <div class="section">
                 <h3><mat-icon>auto_awesome</mat-icon> AI Narrative</h3>
-                <p class="narrative">{{ analysis()!.aiNarrative }}</p>
+                <div class="narrative">
+                  @for (para of splitParagraphs(analysis()!.aiNarrative); track $index) {
+                    <p>{{ para }}</p>
+                  }
+                </div>
               </div>
 
               @if (analysis()!.conflictTypes.length) {
@@ -138,51 +142,63 @@ interface RecommendedActions {
                   <p class="drill-hint">Run a focused sub-analysis for each detected conflict type.</p>
                   <div class="sub-analyses-list">
                     @for (ct of analysis()!.conflictTypes; track ct) {
-                      <div class="sub-row" [class]="subAnalysisFor(ct)?.riskLevel || ''">
-                        <div class="sub-left">
-                          <svg class="mini-gauge" viewBox="0 0 80 52" xmlns="http://www.w3.org/2000/svg" style="overflow:visible">
-                            <path d="M10,44 A30,30 0 0,1 70,44" fill="none" stroke="#e8edf4" stroke-width="8" stroke-linecap="round"/>
-                            <path [attr.d]="gaugeArcFor(ct)" fill="none"
-                                  [attr.stroke]="subAnalysisFor(ct) ? riskColor(subAnalysisFor(ct)!.riskLevel) : 'none'"
-                                  stroke-width="8" stroke-linecap="round"/>
-                            <text x="40" y="43" text-anchor="middle"
-                                  [attr.font-size]="subAnalysisFor(ct) ? 13 : 10"
-                                  font-weight="700"
-                                  [attr.fill]="subAnalysisFor(ct) ? riskColor(subAnalysisFor(ct)!.riskLevel) : '#b0bec5'">
-                              {{ subAnalysisFor(ct)?.riskScore ?? '--' }}
-                            </text>
-                          </svg>
+                      <div class="sub-card" [class]="subAnalysisFor(ct)?.riskLevel || ''">
+                        <div class="sub-row" [class.clickable]="!!subAnalysisFor(ct)"
+                             (click)="subAnalysisFor(ct) && toggleNarrative(ct)">
+                          <div class="sub-left">
+                            <svg class="mini-gauge" viewBox="0 0 80 52" xmlns="http://www.w3.org/2000/svg" style="overflow:visible">
+                              <path d="M10,44 A30,30 0 0,1 70,44" fill="none" stroke="#e8edf4" stroke-width="8" stroke-linecap="round"/>
+                              <path [attr.d]="gaugeArcFor(ct)" fill="none"
+                                    [attr.stroke]="subAnalysisFor(ct) ? riskColor(subAnalysisFor(ct)!.riskLevel) : 'none'"
+                                    stroke-width="8" stroke-linecap="round"/>
+                              <text x="40" y="43" text-anchor="middle"
+                                    [attr.font-size]="subAnalysisFor(ct) ? 13 : 10"
+                                    font-weight="700"
+                                    [attr.fill]="subAnalysisFor(ct) ? riskColor(subAnalysisFor(ct)!.riskLevel) : '#b0bec5'">
+                                {{ subAnalysisFor(ct)?.riskScore ?? '--' }}
+                              </text>
+                            </svg>
+                          </div>
+                          <div class="sub-center">
+                            <div class="sub-type-label">{{ ct }}</div>
+                            @if (subAnalysisFor(ct); as sub) {
+                              <div class="sub-score-bar-wrap">
+                                <div class="sub-score-bar" [style.width.%]="sub.riskScore" [style.background]="riskColor(sub.riskLevel)"></div>
+                              </div>
+                            } @else {
+                              <div class="sub-score-bar-wrap empty">
+                                <div class="sub-score-bar-placeholder">No sub-analysis yet</div>
+                              </div>
+                            }
+                          </div>
+                          <div class="sub-right">
+                            @if (subAnalysisFor(ct); as sub) {
+                              <span class="risk-badge" [class]="sub.riskLevel">{{ sub.riskLevel | titlecase }}</span>
+                              <mat-icon class="expand-icon" [class.expanded]="expandedNarratives().has(ct)">expand_more</mat-icon>
+                            }
+                            @if (!subAnalysisFor(ct)) {
+                              <button mat-stroked-button color="primary"
+                                      [disabled]="runningFor() === ct"
+                                      (click)="runSubAnalysis(ct); $event.stopPropagation()">
+                                @if (runningFor() === ct) {
+                                  <mat-spinner diameter="16" />
+                                } @else {
+                                  <mat-icon>play_arrow</mat-icon>
+                                }
+                                {{ runningFor() === ct ? 'Analyzing…' : 'Run' }}
+                              </button>
+                            }
+                          </div>
                         </div>
-                        <div class="sub-center">
-                          <div class="sub-type-label">{{ ct }}</div>
-                          @if (subAnalysisFor(ct); as sub) {
-                            <div class="sub-score-bar-wrap">
-                              <div class="sub-score-bar" [style.width.%]="sub.riskScore" [style.background]="riskColor(sub.riskLevel)"></div>
-                            </div>
-                            <div class="sub-narrative">{{ sub.aiNarrative }}</div>
-                          } @else {
-                            <div class="sub-score-bar-wrap empty">
-                              <div class="sub-score-bar-placeholder">No sub-analysis yet</div>
-                            </div>
-                          }
-                        </div>
-                        <div class="sub-right">
-                          @if (subAnalysisFor(ct); as sub) {
-                            <span class="risk-badge" [class]="sub.riskLevel">{{ sub.riskLevel | titlecase }}</span>
-                          }
-                          @if (!subAnalysisFor(ct)) {
-                            <button mat-stroked-button color="primary"
-                                    [disabled]="runningFor() === ct"
-                                    (click)="runSubAnalysis(ct)">
-                              @if (runningFor() === ct) {
-                                <mat-spinner diameter="16" />
-                              } @else {
-                                <mat-icon>play_arrow</mat-icon>
+                        @if (subAnalysisFor(ct); as sub) {
+                          @if (expandedNarratives().has(ct)) {
+                            <div class="sub-narrative-panel">
+                              @for (para of splitParagraphs(sub.aiNarrative); track $index) {
+                                <p>{{ para }}</p>
                               }
-                              {{ runningFor() === ct ? 'Analyzing…' : 'Run' }}
-                            </button>
+                            </div>
                           }
-                        </div>
+                        }
                       </div>
                     }
                   </div>
@@ -490,30 +506,41 @@ interface RecommendedActions {
         mat-icon { font-size: 18px; width: 18px; height: 18px; color: #3A9FD6; }
       }
     }
-    .narrative { font-size: 14px; color: #374151; line-height: 1.7; margin: 0; white-space: pre-wrap; }
+    .narrative {
+      font-size: 14px; color: #374151; line-height: 1.7; margin: 0;
+      p { margin: 0 0 12px; &:last-child { margin-bottom: 0; } }
+    }
     .drill-hint { font-size: 13px; color: #6b7280; margin: -4px 0 16px; line-height: 1.5; }
     .sub-analyses-list { display: flex; flex-direction: column; gap: 10px; }
-    .sub-row {
-      display: flex; align-items: center; gap: 14px;
-      background: #f8fafc; border-radius: 10px; padding: 12px 14px;
-      border-left: 4px solid #e8edf4; transition: border-color 0.2s;
+    .sub-card {
+      background: #f8fafc; border-radius: 10px;
+      border-left: 4px solid #e8edf4; transition: border-color 0.2s; overflow: hidden;
       &.low      { border-left-color: #27C4A0; }
       &.medium   { border-left-color: #f0a500; }
       &.high     { border-left-color: #e86c3a; }
       &.critical { border-left-color: #e53e3e; }
     }
+    .sub-row {
+      display: flex; align-items: center; gap: 14px; padding: 12px 14px;
+      &.clickable { cursor: pointer; &:hover { background: rgba(58,159,214,0.04); } }
+    }
     .sub-left { flex-shrink: 0; .mini-gauge { width: 72px; height: 46px; display: block; } }
     .sub-center { flex: 1; min-width: 0; }
     .sub-type-label { font-size: 13px; font-weight: 600; color: #1B2A47; margin-bottom: 6px; }
     .sub-score-bar-wrap {
-      background: #e8edf4; border-radius: 4px; height: 6px; margin-bottom: 6px; overflow: hidden;
+      background: #e8edf4; border-radius: 4px; height: 6px; overflow: hidden;
       &.empty { display: flex; align-items: center; background: transparent; height: auto; }
     }
     .sub-score-bar { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
     .sub-score-bar-placeholder { font-size: 12px; color: #9aa5b4; font-style: italic; }
-    .sub-narrative {
-      font-size: 12px; color: #5a6a7e; line-height: 1.5;
-      .narrative-toggle { color: #3A9FD6; cursor: pointer; text-decoration: none; font-weight: 500; margin-left: 2px; &:hover { text-decoration: underline; } }
+    .sub-narrative-panel {
+      padding: 0 14px 14px 100px; border-top: 1px solid #e8edf4;
+      p { font-size: 13px; color: #374151; line-height: 1.7; margin: 12px 0 0; }
+    }
+    .expand-icon {
+      font-size: 20px; width: 20px; height: 20px; color: #9aa5b4;
+      transition: transform 0.2s;
+      &.expanded { transform: rotate(180deg); }
     }
     .sub-right {
       flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 6px;
@@ -722,6 +749,10 @@ export class ConflictDetailComponent implements OnInit {
       },
       error: () => this.runningFor.set(null),
     });
+  }
+
+  splitParagraphs(text: string): string[] {
+    return text.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
   }
 
   isNarrativeExpanded(ct: string): boolean { return this.expandedNarratives().has(ct); }
