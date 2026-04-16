@@ -21,49 +21,132 @@ interface OAuthProviders {
   microsoftTenantId?: string;
 }
 
+interface WorkflowStep { icon: string; label: string; desc: string; }
 interface ModuleSlide {
   icon: string;
   title: string;
-  description: string;
+  subtitle: string;
   color: string;
+  paragraphs: string[];
+  workflow: WorkflowStep[];
   features: string[];
+  stats: { value: string; label: string }[];
 }
 
 const MODULE_SLIDES: ModuleSlide[] = [
   {
     icon: 'warning_amber',
     title: 'Conflict Intelligence\u2122',
-    description: 'Predict and prevent workplace conflict before it escalates. AI-powered analysis grounded in the Harvard Negotiation Project\u2019s interest-based framework.',
+    subtitle: 'Predict. Prevent. Resolve.',
     color: '#e86c3a',
-    features: ['Anonymous pulse surveys', 'AI risk scoring & analysis', 'Manager conversation guides', 'Escalation-to-mediation pathway'],
+    paragraphs: [
+      'Built on the Harvard Negotiation Project\u2019s interest-based negotiation framework \u2014 the methodology behind Getting to Yes (Fisher, Ury & Patton) and Difficult Conversations (Stone, Patton & Heen). Every layer of the module is designed to surface underlying interests, not just manage surface-level positions.',
+      'The AI analysis maps anonymous survey data to the Three Conversations framework: the \u201cWhat Happened\u201d conversation (divergent narratives), the Feelings conversation (suppressed emotions driving escalation), and the Identity conversation (threats to self-image causing rigidity). This multi-layer diagnosis enables interventions that address the full depth of conflict.',
+      'Manager conversation guides translate principled negotiation into practical scripts any manager can use \u2014 with interest-probing questions, emotion-acknowledging language, and collaborative resolution pathways. When bilateral resolution isn\u2019t enough, the structured escalation pathway activates William Ury\u2019s \u201cThird Side\u201d model for professional mediation.',
+    ],
+    workflow: [
+      { icon: 'poll', label: 'Survey', desc: 'Anonymous pulse & deep-dive surveys detect early conflict signals across teams' },
+      { icon: 'auto_awesome', label: 'AI Analysis', desc: 'Pattern recognition scores risk (0\u2013100) and identifies conflict types with root causes' },
+      { icon: 'record_voice_over', label: 'Guide', desc: 'Manager conversation scripts and recommended actions across time horizons' },
+      { icon: 'shield', label: 'Resolve', desc: 'Track actions to completion or escalate to professional mediation' },
+    ],
+    features: ['Bi-weekly pulse (15 items) & quarterly deep-dive (21 items)', 'AI risk scoring with low/medium/high/critical levels', 'Sub-analysis drill-down per conflict type', 'Interest-based manager conversation scripts', 'Prioritised action plans (immediate / short / long term)', 'Completion tracking with per-action checkboxes', 'Escalation-to-mediation pathway with status tracking', 'Preventive measures and systemic recommendations'],
+    stats: [{ value: '36', label: 'Survey questions across 2 instruments' }, { value: '4', label: 'Risk levels with escalation protocols' }, { value: '3', label: 'Conversation layers detected by AI' }],
   },
   {
     icon: 'psychology_alt',
     title: 'Coaching & Development',
-    description: 'End-to-end coaching management with session tracking, progress monitoring, and AI-generated development plans using the GROW model.',
+    subtitle: 'From Engagement to Transformation.',
     color: '#27C4A0',
-    features: ['Engagement & session management', 'Pre/post session forms', 'Google Calendar sync', 'Sponsor billing & invoicing'],
+    paragraphs: [
+      'A complete coaching practice management platform built on the GROW Model (Goal, Reality, Options, Will) and aligned with ICF Core Competencies. Coaches manage the full engagement lifecycle \u2014 from discovery and chemistry matching through structured sessions to final assessment and alumni follow-up.',
+      'Every session is enriched with AI-powered documentation, pre/post session intake forms, and EQ-i 2.0 psychometric integration (5 composites, 15 subscales). Coaches can generate AI-driven debrief narratives from assessment data, automatically populate session plans, and track coaching arcs across engagements.',
+      'Sponsor organisations get transparent reporting on engagement progress, session completion rates, and development outcomes \u2014 with full contract management, invoicing, and rebillable session tracking built in. The coachee portal provides a dedicated space for session booking, between-session reflection, and progress visibility.',
+    ],
+    workflow: [
+      { icon: 'handshake', label: 'Discovery', desc: 'Intake assessment, contracting, and baseline psychometric evaluation' },
+      { icon: 'flag', label: 'Goal Setting', desc: 'GROW Model IDP creation with AI-generated development plans' },
+      { icon: 'event_note', label: 'Sessions', desc: 'Pre/post forms, AI notes, ratings, and coaching arc tracking' },
+      { icon: 'assessment', label: 'Outcomes', desc: 'Sponsor reporting, progress measurement, and alumni follow-up' },
+    ],
+    features: ['GROW Model session framework with AI documentation', 'EQ-i 2.0 psychometric integration (133 questions, 15 subscales)', 'Pre/post session intake forms linked to templates', 'Engagement lifecycle with status tracking', 'Sponsor contracts, invoicing & rebillable sessions', 'Coachee portal for booking and between-session work', 'Coach journal with AI-generated session summaries', 'Multi-engagement coaching arc visibility'],
+    stats: [{ value: '15', label: 'EQ-i subscales tracked per coachee' }, { value: '4', label: 'GROW phases structured per session' }, { value: '\u221e', label: 'Engagements per coach' }],
   },
   {
     icon: 'psychology',
     title: 'Neuro-Inclusion',
-    description: 'Assess and improve your organisation\u2019s neuroinclusion maturity. AI identifies gaps and provides actionable recommendations.',
+    subtitle: 'Build a Truly Inclusive Workplace.',
     color: '#7c5cbf',
-    features: ['Maturity assessments', 'AI gap analysis', 'Benchmarking by dimension', 'Inclusion action plans'],
+    paragraphs: [
+      'Assess your organisation\u2019s neuroinclusion maturity across multiple dimensions with structured assessments designed for neurodivergent employees and the teams that support them. The module moves beyond awareness training to measurable, actionable inclusion strategies.',
+      'AI-driven gap analysis benchmarks your scores against dimension-level targets, identifies the highest-impact areas for improvement, and generates targeted action plans. Progress is tracked over time, allowing organisations to demonstrate measurable inclusion gains to leadership, boards, and external stakeholders.',
+      'The assessment covers physical environment, communication practices, management approaches, recruitment processes, career development pathways, and organisational culture \u2014 providing a holistic view of where neurodivergent employees experience friction and where the organisation excels.',
+    ],
+    workflow: [
+      { icon: 'quiz', label: 'Assess', desc: 'Multi-dimension neuroinclusion maturity assessment' },
+      { icon: 'insights', label: 'Analyse', desc: 'AI benchmarks scores and identifies highest-impact gaps' },
+      { icon: 'lightbulb', label: 'Plan', desc: 'Targeted inclusion action plans per dimension' },
+      { icon: 'show_chart', label: 'Track', desc: 'Measure progress over time with repeat assessments' },
+    ],
+    features: ['Multi-dimension maturity assessment', 'AI gap analysis with benchmarking', 'Dimension-level scoring and visualisation', 'Targeted inclusion action plans', 'Progress tracking across assessment cycles', 'Physical, cultural & process dimensions covered', 'Board-ready reporting on inclusion gains', 'Integration with coaching for manager development'],
+    stats: [{ value: '6+', label: 'Inclusion dimensions assessed' }, { value: 'AI', label: 'Powered gap analysis' }, { value: '\u0394', label: 'Progress tracked over time' }],
   },
   {
     icon: 'trending_up',
     title: 'Leadership & Succession',
-    description: 'Build future-ready leaders with AI-generated Individual Development Plans, competency mapping, and succession planning.',
+    subtitle: 'Develop Tomorrow\u2019s Leaders Today.',
     color: '#3A9FD6',
-    features: ['GROW model IDPs', 'EQ-i integration', 'Competency gap analysis', 'Milestone tracking'],
+    paragraphs: [
+      'Build a measurable leadership pipeline with AI-generated Individual Development Plans using the GROW coaching model. The module synthesises inputs from EQ-i 2.0 assessments, conflict analysis data, competency gap evaluations, and coach observations to create evidence-based development roadmaps.',
+      'Each IDP includes structured goals, reality assessments, options for development, and concrete action commitments \u2014 with milestones that can be tracked to completion. The AI doesn\u2019t just generate a plan; it contextualises development priorities against the individual\u2019s assessment profile and organisational needs.',
+      'The conflict-to-IDP pipeline is unique: when the Conflict Intelligence module identifies patterns that suggest a leadership development need, the system can generate a targeted IDP that addresses the root cause \u2014 turning conflict data into growth opportunities.',
+    ],
+    workflow: [
+      { icon: 'psychology', label: 'Assess', desc: 'EQ-i 2.0, competency evaluations, and conflict data inputs' },
+      { icon: 'auto_awesome', label: 'Generate', desc: 'AI creates GROW Model IDP with contextualised priorities' },
+      { icon: 'task_alt', label: 'Execute', desc: 'Track milestone completion with notes and evidence' },
+      { icon: 'refresh', label: 'Iterate', desc: 'Regenerate plans as new data emerges from coaching & assessments' },
+    ],
+    features: ['GROW Model AI-generated development plans', 'EQ-i 2.0 score integration (15 subscales)', 'Competency gap analysis and mapping', 'Milestone tracking with completion status', 'Conflict-to-IDP pipeline for root cause development', 'Multi-source input synthesis (assessments + coaching + surveys)', 'Plan regeneration as new data arrives', 'Coach and coachee collaborative goal-setting'],
+    stats: [{ value: 'GROW', label: 'Model structures every plan' }, { value: '15', label: 'EQ-i subscales inform development' }, { value: 'AI', label: 'Generates contextualised IDPs' }],
+  },
+  {
+    icon: 'calendar_month',
+    title: 'Booking & Scheduling',
+    subtitle: 'Effortless Scheduling, Zero Friction.',
+    color: '#2080b0',
+    paragraphs: [
+      'Professional booking pages for every coach with real-time availability, timezone-aware slot generation, and configurable rules for buffer times, advance notice, and daily limits. Clients access a public, shareable link \u2014 no login required \u2014 and book in seconds.',
+      'Google Calendar two-way sync means bookings automatically create calendar events with Google Meet links, and changes in either direction (reschedule, cancel, decline) propagate instantly via webhook. Date exclusions, country holidays, and special availability rules ensure coaches maintain full control over their schedule.',
+      'Built natively into ARTES \u2014 no Calendly dependency, no redirect to third-party tools. All booking data is scoped by coach and tenant, with automated confirmation and reminder emails via AWS SES keeping both parties informed.',
+    ],
+    workflow: [
+      { icon: 'settings', label: 'Configure', desc: 'Set weekly availability, event types, timezone, and buffer rules' },
+      { icon: 'link', label: 'Share', desc: 'Public booking link \u2014 no login required for clients' },
+      { icon: 'event_available', label: 'Book', desc: 'Client selects slot; calendar event + Meet link auto-created' },
+      { icon: 'sync', label: 'Sync', desc: 'Two-way Google Calendar sync with webhook-driven updates' },
+    ],
+    features: ['Public shareable booking pages per coach', 'Google Calendar two-way sync with webhooks', 'Automated Google Meet link generation', 'Timezone-aware slot generation', 'Configurable buffer time and advance notice', 'Date exclusions and country holidays', 'Client self-service reschedule and cancel', 'Automated confirmation and reminder emails'],
+    stats: [{ value: '2-way', label: 'Google Calendar sync' }, { value: '0', label: 'External dependencies' }, { value: '24/7', label: 'Self-service booking' }],
   },
   {
     icon: 'assignment',
-    title: 'Survey Intelligence',
-    description: 'Flexible intake engine supporting anonymous surveys, coach-led interviews, and structured assessments across all modules.',
+    title: 'Intake Management',
+    subtitle: 'One Engine, Every Assessment.',
     color: '#f0a500',
-    features: ['Custom template builder', 'Anonymous & coached modes', 'Response aggregation', 'Cross-module analytics'],
+    paragraphs: [
+      'A flexible intake engine powering every module in the platform. Design custom questionnaires with mixed question types (scale, boolean, text, multi-select), deploy them as anonymous self-service surveys, coach-led interviews, or structured assessments \u2014 all from a single template builder.',
+      'Privacy-first aggregation ensures that individual responses are never exposed. A minimum group size of 5 respondents per analysis prevents statistical de-anonymisation, while public survey links allow distribution without requiring respondents to create accounts. Coach-led sessions capture richer contextual data with session format, target name, and coachee linkage.',
+      'Cross-module analytics feed survey data into Conflict Intelligence (risk scoring), Neuro-Inclusion (maturity assessment), and Coaching (pre/post session forms) \u2014 making the intake engine the connective tissue of the entire platform.',
+    ],
+    workflow: [
+      { icon: 'edit_note', label: 'Design', desc: 'Build templates with mixed question types and branching logic' },
+      { icon: 'send', label: 'Deploy', desc: 'Anonymous links, coach-led sessions, or embedded assessments' },
+      { icon: 'analytics', label: 'Aggregate', desc: 'Privacy-first response aggregation with minimum group sizes' },
+      { icon: 'hub', label: 'Connect', desc: 'Feed data into Conflict, Neuro-Inclusion, and Coaching modules' },
+    ],
+    features: ['Custom template builder with mixed question types', 'Anonymous self-service surveys via public links', 'Coach-led interview and assessment modes', 'Privacy-first aggregation (min. 5 respondents)', 'Real-time response tracking and counts', 'Cross-module data pipeline (Conflict, Neuro, Coaching)', 'Submission token deduplication', 'Global and organisation-scoped templates'],
+    stats: [{ value: '3', label: 'Intake modes (survey, interview, assessment)' }, { value: '5+', label: 'Minimum group for privacy' }, { value: '6', label: 'Modules powered by intake data' }],
   },
 ];
 
@@ -86,7 +169,7 @@ const MODULE_SLIDES: ModuleSlide[] = [
       <!-- Left: Info Panel (desktop only) -->
       <div class="info-panel">
         <div class="info-top">
-          <img src="assets/artes_light.png" alt="ARTES" class="info-logo" />
+          <img src="assets/artes_transparent_dark.png" alt="ARTES" class="info-logo" />
           <p class="info-tagline">People Intelligence Platform</p>
           <p class="info-sub">AI-powered insights for coaching, conflict resolution, neuroinclusion, and leadership development.</p>
         </div>
@@ -94,17 +177,67 @@ const MODULE_SLIDES: ModuleSlide[] = [
         <div class="module-carousel">
           @for (m of modules; track m.title; let i = $index) {
             <div class="module-slide" [class.active]="activeSlide() === i">
-              <div class="slide-icon" [style.background]="m.color + '20'" [style.color]="m.color">
-                <mat-icon>{{ m.icon }}</mat-icon>
-              </div>
-              <div class="slide-content">
-                <h3 [style.color]="m.color">{{ m.title }}</h3>
-                <p>{{ m.description }}</p>
-                <div class="slide-features">
-                  @for (f of m.features; track f) {
-                    <span class="feature-chip">{{ f }}</span>
-                  }
+              <!-- Header with graphic -->
+              <div class="slide-header">
+                <div class="slide-graphic">
+                  <svg viewBox="0 0 100 100" class="module-ring">
+                    <circle cx="50" cy="50" r="42" fill="none" [attr.stroke]="m.color + '20'" stroke-width="3" />
+                    <circle cx="50" cy="50" r="42" fill="none" [attr.stroke]="m.color" stroke-width="3"
+                            stroke-dasharray="264" stroke-dashoffset="66" stroke-linecap="round"
+                            class="ring-progress" />
+                    <circle cx="50" cy="50" r="30" [attr.fill]="m.color + '12'" />
+                  </svg>
+                  <div class="slide-icon-overlay" [style.color]="m.color">
+                    <mat-icon>{{ m.icon }}</mat-icon>
+                  </div>
                 </div>
+                <div class="slide-title-block">
+                  <h3 [style.color]="m.color">{{ m.title }}</h3>
+                  <span class="slide-subtitle">{{ m.subtitle }}</span>
+                </div>
+              </div>
+
+              <!-- Paragraphs -->
+              <div class="slide-body">
+                @for (p of m.paragraphs; track $index) {
+                  <p>{{ p }}</p>
+                }
+              </div>
+
+              <!-- Workflow -->
+              <div class="slide-workflow">
+                @for (s of m.workflow; track s.label; let j = $index) {
+                  <div class="wf-step">
+                    <div class="wf-icon" [style.background]="m.color + '18'" [style.color]="m.color">
+                      <mat-icon>{{ s.icon }}</mat-icon>
+                      <span class="wf-num">{{ j + 1 }}</span>
+                    </div>
+                    <div class="wf-text">
+                      <strong>{{ s.label }}</strong>
+                      <span>{{ s.desc }}</span>
+                    </div>
+                  </div>
+                }
+              </div>
+
+              <!-- Features grid -->
+              <div class="slide-features">
+                @for (f of m.features; track f) {
+                  <span class="feature-chip">
+                    <mat-icon>check_circle</mat-icon>
+                    {{ f }}
+                  </span>
+                }
+              </div>
+
+              <!-- Stats bar -->
+              <div class="slide-stats">
+                @for (s of m.stats; track s.label) {
+                  <div class="stat" [style.color]="m.color">
+                    <span class="stat-val">{{ s.value }}</span>
+                    <span class="stat-label">{{ s.label }}</span>
+                  </div>
+                }
               </div>
             </div>
           }
@@ -137,6 +270,9 @@ const MODULE_SLIDES: ModuleSlide[] = [
       <div class="auth-card">
         @if (!twoFactorStep()) {
           <!-- Step 1: email + password -->
+          <div class="auth-brand">
+            <img src="assets/artes_light.png" alt="ARTES" class="card-logo" />
+          </div>
           <div class="card-header">
             <h2>Welcome back</h2>
             <p>Sign in to your account</p>
@@ -278,7 +414,7 @@ const MODULE_SLIDES: ModuleSlide[] = [
     .info-panel {
       flex: 0 0 55%; display: flex; flex-direction: column;
       background: linear-gradient(160deg, #1B2A47 0%, #223554 40%, #2a4270 100%);
-      padding: 48px 56px; color: white; position: relative; overflow: hidden;
+      padding: 40px 48px; color: white; position: relative; overflow-y: auto; overflow-x: hidden;
     }
     .info-panel::after {
       content: ''; position: absolute; top: -30%; right: -20%;
@@ -293,8 +429,8 @@ const MODULE_SLIDES: ModuleSlide[] = [
       pointer-events: none;
     }
 
-    .info-top { position: relative; z-index: 1; margin-bottom: 40px; }
-    .info-logo { height: 48px; width: auto; margin-bottom: 20px; }
+    .info-top { position: relative; z-index: 1; margin-bottom: 28px; }
+    .info-logo { height: 100px; width: auto; margin-bottom: 20px; }
     .info-tagline {
       font-size: 28px; font-weight: 700; line-height: 1.3; margin: 0 0 12px;
       background: linear-gradient(135deg, #ffffff 0%, #a8d4f0 100%);
@@ -302,52 +438,83 @@ const MODULE_SLIDES: ModuleSlide[] = [
     }
     .info-sub { font-size: 15px; color: rgba(255,255,255,0.7); line-height: 1.6; margin: 0; max-width: 480px; }
 
-    /* ── Module carousel ─────────────────────────────────────────── */
-    .module-carousel { flex: 1; position: relative; z-index: 1; display: flex; flex-direction: column; justify-content: center; }
+    /* Module carousel */
+    .module-carousel { flex: 1; position: relative; z-index: 1; display: flex; flex-direction: column; }
 
     .module-slide {
-      display: none; gap: 20px; align-items: flex-start;
-      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 16px; padding: 28px; backdrop-filter: blur(8px);
-      animation: slideIn 0.4s ease;
+      display: none; flex-direction: column; gap: 0;
+      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px; padding: 24px; backdrop-filter: blur(8px);
+      animation: slideIn 0.5s ease;
       &.active { display: flex; }
     }
 
     @keyframes slideIn {
-      from { opacity: 0; transform: translateY(12px); }
+      from { opacity: 0; transform: translateY(16px); }
       to { opacity: 1; transform: translateY(0); }
     }
 
-    .slide-icon {
-      width: 52px; height: 52px; border-radius: 14px;
+    .slide-header { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; }
+    .slide-graphic { position: relative; width: 64px; height: 64px; flex-shrink: 0; }
+    .module-ring { width: 64px; height: 64px; }
+    .ring-progress { animation: ringDraw 1.2s ease-out; }
+    @keyframes ringDraw { from { stroke-dashoffset: 264; } }
+    .slide-icon-overlay {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      mat-icon { font-size: 26px; width: 26px; height: 26px; }
+    }
+    .slide-title-block {
+      h3 { font-size: 19px; font-weight: 700; margin: 0 0 2px; }
+      .slide-subtitle { font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.5px; }
+    }
+
+    .slide-body {
+      margin-bottom: 16px;
+      p { font-size: 12.5px; color: rgba(255,255,255,0.68); line-height: 1.65; margin: 0 0 8px; &:last-child { margin-bottom: 0; } }
+    }
+
+    .slide-workflow {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px;
+    }
+    .wf-step { display: flex; gap: 10px; align-items: flex-start; }
+    .wf-icon {
+      position: relative; width: 34px; height: 34px; border-radius: 10px;
       display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-      mat-icon { font-size: 28px; width: 28px; height: 28px; }
+      mat-icon { font-size: 18px; width: 18px; height: 18px; }
+      .wf-num {
+        position: absolute; top: -4px; right: -4px; width: 14px; height: 14px;
+        border-radius: 50%; background: rgba(255,255,255,0.15); font-size: 8px; font-weight: 700;
+        display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.8);
+      }
+    }
+    .wf-text {
+      strong { display: block; font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.85); margin-bottom: 1px; }
+      span { font-size: 10.5px; color: rgba(255,255,255,0.55); line-height: 1.4; }
     }
 
-    .slide-content {
-      flex: 1; min-width: 0;
-      h3 { font-size: 18px; font-weight: 700; margin: 0 0 8px; }
-      p { font-size: 14px; color: rgba(255,255,255,0.75); line-height: 1.6; margin: 0 0 14px; }
-    }
-
-    .slide-features { display: flex; flex-wrap: wrap; gap: 6px; }
+    .slide-features { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 14px; }
     .feature-chip {
-      font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 999px;
-      background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.85);
-      border: 1px solid rgba(255,255,255,0.12);
+      display: inline-flex; align-items: center; gap: 3px;
+      font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 999px;
+      background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.75);
+      border: 1px solid rgba(255,255,255,0.08);
+      mat-icon { font-size: 11px; width: 11px; height: 11px; opacity: 0.6; }
     }
+
+    .slide-stats {
+      display: flex; gap: 24px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.08);
+    }
+    .stat { display: flex; flex-direction: column; align-items: center; }
+    .stat-val { font-size: 20px; font-weight: 800; }
+    .stat-label { font-size: 9px; color: rgba(255,255,255,0.5); text-align: center; max-width: 100px; }
 
     .carousel-dots {
-      display: flex; gap: 8px; justify-content: center; margin-top: 24px;
+      display: flex; gap: 8px; justify-content: center; margin-top: 20px;
     }
-    .dot {
-      width: 10px; height: 10px; border-radius: 50%; border: none; cursor: pointer;
-      background: rgba(255,255,255,0.25); transition: all 0.2s;
-      &.active { width: 28px; border-radius: 5px; }
       &:hover:not(.active) { background: rgba(255,255,255,0.4); }
     }
 
-    .info-bottom { position: relative; z-index: 1; margin-top: 40px; }
+    .info-bottom { position: relative; z-index: 1; margin-top: 24px; }
     .trust-bar {
       display: flex; align-items: center; gap: 8px; font-size: 13px; color: rgba(255,255,255,0.45);
       a { color: rgba(255,255,255,0.7); text-decoration: none; &:hover { color: white; } }
@@ -363,8 +530,13 @@ const MODULE_SLIDES: ModuleSlide[] = [
       padding: 48px 56px; max-width: 520px; margin: 0 auto;
     }
 
+    .auth-brand {
+      text-align: center; margin-bottom: 24px;
+      .card-logo { height: 100px; width: auto; }
+    }
+
     .card-header {
-      margin-bottom: 28px;
+      text-align: center; margin-bottom: 28px;
       h2 { font-size: 24px; color: #1B2A47; margin: 0 0 6px; font-weight: 700; }
       p { font-size: 14px; color: #5a6a7e; margin: 0; }
     }
@@ -505,7 +677,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   private startCarousel(): void {
     this.carouselTimer = setInterval(() => {
       this.activeSlide.update(i => (i + 1) % this.modules.length);
-    }, 6000);
+    }, 10000);
   }
 
   private stopCarousel(): void {
