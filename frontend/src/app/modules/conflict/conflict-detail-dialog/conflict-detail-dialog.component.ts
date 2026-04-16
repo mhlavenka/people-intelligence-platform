@@ -15,8 +15,9 @@ type ScriptSection =
 
 interface ConflictAnalysis {
   _id: string;
+  intakeTemplateId?: { _id: string; title: string } | null;
+  name: string;
   departmentId?: string;
-  surveyPeriod: string;
   riskScore: number;
   riskLevel: 'low' | 'medium' | 'high' | 'critical';
   conflictTypes: string[];
@@ -43,7 +44,7 @@ interface ConflictAnalysis {
   template: `
     <h2 mat-dialog-title>
       <mat-icon>analytics</mat-icon>
-      Conflict Analysis — {{ data.departmentId || 'All Departments' }}
+      {{ data.name }}
     </h2>
 
     <mat-dialog-content>
@@ -55,17 +56,19 @@ interface ConflictAnalysis {
         </div>
         <div class="meta-info">
           <div class="meta-item">
-            <mat-icon>calendar_today</mat-icon>
-            <span>{{ data.surveyPeriod }}</span>
+            <mat-icon>event</mat-icon>
+            <span>{{ data.createdAt | date:'MMM d, y' }}</span>
           </div>
           <div class="meta-item">
             <mat-icon>corporate_fare</mat-icon>
             <span>{{ data.departmentId || 'All Departments' }}</span>
           </div>
-          <div class="meta-item">
-            <mat-icon>event</mat-icon>
-            <span>{{ data.createdAt | date:'MMM d, y, h:mm a' }}</span>
-          </div>
+          @if (data.intakeTemplateId?.title; as tplTitle) {
+            <div class="meta-item">
+              <mat-icon>assignment</mat-icon>
+              <span>{{ tplTitle }}</span>
+            </div>
+          }
           <div class="risk-badge" [class]="data.riskLevel">{{ data.riskLevel | titlecase }} Risk</div>
         </div>
       </div>
@@ -683,7 +686,7 @@ export class ConflictDetailDialogComponent implements OnInit {
   <span class="ci-badge">REPORT</span>
 </div>
 <div class="meta-line">
-  ${d.departmentId || 'All Departments'} &nbsp;&middot;&nbsp; ${d.surveyPeriod} &nbsp;&middot;&nbsp; ${date}
+  ${d.departmentId || 'All Departments'} &nbsp;&middot;&nbsp; ${d.name} &nbsp;&middot;&nbsp; ${date}
 </div>
 
 <div class="score-row">
@@ -692,7 +695,7 @@ export class ConflictDetailDialogComponent implements OnInit {
     <div class="score-lbl">Risk Score</div>
   </div>
   <div class="score-meta">
-    <div class="score-meta-item">&#128197; ${d.surveyPeriod}</div>
+    <div class="score-meta-item">&#128197; ${d.name}</div>
     <div class="score-meta-item">&#127970; ${d.departmentId || 'All Departments'}</div>
     <div class="risk-badge">${d.riskLevel.toUpperCase()} RISK</div>
   </div>

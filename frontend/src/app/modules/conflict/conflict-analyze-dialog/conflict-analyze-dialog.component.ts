@@ -57,6 +57,13 @@ interface OrgResponse {
       } @else {
         <form [formGroup]="form" class="dialog-form">
           <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Analysis Title</mat-label>
+            <input matInput formControlName="name"
+              placeholder="e.g. Q1 2026 Team Health, March Pulse" />
+            <mat-hint>Give this analysis a name for easy reference</mat-hint>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
             <mat-label>Intake Template</mat-label>
             <mat-select formControlName="templateId" (selectionChange)="selectedTemplateId.set($event.value)">
               @for (t of templates(); track t._id) {
@@ -78,13 +85,6 @@ interface OrgResponse {
                 <mat-option [value]="dept">{{ dept }}</mat-option>
               }
             </mat-select>
-          </mat-form-field>
-
-          <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Intake Period</mat-label>
-            <input matInput formControlName="surveyPeriod"
-              placeholder="e.g. Q1 2026, March 2026" />
-            <mat-hint>Label this analysis period for reporting</mat-hint>
           </mat-form-field>
 
           @if (selectedMinRequired() > 1) {
@@ -171,9 +171,9 @@ export class ConflictAnalyzeDialogComponent implements OnInit {
     private dialogRef: MatDialogRef<ConflictAnalyzeDialogComponent>
   ) {
     this.form = this.fb.group({
+      name:         ['', Validators.required],
       templateId:   ['', Validators.required],
       departmentId: [''],
-      surveyPeriod: ['', Validators.required],
     });
   }
 
@@ -196,10 +196,10 @@ export class ConflictAnalyzeDialogComponent implements OnInit {
       next: (org) => this.departments.set(org.departments ?? []),
     });
 
-    // Default intake period to current month/year
+    // Default analysis name to current month/year
     const now = new Date();
     const label = now.toLocaleString('default', { month: 'long', year: 'numeric' });
-    this.form.patchValue({ surveyPeriod: label });
+    this.form.patchValue({ name: label });
   }
 
   analyze(): void {
@@ -207,12 +207,12 @@ export class ConflictAnalyzeDialogComponent implements OnInit {
     this.analyzing.set(true);
     this.error.set('');
 
-    const { templateId, departmentId, surveyPeriod } = this.form.value;
+    const { name, templateId, departmentId } = this.form.value;
 
     this.api.post('/conflict/analyze', {
       templateId,
       departmentId: departmentId || undefined,
-      surveyPeriod,
+      name,
     }).subscribe({
       next: (result) => {
         this.analyzing.set(false);

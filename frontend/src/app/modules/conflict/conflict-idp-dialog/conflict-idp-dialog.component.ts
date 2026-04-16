@@ -13,7 +13,7 @@ import { ApiService } from '../../../core/api.service';
 interface ConflictAnalysis {
   _id: string;
   departmentId: string;
-  surveyPeriod: string;
+  name: string;
   riskScore: number;
   riskLevel: string;
   conflictTypes: string[];
@@ -63,7 +63,7 @@ interface Coachee {
         <mat-select [(ngModel)]="selectedAnalysisId">
           @for (a of analyses; track a._id) {
             <mat-option [value]="a._id">
-              {{ a.departmentId || 'All Departments' }} — {{ a.surveyPeriod }}
+              {{ a.departmentId || 'All Departments' }} — {{ a.name }}
               (Risk: {{ a.riskScore }}/100 {{ a.riskLevel }})
             </mat-option>
           }

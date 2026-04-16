@@ -1,6 +1,6 @@
 import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -10,7 +10,6 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { ApiService } from '../../../core/api.service';
 import { ConflictAnalyzeDialogComponent } from '../conflict-analyze-dialog/conflict-analyze-dialog.component';
-import { ConflictDetailDialogComponent } from '../conflict-detail-dialog/conflict-detail-dialog.component';
 import { ConflictIdpDialogComponent } from '../conflict-idp-dialog/conflict-idp-dialog.component';
 
 interface ConflictMilestone {
@@ -38,9 +37,9 @@ interface SurveyTemplate { _id: string; title: string; moduleType: string; }
 
 interface ConflictAnalysis {
   _id: string;
-  templateTitle?: string;
+  intakeTemplateId?: { _id: string; title: string } | null;
+  name: string;
   departmentId: string;
-  surveyPeriod: string;
   riskScore: number;
   riskLevel: 'low' | 'medium' | 'high' | 'critical';
   conflictTypes: string[];
@@ -109,27 +108,15 @@ interface ConflictAnalysis {
         <div class="analyses-header">
           <h2>Analyses</h2>
           <span class="analyses-count">{{ analyses().length }} total</span>
-          <button mat-raised-button color="primary" class="new-analysis-btn" (click)="runNewAnalysis()">
-            <mat-icon>add</mat-icon> New Analysis
-          </button>
         </div>
 
         @if (loading()) {
           <div class="loading-center"><mat-spinner diameter="36" /></div>
-        } @else if (analyses().length === 0) {
-          <div class="empty-state">
-            <mat-icon>analytics</mat-icon>
-            <p>No analyses yet. Run your first conflict analysis.</p>
-            <button mat-raised-button color="primary" (click)="runNewAnalysis()">
-              <mat-icon>add</mat-icon> New Analysis
-            </button>
-          </div>
         } @else {
           <div class="analyses-grid">
             @for (a of analyses(); track a._id) {
               <div class="analysis-card" [class]="'accent-' + a.riskLevel">
                 <div class="analysis-card-top">
-                  <!-- Mini gauge -->
                   <div class="mini-gauge-wrap">
                     <svg viewBox="0 0 100 60" class="mini-gauge-svg">
                       <path d="M 10 52 A 40 40 0 0 1 90 52" fill="none" stroke="#e8edf4" stroke-width="10" stroke-linecap="round"/>
@@ -140,20 +127,18 @@ interface ConflictAnalysis {
                     <span class="risk-badge" [class]="a.riskLevel">{{ a.riskLevel }}</span>
                   </div>
 
-                  <!-- Meta -->
                   <div class="analysis-meta">
-                    <div class="meta-dept">
-                      <mat-icon>corporate_fare</mat-icon>
-                      <strong>{{ a.departmentId || 'All Departments' }}</strong>
+                    <div class="meta-name">
+                      <strong>{{ a.name }}</strong>
                     </div>
                     <div class="meta-period">
                       <mat-icon>calendar_today</mat-icon>
-                      {{ a.surveyPeriod }}
+                      {{ a.createdAt | date:'MMM d, y' }}
                     </div>
-                    @if (a.templateTitle) {
+                    @if (a.intakeTemplateId?.title; as tplTitle) {
                       <div class="meta-template">
                         <mat-icon>assignment</mat-icon>
-                        <span>{{ a.templateTitle }}</span>
+                        <span>{{ tplTitle }}</span>
                       </div>
                     }
                     @if (a.escalationRequested) {
@@ -163,7 +148,6 @@ interface ConflictAnalysis {
                     }
                   </div>
 
-                  <!-- Delete -->
                   <button mat-icon-button class="delete-analysis-btn"
                           matTooltip="Delete analysis"
                           (click)="deleteAnalysis(a); $event.stopPropagation()">
@@ -171,7 +155,6 @@ interface ConflictAnalysis {
                   </button>
                 </div>
 
-                <!-- Conflict types -->
                 @if (a.conflictTypes.length) {
                   <div class="type-chips">
                     @for (t of a.conflictTypes; track t) {
@@ -180,7 +163,6 @@ interface ConflictAnalysis {
                   </div>
                 }
 
-                <!-- Actions -->
                 <div class="analysis-card-actions">
                   <button mat-stroked-button (click)="viewAnalysis(a)">
                     <mat-icon>open_in_new</mat-icon> View Details
@@ -193,6 +175,12 @@ interface ConflictAnalysis {
                 </div>
               </div>
             }
+
+            <!-- New Analysis card -->
+            <div class="analysis-card new-analysis-card" (click)="runNewAnalysis()">
+              <mat-icon class="new-analysis-icon">add</mat-icon>
+              <span>New Analysis</span>
+            </div>
           </div>
         }
       </div>
@@ -556,7 +544,7 @@ interface ConflictAnalysis {
 
     .analyses-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(500px, 1fr));
       gap: 16px; padding: 16px 20px 20px;
     }
 
@@ -596,9 +584,22 @@ interface ConflictAnalysis {
       &.critical { background: rgba(229,62,62,0.15);  color: #c53030; }
     }
 
+    .new-analysis-card {
+      border: 2px dashed #d0d8e4; border-left-width: 2px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 8px; cursor: pointer; min-height: 120px; color: #6b7c93;
+      transition: border-color 0.15s, color 0.15s, background 0.15s;
+      &:hover { border-color: #3A9FD6; color: #3A9FD6; background: rgba(58,159,214,0.04); }
+    }
+    .new-analysis-icon { font-size: 36px; width: 36px; height: 36px; }
+
     /* Analysis meta */
     .analysis-meta {
       display: flex; flex-direction: column; gap: 5px; min-width: 0;
+    }
+    .meta-name {
+      font-size: 14px; color: #1B2A47;
+      strong { font-weight: 600; }
     }
     .meta-template {
       display: flex; align-items: center; gap: 5px; font-size: 12px; color: #3A9FD6;
@@ -890,7 +891,7 @@ export class ConflictDashboardComponent implements OnInit {
     return 'critical';
   }
 
-  constructor(private api: ApiService, private dialog: MatDialog, private snackBar: MatSnackBar) {}
+  constructor(private api: ApiService, private dialog: MatDialog, private snackBar: MatSnackBar, private router: Router) {}
 
   ngOnInit(): void {
     this.api.get<SurveyTemplate[]>('/surveys/templates').subscribe({
@@ -928,14 +929,7 @@ export class ConflictDashboardComponent implements OnInit {
   }
 
   viewAnalysis(analysis: ConflictAnalysis): void {
-    const ref = this.dialog.open(ConflictDetailDialogComponent, {
-      width: '860px',
-      maxHeight: '92vh',
-      data: analysis,
-    });
-    ref.afterClosed().subscribe((result) => {
-      if (result?.action === 'escalate') this.escalate(result.id);
-    });
+    this.router.navigate(['/conflict/analysis', analysis._id]);
   }
 
   escalate(id: string): void {
@@ -945,7 +939,7 @@ export class ConflictDashboardComponent implements OnInit {
   }
 
   deleteAnalysis(analysis: ConflictAnalysis): void {
-    if (!confirm(`Delete analysis for "${analysis.departmentId || 'All Departments'}" (${analysis.surveyPeriod})? This will also delete all sub-analyses.`)) return;
+    if (!confirm(`Delete analysis for "${analysis.departmentId || 'All Departments'}" (${analysis.name})? This will also delete all sub-analyses.`)) return;
     this.api.delete(`/conflict/analyses/${analysis._id}`).subscribe({
       next: () => {
         this.analyses.update((list) => list.filter((a) => a._id !== analysis._id));

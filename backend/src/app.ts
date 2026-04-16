@@ -38,6 +38,7 @@ import { webhookRouter } from './routes/webhook.routes';
 import { startReminderJob } from './jobs/reminder.job';
 import { startWebhookRenewalJob } from './jobs/webhookRenewal.job';
 import { startTrialRevertJob } from './jobs/trialRevert.job';
+import { startPreSessionIntakeJob } from './jobs/preSessionIntake.job';
 
 const app = express();
 
@@ -111,6 +112,7 @@ async function bootstrap(): Promise<void> {
   startReminderJob();
   startWebhookRenewalJob();
   startTrialRevertJob();
+  startPreSessionIntakeJob();
   app.listen(config.port, () => {
     console.log(`[Server] Running on port ${config.port} [${config.nodeEnv}]`);
   });

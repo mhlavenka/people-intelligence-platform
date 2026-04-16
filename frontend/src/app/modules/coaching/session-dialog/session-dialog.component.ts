@@ -92,13 +92,6 @@ const FRAMEWORKS = [
           }
         </div>
 
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Frameworks used</mat-label>
-          <mat-select [(ngModel)]="form.frameworks" multiple>
-            @for (f of frameworks; track f) { <mat-option [value]="f">{{ f }}</mat-option> }
-          </mat-select>
-        </mat-form-field>
-
         <div class="section-label">Pre-Session Intake</div>
         <div class="intake-hint">
           <mat-icon>assignment_turned_in</mat-icon>

@@ -34,7 +34,7 @@ interface ConflictIDP {
 interface ConflictAnalysis {
   _id: string;
   departmentId: string;
-  surveyPeriod: string;
+  name: string;
   riskScore: number;
   riskLevel: string;
   conflictTypes: string[];

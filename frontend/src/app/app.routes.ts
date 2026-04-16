@@ -67,6 +67,13 @@ export const routes: Routes = [
               ),
           },
           {
+            path: 'analysis/:id',
+            loadComponent: () =>
+              import('./modules/conflict/conflict-detail/conflict-detail.component').then(
+                (m) => m.ConflictDetailComponent
+              ),
+          },
+          {
             path: 'skill-development',
             loadComponent: () =>
               import('./modules/conflict/conflict-skill-dev/conflict-skill-dev.component').then(

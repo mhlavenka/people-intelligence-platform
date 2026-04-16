@@ -123,6 +123,114 @@ Return ONLY valid JSON with these keys:
 }`;
 }
 
+export function buildConflictRecommendedActionsPrompt(
+  analysis: {
+    name: string;
+    departmentId?: string;
+    riskScore: number;
+    riskLevel: string;
+    conflictTypes: string[];
+    aiNarrative: string;
+  }
+): string {
+  return `You are an expert workplace conflict resolution strategist using Helena's coaching-integrated, interest-based methodology.
+
+Given this conflict analysis:
+Name: ${analysis.name}
+Department: ${analysis.departmentId || 'All Departments'}
+Risk Score: ${analysis.riskScore}/100 (${analysis.riskLevel})
+Conflict Types: ${analysis.conflictTypes.join(', ')}
+
+Analysis:
+${analysis.aiNarrative.slice(0, 1200)}
+
+Generate concrete, prioritized recommended actions organized by timeframe. Each action should be specific, measurable, and assignable.
+
+Return ONLY valid JSON with this exact structure:
+{
+  "immediateActions": [
+    { "title": "<action title>", "description": "<1-2 sentence explanation>", "owner": "<suggested role: HR, Manager, Coach, or Team Lead>", "priority": "<high|medium|low>" }
+  ],
+  "shortTermActions": [
+    { "title": "<action title>", "description": "<1-2 sentence explanation>", "owner": "<suggested role>", "priority": "<high|medium|low>", "timeframe": "<e.g. within 2 weeks>" }
+  ],
+  "longTermActions": [
+    { "title": "<action title>", "description": "<1-2 sentence explanation>", "owner": "<suggested role>", "priority": "<high|medium|low>", "timeframe": "<e.g. 1-3 months>" }
+  ],
+  "preventiveMeasures": [
+    "<specific ongoing practice or policy change to prevent recurrence>"
+  ]
+}
+
+Rules:
+- immediateActions: 2-4 items for THIS WEEK
+- shortTermActions: 3-5 items for the next 2-4 weeks
+- longTermActions: 2-3 items for 1-3 months
+- preventiveMeasures: 2-4 plain-text strings
+- Match urgency to the risk level: ${analysis.riskLevel} risk means ${analysis.riskLevel === 'critical' ? 'act NOW' : analysis.riskLevel === 'high' ? 'move quickly' : 'address systematically'}`;
+}
+
+export function buildPostSessionReflectionPrompt(
+  context: {
+    coacheeName: string;
+    topics: string[];
+    sharedNotes?: string;
+    coachNotes?: string;
+    summary?: string;
+    growFocus?: string[];
+  }
+): string {
+  const topicList = context.topics.length
+    ? `Topics discussed: ${context.topics.join(', ')}`
+    : '';
+  const notesContext = context.sharedNotes
+    ? `Shared session notes:\n${context.sharedNotes.slice(0, 800)}`
+    : '';
+  const privateContext = context.coachNotes
+    ? `Coach's private observations:\n${context.coachNotes.slice(0, 600)}`
+    : '';
+  const summaryContext = context.summary
+    ? `Coach-provided session summary:\n${context.summary}`
+    : '';
+  const growContext = context.growFocus?.length
+    ? `GROW phases explored: ${context.growFocus.join(', ')}`
+    : '';
+
+  return `You are an expert executive coaching assistant. Generate reflective questions for a coachee to complete after a coaching session.
+
+Coachee: ${context.coacheeName}
+${topicList}
+${growContext}
+${notesContext}
+${privateContext}
+${summaryContext}
+
+Generate 6-8 thoughtful post-session reflection questions. The questions should:
+- Help the coachee consolidate insights from the session
+- Encourage them to identify concrete next steps
+- Be open-ended and thought-provoking
+- Reference specific topics/themes from the session when possible
+- Include at least one question about what they'll do differently
+- Include at least one question about support they need
+
+Return ONLY valid JSON — an array of question objects:
+[
+  {
+    "id": "<unique short id like q1, q2...>",
+    "text": "<the question text>",
+    "type": "text",
+    "category": "<one of: Insights, Action Steps, Support Needed, Reflection>"
+  }
+]
+
+Rules:
+- 6-8 questions total
+- All questions must be type "text" (open-ended)
+- Categories: Insights (2-3), Action Steps (2), Support Needed (1), Reflection (1-2)
+- Warm, encouraging tone — this is a growth conversation, not an exam
+- Do NOT reference the coach's private notes in the question text`;
+}
+
 export function buildNeuroinclustionGapPrompt(
   assessmentData: {
     respondentRole: string;

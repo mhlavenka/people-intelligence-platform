@@ -4,7 +4,7 @@ import { SurveyResponse } from '../models/SurveyResponse.model';
 import { SurveyTemplate } from '../models/SurveyTemplate.model';
 import { ConflictAnalysis } from '../models/ConflictAnalysis.model';
 import { Organization } from '../models/Organization.model';
-import { buildConflictAnalysisPrompt, buildConflictSubAnalysisPrompt, callClaude } from '../services/ai.service';
+import { buildConflictAnalysisPrompt, buildConflictSubAnalysisPrompt, buildConflictRecommendedActionsPrompt, callClaude } from '../services/ai.service';
 
 const MIN_GROUP_SIZE = 5;
 
@@ -15,9 +15,8 @@ export async function analyzeConflict(
 ): Promise<void> {
   try {
     const organizationId = req.user!.organizationId;
-    const { templateId, departmentId, surveyPeriod } = req.body;
+    const { templateId, departmentId, name } = req.body;
 
-    // Only filter by departmentId if one was actually specified
     const responseFilter: Record<string, unknown> = { organizationId, templateId };
     if (departmentId) responseFilter['departmentId'] = departmentId;
 
@@ -33,7 +32,6 @@ export async function analyzeConflict(
       return;
     }
 
-    // Aggregate numeric responses only — no individual-level data
     const aggregated: Record<string, number[]> = {};
     for (const response of responses) {
       for (const item of response.responses) {
@@ -58,7 +56,7 @@ export async function analyzeConflict(
     const prompt = buildConflictAnalysisPrompt(
       {
         departmentId: departmentId || 'All Departments',
-        surveyPeriod,
+        surveyPeriod: name,
         aggregatedResponses: averages,
         responseCount: responses.length,
       },
@@ -98,9 +96,8 @@ export async function analyzeConflict(
 
     const analysis = await ConflictAnalysis.create({
       organizationId,
-      templateId,
-      templateTitle: template?.title,
-      surveyPeriod,
+      intakeTemplateId: templateId,
+      name,
       departmentId,
       riskScore: parsed.riskScore,
       riskLevel: parsed.riskLevel,
@@ -109,6 +106,10 @@ export async function analyzeConflict(
       managerScript,
       escalationRequested: false,
     });
+
+    // Populate the template reference before returning so the client
+    // doesn't need a second round-trip.
+    await analysis.populate('intakeTemplateId', 'title');
 
     res.status(201).json(analysis);
   } catch (error) {
@@ -123,7 +124,10 @@ export async function getAnalyses(
 ): Promise<void> {
   try {
     const organizationId = req.user!.organizationId;
-    const analyses = await ConflictAnalysis.find({ organizationId }).sort({ createdAt: -1 }).limit(50);
+    const analyses = await ConflictAnalysis.find({ organizationId })
+      .populate('intakeTemplateId', 'title')
+      .sort({ createdAt: -1 })
+      .limit(50);
     res.json(analyses);
   } catch (error) {
     next(error);
@@ -140,7 +144,7 @@ export async function getAnalysis(
     const analysis = await ConflictAnalysis.findOne({
       _id: req.params['id'],
       organizationId,
-    });
+    }).populate('intakeTemplateId', 'title');
     if (!analysis) {
       res.status(404).json({ error: 'Analysis not found' });
       return;
@@ -188,7 +192,6 @@ export async function createSubAnalysis(
       return;
     }
 
-    // Prevent duplicate sub-analyses for the same conflict type
     const existing = await ConflictAnalysis.findOne({
       organizationId,
       parentId: parent._id,
@@ -201,7 +204,7 @@ export async function createSubAnalysis(
 
     const prompt = buildConflictSubAnalysisPrompt(focusConflictType, {
       departmentId: parent.departmentId || 'All Departments',
-      surveyPeriod: parent.surveyPeriod,
+      surveyPeriod: parent.name,
       riskScore: parent.riskScore,
       riskLevel: parent.riskLevel,
       aiNarrative: parent.aiNarrative,
@@ -240,7 +243,7 @@ export async function createSubAnalysis(
 
     const subAnalysis = await ConflictAnalysis.create({
       organizationId,
-      surveyPeriod: parent.surveyPeriod,
+      name: parent.name,
       departmentId: parent.departmentId,
       parentId: parent._id,
       focusConflictType,
@@ -253,6 +256,50 @@ export async function createSubAnalysis(
     });
 
     res.status(201).json(subAnalysis);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function generateRecommendedActions(
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const organizationId = req.user!.organizationId;
+    const analysis = await ConflictAnalysis.findOne({
+      _id: req.params['id'],
+      organizationId,
+    });
+    if (!analysis) {
+      res.status(404).json({ error: 'Analysis not found' });
+      return;
+    }
+
+    const prompt = buildConflictRecommendedActionsPrompt({
+      name: analysis.name,
+      departmentId: analysis.departmentId,
+      riskScore: analysis.riskScore,
+      riskLevel: analysis.riskLevel,
+      conflictTypes: analysis.conflictTypes,
+      aiNarrative: analysis.aiNarrative,
+    });
+
+    const aiResponse = await callClaude(prompt);
+
+    let parsed: unknown;
+    try {
+      let clean = aiResponse.replace(/```(?:json)?\r?\n?/g, '').replace(/```/g, '').trim();
+      const jsonStart = clean.indexOf('{');
+      const jsonEnd = clean.lastIndexOf('}');
+      if (jsonStart !== -1 && jsonEnd > jsonStart) clean = clean.slice(jsonStart, jsonEnd + 1);
+      parsed = JSON.parse(clean);
+    } catch {
+      parsed = { immediateActions: [], shortTermActions: [], longTermActions: [], preventiveMeasures: [aiResponse] };
+    }
+
+    res.json(parsed);
   } catch (error) {
     next(error);
   }
@@ -274,7 +321,6 @@ export async function escalateConflict(
       res.status(404).json({ error: 'Analysis not found' });
       return;
     }
-    // TODO: Trigger notification to HR/coach via email service
     res.json(analysis);
   } catch (error) {
     next(error);

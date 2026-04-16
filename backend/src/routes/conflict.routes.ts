@@ -9,6 +9,7 @@ import {
   escalateConflict,
   getSubAnalyses,
   createSubAnalysis,
+  generateRecommendedActions,
 } from '../controllers/conflict.controller';
 
 const router = Router();
@@ -20,6 +21,7 @@ router.get('/analyses', getAnalyses);
 router.get('/analyses/:id', getAnalysis);
 router.get('/analyses/:id/sub-analyses', getSubAnalyses);
 router.post('/analyses/:id/sub-analyses', requireRole('admin', 'hr_manager', 'manager'), createSubAnalysis);
+router.post('/analyses/:id/recommended-actions', requireRole('admin', 'hr_manager', 'manager', 'coach'), generateRecommendedActions);
 router.post('/escalate/:id', requireRole('admin', 'hr_manager', 'manager'), escalateConflict);
 
 router.delete(

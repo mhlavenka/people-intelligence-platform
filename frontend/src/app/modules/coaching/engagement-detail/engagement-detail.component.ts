@@ -39,6 +39,10 @@ interface Session {
   bookingId?: string;
   preSessionIntakeTemplateId?: { _id: string; title: string; moduleType?: string } | string | null;
   preSessionIntakeCompleted?: boolean;
+  preSessionIntakeSentAt?: string;
+  postSessionIntakeTemplateId?: { _id: string; title: string } | string | null;
+  postSessionIntakeSentAt?: string;
+  postSessionIntakeCompleted?: boolean;
 }
 
 @Component({
@@ -287,16 +291,26 @@ interface Session {
 
                     @if (preSessionIntakeTitle(s); as intakeTitle) {
                       @if (!canManage() && !s.preSessionIntakeCompleted && s.status === 'scheduled') {
-                        <a class="intake-card coachee-action"
-                           [routerLink]="['/intake', preSessionIntakeTemplateId(s)]"
-                           [queryParams]="{ sessionId: s._id }">
-                          <mat-icon>assignment</mat-icon>
-                          <div class="intake-body">
-                            <div class="intake-title">Complete your pre-session reflection</div>
-                            <div class="intake-sub">{{ intakeTitle }}</div>
+                        @if (isIntakeAccessible(s)) {
+                          <a class="intake-card coachee-action"
+                             [routerLink]="['/intake', preSessionIntakeTemplateId(s)]"
+                             [queryParams]="{ sessionId: s._id }">
+                            <mat-icon>assignment</mat-icon>
+                            <div class="intake-body">
+                              <div class="intake-title">Complete your pre-session reflection</div>
+                              <div class="intake-sub">{{ intakeTitle }}</div>
+                            </div>
+                            <mat-icon class="chev">chevron_right</mat-icon>
+                          </a>
+                        } @else {
+                          <div class="intake-card locked">
+                            <mat-icon>lock_clock</mat-icon>
+                            <div class="intake-body">
+                              <div class="intake-title">Pre-session form</div>
+                              <div class="intake-sub">Available 24 hours before your session</div>
+                            </div>
                           </div>
-                          <mat-icon class="chev">chevron_right</mat-icon>
-                        </a>
+                        }
                       } @else {
                         <div class="intake-card status"
                              [class.completed]="s.preSessionIntakeCompleted">
@@ -314,6 +328,60 @@ interface Session {
                                     (click)="viewIntakeResponse(s)">
                               <mat-icon>visibility</mat-icon> View results
                             </button>
+                          }
+                        </div>
+                      }
+                    }
+
+                    <!-- Post-session form -->
+                    @if (s.status === 'completed' || s.status === 'no_show') {
+                      @if (s.postSessionIntakeTemplateId) {
+                        @if (!canManage() && !s.postSessionIntakeCompleted) {
+                          <a class="intake-card coachee-action post"
+                             [routerLink]="['/intake', postSessionIntakeTemplateId(s)]"
+                             [queryParams]="{ sessionId: s._id }">
+                            <mat-icon>rate_review</mat-icon>
+                            <div class="intake-body">
+                              <div class="intake-title">Complete your post-session reflection</div>
+                              <div class="intake-sub">A few minutes to capture your insights</div>
+                            </div>
+                            <mat-icon class="chev">chevron_right</mat-icon>
+                          </a>
+                        } @else {
+                          <div class="intake-card status"
+                               [class.completed]="s.postSessionIntakeCompleted">
+                            <mat-icon>{{ s.postSessionIntakeCompleted ? 'check_circle' : 'schedule' }}</mat-icon>
+                            <div class="intake-body">
+                              <div class="intake-title">
+                                {{ s.postSessionIntakeCompleted
+                                    ? 'Post-session reflection completed'
+                                    : 'Post-session reflection sent' }}
+                              </div>
+                              <div class="intake-sub">{{ s.postSessionIntakeSentAt | date:'MMM d, y' }}</div>
+                            </div>
+                            @if (s.postSessionIntakeCompleted && canManage()) {
+                              <button mat-stroked-button class="intake-view-btn"
+                                      (click)="viewPostIntakeResponse(s)">
+                                <mat-icon>visibility</mat-icon> View results
+                              </button>
+                            }
+                          </div>
+                        }
+                      } @else if (canManage()) {
+                        <div class="intake-card generate-post" (click)="generatePostSessionForm(s)">
+                          <mat-icon>auto_awesome</mat-icon>
+                          <div class="intake-body">
+                            <div class="intake-title">Send post-session reflection</div>
+                            <div class="intake-sub">
+                              {{ (s.topics?.length || s.sharedNotes || s.coachNotes)
+                                  ? 'Generate questions from session notes'
+                                  : 'Provide a topic summary to generate questions' }}
+                            </div>
+                          </div>
+                          @if (generatingPostFor() === s._id) {
+                            <mat-spinner diameter="18" />
+                          } @else {
+                            <mat-icon class="chev">send</mat-icon>
                           }
                         </div>
                       }
@@ -728,6 +796,20 @@ interface Session {
         transition: all 0.15s;
         &:hover { background: rgba(124,92,191,0.14); border-color: #7c5cbf; }
       }
+      &.locked {
+        opacity: 0.6; cursor: default;
+        mat-icon { color: #9aa5b4; }
+      }
+      &.post.coachee-action {
+        border-color: rgba(39,196,160,0.3); background: rgba(39,196,160,0.05);
+        &:hover { background: rgba(39,196,160,0.12); border-color: #27C4A0; }
+      }
+      &.generate-post {
+        cursor: pointer; border-color: rgba(58,159,214,0.3); background: rgba(58,159,214,0.04);
+        transition: all 0.15s;
+        &:hover { background: rgba(58,159,214,0.10); border-color: #3A9FD6; }
+        mat-icon:first-child { color: #3A9FD6; }
+      }
       &.status {
         background: #fff8f0; border-color: #fde0c2; color: #b07800;
         mat-icon { color: #f0a500; }
@@ -860,6 +942,71 @@ export class EngagementDetailComponent implements OnInit {
     const tpl = s.preSessionIntakeTemplateId;
     if (!tpl) return null;
     return typeof tpl === 'string' ? tpl : tpl._id;
+  }
+
+  postSessionIntakeTemplateId(s: Session): string | null {
+    const tpl = s.postSessionIntakeTemplateId;
+    if (!tpl) return null;
+    return typeof tpl === 'string' ? tpl : tpl._id;
+  }
+
+  generatingPostFor = signal<string | null>(null);
+
+  generatePostSessionForm(s: Session): void {
+    if (this.generatingPostFor()) return;
+    const hasContext = (s.topics?.length ?? 0) > 0 || s.sharedNotes || s.coachNotes;
+    if (!hasContext) {
+      const summary = prompt('No session notes available. Enter a brief summary of the topics discussed:');
+      if (!summary?.trim()) return;
+      this.doGeneratePost(s._id, summary.trim());
+    } else {
+      this.doGeneratePost(s._id);
+    }
+  }
+
+  private doGeneratePost(sessionId: string, summary?: string): void {
+    this.generatingPostFor.set(sessionId);
+    this.api.post(`/coaching/sessions/${sessionId}/post-session-form`, {
+      ...(summary ? { summary } : {}),
+    }).subscribe({
+      next: () => {
+        this.generatingPostFor.set(null);
+        this.snack.open('Post-session reflection sent to coachee', 'OK', { duration: 3000 });
+        this.load();
+      },
+      error: (err: any) => {
+        this.generatingPostFor.set(null);
+        const msg = err?.error?.error || 'Failed to generate post-session form';
+        if (msg.includes('summary')) {
+          const summary = prompt(msg);
+          if (summary?.trim()) { this.doGeneratePost(sessionId, summary.trim()); return; }
+        }
+        this.snack.open(msg, 'OK', { duration: 4000 });
+      },
+    });
+  }
+
+  viewPostIntakeResponse(s: Session): void {
+    const templateId = this.postSessionIntakeTemplateId(s);
+    if (!templateId) return;
+    this.api.get<any>(`/surveys/templates/${templateId}`).subscribe({
+      next: (template: any) => {
+        import('../../../shared/confirm-dialog/confirm-dialog.component').then(() => {
+          import('../../survey/survey-responses-dialog/survey-responses-dialog.component').then((m) => {
+            this.dialog.open(m.SurveyResponsesDialogComponent, {
+              data: { template, sessionId: s._id },
+              width: '720px', maxHeight: '92vh',
+            });
+          });
+        });
+      },
+    });
+  }
+
+  isIntakeAccessible(s: Session): boolean {
+    if (s.preSessionIntakeSentAt) return true;
+    const hoursUntil = (new Date(s.date).getTime() - Date.now()) / (60 * 60 * 1000);
+    return hoursUntil <= 24;
   }
 
   viewIntakeResponse(s: Session): void {
