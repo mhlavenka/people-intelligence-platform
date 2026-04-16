@@ -71,7 +71,7 @@ interface ConflictAnalysis {
       } @else {
         <div class="analyses-grid">
           @for (a of analyses(); track a._id) {
-            <div class="analysis-card" [class]="'accent-' + a.riskLevel">
+            <div class="analysis-card" [class]="'accent-' + a.riskLevel" (click)="viewAnalysis(a)">
               <div class="analysis-card-top">
                 <div class="mini-gauge-wrap">
                   <svg viewBox="0 0 100 60" class="mini-gauge-svg">
@@ -115,16 +115,13 @@ interface ConflictAnalysis {
                   }
                 </div>
               }
-              <div class="analysis-card-actions">
-                <button mat-stroked-button (click)="viewAnalysis(a)">
-                  <mat-icon>open_in_new</mat-icon> View Details
-                </button>
-                @if (!a.escalationRequested && (a.riskLevel === 'high' || a.riskLevel === 'critical')) {
-                  <button mat-stroked-button color="warn" (click)="escalate(a._id)">
+              @if (!a.escalationRequested && (a.riskLevel === 'high' || a.riskLevel === 'critical')) {
+                <div class="analysis-card-actions">
+                  <button mat-stroked-button color="warn" (click)="escalate(a._id); $event.stopPropagation()">
                     <mat-icon>escalator_warning</mat-icon> Escalate
                   </button>
-                }
-              </div>
+                </div>
+              }
             </div>
           }
 
@@ -232,7 +229,7 @@ interface ConflictAnalysis {
     }
     .analysis-card {
       background: white; border: 1px solid #e8edf4; border-radius: 14px; padding: 18px;
-      border-left: 4px solid transparent; transition: box-shadow 0.15s;
+      border-left: 4px solid transparent; transition: box-shadow 0.15s; cursor: pointer;
       display: flex; flex-direction: column; gap: 12px;
       &:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
       &.accent-low      { border-left-color: #27C4A0; }
