@@ -29,6 +29,7 @@ interface ConflictAnalysis {
   aiNarrative: string;
   managerScript: string;
   recommendedActions?: RecommendedActions;
+  completedActions?: Record<string, number[]>;
   escalationRequested: boolean;
   focusConflictType?: string;
   parentId?: string;
@@ -660,6 +661,15 @@ export class ConflictDetailComponent implements OnInit {
       updated[section] = set;
       return updated;
     });
+    this.saveCompletedActions();
+  }
+
+  private saveCompletedActions(): void {
+    const a = this.analysis();
+    if (!a) return;
+    const payload: Record<string, number[]> = {};
+    for (const [k, v] of Object.entries(this.completedActions())) payload[k] = [...v];
+    this.api.patch(`/conflict/analyses/${a._id}/completed-actions`, { completedActions: payload }).subscribe();
   }
 
   completedCount(section: string, items: unknown[]): number {
@@ -674,6 +684,11 @@ export class ConflictDetailComponent implements OnInit {
       next: (a) => {
         this.analysis.set(a);
         if (a.recommendedActions) this.recommendedActions.set(a.recommendedActions);
+        if (a.completedActions) {
+          const map: Record<string, Set<number>> = {};
+          for (const [k, v] of Object.entries(a.completedActions)) map[k] = new Set(v);
+          this.completedActions.set(map);
+        }
         this.loading.set(false);
         this.loadSubAnalyses(a._id);
       },

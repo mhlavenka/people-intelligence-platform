@@ -22,6 +22,7 @@ export interface IConflictAnalysis extends Document {
     longTermActions?: { title: string; description: string; owner: string; priority: string; timeframe?: string }[];
     preventiveMeasures?: string[];
   };
+  completedActions?: Record<string, number[]>;
   escalationRequested: boolean;
   escalationStatus?: EscalationStatus;
   createdAt: Date;
@@ -47,6 +48,7 @@ const ConflictAnalysisSchema = new Schema<IConflictAnalysis>(
     aiNarrative: { type: String, required: true },
     managerScript: { type: String, required: true },
     recommendedActions: { type: Schema.Types.Mixed },
+    completedActions: { type: Schema.Types.Mixed, default: {} },
     escalationRequested: { type: Boolean, default: false },
     escalationStatus: {
       type: String,

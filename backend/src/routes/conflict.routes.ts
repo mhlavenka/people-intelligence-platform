@@ -24,6 +24,23 @@ router.post('/analyses/:id/sub-analyses', requirePermission('RUN_CONFLICT_ANALYS
 router.post('/analyses/:id/recommended-actions', requirePermission('RUN_CONFLICT_ANALYSIS'), generateRecommendedActions);
 router.post('/escalate/:id', requirePermission('ESCALATE_CONFLICT'), escalateConflict);
 
+router.patch(
+  '/analyses/:id/completed-actions',
+  requirePermission('VIEW_CONFLICT_DASHBOARD'),
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const { completedActions } = req.body as { completedActions: Record<string, number[]> };
+      const analysis = await ConflictAnalysis.findOneAndUpdate(
+        { _id: req.params['id'], organizationId: req.user!.organizationId },
+        { completedActions },
+        { new: true },
+      );
+      if (!analysis) { res.status(404).json({ error: 'Analysis not found' }); return; }
+      res.json({ completedActions: analysis.completedActions });
+    } catch (e) { next(e); }
+  }
+);
+
 router.delete(
   '/analyses/:id',
   requirePermission('RUN_CONFLICT_ANALYSIS'),
