@@ -66,7 +66,7 @@ router.get('/messages', async (req: AuthRequest, res: Response, next: NextFuncti
       })
     );
 
-    res.json(conversations);
+    res.json(conversations.filter(c => c.partner !== null));
   } catch (e) { next(e); }
 });
 
