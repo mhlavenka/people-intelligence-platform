@@ -418,7 +418,12 @@ type DayBuckets = {
     }
     .time-label { color: #6b7c93; font-size: 13px; }
     .email-label { color: #6b7c93; font-size: 13px; }
-    .col-actions { display: flex; gap: 4px; justify-content: center; align-items: center; }
+    .col-actions {
+      display: flex; gap: 4px; justify-content: center; align-items: center;
+      a[mat-icon-button], button[mat-icon-button] {
+        display: inline-flex; align-items: center; justify-content: center;
+      }
+    }
 
     .type-badge {
       display: inline-block; padding: 3px 10px; border-radius: 4px;
