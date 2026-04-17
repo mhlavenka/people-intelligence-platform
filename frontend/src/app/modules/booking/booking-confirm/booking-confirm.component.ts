@@ -126,13 +126,13 @@ import { BookingResult, PublicBookingService } from '../booking.service';
       margin: 16px 0 24px;
       font-size: 24px;
       font-weight: 700;
-      color: #1B2A47;
+      color: var(--artes-primary);
     }
 
     h2 {
       margin: 12px 0 8px;
       font-size: 20px;
-      color: #1B2A47;
+      color: var(--artes-primary);
     }
 
     /* ── Detail box ─────────────────────────── */
@@ -153,20 +153,20 @@ import { BookingResult, PublicBookingService } from '../booking.service';
     }
 
     .detail-icon {
-      color: #3A9FD6;
+      color: var(--artes-accent);
       font-size: 22px;
       flex-shrink: 0;
     }
 
     .detail-text {
       font-size: 15px;
-      color: #1B2A47;
+      color: var(--artes-primary);
       line-height: 1.4;
     }
 
     .detail-text strong {
       font-weight: 600;
-      color: #1B2A47;
+      color: var(--artes-primary);
     }
 
     .tz-label {
@@ -185,7 +185,7 @@ import { BookingResult, PublicBookingService } from '../booking.service';
       width: 100%;
       padding: 14px 20px;
       margin-bottom: 20px;
-      background: #3A9FD6;
+      background: var(--artes-accent);
       color: #ffffff;
       font-size: 15px;
       font-weight: 600;
@@ -230,7 +230,7 @@ import { BookingResult, PublicBookingService } from '../booking.service';
       padding: 10px 18px;
       border: 1px solid #d0d7e0;
       border-radius: 8px;
-      color: #1B2A47;
+      color: var(--artes-primary);
       font-size: 14px;
       font-weight: 500;
       text-decoration: none;
@@ -240,13 +240,13 @@ import { BookingResult, PublicBookingService } from '../booking.service';
 
     .cal-btn:hover {
       background: #f7f9fc;
-      border-color: #3A9FD6;
+      border-color: var(--artes-accent);
       text-decoration: none;
     }
 
     .cal-btn .material-icons {
       font-size: 20px;
-      color: #3A9FD6;
+      color: var(--artes-accent);
     }
 
     /* ── Email notice ───────────────────────── */

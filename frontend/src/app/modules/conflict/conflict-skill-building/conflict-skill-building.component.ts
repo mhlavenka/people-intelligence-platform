@@ -96,7 +96,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
       border: 1px solid #e8edf4; text-decoration: none; cursor: pointer;
       background: #fafbfc; transition: background 0.13s, border-color 0.13s;
       &:last-child { margin-bottom: 0; }
-      &:hover { background: #f0f8ff; border-color: #3A9FD6; }
+      &:hover { background: #f0f8ff; border-color: var(--artes-accent); }
     }
     .edu-icon {
       width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
@@ -105,7 +105,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
     }
     .edu-info {
       flex: 1; min-width: 0;
-      strong { display: block; font-size: 13px; color: #1B2A47; margin-bottom: 2px; }
+      strong { display: block; font-size: 13px; color: var(--artes-primary); margin-bottom: 2px; }
       span { font-size: 11px; color: #6b7280; line-height: 1.4; display: block; }
     }
     .edu-arrow { color: #c4cdd6; font-size: 18px; width: 18px; height: 18px; flex-shrink: 0; }
@@ -124,10 +124,10 @@ import { MatTooltipModule } from '@angular/material/tooltip';
     }
     .toolkit-info {
       flex: 1; display: flex; flex-direction: column; gap: 2px;
-      strong { font-size: 13px; color: #1B2A47; }
+      strong { font-size: 13px; color: var(--artes-primary); }
       span { font-size: 12px; color: #5a6a7e; }
     }
-    .download-btn { color: #3A9FD6; }
+    .download-btn { color: var(--artes-accent); }
   `],
 })
 export class ConflictSkillBuildingComponent {

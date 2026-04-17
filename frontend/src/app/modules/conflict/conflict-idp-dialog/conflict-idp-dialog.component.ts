@@ -121,7 +121,7 @@ interface Coachee {
   `,
   styles: [`
     h2[mat-dialog-title] {
-      display: flex; align-items: center; gap: 8px; color: #1B2A47;
+      display: flex; align-items: center; gap: 8px; color: var(--artes-primary);
       mat-icon { color: #7c5cbf; }
     }
     mat-dialog-content { min-width: 480px; padding-top: 8px !important; }

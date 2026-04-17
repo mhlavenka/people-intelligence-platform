@@ -718,7 +718,7 @@ const COUNTRY_TAX_RATES: Record<string, number> = {
 
       h1 {
         font-size: 28px;
-        color: #1B2A47;
+        color: var(--artes-primary);
         margin: 0 0 4px;
         font-weight: 700;
       }
@@ -753,9 +753,9 @@ const COUNTRY_TAX_RATES: Record<string, number> = {
     .stat-value {
       font-size: 26px;
       font-weight: 700;
-      color: #1B2A47;
+      color: var(--artes-primary);
 
-      &.blue  { color: #3A9FD6; }
+      &.blue  { color: var(--artes-accent); }
       &.green { color: #27C4A0; }
       &.red   { color: #e53e3e; }
     }
@@ -797,7 +797,7 @@ const COUNTRY_TAX_RATES: Record<string, number> = {
         margin: 0;
         font-size: 16px;
         font-weight: 700;
-        color: #1B2A47;
+        color: var(--artes-primary);
       }
     }
 
@@ -838,7 +838,7 @@ const COUNTRY_TAX_RATES: Record<string, number> = {
         font-size: 16px;
         width: 16px;
         height: 16px;
-        color: #3A9FD6;
+        color: var(--artes-accent);
         flex-shrink: 0;
         margin-top: 2px;
       }
@@ -852,7 +852,7 @@ const COUNTRY_TAX_RATES: Record<string, number> = {
 
     .country-badge {
       display: inline-block;
-      background: #1B2A47;
+      background: var(--artes-primary);
       color: white;
       font-size: 11px;
       font-weight: 700;
@@ -886,12 +886,12 @@ const COUNTRY_TAX_RATES: Record<string, number> = {
       gap: 8px;
       font-size: 13px;
       font-weight: 700;
-      color: #1B2A47;
+      color: var(--artes-primary);
       margin-bottom: 10px;
     }
 
     .preview-icon {
-      color: #3A9FD6;
+      color: var(--artes-accent);
       font-size: 18px;
       width: 18px;
       height: 18px;
@@ -903,7 +903,7 @@ const COUNTRY_TAX_RATES: Record<string, number> = {
       font-size: 13px;
       color: #5a6a7e;
 
-      strong { color: #1B2A47; }
+      strong { color: var(--artes-primary); }
 
       .total-amount { color: #27C4A0; font-size: 15px; }
     }
@@ -1008,7 +1008,7 @@ const COUNTRY_TAX_RATES: Record<string, number> = {
     .col-invoice-num { }
     .col-org         { display: flex; flex-direction: column; gap: 2px; overflow: hidden; }
     .col-period      { }
-    .col-amount      { font-weight: 600; color: #1B2A47; }
+    .col-amount      { font-weight: 600; color: var(--artes-primary); }
     .col-status      { }
     .col-due         { font-size: 13px; color: #5a6a7e; }
     .col-sent        { font-size: 13px; color: #5a6a7e; }
@@ -1018,14 +1018,14 @@ const COUNTRY_TAX_RATES: Record<string, number> = {
       font-family: 'Courier New', Courier, monospace;
       font-size: 13px;
       font-weight: 700;
-      color: #3A9FD6;
+      color: var(--artes-accent);
       letter-spacing: 0.3px;
     }
 
     .org-name {
       font-size: 13px;
       font-weight: 600;
-      color: #1B2A47;
+      color: var(--artes-primary);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -1087,7 +1087,7 @@ const COUNTRY_TAX_RATES: Record<string, number> = {
       width: 18px;
       height: 18px;
 
-      &.send-icon  { color: #3A9FD6; }
+      &.send-icon  { color: var(--artes-accent); }
       &.paid-icon  { color: #27C4A0; }
       &.void-icon  { color: #e53e3e; }
     }
@@ -1150,7 +1150,7 @@ const COUNTRY_TAX_RATES: Record<string, number> = {
       font-family: 'Courier New', Courier, monospace;
       font-size: 15px;
       font-weight: 700;
-      color: #1B2A47;
+      color: var(--artes-primary);
     }
 
     .side-panel-body {
@@ -1178,7 +1178,7 @@ const COUNTRY_TAX_RATES: Record<string, number> = {
 
     .detail-value {
       font-size: 14px;
-      color: #1B2A47;
+      color: var(--artes-primary);
 
       &.green { color: #27C4A0; font-weight: 600; }
     }
@@ -1240,7 +1240,7 @@ const COUNTRY_TAX_RATES: Record<string, number> = {
     .li-desc   { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .li-qty    { text-align: center; color: #5a6a7e; }
     .li-unit   { text-align: right; color: #5a6a7e; }
-    .li-amount { text-align: right; font-weight: 600; color: #1B2A47; }
+    .li-amount { text-align: right; font-weight: 600; color: var(--artes-primary); }
 
     /* Totals */
     .totals-section {
@@ -1261,12 +1261,12 @@ const COUNTRY_TAX_RATES: Record<string, number> = {
         border-top: 2px solid #eef2f7;
         font-size: 16px;
         font-weight: 700;
-        color: #1B2A47;
+        color: var(--artes-primary);
       }
     }
 
     .total-label  { }
-    .total-value  { font-weight: 600; color: #1B2A47; }
+    .total-value  { font-weight: 600; color: var(--artes-primary); }
 
     /* Notes */
     .notes-text {
@@ -1299,7 +1299,7 @@ const COUNTRY_TAX_RATES: Record<string, number> = {
       mat-spinner { margin-right: 4px; }
     }
 
-    .send-btn      { color: #3A9FD6; border-color: #3A9FD6; }
+    .send-btn      { color: var(--artes-accent); border-color: var(--artes-accent); }
     .mark-paid-btn { color: #27C4A0; border-color: #27C4A0; }
     .void-btn      { color: #e53e3e; border-color: #e53e3e; }
 
@@ -1313,8 +1313,8 @@ const COUNTRY_TAX_RATES: Record<string, number> = {
     }
     .tax-section-header {
       display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
-      font-size: 13px; font-weight: 600; color: #1B2A47;
-      mat-icon { font-size: 18px; color: #3A9FD6; }
+      font-size: 13px; font-weight: 600; color: var(--artes-primary);
+      mat-icon { font-size: 18px; color: var(--artes-accent); }
     }
     .tax-exempt-toggle {
       margin-left: auto; display: flex; align-items: center; gap: 6px;

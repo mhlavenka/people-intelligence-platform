@@ -228,8 +228,8 @@ import { ApiService } from '../../../core/api.service';
     .journal-page { padding: 32px; max-width: 900px; background: #F8F6F1; min-height: 100%; }
     .page-header {
       margin-bottom: 16px;
-      .back-link { display: flex; align-items: center; gap: 4px; color: #3A9FD6; text-decoration: none; font-size: 14px; font-weight: 500; margin-bottom: 8px; }
-      h1 { font-size: 22px; color: #1B2A47; margin: 0; }
+      .back-link { display: flex; align-items: center; gap: 4px; color: var(--artes-accent); text-decoration: none; font-size: 14px; font-weight: 500; margin-bottom: 8px; }
+      h1 { font-size: 22px; color: var(--artes-primary); margin: 0; }
     }
     .loading-center { display: flex; justify-content: center; padding: 64px; }
 
@@ -258,12 +258,12 @@ import { ApiService } from '../../../core/api.service';
     .ro-field {
       margin-bottom: 8px;
       label { display: block; font-size: 11px; color: #9aa5b4; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
-      p { margin: 0; color: #1B2A47; font-size: 14px; white-space: pre-line; }
+      p { margin: 0; color: var(--artes-primary); font-size: 14px; white-space: pre-line; }
       .stars-ro { display: flex; align-items: center; gap: 2px;
         mat-icon { color: #f5b042; font-size: 18px; width: 18px; height: 18px; }
         .rating-num { color: #6b7c93; font-size: 12px; margin-left: 6px; }
       }
-      .commitment-list { margin: 4px 0 0; padding-left: 20px; color: #1B2A47;
+      .commitment-list { margin: 4px 0 0; padding-left: 20px; color: var(--artes-primary);
         li { font-size: 14px; margin-bottom: 2px; }
       }
     }

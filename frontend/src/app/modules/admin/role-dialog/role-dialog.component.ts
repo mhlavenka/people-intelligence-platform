@@ -215,7 +215,7 @@ const PRESET_COLORS = [
   `,
   styles: [`
     h2[mat-dialog-title] {
-      display: flex; align-items: center; gap: 8px; color: #1B2A47;
+      display: flex; align-items: center; gap: 8px; color: var(--artes-primary);
     }
     mat-dialog-content {
       min-width: 560px; max-width: 680px; max-height: 78vh;
@@ -239,15 +239,15 @@ const PRESET_COLORS = [
       cursor: pointer; display: flex; align-items: center; justify-content: center;
       transition: transform 0.1s;
       &:hover { transform: scale(1.15); }
-      &.selected { border-color: #1B2A47; transform: scale(1.15); }
+      &.selected { border-color: var(--artes-primary); transform: scale(1.15); }
       mat-icon { font-size: 16px; width: 16px; height: 16px; color: white; }
     }
 
     /* Permission matrix */
     .perm-header {
       display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
-      font-size: 13px; font-weight: 600; color: #1B2A47;
-      .perm-count { background: #EBF5FB; color: #3A9FD6; padding: 1px 8px; border-radius: 999px; font-size: 11px; }
+      font-size: 13px; font-weight: 600; color: var(--artes-primary);
+      .perm-count { background: var(--artes-bg); color: var(--artes-accent); padding: 1px 8px; border-radius: 999px; font-size: 11px; }
       .perm-actions { margin-left: auto; display: flex; gap: 0; }
     }
 
@@ -257,7 +257,7 @@ const PRESET_COLORS = [
         display: flex; align-items: center; gap: 6px;
         font-size: 11px; font-weight: 700; text-transform: uppercase;
         letter-spacing: 0.5px; color: #9aa5b4; margin-bottom: 4px;
-        mat-icon { font-size: 15px; width: 15px; height: 15px; color: #3A9FD6; }
+        mat-icon { font-size: 15px; width: 15px; height: 15px; color: var(--artes-accent); }
         .group-count { margin-left: auto; font-size: 10px; color: #b4bec8; }
       }
       .perm-list {
@@ -270,7 +270,7 @@ const PRESET_COLORS = [
       padding: 4px 8px; border-radius: 6px; cursor: pointer;
       font-size: 13px; transition: background 0.1s;
       &:hover { background: #f0f8ff; }
-      &.checked { background: #EBF5FB; }
+      &.checked { background: var(--artes-bg); }
     }
   `],
 })

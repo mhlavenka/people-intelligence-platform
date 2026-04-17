@@ -54,7 +54,7 @@ export interface CoachPick {
       padding: 10px 12px; border: 1px solid #eef2f7; border-radius: 10px;
       margin-bottom: 8px; cursor: pointer;
       transition: background 0.1s, border-color 0.1s;
-      &:hover { background: #f7fbff; border-color: #3A9FD6; }
+      &:hover { background: #f7fbff; border-color: var(--artes-accent); }
     }
     .avatar, .avatar-fallback {
       width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0;
@@ -62,11 +62,11 @@ export interface CoachPick {
     .avatar { object-fit: cover; }
     .avatar-fallback {
       display: flex; align-items: center; justify-content: center;
-      background: linear-gradient(135deg, #3A9FD6, #27C4A0);
+      background: linear-gradient(135deg, var(--artes-accent), #27C4A0);
       color: #fff; font-weight: 600; font-size: 16px;
     }
     .coach-body { flex: 1; min-width: 0; }
-    .coach-name { font-weight: 600; color: #1B2A47; font-size: 15px; }
+    .coach-name { font-weight: 600; color: var(--artes-primary); font-size: 15px; }
     .coach-bio {
       margin-top: 2px; color: #6b7c93; font-size: 13px; line-height: 1.4;
       display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;

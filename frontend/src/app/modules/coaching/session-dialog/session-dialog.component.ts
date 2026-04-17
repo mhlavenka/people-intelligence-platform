@@ -157,7 +157,7 @@ const FRAMEWORKS = [
     </mat-dialog-actions>
   `,
   styles: [`
-    h2[mat-dialog-title] { display: flex; align-items: center; gap: 8px; color: #1B2A47; mat-icon { color: #3A9FD6; } }
+    h2[mat-dialog-title] { display: flex; align-items: center; gap: 8px; color: var(--artes-primary); mat-icon { color: var(--artes-accent); } }
     mat-dialog-content { min-width: 540px; max-height: 75vh; overflow-y: auto; padding-top: 8px !important; }
     .form-section { padding: 8px 0; display: flex; flex-direction: column; gap: 8px; }
     .full-width { width: 100%; }
@@ -171,8 +171,8 @@ const FRAMEWORKS = [
       display: flex; align-items: center; gap: 4px; padding: 6px 12px; border-radius: 8px;
       border: 1.5px solid #e8edf4; font-size: 13px; cursor: pointer; transition: all 0.15s;
       mat-icon { font-size: 16px; width: 16px; height: 16px; }
-      &.checked { background: #EBF5FB; border-color: #3A9FD6; color: #1B2A47; }
-      &:hover { border-color: #3A9FD6; }
+      &.checked { background: var(--artes-bg); border-color: var(--artes-accent); color: var(--artes-primary); }
+      &:hover { border-color: var(--artes-accent); }
     }
 
     .star-section { margin-bottom: 12px; }
@@ -208,7 +208,7 @@ const FRAMEWORKS = [
       display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 8px;
       background: #f0f9ff; border: 1px solid #bae6fd; margin-bottom: 8px;
       font-size: 12px; color: #2080b0;
-      mat-icon { font-size: 16px; color: #3A9FD6; }
+      mat-icon { font-size: 16px; color: var(--artes-accent); }
     }
     .notes-private-warning {
       display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 8px;

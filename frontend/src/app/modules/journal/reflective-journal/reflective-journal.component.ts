@@ -93,8 +93,8 @@ const MOOD_CONFIG: Record<JournalMood, { icon: string; color: string }> = {
     .journal-page { padding: 32px; max-width: 960px; background: #F8F6F1; min-height: 100%; }
     .page-header {
       display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 20px;
-      .back-link { display: flex; align-items: center; gap: 4px; color: #3A9FD6; text-decoration: none; font-size: 14px; font-weight: 500; margin-bottom: 4px; }
-      h1 { font-size: 22px; color: #1B2A47; display: flex; align-items: center; gap: 8px; margin: 0;
+      .back-link { display: flex; align-items: center; gap: 4px; color: var(--artes-accent); text-decoration: none; font-size: 14px; font-weight: 500; margin-bottom: 4px; }
+      h1 { font-size: 22px; color: var(--artes-primary); display: flex; align-items: center; gap: 8px; margin: 0;
         mat-icon { color: #7c5cbf; }
       }
     }
@@ -110,7 +110,7 @@ const MOOD_CONFIG: Record<JournalMood, { icon: string; color: string }> = {
       text-align: center; padding: 48px; color: #9aa5b4;
       background: white; border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06);
       mat-icon { font-size: 48px; width: 48px; height: 48px; display: block; margin: 0 auto 12px; }
-      h3 { color: #1B2A47; margin-bottom: 8px; }
+      h3 { color: var(--artes-primary); margin-bottom: 8px; }
       p { margin: 0; }
     }
 
@@ -127,7 +127,7 @@ const MOOD_CONFIG: Record<JournalMood, { icon: string; color: string }> = {
       mat-icon { font-size: 18px; width: 18px; height: 18px; }
     }
     .entry-date { font-size: 12px; color: #9aa5b4; }
-    .entry-title { font-size: 16px; font-weight: 700; color: #1B2A47; margin-bottom: 4px; }
+    .entry-title { font-size: 16px; font-weight: 700; color: var(--artes-primary); margin-bottom: 4px; }
     .entry-preview { font-size: 13px; color: #5a6a7e; line-height: 1.5; }
     .entry-footer { display: flex; align-items: center; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
     .tag-row { display: flex; gap: 4px; flex-wrap: wrap; }

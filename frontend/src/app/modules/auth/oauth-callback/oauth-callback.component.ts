@@ -30,18 +30,18 @@ import { ApiService } from '../../../core/api.service';
   styles: [`
     .callback-page {
       min-height: 100vh; display: flex; align-items: center; justify-content: center;
-      background: linear-gradient(135deg, #1B2A47 0%, #2a3f6b 50%, #3A9FD6 100%);
+      background: linear-gradient(135deg, var(--artes-primary) 0%, #2a3f6b 50%, var(--artes-accent) 100%);
     }
     .callback-card {
       background: white; border-radius: 16px; padding: 48px;
       text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.25);
       display: flex; flex-direction: column; align-items: center; gap: 16px;
       p { color: #5a6a7e; margin: 0; }
-      a { color: #3A9FD6; font-weight: 600; text-decoration: none; }
+      a { color: var(--artes-accent); font-weight: 600; text-decoration: none; }
     }
     .error-card {
       mat-icon { font-size: 48px; width: 48px; height: 48px; color: #e53e3e; }
-      h2 { color: #1B2A47; margin: 0; }
+      h2 { color: var(--artes-primary); margin: 0; }
     }
   `],
 })

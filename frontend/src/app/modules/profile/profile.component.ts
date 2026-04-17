@@ -456,7 +456,7 @@ function passwordMatchValidator(control: AbstractControl): ValidationErrors | nu
 
     .page-header {
       margin-bottom: 28px;
-      h1 { font-size: 28px; color: #1B2A47; margin: 0 0 4px; }
+      h1 { font-size: 28px; color: var(--artes-primary); margin: 0 0 4px; }
       p  { color: #5a6a7e; margin: 0; }
     }
 
@@ -487,7 +487,7 @@ function passwordMatchValidator(control: AbstractControl): ValidationErrors | nu
     }
     .avatar-circle {
       width: 72px; height: 72px; border-radius: 50%;
-      background: linear-gradient(135deg, #3A9FD6, #27C4A0);
+      background: linear-gradient(135deg, var(--artes-accent), #27C4A0);
       display: flex; align-items: center; justify-content: center;
       font-size: 24px; font-weight: 700; color: white;
     }
@@ -499,7 +499,7 @@ function passwordMatchValidator(control: AbstractControl): ValidationErrors | nu
       mat-icon { color: white; font-size: 24px; }
     }
 
-    .avatar-name  { font-size: 16px; font-weight: 600; color: #1B2A47; }
+    .avatar-name  { font-size: 16px; font-weight: 600; color: var(--artes-primary); }
     .avatar-email { font-size: 12px; color: #9aa5b4; }
 
     .role-badge {
@@ -530,8 +530,8 @@ function passwordMatchValidator(control: AbstractControl): ValidationErrors | nu
 
     .card-header {
       display: flex; align-items: center; gap: 10px; padding: 20px 24px;
-      mat-icon { color: #3A9FD6; }
-      h2 { font-size: 16px; color: #1B2A47; margin: 0; font-weight: 600; }
+      mat-icon { color: var(--artes-accent); }
+      h2 { font-size: 16px; color: var(--artes-primary); margin: 0; font-weight: 600; }
     }
 
     .card-body { padding: 20px 24px; }
@@ -557,8 +557,8 @@ function passwordMatchValidator(control: AbstractControl): ValidationErrors | nu
 
     .signin-section-header {
       display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
-      font-size: 14px; font-weight: 600; color: #1B2A47;
-      mat-icon { font-size: 18px; color: #3A9FD6; }
+      font-size: 14px; font-weight: 600; color: var(--artes-primary);
+      mat-icon { font-size: 18px; color: var(--artes-accent); }
       .add-passkey-btn { margin-left: auto; font-size: 12px; }
     }
 
@@ -579,7 +579,7 @@ function passwordMatchValidator(control: AbstractControl): ValidationErrors | nu
 
     .signin-item-info {
       flex: 1; min-width: 0;
-      strong { display: block; font-size: 13px; color: #1B2A47; }
+      strong { display: block; font-size: 13px; color: var(--artes-primary); }
       span { font-size: 11px; color: #9aa5b4; }
     }
 
@@ -592,7 +592,7 @@ function passwordMatchValidator(control: AbstractControl): ValidationErrors | nu
 
     .security-icon {
       width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
-      background: rgba(58,159,214,0.10); color: #3A9FD6;
+      background: rgba(58,159,214,0.10); color: var(--artes-accent);
       display: flex; align-items: center; justify-content: center;
       mat-icon { font-size: 18px; }
       &.warn  { background: rgba(232,108,58,0.10);  color: #c04a14; }
@@ -600,7 +600,7 @@ function passwordMatchValidator(control: AbstractControl): ValidationErrors | nu
     }
 
     .toggle-info { flex: 1; }
-    .toggle-label { font-size: 14px; color: #1B2A47; font-weight: 500; }
+    .toggle-label { font-size: 14px; color: var(--artes-primary); font-weight: 500; }
     .toggle-desc  { font-size: 12px; color: #9aa5b4; margin-top: 2px; line-height: 1.4; }
 
     .enabled-row {}
@@ -615,7 +615,7 @@ function passwordMatchValidator(control: AbstractControl): ValidationErrors | nu
     .setup-step {
       background: #f8fafc; border-radius: 12px; padding: 20px;
       h3 {
-        font-size: 15px; color: #1B2A47; margin: 0 0 8px; font-weight: 600;
+        font-size: 15px; color: var(--artes-primary); margin: 0 0 8px; font-weight: 600;
         display: flex; align-items: center; gap: 8px;
       }
       p { font-size: 13px; color: #5a6a7e; margin: 0 0 16px; line-height: 1.5; }
@@ -624,7 +624,7 @@ function passwordMatchValidator(control: AbstractControl): ValidationErrors | nu
     .step-num {
       display: inline-flex; align-items: center; justify-content: center;
       width: 22px; height: 22px; border-radius: 50%;
-      background: #3A9FD6; color: white; font-size: 12px; font-weight: 700;
+      background: var(--artes-accent); color: white; font-size: 12px; font-weight: 700;
     }
 
     .qr-block {

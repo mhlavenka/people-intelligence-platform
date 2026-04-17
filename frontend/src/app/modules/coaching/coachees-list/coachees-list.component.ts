@@ -225,7 +225,7 @@ const STATUS_PRIORITY: EngagementStatus[] = ['active', 'contracted', 'prospect',
   styles: [`
     .page { padding: 24px 32px; width: 100%; max-width: 100%; box-sizing: border-box; }
     .page-header { margin-bottom: 20px;
-      h1 { margin: 0 0 4px; font-size: 24px; color: #1B2A47; }
+      h1 { margin: 0 0 4px; font-size: 24px; color: var(--artes-primary); }
       p  { margin: 0; color: #6b7c93; }
     }
     .loading { display: flex; justify-content: center; padding: 60px 0; }
@@ -233,7 +233,7 @@ const STATUS_PRIORITY: EngagementStatus[] = ['active', 'contracted', 'prospect',
       text-align: center; padding: 48px 24px; color: #6b7c93;
       background: #fff; border-radius: 12px; border: 1px solid #eef2f7;
       mat-icon { font-size: 42px; width: 42px; height: 42px; color: #c8d3df; display: block; margin: 0 auto 10px; }
-      h3 { margin: 0 0 4px; color: #1B2A47; }
+      h3 { margin: 0 0 4px; color: var(--artes-primary); }
       p  { margin: 0 0 14px; }
     }
     .empty-small { padding: 32px 16px;
@@ -253,9 +253,9 @@ const STATUS_PRIORITY: EngagementStatus[] = ['active', 'contracted', 'prospect',
         font-size: 11px; color: #9aa5b4; padding: 1px 7px;
         background: #f0f4f8; border-radius: 999px; font-weight: 600;
       }
-      &:hover { border-color: #b8c6d4; color: #1B2A47; }
+      &:hover { border-color: #b8c6d4; color: var(--artes-primary); }
       &.active {
-        background: #1B2A47; color: #fff; border-color: #1B2A47;
+        background: var(--artes-primary); color: #fff; border-color: var(--artes-primary);
         .count { background: rgba(255,255,255,0.2); color: #fff; }
       }
     }
@@ -268,11 +268,11 @@ const STATUS_PRIORITY: EngagementStatus[] = ['active', 'contracted', 'prospect',
       font-size: 11px; font-weight: 700; color: #9aa5b4;
       text-transform: uppercase; letter-spacing: 0.3px;
     }
-    .coachees-table td { color: #1B2A47; font-size: 14px; }
+    .coachees-table td { color: var(--artes-primary); font-size: 14px; }
 
     .name-cell { display: flex; align-items: center; gap: 10px; }
     .n-col { display: flex; flex-direction: column; gap: 2px; }
-    .n-col strong { color: #1B2A47; font-size: 14px; }
+    .n-col strong { color: var(--artes-primary); font-size: 14px; }
     .n-col .dept { font-size: 12px; color: #9aa5b4; }
 
     .muted { color: #9aa5b4; }
@@ -297,7 +297,7 @@ const STATUS_PRIORITY: EngagementStatus[] = ['active', 'contracted', 'prospect',
     .sess-txt { font-size: 12px; color: #5a6a7e; font-weight: 500; min-width: 46px; text-align: right; }
 
     .sponsor-cell { display: flex; flex-direction: column; gap: 2px; }
-    .sponsor-cell strong { font-size: 13px; color: #1B2A47; font-weight: 600; }
+    .sponsor-cell strong { font-size: 13px; color: var(--artes-primary); font-weight: 600; }
     .sponsor-org { font-size: 11px; color: #9aa5b4; }
   `],
 })

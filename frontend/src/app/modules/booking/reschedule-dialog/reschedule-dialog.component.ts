@@ -108,7 +108,7 @@ export interface RescheduleDialogResult {
       display: flex; align-items: center; gap: 6px;
       font-size: 12px; font-weight: 600; color: #5a6a7e;
       text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 8px;
-      mat-icon { font-size: 16px; width: 16px; height: 16px; color: #3A9FD6; }
+      mat-icon { font-size: 16px; width: 16px; height: 16px; color: var(--artes-accent); }
     }
     .slots-loading { display: flex; justify-content: center; padding: 20px; }
     .no-slots {
@@ -121,13 +121,13 @@ export interface RescheduleDialogResult {
     }
     .slot-btn {
       padding: 8px 10px; border-radius: 6px; font-size: 13px; font-weight: 500;
-      background: #fff; border: 1px solid #dbe3ec; color: #1B2A47;
+      background: #fff; border: 1px solid #dbe3ec; color: var(--artes-primary);
       cursor: pointer; transition: all 0.12s;
       font: inherit; font-size: 13px; font-weight: 500;
     }
-    .slot-btn:hover { border-color: #3A9FD6; color: #3A9FD6; }
+    .slot-btn:hover { border-color: var(--artes-accent); color: var(--artes-accent); }
     .slot-btn.selected {
-      background: #3A9FD6; color: #fff; border-color: #3A9FD6;
+      background: var(--artes-accent); color: #fff; border-color: var(--artes-accent);
     }
     .error {
       display: flex; align-items: center; gap: 6px;

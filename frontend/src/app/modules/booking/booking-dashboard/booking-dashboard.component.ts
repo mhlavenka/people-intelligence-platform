@@ -301,16 +301,16 @@ type DayBuckets = {
     }
 
     /* Single-status dots */
-    .calendar-card ::ng-deep .bk-u:not(.bk-p):not(.bk-c) .mat-calendar-body-cell-content::after { background: #3A9FD6; }
+    .calendar-card ::ng-deep .bk-u:not(.bk-p):not(.bk-c) .mat-calendar-body-cell-content::after { background: var(--artes-accent); }
     .calendar-card ::ng-deep .bk-p:not(.bk-u):not(.bk-c) .mat-calendar-body-cell-content::after { background: #9ca3af; }
     .calendar-card ::ng-deep .bk-c:not(.bk-u):not(.bk-p) .mat-calendar-body-cell-content::after { background: #dc2626; }
 
     /* Two-status dots (stacked horizontally via box-shadow) */
     .calendar-card ::ng-deep .bk-u.bk-p:not(.bk-c) .mat-calendar-body-cell-content::after {
-      background: #3A9FD6; box-shadow: -6px 0 0 #9ca3af;
+      background: var(--artes-accent); box-shadow: -6px 0 0 #9ca3af;
     }
     .calendar-card ::ng-deep .bk-u.bk-c:not(.bk-p) .mat-calendar-body-cell-content::after {
-      background: #3A9FD6; box-shadow: -6px 0 0 #dc2626;
+      background: var(--artes-accent); box-shadow: -6px 0 0 #dc2626;
     }
     .calendar-card ::ng-deep .bk-p.bk-c:not(.bk-u) .mat-calendar-body-cell-content::after {
       background: #9ca3af; box-shadow: -6px 0 0 #dc2626;
@@ -333,15 +333,15 @@ type DayBuckets = {
     .legend-dot {
       display: inline-block; width: 8px; height: 8px; border-radius: 50%;
     }
-    .legend-dot.dot-upcoming { background: #3A9FD6; }
+    .legend-dot.dot-upcoming { background: var(--artes-accent); }
     .legend-dot.dot-past { background: #9ca3af; }
     .legend-dot.dot-cancelled { background: #dc2626; }
     .upcoming-header {
       display: flex; align-items: center; gap: 8px;
       padding: 4px 4px 12px;
       border-bottom: 1px solid #f0f3f7;
-      h3 { margin: 0; font-size: 15px; color: #1B2A47; font-weight: 600; }
-      mat-icon { color: #3A9FD6; }
+      h3 { margin: 0; font-size: 15px; color: var(--artes-primary); font-weight: 600; }
+      mat-icon { color: var(--artes-accent); }
     }
     .upcoming-loading { display: flex; justify-content: center; padding: 20px 0; }
     .upcoming-empty { color: #6b7c93; text-align: center; padding: 20px 0; margin: 0; font-size: 14px; }
@@ -356,14 +356,14 @@ type DayBuckets = {
       background: #f7f9fc; border-radius: 8px; padding: 6px 10px;
       min-width: 44px;
     }
-    .upcoming-day { font-size: 18px; font-weight: 700; color: #1B2A47; line-height: 1; }
+    .upcoming-day { font-size: 18px; font-weight: 700; color: var(--artes-primary); line-height: 1; }
     .upcoming-month {
       font-size: 10px; text-transform: uppercase; letter-spacing: 0.6px;
       color: #6b7c93; margin-top: 2px;
     }
     .upcoming-body { flex: 1; min-width: 0; }
     .upcoming-title {
-      font-size: 14px; font-weight: 600; color: #1B2A47;
+      font-size: 14px; font-weight: 600; color: var(--artes-primary);
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .upcoming-meta { font-size: 12px; color: #6b7c93; margin-top: 2px; }
@@ -376,7 +376,7 @@ type DayBuckets = {
     .page-header {
       display: flex; align-items: center; justify-content: space-between;
       margin-bottom: 20px;
-      h1 { margin: 0 0 4px; font-size: 24px; color: #1B2A47; }
+      h1 { margin: 0 0 4px; font-size: 24px; color: var(--artes-primary); }
       p { margin: 0; color: #6b7c93; }
     }
     .header-actions {
@@ -413,8 +413,8 @@ type DayBuckets = {
 
     .type-badge {
       display: inline-block; padding: 3px 10px; border-radius: 4px;
-      font-size: 13px; color: #1B2A47; background: #f7f9fc;
-      border-left: 3px solid #3A9FD6;
+      font-size: 13px; color: var(--artes-primary); background: #f7f9fc;
+      border-left: 3px solid var(--artes-accent);
     }
 
     .status-chip {
@@ -423,7 +423,7 @@ type DayBuckets = {
     }
     .status-confirmed { background: #e8f9f2; color: #0f8a5f; }
     .status-cancelled { background: #fef2f2; color: #dc2626; }
-    .status-completed { background: #EBF5FB; color: #3A9FD6; }
+    .status-completed { background: var(--artes-bg); color: var(--artes-accent); }
 
     .pagination {
       display: flex; align-items: center; justify-content: center;

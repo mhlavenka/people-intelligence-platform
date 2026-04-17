@@ -321,13 +321,13 @@ const SUBSCALE_LABELS: Record<string, string> = {
       padding: 20px; border-radius: 14px; border: 2px solid #e8edf4; cursor: pointer;
       text-align: center; transition: all 0.15s;
       mat-icon { font-size: 32px; width: 32px; height: 32px; margin-bottom: 8px; }
-      h3 { font-size: 15px; margin: 0 0 4px; color: #1B2A47; }
+      h3 { font-size: 15px; margin: 0 0 4px; color: var(--artes-primary); }
       p { font-size: 12px; color: #5a6a7e; margin: 0; line-height: 1.4; }
       .mode-default { font-size: 10px; color: #27C4A0; font-weight: 700; text-transform: uppercase; }
       &.selected { box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
       &.green.selected { border-color: #27C4A0; background: #f0fdf4; mat-icon { color: #27C4A0; } }
       &.amber.selected { border-color: #f0a500; background: #FFFBEB; mat-icon { color: #f0a500; } }
-      &.blue.selected  { border-color: #3A9FD6; background: #EBF5FB; mat-icon { color: #3A9FD6; } }
+      &.blue.selected  { border-color: var(--artes-accent); background: var(--artes-bg); mat-icon { color: var(--artes-accent); } }
       &:hover { border-color: #c5d0db; }
     }
 
@@ -343,7 +343,7 @@ const SUBSCALE_LABELS: Record<string, string> = {
     .upload-zone {
       border: 2px dashed #c5d0db; border-radius: 14px; padding: 48px; text-align: center;
       cursor: pointer; transition: border-color 0.15s;
-      &:hover { border-color: #3A9FD6; }
+      &:hover { border-color: var(--artes-accent); }
       .upload-icon { font-size: 48px; width: 48px; height: 48px; color: #c5d0db; }
       p { color: #5a6a7e; margin: 8px 0 4px; }
       span { font-size: 12px; color: #9aa5b4; }
@@ -357,7 +357,7 @@ const SUBSCALE_LABELS: Record<string, string> = {
       &.warning { border-color: #f0a500; .parse-header mat-icon { color: #f0a500; } }
       &.error   { border-color: #e53e3e; .parse-header mat-icon { color: #e53e3e; } }
     }
-    .parse-header { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 600; color: #1B2A47; margin-bottom: 12px; }
+    .parse-header { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 600; color: var(--artes-primary); margin-bottom: 12px; }
     .parse-meta { display: flex; gap: 16px; flex-wrap: wrap; font-size: 13px; color: #5a6a7e; margin-bottom: 12px; }
     .parse-issues { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
     .issue-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #b07800; mat-icon { font-size: 16px; width: 16px; height: 16px; color: #f0a500; } }
@@ -365,18 +365,18 @@ const SUBSCALE_LABELS: Record<string, string> = {
     .score-table { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
     .score-row { display: flex; justify-content: space-between; padding: 4px 8px; border-radius: 4px; font-size: 12px; &.missing { background: #FFF8E6; } }
     .score-label { color: #5a6a7e; }
-    .score-value { font-weight: 600; color: #1B2A47; .missing & { color: #f0a500; } }
+    .score-value { font-weight: 600; color: var(--artes-primary); .missing & { color: #f0a500; } }
     .year-override { margin-top: 12px; width: 200px; }
 
     .confirm-card { background: white; border-radius: 14px; padding: 24px; border: 1px solid #e8edf4; }
-    .confirm-card h3 { font-size: 16px; color: #1B2A47; margin: 0 0 16px; }
-    .confirm-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f0f4f8; font-size: 14px; span { color: #5a6a7e; } strong { color: #1B2A47; } }
+    .confirm-card h3 { font-size: 16px; color: var(--artes-primary); margin: 0 0 16px; }
+    .confirm-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f0f4f8; font-size: 14px; span { color: #5a6a7e; } strong { color: var(--artes-primary); } }
 
     .result-card { text-align: center; padding: 48px; border-radius: 14px; border: 1px solid #e8edf4; }
     .result-icon { font-size: 56px; width: 56px; height: 56px; margin-bottom: 16px; }
     .result-card.success { .result-icon { color: #27C4A0; } }
     .result-card.error { .result-icon { color: #e53e3e; } }
-    .result-card h3 { font-size: 20px; color: #1B2A47; margin: 0 0 8px; }
+    .result-card h3 { font-size: 20px; color: var(--artes-primary); margin: 0 0 8px; }
     .result-card code { background: #f0f4f8; padding: 4px 10px; border-radius: 4px; font-size: 12px; }
     .result-error { color: #e53e3e; font-size: 13px; margin-top: 8px; }
 

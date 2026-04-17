@@ -243,8 +243,8 @@ const COMMON_GAPS = [
   `,
   styles: [`
     h2[mat-dialog-title] {
-      display: flex; align-items: center; gap: 8px; color: #1B2A47;
-      mat-icon { color: #3A9FD6; }
+      display: flex; align-items: center; gap: 8px; color: var(--artes-primary);
+      mat-icon { color: var(--artes-accent); }
     }
 
     mat-dialog-content { min-width: 520px; max-width: 600px; padding-top: 8px !important; }
@@ -267,8 +267,8 @@ const COMMON_GAPS = [
       padding: 4px 12px; border-radius: 999px; border: 1px solid #dce6f0;
       background: white; font-size: 12px; cursor: pointer; color: #5a6a7e;
       transition: all 0.15s;
-      &.selected { background: #1B2A47; color: white; border-color: #1B2A47; }
-      &:hover:not(.selected) { border-color: #3A9FD6; color: #3A9FD6; }
+      &.selected { background: var(--artes-primary); color: white; border-color: var(--artes-primary); }
+      &:hover:not(.selected) { border-color: var(--artes-accent); color: var(--artes-accent); }
     }
 
     .selected-gaps {
@@ -290,7 +290,7 @@ const COMMON_GAPS = [
       .eqi-input {
         width: 60px; text-align: center; border: 1px solid #dce6f0;
         border-radius: 4px; padding: 4px; font-size: 13px; font-weight: 600;
-        &:focus { outline: none; border-color: #3A9FD6; }
+        &:focus { outline: none; border-color: var(--artes-accent); }
       }
     }
 
@@ -299,7 +299,7 @@ const COMMON_GAPS = [
         display: flex; justify-content: space-between; align-items: flex-start;
         padding: 8px 0; border-bottom: 1px solid #f0f4f8; font-size: 14px;
         span { color: #5a6a7e; flex-shrink: 0; margin-right: 12px; }
-        strong { color: #1B2A47; text-align: right; }
+        strong { color: var(--artes-primary); text-align: right; }
       }
     }
 
@@ -307,7 +307,7 @@ const COMMON_GAPS = [
       display: flex; align-items: center; gap: 8px; margin-top: 16px;
       background: rgba(58,159,214,0.08); border-radius: 8px; padding: 10px 14px;
       font-size: 13px; color: #2080b0;
-      mat-icon { color: #3A9FD6; font-size: 18px; width: 18px; height: 18px; flex-shrink: 0; }
+      mat-icon { color: var(--artes-accent); font-size: 18px; width: 18px; height: 18px; flex-shrink: 0; }
     }
   `],
 })

@@ -115,7 +115,7 @@ interface OrgResponse {
   `,
   styles: [`
     h2[mat-dialog-title] {
-      display: flex; align-items: center; gap: 8px; color: #1B2A47;
+      display: flex; align-items: center; gap: 8px; color: var(--artes-primary);
       mat-icon { color: #e86c3a; }
     }
 
@@ -130,7 +130,7 @@ interface OrgResponse {
       display: flex; align-items: flex-start; gap: 10px;
       background: rgba(58,159,214,0.08); border-radius: 8px;
       padding: 14px; color: #2080b0; font-size: 14px; line-height: 1.5;
-      mat-icon { color: #3A9FD6; flex-shrink: 0; margin-top: 1px; }
+      mat-icon { color: var(--artes-accent); flex-shrink: 0; margin-top: 1px; }
     }
 
     .dialog-form { display: flex; flex-direction: column; gap: 4px; padding-top: 4px; }

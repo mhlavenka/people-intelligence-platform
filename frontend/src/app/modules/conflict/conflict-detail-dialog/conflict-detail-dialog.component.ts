@@ -225,7 +225,7 @@ interface ConflictAnalysis {
   `,
   styles: [`
     h2[mat-dialog-title] {
-      display: flex; align-items: center; gap: 8px; color: #1B2A47;
+      display: flex; align-items: center; gap: 8px; color: var(--artes-primary);
       mat-icon { color: #e86c3a; }
     }
 
@@ -263,8 +263,8 @@ interface ConflictAnalysis {
       padding: 16px 0;
       h3 {
         display: flex; align-items: center; gap: 6px;
-        font-size: 14px; font-weight: 600; color: #1B2A47; margin: 0 0 12px;
-        mat-icon { font-size: 18px; width: 18px; height: 18px; color: #3A9FD6; }
+        font-size: 14px; font-weight: 600; color: var(--artes-primary); margin: 0 0 12px;
+        mat-icon { font-size: 18px; width: 18px; height: 18px; color: var(--artes-accent); }
       }
     }
 
@@ -309,7 +309,7 @@ interface ConflictAnalysis {
     }
 
     .sub-type-label {
-      font-size: 13px; font-weight: 600; color: #1B2A47; margin-bottom: 6px;
+      font-size: 13px; font-weight: 600; color: var(--artes-primary); margin-bottom: 6px;
     }
 
     .sub-score-bar-wrap {
@@ -333,7 +333,7 @@ interface ConflictAnalysis {
     .sub-narrative {
       font-size: 12px; color: #5a6a7e; line-height: 1.5;
       .narrative-toggle {
-        color: #3A9FD6; cursor: pointer; text-decoration: none; font-weight: 500;
+        color: var(--artes-accent); cursor: pointer; text-decoration: none; font-weight: 500;
         margin-left: 2px;
         &:hover { text-decoration: underline; }
       }
@@ -351,7 +351,7 @@ interface ConflictAnalysis {
     /* Script sections */
     .script-box {
       background: #f8fafc; border-radius: 10px; padding: 16px;
-      border-left: 3px solid #3A9FD6;
+      border-left: 3px solid var(--artes-accent);
     }
 
     .script-text {
@@ -365,12 +365,12 @@ interface ConflictAnalysis {
 
     .script-section {
       background: #f8fafc; border-radius: 10px; padding: 14px 16px;
-      border-left: 3px solid #3A9FD6;
+      border-left: 3px solid var(--artes-accent);
     }
 
     .script-section-title {
       font-size: 12px; font-weight: 700; text-transform: uppercase;
-      letter-spacing: 0.05em; color: #3A9FD6; margin-bottom: 8px;
+      letter-spacing: 0.05em; color: var(--artes-accent); margin-bottom: 8px;
     }
 
     .script-para {
@@ -387,7 +387,7 @@ interface ConflictAnalysis {
       width: 100%; border-collapse: collapse; font-size: 13px;
       th {
         text-align: left; padding: 6px 10px;
-        background: #edf2f7; color: #1B2A47; font-weight: 600; font-size: 12px;
+        background: #edf2f7; color: var(--artes-primary); font-weight: 600; font-size: 12px;
         &:first-child { border-radius: 6px 0 0 0; width: 30%; }
         &:last-child  { border-radius: 0 6px 0 0; }
       }
@@ -396,7 +396,7 @@ interface ConflictAnalysis {
         border-bottom: 1px solid #e8edf4;
       }
       tr:last-child td { border-bottom: none; }
-      .topic-name { font-weight: 600; color: #1B2A47; }
+      .topic-name { font-weight: 600; color: var(--artes-primary); }
     }
 
     .escalation-banner {
@@ -555,13 +555,13 @@ export class ConflictDetailDialogComponent implements OnInit {
 <title>Conflict Analysis — ${d.departmentId || 'All Departments'}</title>
 <style>
   * { box-sizing: border-box; }
-  body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 13px; color: #1B2A47; margin: 0; padding: 0; background: #EBF5FB; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 13px; color: var(--artes-primary); margin: 0; padding: 0; background: var(--artes-bg); }
   .page { max-width: 860px; margin: 0 auto; background: white; min-height: 100vh; }
 
   /* Print bar */
-  .print-bar { display: flex; gap: 10px; padding: 14px 32px; background: #1B2A47; }
+  .print-bar { display: flex; gap: 10px; padding: 14px 32px; background: var(--artes-primary); }
   .print-bar button { padding: 8px 22px; border-radius: 6px; border: none; cursor: pointer; font-size: 13px; font-weight: 600; }
-  .print-bar .btn-print { background: #3A9FD6; color: white; }
+  .print-bar .btn-print { background: var(--artes-accent); color: white; }
   .print-bar .btn-print:hover { background: #2d8bc2; }
   .print-bar .btn-save { background: #27C4A0; color: white; }
   .print-bar .btn-save:hover { background: #1da888; }
@@ -572,7 +572,7 @@ export class ConflictDetailDialogComponent implements OnInit {
 
   /* Header */
   .header-row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
-  .header-row h1 { font-size: 22px; margin: 0; color: #1B2A47; }
+  .header-row h1 { font-size: 22px; margin: 0; color: var(--artes-primary); }
   .header-row .ci-badge { font-size: 11px; background: #e86c3a; color: white; padding: 3px 10px; border-radius: 999px; font-weight: 700; }
   .meta-line { font-size: 12px; color: #5a6a7e; margin-bottom: 20px; }
 
@@ -596,34 +596,34 @@ export class ConflictDetailDialogComponent implements OnInit {
 
   /* Sections */
   .section { padding: 0 0 16px; }
-  .section-title { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 700; color: #1B2A47; margin: 0 0 12px; padding-top: 16px; border-top: 2px solid #edf2f7; }
-  .section-icon { color: #3A9FD6; font-size: 18px; }
+  .section-title { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 700; color: var(--artes-primary); margin: 0 0 12px; padding-top: 16px; border-top: 2px solid #edf2f7; }
+  .section-icon { color: var(--artes-accent); font-size: 18px; }
   .narrative { font-size: 14px; color: #374151; line-height: 1.7; margin: 0; white-space: pre-wrap; }
   .divider { border: none; border-top: 1px solid #edf2f7; margin: 8px 0; }
 
   /* Sub-analyses */
   .sub-row { background: #f8fafc; border-left: 4px solid #e8edf4; border-radius: 8px; padding: 14px 16px; margin-bottom: 10px; }
   .sub-top { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-  .sub-type { font-size: 14px; font-weight: 700; color: #1B2A47; }
+  .sub-type { font-size: 14px; font-weight: 700; color: var(--artes-primary); }
   .sub-score { padding: 2px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; }
   .sub-bar-track { background: #e8edf4; border-radius: 4px; height: 6px; margin-bottom: 8px; overflow: hidden; }
   .sub-bar { height: 100%; border-radius: 4px; }
   .sub-narrative { font-size: 13px; color: #5a6a7e; line-height: 1.6; margin: 0; }
 
   /* Script sections */
-  .script-section { background: #f8fafc; border-left: 3px solid #3A9FD6; border-radius: 8px; padding: 14px 16px; margin-bottom: 10px; }
-  .script-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #3A9FD6; margin-bottom: 8px; }
+  .script-section { background: #f8fafc; border-left: 3px solid var(--artes-accent); border-radius: 8px; padding: 14px 16px; margin-bottom: 10px; }
+  .script-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--artes-accent); margin-bottom: 8px; }
   .script-section p { font-size: 13px; color: #374151; line-height: 1.7; margin: 0; }
   .script-section ul { margin: 0; padding-left: 18px; }
   .script-section li { font-size: 13px; color: #374151; line-height: 1.7; margin-bottom: 2px; }
-  .script-raw { font-family: inherit; font-size: 13px; color: #374151; line-height: 1.7; margin: 0; white-space: pre-wrap; word-break: break-word; background: #f8fafc; border-left: 3px solid #3A9FD6; border-radius: 8px; padding: 14px 16px; }
+  .script-raw { font-family: inherit; font-size: 13px; color: #374151; line-height: 1.7; margin: 0; white-space: pre-wrap; word-break: break-word; background: #f8fafc; border-left: 3px solid var(--artes-accent); border-radius: 8px; padding: 14px 16px; }
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  th { text-align: left; padding: 8px 10px; background: #edf2f7; color: #1B2A47; font-weight: 600; font-size: 12px; }
+  th { text-align: left; padding: 8px 10px; background: #edf2f7; color: var(--artes-primary); font-weight: 600; font-size: 12px; }
   th:first-child { border-radius: 6px 0 0 0; width: 30%; }
   th:last-child { border-radius: 0 6px 0 0; }
   td { padding: 8px 10px; vertical-align: top; color: #374151; border-bottom: 1px solid #e8edf4; }
   tr:last-child td { border-bottom: none; }
-  .topic-name { font-weight: 600; color: #1B2A47; }
+  .topic-name { font-weight: 600; color: var(--artes-primary); }
 
   /* Escalation */
   .escalation-banner { display: flex; align-items: center; gap: 8px; background: rgba(229,62,62,0.08); border-radius: 8px; padding: 12px 14px; color: #c53030; font-size: 13px; font-weight: 600; margin-top: 8px; }

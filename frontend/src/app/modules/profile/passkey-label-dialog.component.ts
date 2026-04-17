@@ -30,7 +30,7 @@ import { MatIconModule } from '@angular/material/icon';
     </mat-dialog-actions>
   `,
   styles: [`
-    h2[mat-dialog-title] { display: flex; align-items: center; gap: 8px; color: #1B2A47; mat-icon { color: #7c5cbf; } }
+    h2[mat-dialog-title] { display: flex; align-items: center; gap: 8px; color: var(--artes-primary); mat-icon { color: #7c5cbf; } }
     mat-dialog-content { min-width: 380px; }
     .desc { font-size: 13px; color: #5a6a7e; margin: 0 0 16px; }
     .full-width { width: 100%; }

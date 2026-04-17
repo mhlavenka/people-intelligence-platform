@@ -24,7 +24,7 @@ import { MatIconModule } from '@angular/material/icon';
       gap: 12px;
 
       mat-icon { font-size: 64px; width: 64px; height: 64px; }
-      h2 { font-size: 22px; color: #1B2A47; margin: 0; }
+      h2 { font-size: 22px; color: var(--artes-primary); margin: 0; }
       p  { font-size: 14px; margin: 0; }
     }
   `],

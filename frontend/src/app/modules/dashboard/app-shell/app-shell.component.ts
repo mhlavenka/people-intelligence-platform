@@ -19,6 +19,7 @@ interface OrgInfo {
   name: string;
   theme?: OrgTheme;
   modules?: string[];
+  logoUrl?: string;
 }
 
 import { AppRole } from '../../../core/auth.service';
@@ -66,7 +67,7 @@ function isGroup(entry: NavEntry): entry is NavGroup {
         <button class="mobile-menu-btn" (click)="mobileMenuOpen.set(true)">
           <mat-icon>menu</mat-icon>
         </button>
-        <img src="assets/artes_icon_512.png" alt="PIP" class="mobile-logo" />
+        <img [src]="orgLogo() || 'assets/artes_icon_512.png'" alt="Logo" class="mobile-logo" />
         <span class="mobile-title">{{ orgName() }}</span>
         <button class="mobile-bell-btn" (click)="openHub()">
           <mat-icon [matBadge]="unreadCount() > 0 ? unreadCount() : null" matBadgeColor="warn" matBadgeSize="small">notifications</mat-icon>
@@ -83,14 +84,18 @@ function isGroup(entry: NavEntry): entry is NavGroup {
         <div class="sidebar-header" [class.collapsed]="sidebarCollapsed()">
           @if (sidebarCollapsed()) {
             <!-- Collapsed: logo centred, toggle below -->
-            <img src="assets/artes_icon_512.png" alt="PIP" class="brand-logo" />
+            <img [src]="orgLogo() || 'assets/artes_icon_512.png'" alt="Logo" class="brand-logo" />
             <button class="expand-btn" (click)="sidebarCollapsed.set(false)" title="Expand sidebar">
               <mat-icon>chevron_right</mat-icon>
             </button>
           } @else {
             <!-- Expanded: logo + text left, toggle right -->
             <div class="brand">
-              <img src="assets/artes_transparent_dark.png" alt="PIP" class="brand-logo-wide" />
+              @if (orgLogo()) {
+                <img [src]="orgLogo()" alt="Logo" class="brand-logo-wide org-logo" />
+              } @else {
+                <img src="assets/artes_transparent_dark.png" alt="ARTES" class="brand-logo-wide" />
+              }
             </div>
             <button mat-icon-button class="collapse-btn" (click)="sidebarCollapsed.set(true)">
               <mat-icon>chevron_left</mat-icon>
@@ -297,11 +302,12 @@ function isGroup(entry: NavEntry): entry is NavGroup {
         width: 200px; height: 64px;
         object-fit: contain;
         flex-shrink: 0;
+        &.org-logo { border-radius: 8px; }
       }
       .auth-brand-footer {
         text-align: center;
         margin-top: 24px;
-        h1 { font-size: 20px; color: #1B2A47; margin: 0 0 4px; }
+        h1 { font-size: 20px; color: var(--artes-primary); margin: 0 0 4px; }
         p  { font-size: 12px; color: #9aa5b4; margin: 0; }
       }
       .icon-logo {
@@ -337,7 +343,7 @@ function isGroup(entry: NavEntry): entry is NavGroup {
       background: rgba(255,255,255,0.05);
       border-bottom: 1px solid rgba(255,255,255,0.08);
       font-size: 13px;
-      mat-icon { font-size: 18px; color: #3A9FD6; }
+      mat-icon { font-size: 18px; color: var(--artes-accent); }
       .org-name { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
       .plan-badge { font-size: 16px; color: #f0a500; }
     }
@@ -466,7 +472,7 @@ function isGroup(entry: NavEntry): entry is NavGroup {
       .user-avatar {
         width: 32px;
         height: 32px;
-        background: linear-gradient(135deg, #3A9FD6, #27C4A0);
+        background: linear-gradient(135deg, var(--artes-accent), #27C4A0);
         border-radius: 50%;
         display: flex;
         align-items: center;
@@ -497,7 +503,7 @@ function isGroup(entry: NavEntry): entry is NavGroup {
     .main-content {
       flex: 1;
       overflow-y: auto;
-      background: #EBF5FB;
+      background: var(--artes-bg);
     }
 
     .app-footer {
@@ -505,7 +511,7 @@ function isGroup(entry: NavEntry): entry is NavGroup {
       padding: 10px 24px; flex-shrink: 0;
       background: #e2edf5; border-top: 1px solid #d4dfe9;
       font-size: 12px; color: #6b7c93;
-      a { color: #6b7c93; text-decoration: none; &:hover { color: #3A9FD6; } }
+      a { color: #6b7c93; text-decoration: none; &:hover { color: var(--artes-accent); } }
     }
     .footer-legal { display: flex; gap: 14px; }
 
@@ -514,14 +520,14 @@ function isGroup(entry: NavEntry): entry is NavGroup {
       align-items: center;
       gap: 10px;
       background: #f0a500;
-      color: #1B2A47;
+      color: var(--artes-primary);
       padding: 10px 20px;
       font-size: 14px;
       font-weight: 500;
       mat-icon { font-size: 18px; width: 18px; height: 18px; flex-shrink: 0; }
       span { flex: 1; }
       button {
-        background: #1B2A47;
+        background: var(--artes-primary);
         color: white;
         border: none;
         border-radius: 6px;
@@ -682,6 +688,7 @@ export class AppShellComponent implements OnInit, OnDestroy {
   userPicture = computed(() => this.user()?.profilePicture || '');
   userRole    = computed(() => this.user()?.role?.replace('_', ' ') || '');
   orgName     = signal('My Organization');
+  orgLogo     = signal('');
   unreadCount = signal(0);
 
   constructor(
@@ -714,6 +721,7 @@ export class AppShellComponent implements OnInit, OnDestroy {
     this.api.get<OrgInfo>('/organizations/me').subscribe({
       next: (org) => {
         this.orgName.set(org.name);
+        this.orgLogo.set(org.logoUrl || '');
         this.themeService.apply(org.theme);
       },
       error: () => {},

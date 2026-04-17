@@ -277,7 +277,7 @@ const DEFAULT_SETTINGS: Settings = {
 
     .page-header {
       margin-bottom: 28px;
-      h1 { font-size: 28px; color: #1B2A47; margin: 0 0 4px; }
+      h1 { font-size: 28px; color: var(--artes-primary); margin: 0 0 4px; }
       p  { color: #5a6a7e; margin: 0; }
     }
 
@@ -291,15 +291,15 @@ const DEFAULT_SETTINGS: Settings = {
 
     .card-header {
       display: flex; align-items: flex-start; gap: 12px; padding: 20px 24px;
-      > mat-icon { color: #3A9FD6; margin-top: 2px; flex-shrink: 0; }
-      h2 { font-size: 16px; color: #1B2A47; margin: 0 0 2px; font-weight: 600; }
+      > mat-icon { color: var(--artes-accent); margin-top: 2px; flex-shrink: 0; }
+      h2 { font-size: 16px; color: var(--artes-primary); margin: 0 0 2px; font-weight: 600; }
       p  { font-size: 13px; color: #9aa5b4; margin: 0; }
     }
 
     .card-body { padding: 8px 0; }
 
     .group-label {
-      font-size: 13px; font-weight: 600; color: #1B2A47;
+      font-size: 13px; font-weight: 600; color: var(--artes-primary);
       padding: 16px 24px 0; text-transform: uppercase; letter-spacing: 0.5px;
     }
     .group-desc {
@@ -331,10 +331,10 @@ const DEFAULT_SETTINGS: Settings = {
     .toggle-icon.green  { background: rgba(39,196,160,0.12); color: #1a9678; }
     .toggle-icon.orange { background: rgba(240,165,0,0.12);  color: #b07800; }
     .toggle-icon.red    { background: rgba(232,108,58,0.12); color: #c04a14; }
-    .toggle-icon.navy   { background: rgba(27,42,71,0.10);   color: #1B2A47; }
+    .toggle-icon.navy   { background: rgba(27,42,71,0.10);   color: var(--artes-primary); }
 
     .toggle-info { flex: 1; }
-    .toggle-label { font-size: 14px; color: #1B2A47; font-weight: 500; }
+    .toggle-label { font-size: 14px; color: var(--artes-primary); font-weight: 500; }
     .toggle-desc  { font-size: 12px; color: #9aa5b4; margin-top: 2px; line-height: 1.4; }
 
     .select-row {

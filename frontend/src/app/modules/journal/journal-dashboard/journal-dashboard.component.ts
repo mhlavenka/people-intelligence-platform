@@ -95,7 +95,7 @@ interface FeedItem {
     .journal-page { padding: 32px; max-width: 960px; background: #F8F6F1; min-height: 100%; }
     .page-header {
       display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;
-      h1 { font-size: 24px; color: #1B2A47; display: flex; align-items: center; gap: 8px; margin: 0;
+      h1 { font-size: 24px; color: var(--artes-primary); display: flex; align-items: center; gap: 8px; margin: 0;
         mat-icon { color: #7c5cbf; }
       }
     }
@@ -107,17 +107,17 @@ interface FeedItem {
       background: white; border-radius: 12px; padding: 20px; text-align: center;
       box-shadow: 0 2px 8px rgba(0,0,0,0.06);
       mat-icon { font-size: 24px; width: 24px; height: 24px; color: #7c5cbf; margin-bottom: 4px; }
-      .sum-num { font-size: 28px; font-weight: 700; color: #1B2A47; }
+      .sum-num { font-size: 28px; font-weight: 700; color: var(--artes-primary); }
       .sum-label { font-size: 12px; color: #9aa5b4; margin-top: 2px; }
     }
 
-    .section-header { margin-bottom: 12px; h2 { font-size: 16px; color: #1B2A47; margin: 0; } }
+    .section-header { margin-bottom: 12px; h2 { font-size: 16px; color: var(--artes-primary); margin: 0; } }
 
     .empty-state {
       text-align: center; padding: 48px; color: #9aa5b4;
       background: white; border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06);
       mat-icon { font-size: 48px; width: 48px; height: 48px; display: block; margin: 0 auto 12px; }
-      h3 { color: #1B2A47; margin-bottom: 8px; }
+      h3 { color: var(--artes-primary); margin-bottom: 8px; }
       p { margin: 0 0 16px; }
     }
 
@@ -132,11 +132,11 @@ interface FeedItem {
     .feed-icon {
       width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
       mat-icon { font-size: 18px; width: 18px; height: 18px; color: white; }
-      &.note { background: #3A9FD6; }
+      &.note { background: var(--artes-accent); }
       &.reflective { background: #7c5cbf; }
     }
     .feed-content { flex: 1; min-width: 0; }
-    .feed-title { font-size: 14px; font-weight: 600; color: #1B2A47; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .feed-title { font-size: 14px; font-weight: 600; color: var(--artes-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .feed-subtitle { font-size: 12px; color: #9aa5b4; }
     .feed-date { font-size: 12px; color: #9aa5b4; flex-shrink: 0; }
 

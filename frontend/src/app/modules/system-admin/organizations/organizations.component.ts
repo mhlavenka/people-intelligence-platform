@@ -234,7 +234,7 @@ interface Stats {
     .page-header {
       display: flex; align-items: flex-start; justify-content: space-between;
       margin-bottom: 24px;
-      h1 { font-size: 28px; color: #1B2A47; margin: 0 0 4px; }
+      h1 { font-size: 28px; color: var(--artes-primary); margin: 0 0 4px; }
       p  { color: #5a6a7e; margin: 0; font-size: 14px; }
     }
 
@@ -253,7 +253,7 @@ interface Stats {
     }
 
     .stat-value {
-      font-size: 24px; font-weight: 700; color: #1B2A47;
+      font-size: 24px; font-weight: 700; color: var(--artes-primary);
       &.active { color: #27C4A0; }
       &.trial   { color: #f0a500; }
     }
@@ -290,7 +290,7 @@ interface Stats {
     .suspended-row { opacity: 0.55; }
 
     .org-name-cell { display: flex; flex-direction: column; }
-    .org-name { font-size: 14px; font-weight: 600; color: #1B2A47; }
+    .org-name { font-size: 14px; font-weight: 600; color: var(--artes-primary); }
     .org-slug { font-size: 11px; color: #9aa5b4; font-family: monospace; }
 
     .plan-badge {
@@ -298,7 +298,7 @@ interface Stats {
       font-size: 11px; font-weight: 700; text-transform: uppercase;
       &.starter      { background: #e8f4fd; color: #2080b0; }
       &.professional { background: rgba(39,196,160,0.12); color: #1a9678; }
-      &.enterprise   { background: rgba(27,42,71,0.1); color: #1B2A47; }
+      &.enterprise   { background: rgba(27,42,71,0.1); color: var(--artes-primary); }
     }
 
     .status-badge {

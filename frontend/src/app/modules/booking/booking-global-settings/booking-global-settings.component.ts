@@ -353,7 +353,7 @@ const COMMON_TIMEZONES = [
     }
     .page-header {
       display: flex; align-items: center; gap: 8px; margin-bottom: 24px;
-      h1 { margin: 0 0 4px; font-size: 24px; color: #1B2A47; }
+      h1 { margin: 0 0 4px; font-size: 24px; color: var(--artes-primary); }
       p { margin: 0; color: #6b7c93; }
     }
     .loading {
@@ -365,8 +365,8 @@ const COMMON_TIMEZONES = [
     }
     .card-header {
       display: flex; align-items: center; gap: 12px; padding: 20px 24px;
-      > mat-icon { color: #3A9FD6; font-size: 28px; width: 28px; height: 28px; }
-      h2 { margin: 0; font-size: 17px; color: #1B2A47; }
+      > mat-icon { color: var(--artes-accent); font-size: 28px; width: 28px; height: 28px; }
+      h2 { margin: 0; font-size: 17px; color: var(--artes-primary); }
       p { margin: 2px 0 0; font-size: 13px; color: #6b7c93; }
       .copy-btn { margin-left: auto; }
     }
@@ -427,7 +427,7 @@ const COMMON_TIMEZONES = [
     /* Bold the days that are inside the weekly schedule. */
     ::ng-deep .booking-available-day .mat-calendar-body-cell-content {
       font-weight: 700;
-      color: #1B2A47 !important;
+      color: var(--artes-primary) !important;
     }
     /* Excluded days: red tint + a centred ✕ overlay drawn on the cell. */
     ::ng-deep .booking-excluded-day {
@@ -472,7 +472,7 @@ const COMMON_TIMEZONES = [
     }
     .excl-icon { color: #ef4444; font-size: 18px; width: 18px; height: 18px; }
     .excl-date { flex: 1; min-width: 0; }
-    .excl-date-main { font-size: 13px; color: #1B2A47; font-weight: 500; }
+    .excl-date-main { font-size: 13px; color: var(--artes-primary); font-weight: 500; }
     .excl-date-sub { font-size: 11px; color: #6b7c93; }
     .clear-btn { margin-top: 4px; }
 

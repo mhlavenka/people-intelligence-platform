@@ -162,7 +162,7 @@ interface BillingData {
   `,
   styles: [`
     .billing-page { padding: 32px; max-width: 960px; }
-    .back-link { display: flex; align-items: center; gap: 4px; color: #3A9FD6; text-decoration: none; font-size: 14px; font-weight: 500; }
+    .back-link { display: flex; align-items: center; gap: 4px; color: var(--artes-accent); text-decoration: none; font-size: 14px; font-weight: 500; }
 
     .coachee-header {
       display: flex; align-items: center; gap: 16px; margin-bottom: 24px;
@@ -177,7 +177,7 @@ interface BillingData {
     .avatar-img { object-fit: cover; background: none; }
     .coachee-info {
       flex: 1;
-      h1 { font-size: 22px; color: #1B2A47; margin: 0 0 2px; }
+      h1 { font-size: 22px; color: var(--artes-primary); margin: 0 0 2px; }
       .email { font-size: 13px; color: #5a6a7e; display: block; }
       .dept { font-size: 12px; color: #9aa5b4; display: block; margin-top: 2px; }
     }
@@ -192,7 +192,7 @@ interface BillingData {
     .summary-card {
       background: white; border-radius: 12px; padding: 20px; text-align: center;
       box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-      .sum-num { font-size: 28px; font-weight: 700; color: #1B2A47; }
+      .sum-num { font-size: 28px; font-weight: 700; color: var(--artes-primary); }
       .sum-label { font-size: 12px; color: #9aa5b4; margin-top: 2px; }
       &.accent {
         background: linear-gradient(135deg, #7c5cbf, #5a3ea0); color: white;
@@ -212,16 +212,16 @@ interface BillingData {
     }
     .eng-link {
       display: flex; align-items: center; gap: 4px; font-size: 15px; font-weight: 600;
-      color: #1B2A47; text-decoration: none;
+      color: var(--artes-primary); text-decoration: none;
       mat-icon { color: #7c5cbf; font-size: 20px; }
-      &:hover { color: #3A9FD6; }
+      &:hover { color: var(--artes-accent); }
     }
     .eng-status {
       font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 2px 10px; border-radius: 999px;
       &.active { background: #e8faf4; color: #1a9678; }
       &.completed { background: #e8faf4; color: #1a9678; }
       &.prospect { background: #f0f4f8; color: #9aa5b4; }
-      &.contracted { background: #EBF5FB; color: #3A9FD6; }
+      &.contracted { background: var(--artes-bg); color: var(--artes-accent); }
       &.paused { background: #fefce8; color: #b07800; }
       &.alumni { background: #f3eeff; color: #7c5cbf; }
     }
@@ -253,7 +253,7 @@ interface BillingData {
     .status-dot {
       display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 4px;
       &.completed { background: #27C4A0; }
-      &.scheduled { background: #3A9FD6; }
+      &.scheduled { background: var(--artes-accent); }
       &.cancelled { background: #9aa5b4; }
       &.no_show { background: #e53e3e; }
     }

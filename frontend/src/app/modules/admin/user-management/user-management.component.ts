@@ -229,7 +229,7 @@ const ROLE_META: Record<string, { label: string; color: string }> = {
 
     .page-header {
       display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24px;
-      h1 { font-size: 28px; color: #1B2A47; margin: 0 0 4px; }
+      h1 { font-size: 28px; color: var(--artes-primary); margin: 0 0 4px; }
       p  { color: #5a6a7e; margin: 0; }
     }
 
@@ -240,7 +240,7 @@ const ROLE_META: Record<string, { label: string; color: string }> = {
     .stat-card {
       background: white; border-radius: 12px; padding: 16px 20px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.06); text-align: center;
-      .stat-num   { font-size: 28px; font-weight: 700; color: #1B2A47; }
+      .stat-num   { font-size: 28px; font-weight: 700; color: var(--artes-primary); }
       .stat-label { font-size: 12px; color: #9aa5b4; margin-top: 2px; }
     }
 
@@ -256,8 +256,8 @@ const ROLE_META: Record<string, { label: string; color: string }> = {
       padding: 5px 14px; border-radius: 999px; border: 1px solid #dce6f0;
       background: white; font-size: 12px; cursor: pointer; color: #5a6a7e;
       transition: all 0.15s;
-      &:hover { border-color: #3A9FD6; color: #3A9FD6; }
-      &.active { background: #1B2A47; color: white; border-color: #1B2A47; }
+      &:hover { border-color: var(--artes-accent); color: var(--artes-accent); }
+      &.active { background: var(--artes-primary); color: white; border-color: var(--artes-primary); }
     }
 
     .loading-center { display: flex; justify-content: center; padding: 64px; }
@@ -266,7 +266,7 @@ const ROLE_META: Record<string, { label: string; color: string }> = {
       text-align: center; padding: 64px; background: white;
       border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06);
       mat-icon { font-size: 56px; width: 56px; height: 56px; color: #9aa5b4; margin-bottom: 16px; }
-      h3 { font-size: 20px; color: #1B2A47; margin-bottom: 8px; }
+      h3 { font-size: 20px; color: var(--artes-primary); margin-bottom: 8px; }
       p  { color: #5a6a7e; margin: 0; }
     }
 
@@ -281,7 +281,7 @@ const ROLE_META: Record<string, { label: string; color: string }> = {
 
 
     .user-info { display: flex; flex-direction: column; }
-    .user-name  { font-size: 14px; font-weight: 500; color: #1B2A47; }
+    .user-name  { font-size: 14px; font-weight: 500; color: var(--artes-primary); }
     .user-email { font-size: 12px; color: #9aa5b4; }
 
     .role-badge {

@@ -110,14 +110,14 @@ html, body {
 }
 
 h1, h2, h3, h4, h5, h6 {
-  color: $navy;
+  color: var(--artes-primary);
   font-weight: 600;
   margin: 0 0 $spacing-md;
   font-family: var(--artes-heading-font);
 }
 
 a {
-  color: $blue;
+  color: var(--artes-accent);
   text-decoration: none;
   &:hover { text-decoration: underline; }
 }
@@ -126,16 +126,16 @@ a {
 // Utility Classes
 // ============================================================
 
-.text-navy    { color: $navy; }
-.text-blue    { color: $blue; }
+.text-navy    { color: var(--artes-primary); }
+.text-blue    { color: var(--artes-accent); }
 .text-green   { color: $green; }
 .text-muted   { color: $text-muted; }
 .text-danger  { color: $danger; }
 
-.bg-navy      { background-color: $navy; color: white; }
-.bg-blue      { background-color: $blue; color: white; }
+.bg-navy      { background-color: var(--artes-primary); color: white; }
+.bg-blue      { background-color: var(--artes-accent); color: white; }
 .bg-green     { background-color: $green; color: white; }
-.bg-light     { background-color: $light-bg; }
+.bg-light     { background-color: var(--artes-bg); }
 
 .card {
   background: $white;
@@ -168,7 +168,7 @@ a {
   align-items: flex-start;
   justify-content: space-between;
   margin-bottom: $spacing-xl;
-  h1 { font-size: 28px; color: $navy; margin: 0 0 $spacing-xs; }
+  h1 { font-size: 28px; color: var(--artes-primary); margin: 0 0 $spacing-xs; }
   p  { color: $text-secondary; margin: 0; }
 }
 

@@ -170,8 +170,8 @@ import {
     }
     .card-header {
       display: flex; align-items: flex-start; gap: 12px; padding: 20px 24px;
-      > mat-icon { color: #3A9FD6; margin-top: 2px; flex-shrink: 0; }
-      h2 { font-size: 16px; color: #1B2A47; margin: 0 0 2px; font-weight: 600; }
+      > mat-icon { color: var(--artes-accent); margin-top: 2px; flex-shrink: 0; }
+      h2 { font-size: 16px; color: var(--artes-primary); margin: 0 0 2px; font-weight: 600; }
       p  { font-size: 13px; color: #9aa5b4; margin: 0; }
     }
     .card-body { padding: 16px 24px 20px; }
@@ -190,7 +190,7 @@ import {
     .status-icon.connected     { background: rgba(39,196,160,0.12);  color: #1a9678; }
 
     .info { flex: 1; }
-    .label { font-size: 14px; color: #1B2A47; font-weight: 500; }
+    .label { font-size: 14px; color: var(--artes-primary); font-weight: 500; }
     .desc  { font-size: 12px; color: #9aa5b4; margin-top: 2px; }
 
     .badge {
@@ -220,7 +220,7 @@ import {
     }
     .action-link {
       font-size: 13px; cursor: pointer; text-decoration: none;
-      color: #3A9FD6;
+      color: var(--artes-accent);
       &:hover { text-decoration: underline; }
       &.disconnect { color: #dc2626; }
     }

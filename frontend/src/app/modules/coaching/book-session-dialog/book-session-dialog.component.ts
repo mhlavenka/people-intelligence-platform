@@ -84,7 +84,7 @@ export interface BookSessionData {
   styles: [`
     h2[mat-dialog-title] {
       display: flex; align-items: center; gap: 8px;
-      mat-icon { color: #3A9FD6; }
+      mat-icon { color: var(--artes-accent); }
     }
     .subtitle { font-size: 14px; color: #5a6a7e; margin: 0 0 16px; }
     .full-width { width: 100%; }
@@ -92,7 +92,7 @@ export interface BookSessionData {
     .time-row mat-form-field { flex: 1; }
     .confirmation {
       text-align: center; padding: 24px 0;
-      h3 { font-size: 18px; color: #1B2A47; margin: 12px 0 8px; }
+      h3 { font-size: 18px; color: var(--artes-primary); margin: 12px 0 8px; }
       p { font-size: 14px; color: #5a6a7e; max-width: 320px; margin: 0 auto; }
     }
     .confirm-icon { font-size: 56px; width: 56px; height: 56px; color: #27C4A0; }

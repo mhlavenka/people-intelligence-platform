@@ -32,7 +32,7 @@ calendarCallbackRouter.get('/auth/google/callback', async (req: Request, res: Re
 
     await exchangeCodeForTokens(code, userId);
 
-    res.redirect(`${config.frontendUrl}/booking/settings?calendarConnected=true`);
+    res.redirect(`${config.frontendUrl}/booking/global-settings?calendarConnected=true`);
   } catch (e) { next(e); }
 });
 
@@ -48,7 +48,7 @@ calendarCallbackRouter.get('/auth/microsoft/callback', async (req: Request, res:
     const provider = getCalendarProvider('microsoft');
     await provider.exchangeCodeForTokens(code, userId);
 
-    res.redirect(`${config.frontendUrl}/booking/settings?calendarConnected=true&provider=microsoft`);
+    res.redirect(`${config.frontendUrl}/booking/global-settings?calendarConnected=true&provider=microsoft`);
   } catch (e) { next(e); }
 });
 

@@ -327,7 +327,7 @@ const REFRESH_EXPIRY_OPTIONS = [
     .page-header {
       display: flex; align-items: flex-start; justify-content: space-between;
       margin-bottom: 28px;
-      h1 { font-size: 28px; color: #1B2A47; margin: 0 0 4px; }
+      h1 { font-size: 28px; color: var(--artes-primary); margin: 0 0 4px; }
       p  { color: #5a6a7e; margin: 0; }
     }
 
@@ -345,8 +345,8 @@ const REFRESH_EXPIRY_OPTIONS = [
     .card-header {
       display: flex; align-items: flex-start; gap: 12px;
       padding: 20px 24px 0;
-      mat-icon { font-size: 22px; color: #3A9FD6; margin-top: 2px; }
-      h3 { font-size: 16px; font-weight: 700; color: #1B2A47; margin: 0 0 2px; }
+      mat-icon { font-size: 22px; color: var(--artes-accent); margin-top: 2px; }
+      h3 { font-size: 16px; font-weight: 700; color: var(--artes-primary); margin: 0 0 2px; }
       p  { font-size: 13px; color: #9aa5b4; margin: 0; }
     }
 
@@ -371,7 +371,7 @@ const REFRESH_EXPIRY_OPTIONS = [
     .toggle-info {
       display: flex; flex-direction: column; gap: 1px;
     }
-    .toggle-label { font-size: 14px; font-weight: 500; color: #1B2A47; }
+    .toggle-label { font-size: 14px; font-weight: 500; color: var(--artes-primary); }
     .toggle-desc  { font-size: 12px; color: #9aa5b4; }
 
     .maintenance-toggle {

@@ -142,7 +142,7 @@ interface Coachee { _id: string; firstName: string; lastName: string; email: str
     </mat-dialog-actions>
   `,
   styles: [`
-    h2[mat-dialog-title] { display: flex; align-items: center; gap: 8px; color: #1B2A47; mat-icon { color: #3A9FD6; } }
+    h2[mat-dialog-title] { display: flex; align-items: center; gap: 8px; color: var(--artes-primary); mat-icon { color: var(--artes-accent); } }
     mat-dialog-content { min-width: 480px; padding-top: 8px !important; }
     .full-width { width: 100%; }
     .form-row { display: flex; gap: 12px; align-items: flex-start;

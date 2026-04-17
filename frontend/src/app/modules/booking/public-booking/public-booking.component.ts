@@ -184,9 +184,9 @@ import {
 
     .booking-header {
       text-align: center; max-width: 600px; margin-bottom: 32px;
-      .brand-bar { width: 60px; height: 4px; background: #3A9FD6; border-radius: 2px; margin: 0 auto 20px; }
-      h1 { margin: 0 0 4px; font-size: 26px; color: #1B2A47; }
-      .coach-name { margin: 0 0 8px; color: #3A9FD6; font-weight: 500; font-size: 16px; }
+      .brand-bar { width: 60px; height: 4px; background: var(--artes-accent); border-radius: 2px; margin: 0 auto 20px; }
+      h1 { margin: 0 0 4px; font-size: 26px; color: var(--artes-primary); }
+      .coach-name { margin: 0 0 8px; color: var(--artes-accent); font-weight: 500; font-size: 16px; }
       .description { color: #6b7c93; margin: 0 0 16px; line-height: 1.5; }
     }
     .meta-row {
@@ -194,7 +194,7 @@ import {
       color: #6b7c93; font-size: 14px;
       span { display: flex; align-items: center; gap: 4px; }
       mat-icon { font-size: 18px; width: 18px; height: 18px; }
-      .tz-display { cursor: pointer; &:hover { color: #3A9FD6; } }
+      .tz-display { cursor: pointer; &:hover { color: var(--artes-accent); } }
       .expand { font-size: 16px; width: 16px; height: 16px; }
     }
     .tz-select { margin-top: 12px; width: 300px; }
@@ -210,7 +210,7 @@ import {
     .month-nav {
       display: flex; align-items: center; justify-content: space-between;
       margin-bottom: 12px;
-      h3 { margin: 0; font-size: 16px; color: #1B2A47; }
+      h3 { margin: 0; font-size: 16px; color: var(--artes-primary); }
     }
     .weekday-header {
       display: grid; grid-template-columns: repeat(7, 1fr);
@@ -223,19 +223,19 @@ import {
     .day-cell {
       width: 44px; height: 44px; border: none; border-radius: 50%;
       background: transparent; cursor: pointer; font-size: 14px;
-      color: #1B2A47; display: flex; align-items: center; justify-content: center;
+      color: var(--artes-primary); display: flex; align-items: center; justify-content: center;
       margin: 0 auto; transition: all 0.15s;
       &:disabled { color: #d0d5dd; cursor: default; }
       &.other-month { visibility: hidden; }
       &.has-slots { font-weight: 600; }
-      &.has-slots:hover { background: #EBF5FB; }
-      &.selected { background: #3A9FD6; color: #fff; font-weight: 600; }
+      &.has-slots:hover { background: var(--artes-bg); }
+      &.selected { background: var(--artes-accent); color: #fff; font-weight: 600; }
       &.today:not(.selected) { border: 2px solid #3A9FD6; }
     }
 
     .slots-panel {
       min-height: 300px;
-      h3 { margin: 0 0 16px; font-size: 16px; color: #1B2A47; }
+      h3 { margin: 0 0 16px; font-size: 16px; color: var(--artes-primary); }
     }
     .loading-small {
       display: flex; justify-content: center; padding: 40px 0;
@@ -250,15 +250,15 @@ import {
       display: flex; flex-wrap: wrap; gap: 8px;
     }
     .slot-btn {
-      border-color: #3A9FD6 !important; color: #3A9FD6 !important;
-      &:hover { background: #EBF5FB !important; }
+      border-color: var(--artes-accent) !important; color: var(--artes-accent) !important;
+      &:hover { background: var(--artes-bg) !important; }
     }
     .no-slots { color: #9aa5b4; font-style: italic; }
 
     .selected-time {
       display: flex; align-items: center; gap: 8px;
       background: #f0f9f4; padding: 10px 16px; border-radius: 8px;
-      margin-bottom: 20px; color: #1B2A47; font-weight: 500;
+      margin-bottom: 20px; color: var(--artes-primary); font-weight: 500;
       mat-icon { color: #27C4A0; }
       .change-btn { margin-left: auto; }
     }

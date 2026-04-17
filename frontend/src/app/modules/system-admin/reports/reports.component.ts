@@ -206,8 +206,8 @@ interface OrgSummaryItem { name: string; plan: string; isActive: boolean; userCo
     }
     .report-header {
       display: flex; align-items: flex-start; gap: 12px; margin-bottom: 20px;
-      mat-icon { font-size: 24px; color: #3A9FD6; margin-top: 2px; }
-      h2 { font-size: 18px; color: #1B2A47; margin: 0 0 2px; font-weight: 700; }
+      mat-icon { font-size: 24px; color: var(--artes-accent); margin-top: 2px; }
+      h2 { font-size: 18px; color: var(--artes-primary); margin: 0 0 2px; font-weight: 700; }
       p  { font-size: 13px; color: #9aa5b4; margin: 0; }
       .report-total { margin-left: auto; font-size: 16px; font-weight: 700; color: #27C4A0; }
     }
@@ -220,27 +220,27 @@ interface OrgSummaryItem { name: string; plan: string; isActive: boolean; userCo
     .aging-bucket {
       flex: 1; min-width: 120px; padding: 14px; border-radius: 10px; text-align: center;
       border: 2px solid #e8edf4; cursor: pointer; transition: all 0.15s;
-      &:hover { border-color: #3A9FD6; }
-      &.active { border-color: #3A9FD6; background: #EBF5FB; }
+      &:hover { border-color: var(--artes-accent); }
+      &.active { border-color: var(--artes-accent); background: var(--artes-bg); }
       &.current { .bucket-amount { color: #27C4A0; } }
       &.days30  { .bucket-amount { color: #f0a500; } }
       &.days60  { .bucket-amount { color: #e86c3a; } }
       &.days90  { .bucket-amount { color: #e53e3e; } }
       &.over90  { .bucket-amount { color: #c53030; } }
-      &.total   { background: #1B2A47; color: white; cursor: default; .bucket-label, .bucket-amount { color: white; } }
+      &.total   { background: var(--artes-primary); color: white; cursor: default; .bucket-label, .bucket-amount { color: white; } }
     }
     .bucket-label { font-size: 11px; color: #9aa5b4; text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 4px; }
-    .bucket-amount { font-size: 18px; font-weight: 700; color: #1B2A47; }
+    .bucket-amount { font-size: 18px; font-weight: 700; color: var(--artes-primary); }
     .bucket-count { font-size: 11px; color: #9aa5b4; margin-top: 2px; }
 
     /* Data table */
     .data-table {
       width: 100%; border-collapse: collapse; font-size: 13px;
-      th { text-align: left; padding: 10px 12px; background: #f8fafc; color: #1B2A47; font-weight: 600; font-size: 12px; border-bottom: 2px solid #edf2f7; }
+      th { text-align: left; padding: 10px 12px; background: #f8fafc; color: var(--artes-primary); font-weight: 600; font-size: 12px; border-bottom: 2px solid #edf2f7; }
       td { padding: 10px 12px; border-bottom: 1px solid #f0f4f8; color: #374151; }
       tr:hover td { background: #fafbfc; }
-      .mono { font-family: monospace; font-size: 12px; color: #3A9FD6; }
-      .amount { font-weight: 600; color: #1B2A47; text-align: right; }
+      .mono { font-family: monospace; font-size: 12px; color: var(--artes-accent); }
+      .amount { font-weight: 600; color: var(--artes-primary); text-align: right; }
       th:last-child, td:last-child { text-align: right; }
     }
     .inactive-row { opacity: 0.6; }
@@ -271,7 +271,7 @@ interface OrgSummaryItem { name: string; plan: string; isActive: boolean; userCo
     }
     .stat-box {
       background: #f8fafc; border-radius: 10px; padding: 16px; text-align: center;
-      .stat-num { font-size: 28px; font-weight: 700; color: #1B2A47; }
+      .stat-num { font-size: 28px; font-weight: 700; color: var(--artes-primary); }
       .stat-label { font-size: 12px; color: #5a6a7e; margin-top: 2px; }
       .stat-sub { font-size: 11px; color: #9aa5b4; margin-top: 2px; }
     }
@@ -279,13 +279,13 @@ interface OrgSummaryItem { name: string; plan: string; isActive: boolean; userCo
     /* Breakdown */
     .breakdown-row { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
     .breakdown-col {
-      h4 { font-size: 13px; font-weight: 600; color: #1B2A47; margin: 0 0 10px; }
+      h4 { font-size: 13px; font-weight: 600; color: var(--artes-primary); margin: 0 0 10px; }
     }
     .breakdown-item {
       display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f0f4f8;
       font-size: 13px;
       .breakdown-key { color: #5a6a7e; text-transform: capitalize; }
-      .breakdown-val { font-weight: 600; color: #1B2A47; }
+      .breakdown-val { font-weight: 600; color: var(--artes-primary); }
     }
   `],
 })

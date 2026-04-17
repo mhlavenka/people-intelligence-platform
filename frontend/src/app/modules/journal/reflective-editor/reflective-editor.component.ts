@@ -111,8 +111,8 @@ const MOODS: { value: JournalMood; icon: string; label: string }[] = [
     .journal-page { padding: 32px; max-width: 800px; background: #F8F6F1; min-height: 100%; }
     .page-header {
       margin-bottom: 16px;
-      .back-link { display: flex; align-items: center; gap: 4px; color: #3A9FD6; text-decoration: none; font-size: 14px; font-weight: 500; margin-bottom: 8px; }
-      h1 { font-size: 22px; color: #1B2A47; margin: 0; }
+      .back-link { display: flex; align-items: center; gap: 4px; color: var(--artes-accent); text-decoration: none; font-size: 14px; font-weight: 500; margin-bottom: 8px; }
+      h1 { font-size: 22px; color: var(--artes-primary); margin: 0; }
     }
     .loading-center { display: flex; justify-content: center; padding: 64px; }
 
@@ -133,11 +133,11 @@ const MOODS: { value: JournalMood; icon: string; label: string }[] = [
       background: transparent; cursor: pointer; transition: all 0.15s;
       mat-icon { font-size: 24px; width: 24px; height: 24px; color: #9aa5b4; }
       span { font-size: 11px; color: #9aa5b4; font-weight: 500; }
-      &:hover { border-color: #3A9FD6; }
+      &:hover { border-color: var(--artes-accent); }
       &.selected {
-        border-color: #3A9FD6; background: #EBF5FB;
-        mat-icon { color: #3A9FD6; }
-        span { color: #3A9FD6; }
+        border-color: var(--artes-accent); background: var(--artes-bg);
+        mat-icon { color: var(--artes-accent); }
+        span { color: var(--artes-accent); }
       }
     }
 

@@ -102,7 +102,7 @@ const CLASS_MAP: Record<string, string> = {
     .page-header {
       display: flex; align-items: flex-start; justify-content: space-between; gap: 16px;
       margin-bottom: 20px;
-      h1 { margin: 0 0 4px; font-size: 24px; color: #1B2A47; }
+      h1 { margin: 0 0 4px; font-size: 24px; color: var(--artes-primary); }
       p  { margin: 0; color: #6b7c93; }
     }
     .type-filter { width: 200px; }
@@ -111,7 +111,7 @@ const CLASS_MAP: Record<string, string> = {
       text-align: center; padding: 48px 24px; color: #6b7c93;
       background: #fff; border-radius: 12px; border: 1px solid #eef2f7;
       mat-icon { font-size: 42px; width: 42px; height: 42px; color: #c8d3df; display: block; margin: 0 auto 10px; }
-      h3 { margin: 0 0 4px; color: #1B2A47; }
+      h3 { margin: 0 0 4px; color: var(--artes-primary); }
     }
     .activity-list {
       background: #fff; border: 1px solid #eef2f7; border-radius: 12px; overflow: hidden;
@@ -126,7 +126,7 @@ const CLASS_MAP: Record<string, string> = {
       width: 36px; height: 36px; min-width: 36px; border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
       font-size: 18px; color: #fff; background: #9aa5b4;
-      &.survey        { background: #3A9FD6; }
+      &.survey        { background: var(--artes-accent); }
       &.conflict      { background: #e86c3a; }
       &.succession    { background: #7c5cbf; }
       &.neuroinclusion { background: #27C4A0; }
@@ -135,7 +135,7 @@ const CLASS_MAP: Record<string, string> = {
     }
     .activity-content {
       display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1;
-      strong { color: #1B2A47; font-size: 14px; }
+      strong { color: var(--artes-primary); font-size: 14px; }
       span   { color: #5a6a7e; font-size: 13px; }
     }
     .activity-time { font-size: 12px; color: #9aa5b4; white-space: nowrap; flex-shrink: 0; }

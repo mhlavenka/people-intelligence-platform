@@ -242,8 +242,8 @@ interface DeptBreakdown { dept: string; count: number; pct: number; }
     }
     .header-left {
       display: flex; align-items: center; gap: 14px;
-      .header-icon { font-size: 28px; width: 28px; height: 28px; color: #3A9FD6; }
-      h2 { font-size: 18px; color: #1B2A47; margin: 0 0 4px; font-weight: 700; }
+      .header-icon { font-size: 28px; width: 28px; height: 28px; color: var(--artes-accent); }
+      h2 { font-size: 18px; color: var(--artes-primary); margin: 0 0 4px; font-weight: 700; }
     }
     .module-badge {
       display: inline-block; padding: 2px 10px; border-radius: 999px;
@@ -262,7 +262,7 @@ interface DeptBreakdown { dept: string; count: number; pct: number; }
     .center-state {
       display: flex; flex-direction: column; align-items: center;
       padding: 64px 40px; text-align: center; gap: 12px;
-      h3 { font-size: 18px; color: #1B2A47; margin: 0; }
+      h3 { font-size: 18px; color: var(--artes-primary); margin: 0; }
       p  { font-size: 14px; color: #5a6a7e; margin: 0; max-width: 340px; line-height: 1.5; }
     }
     .lock-circle {
@@ -283,7 +283,7 @@ interface DeptBreakdown { dept: string; count: number; pct: number; }
     .ov-stat {
       padding: 18px 12px; text-align: center; border-right: 1px solid #edf2f7;
       &:last-child { border-right: none; }
-      .ov-value { font-size: 22px; font-weight: 700; color: #1B2A47; margin-bottom: 4px;
+      .ov-value { font-size: 22px; font-weight: 700; color: var(--artes-primary); margin-bottom: 4px;
         &.small { font-size: 13px; font-weight: 600; }
         &.privacy { display: flex; align-items: center; justify-content: center; gap: 4px;
           font-size: 13px; color: #27C4A0; font-weight: 600;
@@ -301,7 +301,7 @@ interface DeptBreakdown { dept: string; count: number; pct: number; }
     /* Dept */
     .dept-row {
       display: flex; align-items: center; gap: 10px; margin-bottom: 8px;
-      .dept-name  { width: 120px; font-size: 13px; color: #1B2A47; flex-shrink: 0;
+      .dept-name  { width: 120px; font-size: 13px; color: var(--artes-primary); flex-shrink: 0;
         overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       .dept-count { width: 80px; font-size: 12px; color: #9aa5b4; text-align: right; flex-shrink: 0; }
     }
@@ -312,7 +312,7 @@ interface DeptBreakdown { dept: string; count: number; pct: number; }
     }
     .bar-fill {
       height: 100%; border-radius: 99px; min-width: 2px; transition: width 0.4s ease;
-      &.blue  { background: #3A9FD6; }
+      &.blue  { background: var(--artes-accent); }
       &.green { background: #27C4A0; }
       &.red   { background: #e86c3a; }
     }
@@ -332,7 +332,7 @@ interface DeptBreakdown { dept: string; count: number; pct: number; }
       text-transform: uppercase; background: #f0f4f8; color: #5a6a7e;
     }
     .answered-lbl { font-size: 11px; color: #9aa5b4; margin-left: auto; }
-    .q-text { font-size: 14px; font-weight: 600; color: #1B2A47; margin-bottom: 14px; line-height: 1.4; }
+    .q-text { font-size: 14px; font-weight: 600; color: var(--artes-primary); margin-bottom: 14px; line-height: 1.4; }
 
     /* Scale */
     .scale-wrap { display: flex; gap: 24px; align-items: flex-start; }
@@ -355,7 +355,7 @@ interface DeptBreakdown { dept: string; count: number; pct: number; }
     .bool-wrap { display: flex; flex-direction: column; gap: 10px; }
     .bool-row {
       display: flex; align-items: center; gap: 10px;
-      .bool-lbl   { width: 28px; font-size: 13px; font-weight: 600; color: #1B2A47; flex-shrink: 0; }
+      .bool-lbl   { width: 28px; font-size: 13px; font-weight: 600; color: var(--artes-primary); flex-shrink: 0; }
       .bool-count { width: 70px; font-size: 13px; color: #5a6a7e; flex-shrink: 0; }
     }
     .yes-icon { color: #27C4A0; font-size: 18px; width: 18px; height: 18px; flex-shrink: 0; }
@@ -364,7 +364,7 @@ interface DeptBreakdown { dept: string; count: number; pct: number; }
     /* Text */
     .text-wrap { display: flex; flex-direction: column; gap: 6px; }
     .text-answer {
-      padding: 10px 14px; background: #f8fafc; border-left: 3px solid #3A9FD6;
+      padding: 10px 14px; background: #f8fafc; border-left: 3px solid var(--artes-accent);
       border-radius: 0 6px 6px 0; font-size: 13px; color: #374151;
       font-style: italic; line-height: 1.5;
     }

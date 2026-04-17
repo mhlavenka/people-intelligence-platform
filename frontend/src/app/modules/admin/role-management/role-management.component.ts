@@ -234,7 +234,7 @@ interface SystemRoleData { permissions: string[]; isOverridden: boolean; }
 
     .page-header {
       margin-bottom: 24px;
-      h1 { font-size: 28px; color: #1B2A47; margin: 0 0 4px; }
+      h1 { font-size: 28px; color: var(--artes-primary); margin: 0 0 4px; }
       p  { color: #5a6a7e; margin: 0; }
     }
 
@@ -244,8 +244,8 @@ interface SystemRoleData { permissions: string[]; isOverridden: boolean; }
 
     .section-title {
       display: flex; align-items: center; gap: 8px; flex: 1;
-      font-size: 16px; font-weight: 700; color: #1B2A47;
-      mat-icon { color: #3A9FD6; font-size: 20px; }
+      font-size: 16px; font-weight: 700; color: var(--artes-primary);
+      mat-icon { color: var(--artes-accent); font-size: 20px; }
     }
 
     .loading-row {
@@ -286,7 +286,7 @@ interface SystemRoleData { permissions: string[]; isOverridden: boolean; }
     }
 
     .cr-name {
-      font-size: 14px; font-weight: 700; color: #1B2A47; flex: 1; min-width: 0;
+      font-size: 14px; font-weight: 700; color: var(--artes-primary); flex: 1; min-width: 0;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
 
@@ -302,7 +302,7 @@ interface SystemRoleData { permissions: string[]; isOverridden: boolean; }
     .cr-perms { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
 
     .perm-chip {
-      font-size: 10px; background: #EBF5FB; color: #3A9FD6;
+      font-size: 10px; background: var(--artes-bg); color: var(--artes-accent);
       padding: 2px 6px; border-radius: 4px; white-space: nowrap;
     }
 
@@ -331,7 +331,7 @@ interface SystemRoleData { permissions: string[]; isOverridden: boolean; }
       mat-icon { font-size: 22px; }
     }
 
-    .role-name  { font-size: 13px; font-weight: 600; color: #1B2A47; }
+    .role-name  { font-size: 13px; font-weight: 600; color: var(--artes-primary); }
     .role-count { font-size: 11px; color: #9aa5b4; }
 
     .matrix-card {
@@ -344,8 +344,8 @@ interface SystemRoleData { permissions: string[]; isOverridden: boolean; }
     .category-header {
       display: flex; align-items: center; gap: 8px;
       padding: 14px 20px; background: #f8fafc;
-      font-size: 13px; font-weight: 600; color: #1B2A47;
-      mat-icon { font-size: 18px; color: #3A9FD6; }
+      font-size: 13px; font-weight: 600; color: var(--artes-primary);
+      mat-icon { font-size: 18px; color: var(--artes-accent); }
     }
 
     .matrix-table {

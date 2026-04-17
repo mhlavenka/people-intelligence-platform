@@ -404,15 +404,15 @@ interface IDP {
   `,
   styles: [`
     .idp-page { padding: 32px; }
-    .page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 28px; h1 { font-size: 28px; color: #1B2A47; margin: 0 0 4px; } p { color: #5a6a7e; margin: 0; } }
+    .page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 28px; h1 { font-size: 28px; color: var(--artes-primary); margin: 0 0 4px; } p { color: #5a6a7e; margin: 0; } }
 
     .loading-center { display: flex; justify-content: center; padding: 64px; }
 
     .empty-state {
       text-align: center; padding: 64px; background: white; border-radius: 16px;
       box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-      mat-icon { font-size: 64px; width: 64px; height: 64px; color: #3A9FD6; margin-bottom: 16px; }
-      h3 { font-size: 20px; color: #1B2A47; margin-bottom: 8px; }
+      mat-icon { font-size: 64px; width: 64px; height: 64px; color: var(--artes-accent); margin-bottom: 16px; }
+      h3 { font-size: 20px; color: var(--artes-primary); margin-bottom: 8px; }
       p  { color: #5a6a7e; margin-bottom: 24px; }
     }
 
@@ -429,10 +429,10 @@ interface IDP {
     .idp-card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; .idp-date { margin-left: auto; } }
     .idp-coachee-name {
       display: inline-flex; align-items: center; gap: 3px;
-      font-size: 12px; font-weight: 600; color: #1B2A47;
+      font-size: 12px; font-weight: 600; color: var(--artes-primary);
       background: rgba(27,42,71,0.07); border-radius: 20px;
       padding: 2px 8px 2px 4px;
-      .coachee-icon { font-size: 14px; width: 14px; height: 14px; color: #3A9FD6; }
+      .coachee-icon { font-size: 14px; width: 14px; height: 14px; color: var(--artes-accent); }
     }
     .card-action-btn {
       display: flex; align-items: center; justify-content: center;
@@ -441,7 +441,7 @@ interface IDP {
       color: rgba(0,0,0,0.35); padding: 0;
       transition: background 0.15s, color 0.15s;
       mat-icon { font-size: 18px; width: 18px; height: 18px; line-height: 18px; }
-      &:hover:not([disabled]) { background: rgba(58,159,214,0.1); color: #3A9FD6; }
+      &:hover:not([disabled]) { background: rgba(58,159,214,0.1); color: var(--artes-accent); }
       &[disabled] { cursor: default; opacity: 0.5; }
       &.delete-btn:hover:not([disabled]) { background: rgba(229,62,62,0.1); color: #e53e3e; }
     }
@@ -455,7 +455,7 @@ interface IDP {
 
     .grow-accordion { margin-bottom: 20px; }
     .grow-panel {
-      &.goal-panel    ::ng-deep .mat-expansion-panel-header-title mat-icon { color: #3A9FD6; }
+      &.goal-panel    ::ng-deep .mat-expansion-panel-header-title mat-icon { color: var(--artes-accent); }
       &.reality-panel ::ng-deep .mat-expansion-panel-header-title mat-icon { color: #27C4A0; }
       &.options-panel ::ng-deep .mat-expansion-panel-header-title mat-icon { color: #f0a500; }
       &.will-panel    ::ng-deep .mat-expansion-panel-header-title mat-icon { color: #e86c3a; }
@@ -463,22 +463,22 @@ interface IDP {
     ::ng-deep .mat-expansion-panel-header-title { display: flex; align-items: center; gap: 8px; font-weight: 600; }
     ul { margin: 0; padding-left: 20px; li { margin-bottom: 6px; font-size: 14px; color: #5a6a7e; } }
 
-    .milestone-section { margin-bottom: 16px; margin-top: 16px; h4 { font-size: 14px; color: #1B2A47; margin-bottom: 12px; } }
+    .milestone-section { margin-bottom: 16px; margin-top: 16px; h4 { font-size: 14px; color: var(--artes-primary); margin-bottom: 12px; } }
     .milestone-timeline { display: flex; flex-direction: column; gap: 8px; }
     .milestone-item {
       display: flex; align-items: center; gap: 10px;
       .ms-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; background: #dce6f0; }
-      .ms-content { flex: 1; .ms-title { display: block; font-size: 13px; color: #1B2A47; } .ms-date { font-size: 11px; color: #9aa5b4; } }
+      .ms-content { flex: 1; .ms-title { display: block; font-size: 13px; color: var(--artes-primary); } .ms-date { font-size: 11px; color: #9aa5b4; } }
       &.completed .ms-dot { background: #27C4A0; }
-      &.in_progress .ms-dot { background: #3A9FD6; }
+      &.in_progress .ms-dot { background: var(--artes-accent); }
       &.pending .ms-dot { background: #dce6f0; border: 2px solid #9aa5b4; }
     }
 
-    .gaps-section { h4 { font-size: 14px; color: #1B2A47; margin-bottom: 8px; } }
+    .gaps-section { h4 { font-size: 14px; color: var(--artes-primary); margin-bottom: 8px; } }
 
     /* ── Module banner ── */
     .module-banner {
-      background: linear-gradient(135deg, #1B2A47 0%, #253659 100%);
+      background: linear-gradient(135deg, var(--artes-primary) 0%, #253659 100%);
       border-radius: 16px; padding: 24px 28px; margin-bottom: 24px; color: white;
     }
     .banner-insight {
@@ -507,7 +507,7 @@ interface IDP {
     }
     .section-header-left {
       display: flex; gap: 16px; align-items: flex-start;
-      h3 { font-size: 17px; color: #1B2A47; margin: 0 0 4px; font-weight: 700; }
+      h3 { font-size: 17px; color: var(--artes-primary); margin: 0 0 4px; font-weight: 700; }
       p  { font-size: 13px; color: #5a6a7e; margin: 0; line-height: 1.6; }
     }
     .section-icon {
@@ -539,7 +539,7 @@ interface IDP {
     .journal-inline-header {
       display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
       .journal-icon { font-size: 18px; width: 18px; height: 18px; color: #27C4A0; }
-      .journal-title { font-size: 13px; font-weight: 600; color: #1B2A47; }
+      .journal-title { font-size: 13px; font-weight: 600; color: var(--artes-primary); }
       .journal-count {
         font-size: 11px; background: #e8faf4; color: #1a9678;
         padding: 1px 7px; border-radius: 999px;
@@ -563,14 +563,14 @@ interface IDP {
       font-size: 12px; color: #374151; line-height: 1.4; cursor: pointer;
       text-align: left; transition: background 0.15s;
       &:hover { background: #e0f2fe; }
-      .prompt-icon { color: #3A9FD6; font-size: 14px; width: 14px; height: 14px; flex-shrink: 0; margin-top: 1px; }
+      .prompt-icon { color: var(--artes-accent); font-size: 14px; width: 14px; height: 14px; flex-shrink: 0; margin-top: 1px; }
     }
 
     .selected-prompt {
       display: flex; align-items: center; gap: 6px; margin-bottom: 8px;
-      background: #EBF5FB; border-radius: 6px; padding: 8px 10px;
+      background: var(--artes-bg); border-radius: 6px; padding: 8px 10px;
       font-size: 12px; color: #2080b0; font-style: italic;
-      mat-icon { color: #3A9FD6; font-size: 16px; flex-shrink: 0; }
+      mat-icon { color: var(--artes-accent); font-size: 16px; flex-shrink: 0; }
       span { flex: 1; }
       button { width: 22px; height: 22px; color: #9aa5b4; }
     }
@@ -584,7 +584,7 @@ interface IDP {
       display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;
     }
     .entry-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-    .entry-author { font-size: 12px; font-weight: 600; color: #1B2A47; }
+    .entry-author { font-size: 12px; font-weight: 600; color: var(--artes-primary); }
     .entry-date { font-size: 11px; color: #9aa5b4; }
     .entry-mood {
       font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 999px;
@@ -595,7 +595,7 @@ interface IDP {
     .entry-delete { width: 24px; height: 24px; color: #c5d0db; &:hover { color: #e53e3e; } }
     .entry-prompt {
       display: flex; align-items: flex-start; gap: 4px; margin-bottom: 4px;
-      font-size: 11px; color: #3A9FD6; font-style: italic;
+      font-size: 11px; color: var(--artes-accent); font-style: italic;
       mat-icon { font-size: 13px; width: 13px; height: 13px; margin-top: 1px; }
     }
     .entry-content { font-size: 13px; color: #374151; line-height: 1.6; margin: 0; white-space: pre-wrap; }
@@ -615,7 +615,7 @@ interface IDP {
     }
     .service-info {
       flex: 1; display: flex; flex-direction: column; gap: 3px;
-      strong { font-size: 14px; color: #1B2A47; }
+      strong { font-size: 14px; color: var(--artes-primary); }
       span   { font-size: 12px; color: #5a6a7e; }
     }
     .service-meta { display: flex; align-items: center; gap: 14px; margin-top: 4px; }
@@ -624,7 +624,7 @@ interface IDP {
       font-size: 11px; color: #9aa5b4;
       mat-icon { font-size: 13px; width: 13px; height: 13px; }
     }
-    .service-price { font-size: 12px; font-weight: 700; color: #1B2A47; }
+    .service-price { font-size: 12px; font-weight: 700; color: var(--artes-primary); }
     .book-btn { color: #e86c3a; border-color: #e86c3a; flex-shrink: 0; }
   `],
 })

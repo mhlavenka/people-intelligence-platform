@@ -81,8 +81,8 @@ import { JournalService, SupervisionDigest } from '../journal.service';
     .journal-page { padding: 32px; max-width: 800px; background: #F8F6F1; min-height: 100%; }
     .page-header {
       margin-bottom: 20px;
-      .back-link { display: flex; align-items: center; gap: 4px; color: #3A9FD6; text-decoration: none; font-size: 14px; font-weight: 500; margin-bottom: 8px; }
-      h1 { font-size: 22px; color: #1B2A47; display: flex; align-items: center; gap: 8px; margin: 0 0 4px;
+      .back-link { display: flex; align-items: center; gap: 4px; color: var(--artes-accent); text-decoration: none; font-size: 14px; font-weight: 500; margin-bottom: 8px; }
+      h1 { font-size: 22px; color: var(--artes-primary); display: flex; align-items: center; gap: 8px; margin: 0 0 4px;
         mat-icon { color: #7c5cbf; }
       }
       .page-desc { font-size: 13px; color: #5a6a7e; margin: 0; }
@@ -91,7 +91,7 @@ import { JournalService, SupervisionDigest } from '../journal.service';
     .generate-prompt {
       text-align: center; padding: 48px; background: white; border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06);
       mat-icon { font-size: 48px; width: 48px; height: 48px; color: #7c5cbf; display: block; margin: 0 auto 12px; }
-      h3 { color: #1B2A47; margin-bottom: 8px; }
+      h3 { color: var(--artes-primary); margin-bottom: 8px; }
       p { color: #9aa5b4; margin: 0 0 16px; max-width: 500px; margin-left: auto; margin-right: auto; }
     }
 
@@ -114,7 +114,7 @@ import { JournalService, SupervisionDigest } from '../journal.service';
     }
     .report-section {
       margin-bottom: 20px;
-      h3 { font-size: 15px; font-weight: 700; color: #1B2A47; margin: 0 0 8px; display: flex; align-items: center; gap: 6px;
+      h3 { font-size: 15px; font-weight: 700; color: var(--artes-primary); margin: 0 0 8px; display: flex; align-items: center; gap: 6px;
         mat-icon { font-size: 18px; width: 18px; height: 18px; color: #7c5cbf; }
       }
       p { font-size: 14px; color: #374151; line-height: 1.7; margin: 0; }

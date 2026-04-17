@@ -359,7 +359,7 @@ TASK 7.1 — Generate lazy-loaded module
     { path: 'book/:coachSlug', component: BookingPageComponent }
 
 TASK 7.2 — Booking Settings Component (Admin)
-  Route: /booking/settings (protected)
+  Route: /booking/global-settings (protected)
 
   Template sections:
     [1] Google Calendar Connection

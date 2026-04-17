@@ -275,9 +275,9 @@ interface CoachingSession {
     .page { padding: 24px; max-width: 900px; margin: 0 auto; }
     .header {
       display: flex; align-items: center; gap: 8px; margin-bottom: 16px;
-      h1 { margin: 0; color: #1B2A47; font-size: 22px; }
+      h1 { margin: 0; color: var(--artes-primary); font-size: 22px; }
       .show-all-link {
-        margin-left: auto; color: #3A9FD6; font-size: 13px; font-weight: 500;
+        margin-left: auto; color: var(--artes-accent); font-size: 13px; font-weight: 500;
         text-decoration: none;
         &:hover { text-decoration: underline; }
       }
@@ -292,13 +292,13 @@ interface CoachingSession {
     .note-head {
       padding: 14px 18px; background: #f7f9fc; border-bottom: 1px solid #eef2f7;
       display: flex; align-items: center; gap: 12px;
-      strong { color: #1B2A47; font-size: 15px; }
+      strong { color: var(--artes-primary); font-size: 15px; }
       .muted { color: #6b7c93; font-size: 13px; }
       .muted-status {
         margin-left: auto; text-transform: uppercase; letter-spacing: 0.5px;
         font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 999px;
         background: #f0f4f8; color: #6b7c93;
-        &.st-scheduled { background: #EBF5FB; color: #3A9FD6; }
+        &.st-scheduled { background: var(--artes-bg); color: var(--artes-accent); }
         &.st-completed { background: #e8f9f2; color: #0f8a5f; }
         &.st-cancelled { background: #fef2f2; color: #dc2626; }
       }
@@ -310,27 +310,27 @@ interface CoachingSession {
     .ro-field {
       margin-bottom: 10px;
       label { display: block; font-size: 11px; color: #9aa5b4; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
-      p { margin: 0; color: #1B2A47; font-size: 14px; white-space: pre-line; }
+      p { margin: 0; color: var(--artes-primary); font-size: 14px; white-space: pre-line; }
     }
     .chips { display: flex; gap: 4px; flex-wrap: wrap; }
-    .chip { background: #EBF5FB; color: #3A9FD6; font-size: 12px; padding: 2px 8px; border-radius: 999px; }
+    .chip { background: var(--artes-bg); color: var(--artes-accent); font-size: 12px; padding: 2px 8px; border-radius: 999px; }
     mat-spinner { display: inline-block; margin-right: 6px; }
 
     .section-label {
       display: flex; align-items: center; gap: 8px;
       margin: 18px 0 8px;
-      color: #1B2A47; font-size: 13px; font-weight: 700;
+      color: var(--artes-primary); font-size: 13px; font-weight: 700;
       text-transform: uppercase; letter-spacing: 0.6px;
     }
     .pip-accent {
       display: inline-block; width: 4px; height: 16px;
-      background: #3A9FD6; border-radius: 2px;
+      background: var(--artes-accent); border-radius: 2px;
     }
     .field {
       margin-bottom: 12px;
       label {
         display: block; margin-bottom: 6px;
-        font-size: 13px; color: #1B2A47; font-weight: 500;
+        font-size: 13px; color: var(--artes-primary); font-weight: 500;
       }
     }
     .stars { display: flex; align-items: center; gap: 4px; }
@@ -343,7 +343,7 @@ interface CoachingSession {
     .clear-btn {
       background: none; border: none; cursor: pointer;
       color: #6b7c93; font-size: 12px; padding: 4px 8px; margin-left: 6px;
-      &:hover { color: #1B2A47; }
+      &:hover { color: var(--artes-primary); }
     }
     .scale-labels {
       display: flex; justify-content: space-between;
@@ -366,7 +366,7 @@ interface CoachingSession {
     }
     .action-num {
       width: 24px; height: 24px; border-radius: 50%;
-      background: #3A9FD6; color: #fff;
+      background: var(--artes-accent); color: #fff;
       display: flex; align-items: center; justify-content: center;
       font-weight: 700; font-size: 12px; flex-shrink: 0;
     }
@@ -380,7 +380,7 @@ interface CoachingSession {
       display: flex; align-items: center; gap: 12px; max-width: 320px;
       input[type="range"] { flex: 1; }
       .slider-val {
-        font-weight: 700; color: #1B2A47; min-width: 22px;
+        font-weight: 700; color: var(--artes-primary); min-width: 22px;
         text-align: center;
       }
     }

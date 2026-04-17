@@ -211,8 +211,8 @@ const ROLES = [
   `,
   styles: [`
     h2[mat-dialog-title] {
-      display: flex; align-items: center; gap: 8px; color: #1B2A47;
-      mat-icon { color: #3A9FD6; }
+      display: flex; align-items: center; gap: 8px; color: var(--artes-primary);
+      mat-icon { color: var(--artes-accent); }
     }
 
     mat-dialog-content { min-width: 480px; padding-top: 8px !important; }
@@ -251,7 +251,7 @@ const ROLES = [
       width: 56px; height: 56px; border-radius: 50%; object-fit: cover;
     }
     .avatar-initials {
-      background: linear-gradient(135deg, #3A9FD6, #27C4A0);
+      background: linear-gradient(135deg, var(--artes-accent), #27C4A0);
       display: flex; align-items: center; justify-content: center;
       font-size: 18px; font-weight: 700; color: white;
     }
@@ -272,7 +272,7 @@ const ROLES = [
     }
     .coachee-toggle-text { flex: 1; }
     .coachee-toggle-title {
-      font-size: 13px; font-weight: 600; color: #1B2A47;
+      font-size: 13px; font-weight: 600; color: var(--artes-primary);
     }
     .coachee-toggle-hint {
       font-size: 11px; color: #5a6a7e; margin-top: 2px; line-height: 1.4;

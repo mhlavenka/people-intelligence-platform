@@ -183,7 +183,7 @@ const MODULE_DEFS = [
 
     .page-header {
       display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 28px;
-      h1 { font-size: 22px; font-weight: 700; color: #1B2A47; margin: 0 0 4px; }
+      h1 { font-size: 22px; font-weight: 700; color: var(--artes-primary); margin: 0 0 4px; }
       p  { font-size: 13px; color: #6b7280; margin: 0; }
     }
 
@@ -212,7 +212,7 @@ const MODULE_DEFS = [
       display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
     }
     .plan-badge {
-      font-size: 14px; font-weight: 700; color: #1B2A47;
+      font-size: 14px; font-weight: 700; color: var(--artes-primary);
       background: #eff6ff; padding: 3px 10px; border-radius: 20px;
       &.inactive-badge { background: #f3f4f6; color: #9ca3af; }
     }
@@ -241,7 +241,7 @@ const MODULE_DEFS = [
       display: flex; align-items: baseline; gap: 3px; margin-bottom: 4px;
     }
     .price-value {
-      font-size: 22px; font-weight: 800; color: #1B2A47;
+      font-size: 22px; font-weight: 800; color: var(--artes-primary);
     }
     .price-per { font-size: 13px; color: #9ca3af; }
     .price-meta { font-size: 11px; color: #9ca3af; }

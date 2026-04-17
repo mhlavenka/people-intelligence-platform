@@ -533,7 +533,7 @@ interface Session {
   `,
   styles: [`
     .detail-page { padding: 32px; }
-    .back-link { display: flex; align-items: center; gap: 4px; color: #3A9FD6; text-decoration: none; font-size: 14px; font-weight: 500; }
+    .back-link { display: flex; align-items: center; gap: 4px; color: var(--artes-accent); text-decoration: none; font-size: 14px; font-weight: 500; }
 
     .detail-layout { display: grid; grid-template-columns: 280px 1fr; gap: 24px; align-items: start; }
 
@@ -544,18 +544,18 @@ interface Session {
     .coachee-block { padding: 24px; text-align: center; }
     .avatar {
       width: 64px; height: 64px; border-radius: 50%; margin: 0 auto 12px;
-      background: linear-gradient(135deg, #3A9FD6, #27C4A0);
+      background: linear-gradient(135deg, var(--artes-accent), #27C4A0);
       display: flex; align-items: center; justify-content: center;
       font-size: 22px; font-weight: 700; color: white;
     }
     .avatar-img { object-fit: cover; background: none; }
-    .coachee-block h2 { font-size: 18px; color: #1B2A47; margin: 0 0 8px; }
+    .coachee-block h2 { font-size: 18px; color: var(--artes-primary); margin: 0 0 8px; }
     .status-chip { display: inline-block; padding: 3px 12px; border-radius: 999px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
 
     .info-list, .goals-block, .notes-block, .billing-block { padding: 16px 20px; }
     .info-item { display: flex; justify-content: space-between; padding: 4px 0; font-size: 13px; color: #374151; }
     .info-label { font-size: 11px; color: #9aa5b4; text-transform: uppercase; letter-spacing: 0.4px; display: block; margin-bottom: 4px; }
-    .goal-chip { display: inline-block; font-size: 11px; background: #EBF5FB; color: #3A9FD6; padding: 2px 8px; border-radius: 4px; margin: 2px; }
+    .goal-chip { display: inline-block; font-size: 11px; background: var(--artes-bg); color: var(--artes-accent); padding: 2px 8px; border-radius: 4px; margin: 2px; }
     .notes-block p { font-size: 13px; color: #5a6a7e; margin: 0; line-height: 1.5; }
 
     .billing-row {
@@ -566,9 +566,9 @@ interface Session {
       font-size: 10px; font-weight: 700; text-transform: uppercase;
       background: rgba(124,92,191,0.12); color: #7c5cbf; padding: 2px 8px; border-radius: 999px;
     }
-    .billing-rate { font-size: 13px; color: #1B2A47; font-weight: 600; margin-top: 6px; }
+    .billing-rate { font-size: 13px; color: var(--artes-primary); font-weight: 600; margin-top: 6px; }
     .billing-link {
-      display: flex; align-items: center; gap: 4px; font-size: 12px; color: #3A9FD6;
+      display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--artes-accent);
       cursor: pointer; margin-top: 8px; text-decoration: none;
       mat-icon { font-size: 14px; width: 14px; height: 14px; }
       &:hover { text-decoration: underline; }
@@ -586,7 +586,7 @@ interface Session {
       display: flex; align-items: center; gap: 6px; margin-bottom: 10px;
       mat-icon { color: #7c5cbf; font-size: 18px; width: 18px; height: 18px; }
     }
-    .journal-label { font-size: 13px; font-weight: 600; color: #1B2A47; }
+    .journal-label { font-size: 13px; font-weight: 600; color: var(--artes-primary); }
     .journal-status {
       font-size: 9px; font-weight: 700; text-transform: uppercase; padding: 1px 6px; border-radius: 999px;
       &.complete { background: #e8faf4; color: #1a9678; }
@@ -620,7 +620,7 @@ interface Session {
     }
 
     .sessions-col h3 {
-      font-size: 16px; color: #1B2A47; margin: 0 0 16px; display: flex; align-items: center; gap: 8px;
+      font-size: 16px; color: var(--artes-primary); margin: 0 0 16px; display: flex; align-items: center; gap: 8px;
       .session-count { font-size: 12px; background: #f0f4f8; color: #5a6a7e; padding: 2px 8px; border-radius: 999px; }
     }
 
@@ -631,7 +631,7 @@ interface Session {
       box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 12px;
       border-left: 4px solid #e8edf4; overflow: hidden;
       &.status-completed { border-left-color: #27C4A0; }
-      &.status-scheduled { border-left-color: #3A9FD6; }
+      &.status-scheduled { border-left-color: var(--artes-accent); }
       &.status-cancelled { border-left-color: #9aa5b4; opacity: 0.7; }
       &.status-no_show { border-left-color: #e53e3e; opacity: 0.7; }
     }
@@ -643,7 +643,7 @@ interface Session {
       transition: border-color 0.15s, color 0.15s, background 0.15s;
       box-shadow: none;
       &:hover {
-        border-color: #3A9FD6; color: #3A9FD6;
+        border-color: var(--artes-accent); color: var(--artes-accent);
         background: rgba(58,159,214,0.04);
       }
       .add-icon { font-size: 28px; width: 28px; height: 28px; }
@@ -651,12 +651,12 @@ interface Session {
     }
 
     .session-header { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
-    .session-date { display: flex; align-items: center; gap: 4px; font-size: 14px; color: #1B2A47; mat-icon { font-size: 16px; color: #3A9FD6; } }
+    .session-date { display: flex; align-items: center; gap: 4px; font-size: 14px; color: var(--artes-primary); mat-icon { font-size: 16px; color: var(--artes-accent); } }
     .session-duration { font-size: 12px; color: #9aa5b4; margin-left: auto; }
     .session-status {
       font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 2px 8px; border-radius: 999px;
       &.completed { background: #e8faf4; color: #1a9678; }
-      &.scheduled { background: #EBF5FB; color: #3A9FD6; }
+      &.scheduled { background: var(--artes-bg); color: var(--artes-accent); }
       &.cancelled { background: #f0f4f8; color: #9aa5b4; }
       &.no_show { background: #fef2f2; color: #e53e3e; }
     }
@@ -685,7 +685,7 @@ interface Session {
 
     .notes-section {
       padding: 10px 14px; border-radius: 8px; margin-bottom: 8px;
-      &.shared { background: #f0f9ff; border-left: 3px solid #3A9FD6; }
+      &.shared { background: #f0f9ff; border-left: 3px solid var(--artes-accent); }
       &.private { background: #fff8f0; border-left: 3px solid #f0a500; }
       .notes-label { font-size: 11px; font-weight: 600; color: #9aa5b4; display: flex; align-items: center; gap: 4px; margin-bottom: 4px; mat-icon { font-size: 14px; width: 14px; height: 14px; } }
       p { font-size: 13px; color: #374151; margin: 0; line-height: 1.6; white-space: pre-wrap; }
@@ -713,7 +713,7 @@ interface Session {
     }
     .cal-header-row {
       display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;
-      .cal-month-label { font-size: 14px; font-weight: 600; color: #1B2A47; }
+      .cal-month-label { font-size: 14px; font-weight: 600; color: var(--artes-primary); }
     }
     .cal-grid {
       display: grid; grid-template-columns: repeat(7, 1fr);
@@ -728,24 +728,24 @@ interface Session {
       display: flex; flex-direction: column; align-items: center; gap: 1px;
       &:nth-child(7n) { border-right: none; }
       &.other { background: #fafbfc; .cal-num { color: #d1d5db; } }
-      &.today { background: #f0f9ff; .cal-num { background: #3A9FD6; color: white; border-radius: 50%; width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; } }
+      &.today { background: #f0f9ff; .cal-num { background: var(--artes-accent); color: white; border-radius: 50%; width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; } }
     }
     .cal-num { font-size: 10px; color: #5a6a7e; }
     .cal-dot {
       width: 6px; height: 6px; border-radius: 50%;
       &.completed { background: #27C4A0; }
-      &.scheduled { background: #3A9FD6; }
+      &.scheduled { background: var(--artes-accent); }
       &.cancelled { background: #9aa5b4; }
       &.no_show { background: #e53e3e; }
     }
     .cal-upcoming {
       margin-top: 10px; border-top: 1px solid #f0f4f8; padding-top: 10px;
-      h4 { font-size: 12px; font-weight: 600; color: #1B2A47; margin: 0 0 6px; }
+      h4 { font-size: 12px; font-weight: 600; color: var(--artes-primary); margin: 0 0 6px; }
     }
     .upcoming-row {
       display: flex; align-items: center; gap: 6px; padding: 4px 0; font-size: 12px;
-      .upcoming-date { font-weight: 600; color: #1B2A47; min-width: 48px; }
-      .upcoming-time { color: #3A9FD6; min-width: 56px; }
+      .upcoming-date { font-weight: 600; color: var(--artes-primary); min-width: 48px; }
+      .upcoming-time { color: var(--artes-accent); min-width: 56px; }
       .upcoming-dur { color: #9aa5b4; font-size: 11px; }
     }
 
@@ -765,17 +765,17 @@ interface Session {
           background: #f0f4f8; color: #5a6a7e; padding: 1px 7px;
           border-radius: 999px; font-size: 11px; font-weight: 700;
         }
-        &:hover { border-color: #3A9FD6; color: #1B2A47; }
+        &:hover { border-color: var(--artes-accent); color: var(--artes-primary); }
         &.active {
-          background: #EBF5FB; border-color: #3A9FD6; color: #1B2A47;
-          mat-icon { color: #3A9FD6; }
-          .pill-count { background: #3A9FD6; color: #ffffff; }
+          background: var(--artes-bg); border-color: var(--artes-accent); color: var(--artes-primary);
+          mat-icon { color: var(--artes-accent); }
+          .pill-count { background: var(--artes-accent); color: #ffffff; }
         }
       }
       .pill-reset {
         color: #9aa5b4; font-weight: 500;
         mat-icon { color: #9aa5b4; }
-        &:hover { color: #1B2A47; border-color: #9aa5b4; mat-icon { color: #1B2A47; } }
+        &:hover { color: var(--artes-primary); border-color: #9aa5b4; mat-icon { color: var(--artes-primary); } }
       }
     }
 
@@ -798,7 +798,7 @@ interface Session {
       color: #5e3fa8;
       mat-icon { color: #7c5cbf; }
       .intake-body { flex: 1; min-width: 0; }
-      .intake-title { font-weight: 600; font-size: 14px; color: #1B2A47; }
+      .intake-title { font-weight: 600; font-size: 14px; color: var(--artes-primary); }
       .intake-sub { font-size: 12px; color: #5a6a7e; margin-top: 2px; }
       .chev { color: #9aa5b4; }
       &.coachee-action {
@@ -817,8 +817,8 @@ interface Session {
       &.generate-post {
         cursor: pointer; border-color: rgba(58,159,214,0.3); background: rgba(58,159,214,0.04);
         transition: all 0.15s;
-        &:hover { background: rgba(58,159,214,0.10); border-color: #3A9FD6; }
-        mat-icon:first-child { color: #3A9FD6; }
+        &:hover { background: rgba(58,159,214,0.10); border-color: var(--artes-accent); }
+        mat-icon:first-child { color: var(--artes-accent); }
       }
       &.status {
         background: #fff8f0; border-color: #fde0c2; color: #b07800;

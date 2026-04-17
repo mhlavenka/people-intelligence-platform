@@ -43,7 +43,7 @@ import { MatIconModule } from '@angular/material/icon';
       transition: color 0.15s, border-color 0.15s;
       mat-icon { font-size: 18px; width: 18px; height: 18px; }
 
-      &:hover { color: #1B2A47; }
+      &:hover { color: var(--artes-primary); }
 
       &.active {
         color: #e86c3a;

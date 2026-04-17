@@ -37,13 +37,13 @@ import { ApiService } from '../../../core/api.service';
     </div>
   `,
   styles: [`
-    .auth-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #1B2A47, #3A9FD6); padding: 24px; }
+    .auth-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--artes-primary), var(--artes-accent)); padding: 24px; }
     .auth-card { background: white; border-radius: 16px; padding: 40px; width: 100%; max-width: 440px; box-shadow: 0 20px 60px rgba(0,0,0,0.25); }
-    h2 { color: #1B2A47; margin-bottom: 8px; }
+    h2 { color: var(--artes-primary); margin-bottom: 8px; }
     .subtitle { color: #9aa5b4; margin-bottom: 24px; font-size: 14px; }
     .success-banner { background: #f0fdf4; border: 1px solid #86efac; color: #16a34a; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; }
     .full-width { width: 100%; }
-    .auth-links { text-align: center; margin-top: 16px; a { color: #3A9FD6; font-size: 14px; } }
+    .auth-links { text-align: center; margin-top: 16px; a { color: var(--artes-accent); font-size: 14px; } }
   `],
 })
 export class ForgotPasswordComponent {

@@ -241,7 +241,7 @@ interface SurveyTemplate {
 
     .page-header {
       display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24px;
-      h1 { font-size: 28px; color: #1B2A47; margin: 0 0 4px; }
+      h1 { font-size: 28px; color: var(--artes-primary); margin: 0 0 4px; }
       p  { color: #5a6a7e; margin: 0; }
     }
 
@@ -265,10 +265,10 @@ interface SurveyTemplate {
         padding: 1px 7px; border-radius: 999px; font-size: 11px;
       }
       &.active {
-        background: #1B2A47; color: white; border-color: #1B2A47;
+        background: var(--artes-primary); color: white; border-color: var(--artes-primary);
         .tab-count { background: rgba(255,255,255,0.2); color: white; }
       }
-      &:hover:not(.active) { border-color: #3A9FD6; color: #3A9FD6; }
+      &:hover:not(.active) { border-color: var(--artes-accent); color: var(--artes-accent); }
     }
 
     .loading-center { display: flex; justify-content: center; padding: 64px; }
@@ -277,7 +277,7 @@ interface SurveyTemplate {
       text-align: center; padding: 64px; background: white;
       border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06);
       mat-icon { font-size: 56px; width: 56px; height: 56px; color: #9aa5b4; margin-bottom: 16px; }
-      h3 { font-size: 20px; color: #1B2A47; margin-bottom: 8px; }
+      h3 { font-size: 20px; color: var(--artes-primary); margin-bottom: 8px; }
       p  { color: #5a6a7e; margin-bottom: 24px; }
     }
 
@@ -312,7 +312,7 @@ interface SurveyTemplate {
       padding: 5px 10px; margin: -4px -4px 0;
       mat-icon { font-size: 15px; width: 15px; height: 15px; color: #2080b0; }
       .instrument-id {
-        font-size: 12px; font-weight: 800; color: #1B2A47; letter-spacing: 0.4px;
+        font-size: 12px; font-weight: 800; color: var(--artes-primary); letter-spacing: 0.4px;
       }
       .instrument-version {
         font-size: 11px; color: #5a6a7e; background: rgba(0,0,0,0.07);
@@ -344,13 +344,13 @@ interface SurveyTemplate {
     }
     .intake-type-badge {
       &.survey     { background: rgba(124,92,191,0.12); color: #6135b3; }
-      &.interview  { background: rgba(27,42,71,0.10);   color: #1B2A47; }
+      &.interview  { background: rgba(27,42,71,0.10);   color: var(--artes-primary); }
       &.assessment { background: rgba(240,165,0,0.12);  color: #a06800; }
     }
 
     .card-actions { display: flex; align-items: center; gap: 4px; }
 
-    h3 { font-size: 16px; color: #1B2A47; margin: 0; font-weight: 600; line-height: 1.3; }
+    h3 { font-size: 16px; color: var(--artes-primary); margin: 0; font-weight: 600; line-height: 1.3; }
 
     .card-meta {
       display: flex; gap: 16px; flex-wrap: wrap;

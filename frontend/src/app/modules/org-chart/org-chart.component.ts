@@ -360,7 +360,7 @@ const DEPT_PALETTE = [
       border-bottom: 1px solid #e8edf4;
       flex-shrink: 0;
 
-      h1 { font-size: 22px; font-weight: 700; color: #1B2A47; margin: 0 0 2px; }
+      h1 { font-size: 22px; font-weight: 700; color: var(--artes-primary); margin: 0 0 2px; }
       p  { font-size: 13px; color: #5a6a7e; margin: 0 0 10px; }
     }
 
@@ -388,7 +388,7 @@ const DEPT_PALETTE = [
       font-weight: 500;
       cursor: pointer;
       transition: background 0.12s, color 0.12s, border-color 0.12s;
-      &:hover { background: #e8f4fb; border-color: #3A9FD6; color: #2080b0; }
+      &:hover { background: #e8f4fb; border-color: var(--artes-accent); color: #2080b0; }
       &.active {
         background: #e8f4fb;
         border-color: var(--chip-color, #3A9FD6);
@@ -484,7 +484,7 @@ const DEPT_PALETTE = [
       &:hover { box-shadow: 0 4px 18px rgba(0,0,0,0.13); }
 
       &.drop-target {
-        border-color: #3A9FD6;
+        border-color: var(--artes-accent);
         box-shadow: 0 0 0 3px rgba(58,159,214,0.2), 0 4px 18px rgba(0,0,0,0.13);
       }
 
@@ -506,7 +506,7 @@ const DEPT_PALETTE = [
       flex-shrink: 0;
       cursor: grab;
       color: #c8d6e5;
-      &:hover { color: #3A9FD6; }
+      &:hover { color: var(--artes-accent); }
       mat-icon { font-size: 18px; width: 18px; height: 18px; }
     }
 
@@ -533,7 +533,7 @@ const DEPT_PALETTE = [
     .node-name {
       font-size: 13px;
       font-weight: 600;
-      color: #1B2A47;
+      color: var(--artes-primary);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;

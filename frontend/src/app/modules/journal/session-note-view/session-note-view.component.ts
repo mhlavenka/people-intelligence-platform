@@ -148,7 +148,7 @@ import { JournalService, SessionNote } from '../journal.service';
   `,
   styles: [`
     .journal-page { padding: 32px; max-width: 1100px; background: #F8F6F1; min-height: 100%; }
-    .back-link { display: flex; align-items: center; gap: 4px; color: #3A9FD6; text-decoration: none; font-size: 14px; font-weight: 500; margin-bottom: 16px; }
+    .back-link { display: flex; align-items: center; gap: 4px; color: var(--artes-accent); text-decoration: none; font-size: 14px; font-weight: 500; margin-bottom: 16px; }
     .loading-center { display: flex; justify-content: center; padding: 64px; }
 
     .view-layout { display: grid; grid-template-columns: 1fr 320px; gap: 24px; }
@@ -158,7 +158,7 @@ import { JournalService, SessionNote } from '../journal.service';
     }
     .session-header {
       display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;
-      h1 { font-size: 22px; color: #1B2A47; margin: 0 0 4px; }
+      h1 { font-size: 22px; color: var(--artes-primary); margin: 0 0 4px; }
     }
     .session-meta {
       display: flex; gap: 12px; font-size: 13px; color: #5a6a7e; flex-wrap: wrap;
@@ -171,7 +171,7 @@ import { JournalService, SessionNote } from '../journal.service';
 
     .section {
       margin-bottom: 20px;
-      h3 { font-size: 15px; font-weight: 700; color: #1B2A47; display: flex; align-items: center; gap: 6px; margin: 0 0 12px;
+      h3 { font-size: 15px; font-weight: 700; color: var(--artes-primary); display: flex; align-items: center; gap: 6px; margin: 0 0 12px;
         mat-icon { font-size: 18px; width: 18px; height: 18px; color: #7c5cbf; }
       }
     }
@@ -205,7 +205,7 @@ import { JournalService, SessionNote } from '../journal.service';
       background: #f0faf6; border-left: 4px solid #27C4A0; border-radius: 12px; padding: 20px;
     }
     .ai-header {
-      display: flex; align-items: center; gap: 6px; font-size: 16px; font-weight: 700; color: #1B2A47; margin-bottom: 10px;
+      display: flex; align-items: center; gap: 6px; font-size: 16px; font-weight: 700; color: var(--artes-primary); margin-bottom: 10px;
       mat-icon { color: #27C4A0; }
     }
     .ai-body { font-size: 14px; color: #374151; line-height: 1.6; margin: 0 0 12px; }

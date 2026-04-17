@@ -49,6 +49,16 @@ export class ThemeService {
     root.style.setProperty('--mdc-theme-primary',                    t.primaryColor);
     root.style.setProperty('--mdc-filled-button-container-color',    t.primaryColor);
     root.style.setProperty('--mdc-protected-button-container-color', t.primaryColor);
+    root.style.setProperty('--mdc-outlined-button-label-text-color', t.primaryColor);
+    root.style.setProperty('--mdc-text-button-label-text-color',     t.primaryColor);
+    root.style.setProperty('--mdc-checkbox-selected-checkmark-color','#fff');
+    root.style.setProperty('--mdc-checkbox-selected-focus-icon-color', t.primaryColor);
+    root.style.setProperty('--mdc-checkbox-selected-icon-color',     t.primaryColor);
+    root.style.setProperty('--mdc-switch-selected-track-color',      t.primaryColor);
+    root.style.setProperty('--mdc-fab-container-color',              t.accentColor);
+    root.style.setProperty('--mat-tab-header-active-label-text-color', t.primaryColor);
+    root.style.setProperty('--mat-tab-header-active-focus-indicator-color', t.primaryColor);
+    root.style.setProperty('--mdc-linear-progress-active-indicator-color', t.accentColor);
 
     // Load Google Fonts for any non-system font
     this.loadGoogleFont(t.headingFont);

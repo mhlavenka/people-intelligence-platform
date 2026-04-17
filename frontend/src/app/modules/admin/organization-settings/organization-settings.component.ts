@@ -12,16 +12,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { ApiService } from '../../../core/api.service';
-
-interface OrgTheme {
-  primaryColor: string;
-  accentColor: string;
-  backgroundColor: string;
-  surfaceColor: string;
-  headingFont: string;
-  bodyFont: string;
-  borderRadius: 'sharp' | 'rounded' | 'pill';
-}
+import { ThemeService, OrgTheme } from '../../../core/theme.service';
 
 interface BillingAddress {
   line1?: string;
@@ -1063,6 +1054,7 @@ export class OrganizationSettingsComponent implements OnInit {
     private api: ApiService,
     private fb: FormBuilder,
     private snackBar: MatSnackBar,
+    private themeService: ThemeService,
   ) {}
 
   ngOnInit(): void {
@@ -1165,6 +1157,7 @@ export class OrganizationSettingsComponent implements OnInit {
     this.api.put<Organization>('/organizations/me', { theme: this.themeForm.value }).subscribe({
       next: (updated) => {
         this.org.set(updated);
+        this.themeService.apply(updated.theme);
         this.savingTheme.set(false);
         this.snackBar.open('Theme saved', 'Close', { duration: 2500 });
       },

@@ -152,7 +152,7 @@ interface FullInvoice extends SponsorInvoice {
 
     .invoice-page {
       max-width: 800px; margin: 24px auto; padding: 48px 56px;
-      background: #fff; color: #1B2A47;
+      background: #fff; color: var(--artes-primary);
       box-shadow: 0 4px 20px rgba(0,0,0,0.06);
       font-size: 14px; line-height: 1.5;
     }
@@ -162,7 +162,7 @@ interface FullInvoice extends SponsorInvoice {
       border-bottom: 3px solid #1B2A47; padding-bottom: 16px; margin-bottom: 24px;
     }
     .brand h1 {
-      margin: 0; font-size: 32px; letter-spacing: 4px; color: #1B2A47;
+      margin: 0; font-size: 32px; letter-spacing: 4px; color: var(--artes-primary);
     }
     .inv-no { color: #6b7c93; font-size: 14px; letter-spacing: 1px; }
     .inv-status {
@@ -170,7 +170,7 @@ interface FullInvoice extends SponsorInvoice {
       font-size: 11px; padding: 4px 12px; border-radius: 999px;
       background: #f0f4f8; color: #6b7c93;
       &.is-draft   { background: #fef6e6; color: #b87e08; }
-      &.is-sent    { background: #EBF5FB; color: #3A9FD6; }
+      &.is-sent    { background: var(--artes-bg); color: var(--artes-accent); }
       &.is-paid    { background: #e8f9f2; color: #0f8a5f; }
       &.is-overdue { background: #fef2f2; color: #dc2626; }
       &.is-void    { background: #f0f4f8; color: #9aa5b4; text-decoration: line-through; }
@@ -209,13 +209,13 @@ interface FullInvoice extends SponsorInvoice {
       }
       .totals-label { text-align: right; color: #6b7c93; font-weight: 500; }
       .grand td {
-        font-size: 17px; font-weight: 700; color: #1B2A47;
-        border-top: 2px solid #1B2A47; padding-top: 14px;
+        font-size: 17px; font-weight: 700; color: var(--artes-primary);
+        border-top: 2px solid var(--artes-primary); padding-top: 14px;
       }
     }
 
     .notes {
-      background: #f7f9fc; border-left: 3px solid #3A9FD6;
+      background: #f7f9fc; border-left: 3px solid var(--artes-accent);
       padding: 12px 16px; border-radius: 0 6px 6px 0; margin-bottom: 24px;
       p { margin: 4px 0 0; color: #46546b; }
     }

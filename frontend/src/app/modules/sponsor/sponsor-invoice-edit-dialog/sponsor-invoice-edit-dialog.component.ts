@@ -115,11 +115,11 @@ export interface SponsorInvoiceEditData {
     .line-row input {
       border: 1px solid #d6dde5; border-radius: 6px; padding: 6px 8px;
       font-size: 13px; min-width: 0;
-      &:focus { outline: 2px solid #3A9FD6; outline-offset: -1px; border-color: #3A9FD6; }
+      &:focus { outline: 2px solid #3A9FD6; outline-offset: -1px; border-color: var(--artes-accent); }
     }
     .col.qty, .col.price { text-align: right; }
     .col.amt { text-align: right; font-weight: 600; }
-    .add-row { width: 100%; padding: 8px; color: #3A9FD6; }
+    .add-row { width: 100%; padding: 8px; color: var(--artes-accent); }
     .meta-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .meta-row mat-form-field { width: 100%; }
     .full { width: 100%; }
@@ -127,7 +127,7 @@ export interface SponsorInvoiceEditData {
       background: #f7f9fc; border-radius: 8px; padding: 12px 16px; margin-top: 8px;
       font-size: 14px;
       div { display: flex; justify-content: space-between; padding: 4px 0; }
-      .grand { font-size: 16px; font-weight: 700; color: #1B2A47;
+      .grand { font-size: 16px; font-weight: 700; color: var(--artes-primary);
         border-top: 1px solid #d6dde5; margin-top: 6px; padding-top: 8px; }
     }
     .error {

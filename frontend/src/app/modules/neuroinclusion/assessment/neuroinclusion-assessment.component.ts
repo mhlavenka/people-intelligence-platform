@@ -362,7 +362,7 @@ interface AssessmentResult {
   styles: [`
     .assessment-page { padding: 32px; max-width: 800px; }
     .assessment-page.results-mode { max-width: 100%; }
-    .page-header { margin-bottom: 28px; h1 { font-size: 28px; color: #1B2A47; margin: 0 0 4px; } p { color: #5a6a7e; margin: 0; } }
+    .page-header { margin-bottom: 28px; h1 { font-size: 28px; color: var(--artes-primary); margin: 0 0 4px; } p { color: #5a6a7e; margin: 0; } }
 
     .assessment-card, .results-card {
       background: white; border-radius: 16px; padding: 32px;
@@ -395,7 +395,7 @@ interface AssessmentResult {
 
     .step-actions { display: flex; gap: 12px; align-items: center; margin-top: 16px; }
 
-    .score-question label { font-size: 14px; color: #1B2A47; font-weight: 500; }
+    .score-question label { font-size: 14px; color: var(--artes-primary); font-weight: 500; }
 
     .review-row {
       display: flex; justify-content: space-between; align-items: center;
@@ -412,7 +412,7 @@ interface AssessmentResult {
     .results-header {
       display: flex; gap: 24px; align-items: center; margin-bottom: 28px;
       .score-circle { width: 100px; height: 100px; flex-shrink: 0; .score-num { font-size: 22px; font-weight: 700; fill: #1B2A47; } .score-sub { font-size: 10px; fill: #9aa5b4; } }
-      h2 { font-size: 22px; color: #1B2A47; margin-bottom: 4px; }
+      h2 { font-size: 22px; color: var(--artes-primary); margin-bottom: 4px; }
       .maturity-level { font-size: 14px; color: #5a6a7e; margin: 0 0 8px; strong { color: #27C4A0; } }
     }
 
@@ -446,7 +446,7 @@ interface AssessmentResult {
       padding: 18px 20px;
       border-left: 3px solid transparent;
 
-      &.gap-analysis  { border-left-color: #3A9FD6; }
+      &.gap-analysis  { border-left-color: var(--artes-accent); }
       &.quick-wins    { border-left-color: #27C4A0; }
       &.long-term     { border-left-color: #f0a500; }
     }
@@ -460,7 +460,7 @@ interface AssessmentResult {
       h3 {
         font-size: 14px;
         font-weight: 700;
-        color: #1B2A47;
+        color: var(--artes-primary);
         margin: 0;
         display: flex;
         align-items: baseline;
@@ -473,7 +473,7 @@ interface AssessmentResult {
       display: flex; align-items: center; justify-content: center;
       mat-icon { font-size: 16px; width: 16px; height: 16px; }
       &.blue   { background: rgba(58,159,214,0.12);  color: #2080b0; }
-      &.navy   { background: rgba(27,42,71,0.08);    color: #1B2A47; }
+      &.navy   { background: rgba(27,42,71,0.08);    color: var(--artes-primary); }
       &.green  { background: rgba(39,196,160,0.12);  color: #1a9678; }
       &.orange { background: rgba(240,165,0,0.12);   color: #b07800; }
     }
@@ -519,7 +519,7 @@ interface AssessmentResult {
       justify-content: center;
       min-width: 22px; height: 22px;
       border-radius: 50%;
-      background: #1B2A47;
+      background: var(--artes-primary);
       color: white;
       font-size: 11px;
       font-weight: 700;
@@ -558,8 +558,8 @@ interface AssessmentResult {
       display: flex; align-items: center; gap: 12px;
       .dim-name  { width: 220px; font-size: 13px; color: #5a6a7e; flex-shrink: 0; }
       .dim-bar   { flex: 1; height: 8px; background: #e8edf4; border-radius: 4px; overflow: hidden; }
-      .dim-fill  { height: 100%; border-radius: 4px; transition: width 0.5s; &.excellent { background: #27C4A0; } &.good { background: #3A9FD6; } &.fair { background: #f0a500; } &.poor { background: #e53e3e; } }
-      .dim-score { width: 32px; font-size: 13px; font-weight: 600; color: #1B2A47; }
+      .dim-fill  { height: 100%; border-radius: 4px; transition: width 0.5s; &.excellent { background: #27C4A0; } &.good { background: var(--artes-accent); } &.fair { background: #f0a500; } &.poor { background: #e53e3e; } }
+      .dim-score { width: 32px; font-size: 13px; font-weight: 600; color: var(--artes-primary); }
     }
 
     .results-actions { margin-top: 8px; }
@@ -591,7 +591,7 @@ interface AssessmentResult {
     }
     .section-header {
       display: flex; gap: 16px; align-items: flex-start; margin-bottom: 24px;
-      h3 { font-size: 17px; color: #1B2A47; margin: 0 0 4px; font-weight: 700; }
+      h3 { font-size: 17px; color: var(--artes-primary); margin: 0 0 4px; font-weight: 700; }
       p  { font-size: 13px; color: #5a6a7e; margin: 0; line-height: 1.6; }
     }
     .section-icon {
@@ -615,7 +615,7 @@ interface AssessmentResult {
     }
     .accom-step-body {
       display: flex; flex-direction: column; gap: 3px;
-      strong { font-size: 13px; color: #1B2A47; }
+      strong { font-size: 13px; color: var(--artes-primary); }
       span   { font-size: 12px; color: #5a6a7e; line-height: 1.5; }
     }
     .accom-btn { position: relative; }
@@ -640,7 +640,7 @@ interface AssessmentResult {
     }
     .training-info {
       display: flex; flex-direction: column; gap: 4px;
-      strong { font-size: 13px; color: #1B2A47; }
+      strong { font-size: 13px; color: var(--artes-primary); }
       span   { font-size: 12px; color: #5a6a7e; line-height: 1.5; }
     }
     .training-meta { display: flex; align-items: center; gap: 10px; margin-top: 4px; }

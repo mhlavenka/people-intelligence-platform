@@ -106,14 +106,14 @@ import { HttpErrorResponse } from '@angular/common/http';
     .page-header {
       display: flex; align-items: flex-start; justify-content: space-between;
       margin-bottom: 24px;
-      h1 { margin: 0 0 4px; font-size: 24px; color: #1B2A47; }
+      h1 { margin: 0 0 4px; font-size: 24px; color: var(--artes-primary); }
       p  { margin: 0; color: #6b7c93; }
     }
     .loading { display: flex; justify-content: center; padding: 60px 0; }
     .empty {
       text-align: center; padding: 60px 24px; color: #6b7c93;
       mat-icon { font-size: 48px; width: 48px; height: 48px; color: #c8d3df; }
-      h3 { margin: 12px 0 4px; color: #1B2A47; }
+      h3 { margin: 12px 0 4px; color: var(--artes-primary); }
     }
     .grid {
       display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -132,10 +132,10 @@ import { HttpErrorResponse } from '@angular/common/http';
       transition: all 0.15s;
       mat-icon {
         font-size: 36px; width: 36px; height: 36px;
-        color: #3A9FD6;
+        color: var(--artes-accent);
       }
       &:hover {
-        border-color: #3A9FD6; background: #EBF5FB; color: #1B2A47;
+        border-color: var(--artes-accent); background: var(--artes-bg); color: var(--artes-primary);
         box-shadow: 0 4px 16px rgba(58,159,214,0.12);
       }
     }
@@ -143,7 +143,7 @@ import { HttpErrorResponse } from '@angular/common/http';
     .ident { display: flex; gap: 12px; min-width: 0; }
     .ident-body {
       display: flex; flex-direction: column; gap: 2px; min-width: 0;
-      strong { font-size: 14px; color: #1B2A47; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      strong { font-size: 14px; color: var(--artes-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
       .email { font-size: 12px; color: #6b7c93; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
       .org   { font-size: 12px; color: #9aa5b4; }
     }
@@ -151,7 +151,7 @@ import { HttpErrorResponse } from '@angular/common/http';
     .badge {
       font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 999px;
       &.self-pay  { background: #f3eafc; color: #6b3aa0; }
-      &.eng-count { background: #EBF5FB; color: #3A9FD6; }
+      &.eng-count { background: var(--artes-bg); color: var(--artes-accent); }
       &.eng-count.zero { background: #f0f4f8; color: #9aa5b4; }
       &.rate      { background: #e8f9f2; color: #0f8a5f; }
     }

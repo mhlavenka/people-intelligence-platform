@@ -79,16 +79,16 @@ interface CalendarDay {
   `,
   styles: [`
     .calendar-page { padding: 32px; }
-    .back-link { display: flex; align-items: center; gap: 4px; color: #3A9FD6; text-decoration: none; font-size: 14px; }
+    .back-link { display: flex; align-items: center; gap: 4px; color: var(--artes-accent); text-decoration: none; font-size: 14px; }
     .month-nav { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
-    .month-nav h2 { font-size: 20px; color: #1B2A47; margin: 0; min-width: 180px; text-align: center; }
+    .month-nav h2 { font-size: 20px; color: var(--artes-primary); margin: 0; min-width: 180px; text-align: center; }
     .today-btn { font-size: 12px; margin-left: 8px; }
 
     .legend { display: flex; gap: 16px; margin-bottom: 12px; font-size: 12px; color: #5a6a7e; }
     .legend-item { display: flex; align-items: center; gap: 6px; }
     .dot { width: 10px; height: 10px; border-radius: 50%; }
     .dot.completed { background: #27C4A0; }
-    .dot.scheduled { background: #3A9FD6; }
+    .dot.scheduled { background: var(--artes-accent); }
     .dot.cancelled { background: #c5d0db; }
 
     .calendar-grid {
@@ -107,7 +107,7 @@ interface CalendarDay {
       display: flex; flex-direction: column; gap: 3px;
       &:nth-child(7n) { border-right: none; }
       &.other-month { background: #fafbfc; .day-num { color: #c5d0db; } }
-      &.today { background: #f0f9ff; .day-num { background: #3A9FD6; color: white; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; } }
+      &.today { background: #f0f9ff; .day-num { background: var(--artes-accent); color: white; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; } }
     }
 
     .day-num { font-size: 12px; color: #5a6a7e; margin-bottom: 2px; }
@@ -121,7 +121,7 @@ interface CalendarDay {
 
     .session-event {
       &.completed { background: #e8faf4; color: #1a9678; border-left: 3px solid #27C4A0; }
-      &.scheduled { background: #EBF5FB; color: #2080b0; border-left: 3px solid #3A9FD6; }
+      &.scheduled { background: var(--artes-bg); color: #2080b0; border-left: 3px solid var(--artes-accent); }
       &.cancelled { background: #f0f4f8; color: #9aa5b4; border-left: 3px solid #c5d0db; text-decoration: line-through; }
       &.no_show { background: #fef2f2; color: #c53030; border-left: 3px solid #e53e3e; }
     }

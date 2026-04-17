@@ -458,7 +458,7 @@ interface AvailablePlan {
 
                   <div class="tier-module">
                     <div class="tier-module-label">
-                      <mat-icon class="tier-mod-icon" style="color:#3A9FD6">emoji_events</mat-icon>
+                      <mat-icon class="tier-mod-icon" style="color:var(--artes-accent)">emoji_events</mat-icon>
                       Leadership & Succession Hub™
                     </div>
                     <div class="tier-row-list">
@@ -531,7 +531,7 @@ interface AvailablePlan {
     .page-title {
       font-size: 26px;
       font-weight: 700;
-      color: #1B2A47;
+      color: var(--artes-primary);
       margin: 0 0 6px 0;
       letter-spacing: -0.3px;
     }
@@ -576,7 +576,7 @@ interface AvailablePlan {
     .card-title {
       font-size: 15px;
       font-weight: 600;
-      color: #1B2A47;
+      color: var(--artes-primary);
       margin: 0;
       letter-spacing: -0.1px;
     }
@@ -597,7 +597,7 @@ interface AvailablePlan {
       justify-content: center;
       padding: 0;
       mat-icon { font-size: 17px; width: 17px; height: 17px; line-height: 17px; }
-      &:hover { color: #1B2A47; }
+      &:hover { color: var(--artes-primary); }
     }
 
     .card-divider {
@@ -656,7 +656,7 @@ interface AvailablePlan {
       font-size: 12px;
       font-weight: 500;
       background: #e8f4fd;
-      color: #3A9FD6;
+      color: var(--artes-accent);
       border: 1px solid #c3e0f5;
     }
 
@@ -669,7 +669,7 @@ interface AvailablePlan {
     .plan-price {
       font-size: 28px;
       font-weight: 700;
-      color: #1B2A47;
+      color: var(--artes-primary);
       margin-bottom: 10px;
       letter-spacing: -0.5px;
     }
@@ -703,7 +703,7 @@ interface AvailablePlan {
       font-size: 11px;
       font-weight: 500;
       background: #f0f9ff;
-      color: #3A9FD6;
+      color: var(--artes-accent);
       border: 1px solid #bae6fd;
     }
 
@@ -733,7 +733,7 @@ interface AvailablePlan {
     .usage-numbers {
       font-size: 14px;
       font-weight: 700;
-      color: #1B2A47;
+      color: var(--artes-primary);
     }
 
     .usage-sep {
@@ -816,7 +816,7 @@ interface AvailablePlan {
     .amount-value {
       font-size: 36px;
       font-weight: 700;
-      color: #1B2A47;
+      color: var(--artes-primary);
       letter-spacing: -1px;
       line-height: 1;
     }
@@ -884,13 +884,13 @@ interface AvailablePlan {
     .grand-label {
       font-size: 13px;
       font-weight: 700;
-      color: #1B2A47;
+      color: var(--artes-primary);
     }
 
     .grand-amount {
       font-size: 15px;
       font-weight: 700;
-      color: #1B2A47;
+      color: var(--artes-primary);
     }
 
     .invoice-notes {
@@ -910,7 +910,7 @@ interface AvailablePlan {
       font-size: 15px;
       width: 15px;
       height: 15px;
-      color: #3A9FD6;
+      color: var(--artes-accent);
       flex-shrink: 0;
       margin-top: 1px;
     }
@@ -1030,7 +1030,7 @@ interface AvailablePlan {
     .outstanding-amount {
       font-size: 15px;
       font-weight: 700;
-      color: #1B2A47;
+      color: var(--artes-primary);
     }
 
     /* ── Section 4: Payment History ─────────────── */
@@ -1082,7 +1082,7 @@ interface AvailablePlan {
       font-family: 'Courier New', Courier, monospace;
       font-size: 12px;
       font-weight: 600;
-      color: #1B2A47;
+      color: var(--artes-primary);
       background: #f1f5f9;
       padding: 2px 6px;
       border-radius: 4px;
@@ -1090,7 +1090,7 @@ interface AvailablePlan {
 
     .receipt-btn {
       color: #6b7280;
-      &:hover { color: #1B2A47; }
+      &:hover { color: var(--artes-primary); }
     }
 
 
@@ -1128,22 +1128,22 @@ interface AvailablePlan {
     }
 
     .tier-name-col { flex: 1; display: flex; align-items: center; gap: 8px; }
-    .tier-name { font-size: 13px; font-weight: 600; color: #1B2A47; }
+    .tier-name { font-size: 13px; font-weight: 600; color: var(--artes-primary); }
 
     .current-chip {
       font-size: 10px; font-weight: 700; text-transform: uppercase;
-      background: #3A9FD6; color: white; padding: 2px 7px; border-radius: 10px;
+      background: var(--artes-accent); color: white; padding: 2px 7px; border-radius: 10px;
     }
 
     .tier-price {
-      font-size: 13px; font-weight: 700; color: #1B2A47;
+      font-size: 13px; font-weight: 700; color: var(--artes-primary);
       min-width: 130px; text-align: right;
     }
 
     .bundle-row {
       display: flex; align-items: center; gap: 14px;
       padding: 14px 16px; border-radius: 12px;
-      background: linear-gradient(135deg, #1B2A47 0%, #253659 100%);
+      background: linear-gradient(135deg, var(--artes-primary) 0%, #253659 100%);
       color: white;
     }
     .bundle-icon { color: #f0c040; font-size: 22px; flex-shrink: 0; }
@@ -1443,10 +1443,10 @@ export class BillingComponent implements OnInit {
     /* ── Header ── */
     .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 36px; }
     .brand { display: flex; flex-direction: column; gap: 2px; }
-    .brand-name { font-size: 20px; font-weight: 700; color: #1B2A47; letter-spacing: -0.3px; }
+    .brand-name { font-size: 20px; font-weight: 700; color: var(--artes-primary); letter-spacing: -0.3px; }
     .brand-sub { font-size: 10px; color: #9ca3af; text-transform: uppercase; letter-spacing: 1px; }
     .invoice-label { text-align: right; }
-    .invoice-title { font-size: 28px; font-weight: 800; color: #1B2A47; letter-spacing: -1px; }
+    .invoice-title { font-size: 28px; font-weight: 800; color: var(--artes-primary); letter-spacing: -1px; }
     .invoice-number { font-size: 13px; color: #6b7280; margin-top: 4px; font-family: 'Courier New', monospace; }
     .status-pill {
       display: inline-block; margin-top: 8px;
@@ -1459,7 +1459,7 @@ export class BillingComponent implements OnInit {
     .parties { display: flex; gap: 48px; margin-bottom: 32px; }
     .party { flex: 1; }
     .party-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #9ca3af; margin-bottom: 6px; }
-    .party-name { font-size: 14px; font-weight: 700; color: #1B2A47; margin-bottom: 4px; }
+    .party-name { font-size: 14px; font-weight: 700; color: var(--artes-primary); margin-bottom: 4px; }
     .party-addr { font-size: 11px; color: #6b7280; line-height: 1.7; }
     .taxid { font-size: 10px; color: #9ca3af; margin-top: 4px; }
 
@@ -1468,12 +1468,12 @@ export class BillingComponent implements OnInit {
     .meta-cell { flex: 1; padding: 12px 16px; border-right: 1px solid #e5e7eb; background: #fafafa; }
     .meta-cell:last-child { border-right: none; }
     .meta-cell-label { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: #9ca3af; margin-bottom: 4px; }
-    .meta-cell-value { font-size: 12px; font-weight: 600; color: #1B2A47; }
+    .meta-cell-value { font-size: 12px; font-weight: 600; color: var(--artes-primary); }
     .overdue-val { color: #ef4444; }
 
     /* ── Line items ── */
     .items-table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
-    .items-table thead tr { background: #1B2A47; }
+    .items-table thead tr { background: var(--artes-primary); }
     .items-table thead th { padding: 10px 14px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; color: #ffffff; text-align: left; }
     .items-table thead th.th-num { text-align: right; }
     .items-table tbody tr { border-bottom: 1px solid #f1f5f9; }
@@ -1486,12 +1486,12 @@ export class BillingComponent implements OnInit {
     .totals { display: flex; justify-content: flex-end; margin-bottom: 32px; }
     .totals-box { width: 260px; }
     .total-row { display: flex; justify-content: space-between; padding: 5px 0; font-size: 12px; color: #6b7280; }
-    .total-row.grand { border-top: 2px solid #1B2A47; margin-top: 4px; padding-top: 10px; }
-    .total-row.grand .total-label, .total-row.grand .total-val { font-size: 16px; font-weight: 800; color: #1B2A47; }
-    .total-val { font-weight: 600; color: #1B2A47; }
+    .total-row.grand { border-top: 2px solid var(--artes-primary); margin-top: 4px; padding-top: 10px; }
+    .total-row.grand .total-label, .total-row.grand .total-val { font-size: 16px; font-weight: 800; color: var(--artes-primary); }
+    .total-val { font-weight: 600; color: var(--artes-primary); }
 
     /* ── Notes ── */
-    .notes { background: #f8fafc; border-left: 3px solid #3A9FD6; padding: 12px 16px; border-radius: 0 6px 6px 0; margin-bottom: 32px; }
+    .notes { background: #f8fafc; border-left: 3px solid var(--artes-accent); padding: 12px 16px; border-radius: 0 6px 6px 0; margin-bottom: 32px; }
     .notes-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #9ca3af; margin-bottom: 4px; }
     .notes-text { font-size: 11px; color: #6b7280; line-height: 1.6; }
 
@@ -1508,13 +1508,13 @@ export class BillingComponent implements OnInit {
     /* ── Print button (screen only) ── */
     .print-bar {
       position: fixed; top: 0; left: 0; right: 0;
-      background: #1B2A47; padding: 12px 24px;
+      background: var(--artes-primary); padding: 12px 24px;
       display: flex; justify-content: space-between; align-items: center;
       box-shadow: 0 2px 8px rgba(0,0,0,0.2); z-index: 100;
     }
     .print-bar span { color: white; font-size: 13px; font-weight: 500; }
     .print-bar button {
-      background: #3A9FD6; color: white; border: none; cursor: pointer;
+      background: var(--artes-accent); color: white; border: none; cursor: pointer;
       padding: 8px 20px; border-radius: 6px; font-size: 13px; font-weight: 600;
       display: flex; align-items: center; gap: 8px;
     }

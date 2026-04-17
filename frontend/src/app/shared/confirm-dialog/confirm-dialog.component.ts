@@ -63,7 +63,7 @@ export interface ConfirmDialogData {
     h2 {
       font-size: 18px;
       font-weight: 700;
-      color: #1B2A47;
+      color: var(--artes-primary);
       margin: 0 0 10px;
     }
 

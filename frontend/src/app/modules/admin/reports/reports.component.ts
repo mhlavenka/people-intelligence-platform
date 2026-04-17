@@ -228,8 +228,8 @@ const ROLE_LABELS: Record<string, string> = {
     .report-card { background: white; border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); padding: 24px; margin-bottom: 24px; }
     .report-header {
       display: flex; align-items: flex-start; gap: 12px; margin-bottom: 20px;
-      mat-icon { font-size: 24px; color: #3A9FD6; margin-top: 2px; }
-      h2 { font-size: 18px; color: #1B2A47; margin: 0 0 2px; font-weight: 700; }
+      mat-icon { font-size: 24px; color: var(--artes-accent); margin-top: 2px; }
+      h2 { font-size: 18px; color: var(--artes-primary); margin: 0 0 2px; font-weight: 700; }
       p  { font-size: 13px; color: #9aa5b4; margin: 0; }
       .report-total { margin-left: auto; font-size: 16px; font-weight: 700; color: #27C4A0; }
     }
@@ -237,7 +237,7 @@ const ROLE_LABELS: Record<string, string> = {
     .stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; margin-bottom: 20px; }
     .stat-box {
       background: #f8fafc; border-radius: 10px; padding: 16px; text-align: center;
-      .stat-num { font-size: 28px; font-weight: 700; color: #1B2A47; }
+      .stat-num { font-size: 28px; font-weight: 700; color: var(--artes-primary); }
       .stat-label { font-size: 12px; color: #5a6a7e; margin-top: 2px; }
       .stat-sub { font-size: 11px; color: #9aa5b4; }
       &.low .stat-num { color: #27C4A0; }
@@ -247,10 +247,10 @@ const ROLE_LABELS: Record<string, string> = {
     }
 
     .breakdown-row { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
-    .breakdown-col { h4 { font-size: 13px; font-weight: 600; color: #1B2A47; margin: 0 0 10px; } }
+    .breakdown-col { h4 { font-size: 13px; font-weight: 600; color: var(--artes-primary); margin: 0 0 10px; } }
     .breakdown-item { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f0f4f8; font-size: 13px; }
     .breakdown-key { color: #5a6a7e; }
-    .breakdown-val { font-weight: 600; color: #1B2A47; }
+    .breakdown-val { font-weight: 600; color: var(--artes-primary); }
     .breakdown-empty { font-size: 13px; color: #9aa5b4; }
 
     .bar-chart { display: flex; gap: 6px; align-items: flex-end; height: 140px; padding: 0 8px; margin-top: 12px; }
@@ -260,20 +260,20 @@ const ROLE_LABELS: Record<string, string> = {
 
     .data-table {
       width: 100%; border-collapse: collapse; font-size: 13px;
-      th { text-align: left; padding: 10px 12px; background: #f8fafc; color: #1B2A47; font-weight: 600; font-size: 12px; border-bottom: 2px solid #edf2f7; }
+      th { text-align: left; padding: 10px 12px; background: #f8fafc; color: var(--artes-primary); font-weight: 600; font-size: 12px; border-bottom: 2px solid #edf2f7; }
       td { padding: 10px 12px; border-bottom: 1px solid #f0f4f8; color: #374151; }
       tr:hover td { background: #fafbfc; }
       .amount { font-weight: 600; text-align: right; }
       .goal-cell { max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     }
-    .module-chip { font-size: 10px; background: #EBF5FB; color: #3A9FD6; padding: 2px 8px; border-radius: 4px; text-transform: capitalize; }
+    .module-chip { font-size: 10px; background: var(--artes-bg); color: var(--artes-accent); padding: 2px 8px; border-radius: 4px; text-transform: capitalize; }
     .status-chip {
       font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 2px 8px; border-radius: 999px;
       &.draft { background: #f0f4f8; color: #9aa5b4; }
-      &.active { background: #EBF5FB; color: #3A9FD6; }
+      &.active { background: var(--artes-bg); color: var(--artes-accent); }
       &.completed { background: #e8faf4; color: #27C4A0; }
     }
-    h4 { font-size: 14px; color: #1B2A47; margin: 16px 0 8px; }
+    h4 { font-size: 14px; color: var(--artes-primary); margin: 16px 0 8px; }
   `],
 })
 export class OrgReportsComponent implements OnInit {

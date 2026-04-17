@@ -310,7 +310,7 @@ const DAY_SHORTS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
       font-weight: 600; padding: 12px 2px 8px;
       .edit-link {
         margin-left: auto; text-transform: none; letter-spacing: 0;
-        color: #3A9FD6; font-weight: 600; text-decoration: none; font-size: 13px;
+        color: var(--artes-accent); font-weight: 600; text-decoration: none; font-size: 13px;
         &:hover { text-decoration: underline; }
       }
     }
@@ -320,7 +320,7 @@ const DAY_SHORTS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     }
     .shared-row {
       display: flex; align-items: center; justify-content: space-between;
-      padding: 6px 2px; font-size: 13px; color: #1B2A47;
+      padding: 6px 2px; font-size: 13px; color: var(--artes-primary);
       border-bottom: 1px solid #f5f7fa;
       &.off { color: #9aa5b4; }
       &:last-child { border-bottom: none; }
@@ -335,7 +335,7 @@ const DAY_SHORTS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
       position: sticky; top: 0; z-index: 5;
       background: #fafbfd;
       border-bottom: 1px solid #e8eef4;
-      h1 { margin: 0 0 4px; font-size: 24px; color: #1B2A47; }
+      h1 { margin: 0 0 4px; font-size: 24px; color: var(--artes-primary); }
       p { margin: 0; color: #6b7c93; font-size: 13px; }
     }
     .header-text { flex: 1; min-width: 0;
@@ -354,8 +354,8 @@ const DAY_SHORTS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     }
     .card-header {
       display: flex; align-items: center; gap: 12px; padding: 20px 24px;
-      > mat-icon { color: #3A9FD6; font-size: 28px; width: 28px; height: 28px; }
-      h2 { margin: 0; font-size: 17px; color: #1B2A47; }
+      > mat-icon { color: var(--artes-accent); font-size: 28px; width: 28px; height: 28px; }
+      h2 { margin: 0; font-size: 17px; color: var(--artes-primary); }
       p { margin: 2px 0 0; font-size: 13px; color: #6b7c93; }
       .copy-btn { margin-left: auto; }
     }
@@ -372,7 +372,7 @@ const DAY_SHORTS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     .swatch {
       width: 32px; height: 32px; border-radius: 50%; border: 3px solid transparent;
       cursor: pointer; transition: transform 0.1s;
-      &.selected { border-color: #1B2A47; transform: scale(1.15); }
+      &.selected { border-color: var(--artes-primary); transform: scale(1.15); }
       &:hover { transform: scale(1.1); }
     }
     .toggle-row {
@@ -400,10 +400,10 @@ const DAY_SHORTS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
     .inherited-note {
       display: flex; align-items: center; gap: 8px; padding: 12px 16px;
-      background: #EBF5FB; border-radius: 8px; margin-bottom: 20px;
-      font-size: 14px; color: #1B2A47;
-      mat-icon { color: #3A9FD6; font-size: 20px; width: 20px; height: 20px; }
-      a { color: #3A9FD6; text-decoration: none; margin-left: auto; white-space: nowrap;
+      background: var(--artes-bg); border-radius: 8px; margin-bottom: 20px;
+      font-size: 14px; color: var(--artes-primary);
+      mat-icon { color: var(--artes-accent); font-size: 20px; width: 20px; height: 20px; }
+      a { color: var(--artes-accent); text-decoration: none; margin-left: auto; white-space: nowrap;
         &:hover { text-decoration: underline; } }
     }
 
@@ -412,7 +412,7 @@ const DAY_SHORTS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
       background: #f7f9fc; border-radius: 8px; padding: 12px 16px;
     }
     .booking-url {
-      flex: 1; font-size: 14px; color: #3A9FD6; word-break: break-all;
+      flex: 1; font-size: 14px; color: var(--artes-accent); word-break: break-all;
     }
     .link-hint { margin: 8px 0 0; font-size: 12px; color: #9aa5b4; }
 
@@ -420,10 +420,10 @@ const DAY_SHORTS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
       display: flex; align-items: flex-start; gap: 10px;
       margin-top: 10px; padding: 10px 14px;
       background: #fef3cd; border-left: 3px solid #b07800;
-      border-radius: 6px; color: #1B2A47; font-size: 13px;
+      border-radius: 6px; color: var(--artes-primary); font-size: 13px;
       mat-icon { color: #b07800; flex-shrink: 0; font-size: 20px; width: 20px; height: 20px; }
       .swn-title { font-weight: 700; margin-bottom: 2px; }
-      .swn-new   { display: block; font-size: 13px; color: #1B2A47; word-break: break-all; margin-bottom: 4px; }
+      .swn-new   { display: block; font-size: 13px; color: var(--artes-primary); word-break: break-all; margin-bottom: 4px; }
       .swn-hint  { font-size: 12px; color: #5a6a7e; }
     }
 

@@ -4,11 +4,9 @@
 I. MODULES
 ----------
 **Conflict Intelligence**
- - created an analysis anbd design doc "conflict_intelligence_module.docx"
+ - created an analysis and design doc "conflict_intelligence_module.docx"
 
 **Coaching Module**
- - session reminders 
-   - app generated or google calendar generated? Both is duplicate and confusing
  - add mentoring to coaching module
  - invoicing, QB integration
    - when invoice is sent, the tax line does not have different possible taxes - ex. split gst/qst
@@ -16,7 +14,6 @@ I. MODULES
  - repeating schedules for session creation by coach (weekly / monthly)
 
 **Booking**
-- Office 365 integration - design completed
 
 **IDPs** 
 - users need to have access to it and be able to print / follow thru with coach follow up - notifications, reminders, etc.
@@ -27,17 +24,15 @@ I. MODULES
 
 II. SYSTEM
 ----------
+
+- login page make carousel pause (a pause button and also on hover)
+
 **Organization setup** 
  - put together users / departments / orgchart in more logical way. Make me a proposed solution before implementing so I can approve
 **Google Test Env**
  - need to switch to prod and have the app approved by google
 **Multilingual**
  - design done, need to implement
-
-**Legal**
-- terms of service
-- privacy statement
-
 
 **Placeholders**
  - Billing - contact us to upgrade - create form to send a contact us to system admin via SES. Alternatively let the organization admin upgrade / choose a plan

@@ -446,7 +446,7 @@ interface ConflictAnalysis {
 
     .page-header {
       display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 28px;
-      h1 { font-size: 28px; color: #1B2A47; margin: 0 0 4px; }
+      h1 { font-size: 28px; color: var(--artes-primary); margin: 0 0 4px; }
       p  { color: #5a6a7e; margin: 0; max-width: 700px; }
     }
 
@@ -482,7 +482,7 @@ interface ConflictAnalysis {
       background: white; border-radius: 12px; padding: 16px 20px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.06); border-left: 4px solid transparent;
       text-align: center;
-      .risk-count { font-size: 32px; font-weight: 700; color: #1B2A47; line-height: 1; }
+      .risk-count { font-size: 32px; font-weight: 700; color: var(--artes-primary); line-height: 1; }
       .risk-label { font-size: 11px; color: #5a6a7e; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.4px; }
     }
     .risk-card--low      { border-color: #27C4A0; .risk-count { color: #27C4A0; } }
@@ -527,7 +527,7 @@ interface ConflictAnalysis {
     .analyses-header {
       display: flex; align-items: center; gap: 10px;
       padding: 18px 24px; border-bottom: 1px solid #f0f4f8;
-      h2 { font-size: 16px; color: #1B2A47; margin: 0; font-weight: 700; }
+      h2 { font-size: 16px; color: var(--artes-primary); margin: 0; font-weight: 700; }
       .analyses-count {
         font-size: 12px; background: #f0f4f8; color: #5a6a7e;
         padding: 2px 9px; border-radius: 999px;
@@ -576,7 +576,7 @@ interface ConflictAnalysis {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       gap: 8px; cursor: pointer; min-height: 120px; color: #6b7c93;
       transition: border-color 0.15s, color 0.15s, background 0.15s;
-      &:hover { border-color: #3A9FD6; color: #3A9FD6; background: rgba(58,159,214,0.04); }
+      &:hover { border-color: var(--artes-accent); color: var(--artes-accent); background: rgba(58,159,214,0.04); }
     }
     .new-analysis-icon { font-size: 36px; width: 36px; height: 36px; }
 
@@ -585,17 +585,17 @@ interface ConflictAnalysis {
       display: flex; flex-direction: column; gap: 5px; min-width: 0;
     }
     .meta-name {
-      font-size: 14px; color: #1B2A47;
+      font-size: 14px; color: var(--artes-primary);
       strong { font-weight: 600; }
     }
     .meta-template {
-      display: flex; align-items: center; gap: 5px; font-size: 12px; color: #3A9FD6;
+      display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--artes-accent);
       mat-icon { font-size: 14px; width: 14px; height: 14px; }
     }
     .meta-dept, .meta-period {
       display: flex; align-items: center; gap: 5px; font-size: 13px;
       mat-icon { font-size: 14px; width: 14px; height: 14px; color: #9aa5b4; }
-      strong { color: #1B2A47; }
+      strong { color: var(--artes-primary); }
     }
     .meta-period { color: #5a6a7e; }
     .type-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
@@ -636,7 +636,7 @@ interface ConflictAnalysis {
     }
     .step-content {
       display: flex; flex-direction: column; gap: 3px;
-      strong { font-size: 13px; color: #1B2A47; }
+      strong { font-size: 13px; color: var(--artes-primary); }
       span   { font-size: 12px; color: #5a6a7e; line-height: 1.5; }
     }
     .escalation-cta { color: #e53e3e; border-color: #e53e3e; }
@@ -656,10 +656,10 @@ interface ConflictAnalysis {
     }
     .toolkit-info {
       flex: 1; display: flex; flex-direction: column; gap: 2px;
-      strong { font-size: 13px; color: #1B2A47; }
+      strong { font-size: 13px; color: var(--artes-primary); }
       span   { font-size: 12px; color: #5a6a7e; }
     }
-    .download-btn { color: #3A9FD6; }
+    .download-btn { color: var(--artes-accent); }
 
     /* ── Skill Development — component-specific only ── */
     .section-action-btn { margin-left: auto; flex-shrink: 0; }
@@ -693,7 +693,7 @@ interface ConflictAnalysis {
       border: 1px solid #e8edf4; text-decoration: none; cursor: pointer;
       transition: background 0.13s, border-color 0.13s;
       &:last-child { margin-bottom: 0; }
-      &:hover { background: #f0f8ff; border-color: #3A9FD6; }
+      &:hover { background: #f0f8ff; border-color: var(--artes-accent); }
       &.internal { background: #fafbfc; }
       &.external { background: #fafbfc; }
     }
@@ -706,13 +706,13 @@ interface ConflictAnalysis {
 
     .edu-info {
       flex: 1; min-width: 0;
-      strong { display: block; font-size: 13px; color: #1B2A47; margin-bottom: 2px; }
+      strong { display: block; font-size: 13px; color: var(--artes-primary); margin-bottom: 2px; }
       span   { font-size: 11px; color: #6b7280; line-height: 1.4; display: block; }
     }
 
     .edu-arrow {
       color: #c4cdd6; font-size: 18px; width: 18px; height: 18px; flex-shrink: 0;
-      .edu-card:hover & { color: #3A9FD6; }
+      .edu-card:hover & { color: var(--artes-accent); }
     }
   `],
 })

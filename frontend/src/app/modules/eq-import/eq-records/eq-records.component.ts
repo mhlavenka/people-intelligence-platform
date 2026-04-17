@@ -159,7 +159,7 @@ const COMPOSITE_LABELS: Record<string, string> = {
     .stat-box {
       background: white; border-radius: 12px; padding: 16px; text-align: center;
       box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-      .stat-num { font-size: 28px; font-weight: 700; color: #1B2A47; }
+      .stat-num { font-size: 28px; font-weight: 700; color: var(--artes-primary); }
       .stat-label { font-size: 12px; color: #5a6a7e; }
     }
 
@@ -180,7 +180,7 @@ const COMPOSITE_LABELS: Record<string, string> = {
     .record-id { display: flex; align-items: center; gap: 6px; }
     .mode-chip {
       font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; text-transform: uppercase;
-      &.identified { background: #EBF5FB; color: #3A9FD6; }
+      &.identified { background: var(--artes-bg); color: var(--artes-accent); }
       &.pseudonymized { background: #FFF8E6; color: #b07800; }
       &.anonymized { background: #e8faf4; color: #1a9678; }
     }
@@ -205,7 +205,7 @@ const COMPOSITE_LABELS: Record<string, string> = {
     }
     .composite-bar { height: 6px; border-radius: 3px; min-width: 4px; transition: width 0.3s; }
     .composite-label { font-size: 11px; color: #5a6a7e; width: 60px; flex-shrink: 0; }
-    .composite-val { font-size: 12px; font-weight: 600; color: #1B2A47; }
+    .composite-val { font-size: 12px; font-weight: 600; color: var(--artes-primary); }
 
     .subscales-panel {
       box-shadow: none !important; border: 1px solid #e8edf4 !important;

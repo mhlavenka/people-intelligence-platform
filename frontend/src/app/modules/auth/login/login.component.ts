@@ -439,7 +439,7 @@ const MODULE_SLIDES: ModuleSlide[] = [
     /* ── Left info panel ─────────────────────────────────────────── */
     .info-panel {
       flex: 0 0 55%; display: flex; flex-direction: column;
-      background: linear-gradient(160deg, #1B2A47 0%, #223554 40%, #2a4270 100%);
+      background: linear-gradient(160deg, var(--artes-primary) 0%, #223554 40%, #2a4270 100%);
       padding: 40px 48px; color: white; position: relative; overflow: hidden;
       height: 100vh;
     }
@@ -575,7 +575,7 @@ const MODULE_SLIDES: ModuleSlide[] = [
     }
     .auth-brand-footer .legal-bar {
       display: flex; gap: 12px; justify-content: center; margin-top: 8px;
-      a { font-size: 11px; color: #9aa5b4; text-decoration: none; &:hover { color: #3A9FD6; } }
+      a { font-size: 11px; color: #9aa5b4; text-decoration: none; &:hover { color: var(--artes-accent); } }
     }
 
     /* ── Mobile brand bar ────────────────────────────────────────── */
@@ -594,7 +594,7 @@ const MODULE_SLIDES: ModuleSlide[] = [
 
     .card-header {
       text-align: center; margin-bottom: 28px;
-      h2 { font-size: 24px; color: #1B2A47; margin: 0 0 6px; font-weight: 700; }
+      h2 { font-size: 24px; color: var(--artes-primary); margin: 0 0 6px; font-weight: 700; }
       p { font-size: 14px; color: #5a6a7e; margin: 0; }
     }
 
@@ -603,7 +603,7 @@ const MODULE_SLIDES: ModuleSlide[] = [
 
     .auth-links {
       display: flex; gap: 8px; justify-content: center; margin-top: 20px; font-size: 14px;
-      a { color: #3A9FD6; }
+      a { color: var(--artes-accent); }
       span { color: #9aa5b4; }
     }
 
@@ -639,9 +639,9 @@ const MODULE_SLIDES: ModuleSlide[] = [
       .twofa-icon {
         width: 56px; height: 56px; border-radius: 14px; margin: 0 auto 16px;
         background: rgba(58,159,214,0.1); display: flex; align-items: center; justify-content: center;
-        mat-icon { font-size: 28px; width: 28px; height: 28px; color: #3A9FD6; }
+        mat-icon { font-size: 28px; width: 28px; height: 28px; color: var(--artes-accent); }
       }
-      h2 { margin-bottom: 8px; font-size: 20px; color: #1B2A47; font-weight: 600; }
+      h2 { margin-bottom: 8px; font-size: 20px; color: var(--artes-primary); font-weight: 600; }
       p  { font-size: 14px; color: #5a6a7e; margin: 0; }
     }
     .otp-field input { font-size: 24px; letter-spacing: 8px; text-align: center; }
@@ -669,7 +669,7 @@ const MODULE_SLIDES: ModuleSlide[] = [
 
     /* ── Responsive: mobile ──────────────────────────────────────── */
     @media (max-width: 768px) {
-      .auth-page { flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(160deg, #1B2A47 0%, #223554 100%); }
+      .auth-page { flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(160deg, var(--artes-primary) 0%, #223554 100%); }
       .info-panel { display: none; }
       .mobile-brand { display: none; }
       .auth-card {

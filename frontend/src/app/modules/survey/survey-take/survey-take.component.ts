@@ -285,7 +285,7 @@ const DEPARTMENTS = [
   styles: [`
     .survey-page {
       min-height: 100vh;
-      background: #EBF5FB;
+      background: var(--artes-bg);
       display: flex;
       align-items: flex-start;
       justify-content: center;
@@ -319,12 +319,12 @@ const DEPARTMENTS = [
         &.coaching      { background: rgba(124,92,191,0.12); color: #5e3fa8; mat-icon { font-size: 16px; } }
       }
 
-      h1 { font-size: 22px; color: #1B2A47; margin: 0 0 8px; line-height: 1.3; }
+      h1 { font-size: 22px; color: var(--artes-primary); margin: 0 0 8px; line-height: 1.3; }
 
       .survey-description {
         color: #5a6a7e; font-size: 15px; line-height: 1.6;
         margin: 0 0 20px; padding: 12px 16px;
-        background: #f8fafc; border-left: 3px solid #3A9FD6; border-radius: 0 8px 8px 0;
+        background: #f8fafc; border-left: 3px solid var(--artes-accent); border-radius: 0 8px 8px 0;
       }
 
       .progress-row {
@@ -334,13 +334,13 @@ const DEPARTMENTS = [
     }
 
     .dept-step {
-      h2 { font-size: 20px; color: #1B2A47; margin-bottom: 8px; }
+      h2 { font-size: 20px; color: var(--artes-primary); margin-bottom: 8px; }
       p  { color: #5a6a7e; font-size: 14px; line-height: 1.6; margin-bottom: 24px; }
       .full-width { width: 100%; margin-bottom: 16px; }
     }
 
     .instructions-step {
-      h2 { font-size: 20px; color: #1B2A47; margin-bottom: 16px; }
+      h2 { font-size: 20px; color: var(--artes-primary); margin-bottom: 16px; }
       .instructions-text {
         color: #374151; font-size: 15px; line-height: 1.7;
         background: #f8fafc; border-radius: 12px; padding: 20px 24px;
@@ -356,7 +356,7 @@ const DEPARTMENTS = [
 
     .question-text {
       font-size: 18px;
-      color: #1B2A47;
+      color: var(--artes-primary);
       font-weight: 500;
       line-height: 1.5;
       margin-bottom: 28px;
@@ -378,7 +378,7 @@ const DEPARTMENTS = [
         cursor: pointer; color: #5a6a7e; transition: all 0.15s;
         display: flex; flex-direction: column; align-items: center;
         justify-content: center; padding: 4px 8px;
-        &:hover { border-color: #3A9FD6; color: #3A9FD6; }
+        &:hover { border-color: var(--artes-accent); color: var(--artes-accent); }
         &.selected { color: white; border-color: transparent; }
         &.low.selected    { background: #27C4A0; }
         &.mid.selected    { background: #f0a500; }
@@ -403,8 +403,8 @@ const DEPARTMENTS = [
         font-size: 16px; font-weight: 600; cursor: pointer; color: #5a6a7e;
         transition: all 0.15s;
         mat-icon { font-size: 24px; }
-        &:hover { border-color: #3A9FD6; color: #3A9FD6; }
-        &.selected { background: #1B2A47; color: white; border-color: #1B2A47; }
+        &:hover { border-color: var(--artes-accent); color: var(--artes-accent); }
+        &.selected { background: var(--artes-primary); color: white; border-color: var(--artes-primary); }
       }
     }
 
@@ -417,15 +417,15 @@ const DEPARTMENTS = [
         display: flex; align-items: flex-start; gap: 14px; padding: 16px 20px;
         border-radius: 12px; border: 2px solid #dce6f0; background: white;
         cursor: pointer; text-align: left; transition: all 0.15s; width: 100%;
-        &:hover { border-color: #3A9FD6; background: #f0f8ff; }
-        &.selected { border-color: #1B2A47; background: #f0f4f8; }
+        &:hover { border-color: var(--artes-accent); background: #f0f8ff; }
+        &.selected { border-color: var(--artes-primary); background: #f0f4f8; }
         .fc-badge {
           width: 28px; height: 28px; border-radius: 50%;
-          background: #e8edf4; color: #1B2A47;
+          background: #e8edf4; color: var(--artes-primary);
           display: flex; align-items: center; justify-content: center;
           font-size: 12px; font-weight: 700; flex-shrink: 0;
         }
-        &.selected .fc-badge { background: #1B2A47; color: white; }
+        &.selected .fc-badge { background: var(--artes-primary); color: white; }
         .fc-text {
           flex: 1; font-size: 15px; color: #374151; line-height: 1.5;
         }
@@ -447,7 +447,7 @@ const DEPARTMENTS = [
         margin-bottom: 20px;
         &.already mat-icon { color: #9aa5b4; }
       }
-      h2 { font-size: 24px; color: #1B2A47; margin-bottom: 12px; }
+      h2 { font-size: 24px; color: var(--artes-primary); margin-bottom: 12px; }
       p  { color: #5a6a7e; font-size: 15px; line-height: 1.6; margin-bottom: 28px; max-width: 400px; margin-inline: auto; }
     }
 

@@ -119,7 +119,7 @@ import { BookingConfirmComponent } from '../booking-confirm/booking-confirm.comp
   styles: [`
     .page {
       min-height: 100vh;
-      background: linear-gradient(180deg, #f7f9fc 0%, #EBF5FB 100%);
+      background: linear-gradient(180deg, #f7f9fc 0%, var(--artes-bg) 100%);
       padding: 48px 16px;
       box-sizing: border-box;
       position: relative;
@@ -153,7 +153,7 @@ import { BookingConfirmComponent } from '../booking-confirm/booking-confirm.comp
     .loading, .error-state {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       min-height: 60vh; gap: 12px;
-      h2 { margin: 0; color: #1B2A47; font-size: 22px; }
+      h2 { margin: 0; color: var(--artes-primary); font-size: 22px; }
       p { margin: 0; color: #6b7c93; max-width: 420px; text-align: center; }
       mat-icon { font-size: 56px; width: 56px; height: 56px; color: #c8d3df; }
     }
@@ -165,7 +165,7 @@ import { BookingConfirmComponent } from '../booking-confirm/booking-confirm.comp
     .header {
       text-align: center; margin-bottom: 40px;
       h1 {
-        margin: 16px 0 8px; font-size: 30px; color: #1B2A47;
+        margin: 16px 0 8px; font-size: 30px; color: var(--artes-primary);
         letter-spacing: -0.5px; font-weight: 700;
       }
     }
@@ -179,7 +179,7 @@ import { BookingConfirmComponent } from '../booking-confirm/booking-confirm.comp
     .avatar { object-fit: cover; }
     .avatar-fallback {
       display: flex; align-items: center; justify-content: center;
-      background: linear-gradient(135deg, #3A9FD6, #27C4A0);
+      background: linear-gradient(135deg, var(--artes-accent), #27C4A0);
       color: #fff; font-size: 32px; font-weight: 600;
     }
     .bio {
@@ -199,7 +199,7 @@ import { BookingConfirmComponent } from '../booking-confirm/booking-confirm.comp
     .event-card {
       display: flex; align-items: center; gap: 16px;
       background: #fff; border-radius: 12px; padding: 20px 22px;
-      border-left: 4px solid #3A9FD6;
+      border-left: 4px solid var(--artes-accent);
       box-shadow: 0 1px 3px rgba(27, 42, 71, 0.06);
       transition: transform 0.12s ease, box-shadow 0.12s ease;
       &:hover {
@@ -210,7 +210,7 @@ import { BookingConfirmComponent } from '../booking-confirm/booking-confirm.comp
     .event-body {
       flex: 1; min-width: 0;
       h3 {
-        margin: 0 0 8px; font-size: 17px; color: #1B2A47;
+        margin: 0 0 8px; font-size: 17px; color: var(--artes-primary);
         font-weight: 600;
       }
     }
@@ -220,7 +220,7 @@ import { BookingConfirmComponent } from '../booking-confirm/booking-confirm.comp
     }
     .meta-item {
       display: inline-flex; align-items: center; gap: 4px;
-      mat-icon { font-size: 16px; width: 16px; height: 16px; color: #3A9FD6; }
+      mat-icon { font-size: 16px; width: 16px; height: 16px; color: var(--artes-accent); }
     }
     .event-desc {
       margin: 8px 0 0; color: #46546b; font-size: 14px; line-height: 1.5;

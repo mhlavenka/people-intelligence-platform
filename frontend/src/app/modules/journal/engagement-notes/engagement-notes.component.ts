@@ -149,7 +149,7 @@ interface EngagementInfo {
   `,
   styles: [`
     .journal-page { padding: 32px; max-width: 960px; background: #F8F6F1; min-height: 100%; }
-    .back-link { display: flex; align-items: center; gap: 4px; color: #3A9FD6; text-decoration: none; font-size: 14px; font-weight: 500; margin-bottom: 16px; }
+    .back-link { display: flex; align-items: center; gap: 4px; color: var(--artes-accent); text-decoration: none; font-size: 14px; font-weight: 500; margin-bottom: 16px; }
     .loading-center { display: flex; justify-content: center; padding: 64px; }
 
     .eng-header {
@@ -159,7 +159,7 @@ interface EngagementInfo {
     .eng-title {
       display: flex; align-items: center; gap: 12px;
       mat-icon { font-size: 28px; width: 28px; height: 28px; color: #7c5cbf; }
-      h1 { font-size: 20px; color: #1B2A47; margin: 0; }
+      h1 { font-size: 20px; color: var(--artes-primary); margin: 0; }
       .coachee-name { font-size: 14px; color: #5a6a7e; margin-right: 8px; }
     }
     .eng-status {
@@ -167,7 +167,7 @@ interface EngagementInfo {
       &.active { background: #e8faf4; color: #1a9678; }
       &.completed { background: #e8faf4; color: #1a9678; }
       &.prospect { background: #f0f4f8; color: #9aa5b4; }
-      &.contracted { background: #EBF5FB; color: #3A9FD6; }
+      &.contracted { background: var(--artes-bg); color: var(--artes-accent); }
       &.paused { background: #fefce8; color: #b07800; }
     }
     .header-actions { display: flex; gap: 8px; }
@@ -176,7 +176,7 @@ interface EngagementInfo {
       text-align: center; padding: 48px; color: #9aa5b4;
       background: white; border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06);
       mat-icon { font-size: 48px; width: 48px; height: 48px; display: block; margin: 0 auto 12px; }
-      h3 { color: #1B2A47; margin-bottom: 8px; }
+      h3 { color: var(--artes-primary); margin-bottom: 8px; }
       p { margin: 0; }
     }
 
@@ -202,7 +202,7 @@ interface EngagementInfo {
       &:hover { box-shadow: 0 3px 12px rgba(0,0,0,0.1); }
     }
     .tc-header { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
-    .tc-date { font-size: 13px; font-weight: 600; color: #1B2A47; }
+    .tc-date { font-size: 13px; font-weight: 600; color: var(--artes-primary); }
     .tc-format { font-size: 12px; color: #5a6a7e; }
     .tc-status {
       font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 1px 8px; border-radius: 999px;
@@ -223,12 +223,12 @@ interface EngagementInfo {
       padding: 20px; margin-top: 24px;
     }
     .ai-header {
-      display: flex; align-items: center; gap: 6px; font-size: 16px; font-weight: 700; color: #1B2A47; margin-bottom: 16px;
+      display: flex; align-items: center; gap: 6px; font-size: 16px; font-weight: 700; color: var(--artes-primary); margin-bottom: 16px;
       mat-icon { color: #27C4A0; }
     }
     .ai-section {
       margin-bottom: 14px;
-      h4 { font-size: 13px; font-weight: 700; color: #1B2A47; margin: 0 0 4px; text-transform: uppercase; letter-spacing: 0.3px; }
+      h4 { font-size: 13px; font-weight: 700; color: var(--artes-primary); margin: 0 0 4px; text-transform: uppercase; letter-spacing: 0.3px; }
       p { font-size: 14px; color: #374151; line-height: 1.6; margin: 0; }
       ul { margin: 4px 0 0; padding-left: 18px; font-size: 14px; color: #374151; }
       .theme-list { display: flex; flex-wrap: wrap; gap: 4px; }
@@ -236,8 +236,8 @@ interface EngagementInfo {
 
     /* Accountability */
     .section-title {
-      font-size: 16px; color: #1B2A47; display: flex; align-items: center; gap: 6px; margin: 0 0 12px;
-      mat-icon { font-size: 20px; width: 20px; height: 20px; color: #3A9FD6; }
+      font-size: 16px; color: var(--artes-primary); display: flex; align-items: center; gap: 6px; margin: 0 0 12px;
+      mat-icon { font-size: 20px; width: 20px; height: 20px; color: var(--artes-accent); }
     }
     .acc-group { margin-bottom: 12px; }
     .acc-session { font-size: 12px; font-weight: 600; color: #9aa5b4; text-transform: uppercase; margin-bottom: 4px; }

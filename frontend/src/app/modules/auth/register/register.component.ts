@@ -108,7 +108,7 @@ import { AuthService } from '../../../core/auth.service';
       display: flex;
       align-items: center;
       justify-content: center;
-      background: linear-gradient(135deg, #1B2A47, #3A9FD6);
+      background: linear-gradient(135deg, var(--artes-primary), var(--artes-accent));
       padding: 24px;
     }
     .auth-card {
@@ -124,18 +124,18 @@ import { AuthService } from '../../../core/auth.service';
       margin-bottom: 24px;
       .brand-logo {
         width: 350px; height: 120px;
-        background: linear-gradient(135deg, #1B2A47, #3A9FD6);
+        background: linear-gradient(135deg, var(--artes-primary), var(--artes-accent));
         border-radius: 14px;
         display: flex; align-items: center; justify-content: center;
         .logo-pip { color: white; font-size: 18px; font-weight: 700; }
       }
-      h1 { font-size: 20px; color: #1B2A47; margin: 0 0 4px; }
+      h1 { font-size: 20px; color: var(--artes-primary); margin: 0 0 4px; }
       p  { font-size: 12px; color: #9aa5b4; margin: 0; }
     }
     .auth-brand-footer {
       text-align: center;
       margin-top: 24px;
-      h1 { font-size: 20px; color: #1B2A47; margin: 0 0 4px; }
+      h1 { font-size: 20px; color: var(--artes-primary); margin: 0 0 4px; }
       p  { font-size: 12px; color: #9aa5b4; margin: 0; }
     }
     
@@ -147,7 +147,7 @@ import { AuthService } from '../../../core/auth.service';
     .step-fields { padding-top: 12px; display: flex; flex-direction: column; gap: 4px; }
     .name-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .step-actions { display: flex; gap: 12px; align-items: center; margin-top: 8px; }
-    .auth-links { text-align: center; margin-top: 16px; font-size: 14px; a { color: #3A9FD6; } }
+    .auth-links { text-align: center; margin-top: 16px; font-size: 14px; a { color: var(--artes-accent); } }
   `],
 })
 export class RegisterComponent {

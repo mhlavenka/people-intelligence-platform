@@ -630,8 +630,8 @@ interface SurveyTemplate {
   `,
   styles: [`
     h2[mat-dialog-title] {
-      display: flex; align-items: center; gap: 8px; color: #1B2A47;
-      mat-icon { color: #3A9FD6; }
+      display: flex; align-items: center; gap: 8px; color: var(--artes-primary);
+      mat-icon { color: var(--artes-accent); }
     }
 
     mat-dialog-content {
@@ -657,7 +657,7 @@ interface SurveyTemplate {
     }
     .tab-icon { font-size: 18px; width: 18px; height: 18px; margin-right: 4px; vertical-align: middle; }
     .tab-count {
-      margin-left: 6px; background: #EBF5FB; color: #3A9FD6;
+      margin-left: 6px; background: var(--artes-bg); color: var(--artes-accent);
       padding: 1px 7px; border-radius: 999px; font-size: 11px;
     }
 
@@ -692,7 +692,7 @@ interface SurveyTemplate {
       border: 1px solid #e2eaf2; display: flex; flex-direction: column; gap: 8px;
     }
     .inset-label {
-      font-size: 12px; font-weight: 600; color: #3A9FD6; margin-bottom: 2px;
+      font-size: 12px; font-weight: 600; color: var(--artes-accent); margin-bottom: 2px;
     }
 
     /* Checkboxes */
@@ -736,7 +736,7 @@ interface SurveyTemplate {
     }
     .q-number {
       width: 28px; height: 28px; border-radius: 50%;
-      background: #1B2A47; color: white;
+      background: var(--artes-primary); color: white;
       display: flex; align-items: center; justify-content: center;
       font-size: 12px; font-weight: 700; flex-shrink: 0; margin-top: 12px;
     }
@@ -752,13 +752,13 @@ interface SurveyTemplate {
     .fc-header { display: flex; flex-direction: column; gap: 8px; }
     .fc-option-label {
       font-size: 11px; font-weight: 700; text-transform: uppercase;
-      letter-spacing: 0.5px; color: #3A9FD6;
+      letter-spacing: 0.5px; color: var(--artes-accent);
     }
     .fc-meta { display: flex; gap: 8px; align-items: flex-start; flex-wrap: wrap; }
     .fc-row { display: flex; align-items: center; gap: 8px; }
     .fc-badge {
       width: 26px; height: 26px; border-radius: 50%;
-      background: #1B2A47; color: white;
+      background: var(--artes-primary); color: white;
       display: flex; align-items: center; justify-content: center;
       font-size: 11px; font-weight: 700; flex-shrink: 0;
     }
@@ -780,12 +780,12 @@ interface SurveyTemplate {
     .adv-q-fields { display: flex; flex-direction: column; gap: 8px; padding-top: 4px; }
     .scale-range-block { display: flex; flex-direction: column; gap: 6px; }
     .gen-labels-btn {
-      height: 56px; align-self: flex-start; color: #3A9FD6;
-      border-color: #3A9FD6; font-size: 12px;
+      height: 56px; align-self: flex-start; color: var(--artes-accent);
+      border-color: var(--artes-accent); font-size: 12px;
     }
 
     .remove-btn { color: #9aa5b4; flex-shrink: 0; margin-top: 6px; }
-    .add-q-btn { width: 100%; margin-top: 4px; color: #3A9FD6; border-color: #3A9FD6; }
+    .add-q-btn { width: 100%; margin-top: 4px; color: var(--artes-accent); border-color: var(--artes-accent); }
   `],
 })
 export class SurveyTemplateDialogComponent implements OnInit {

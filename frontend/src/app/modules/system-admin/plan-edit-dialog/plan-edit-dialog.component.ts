@@ -152,7 +152,7 @@ const MODULE_DEFS = [
     </mat-dialog-actions>
   `,
   styles: [`
-    h2[mat-dialog-title] { display: flex; align-items: center; gap: 8px; color: #1B2A47; mat-icon { color: #3A9FD6; } }
+    h2[mat-dialog-title] { display: flex; align-items: center; gap: 8px; color: var(--artes-primary); mat-icon { color: var(--artes-accent); } }
     mat-dialog-content { min-width: 620px; max-height: 78vh; overflow-y: auto; padding-top: 8px !important; }
     .form-grid { display: flex; flex-direction: column; gap: 12px; }
     .form-row { display: flex; gap: 12px; flex-wrap: wrap; }
@@ -161,8 +161,8 @@ const MODULE_DEFS = [
     .field-sm { width: 170px; flex-shrink: 0; }
     .field-lg { flex: 1; min-width: 180px; }
     .section-label {
-      display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: #1B2A47; margin-top: 8px;
-      mat-icon { font-size: 18px; color: #3A9FD6; }
+      display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: var(--artes-primary); margin-top: 8px;
+      mat-icon { font-size: 18px; color: var(--artes-accent); }
       .hint { font-size: 11px; color: #9aa5b4; font-weight: 400; margin-left: auto; }
     }
     .module-check-row { display: flex; gap: 16px; flex-wrap: wrap; }

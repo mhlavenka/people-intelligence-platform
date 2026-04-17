@@ -164,7 +164,7 @@ import { SponsorInvoiceEditDialogComponent } from '../sponsor-invoice-edit-dialo
     .header {
       display: flex; align-items: center; gap: 12px; margin-bottom: 20px;
       .header-text { flex: 1; min-width: 0; }
-      h1 { margin: 0; font-size: 22px; color: #1B2A47; }
+      h1 { margin: 0; font-size: 22px; color: var(--artes-primary); }
       p  { margin: 4px 0 0; color: #6b7c93; font-size: 13px; }
       mat-spinner { display: inline-block; margin-right: 6px; }
     }
@@ -178,13 +178,13 @@ import { SponsorInvoiceEditDialogComponent } from '../sponsor-invoice-edit-dialo
     }
     .totals {
       display: flex; flex-direction: column; gap: 4px;
-      background: #fff; color: #1B2A47;
+      background: #fff; color: var(--artes-primary);
       border: 1px solid #eef2f7; border-radius: 12px; padding: 18px 22px;
       .totals-label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.6px; color: #6b7c93; }
       .totals-value { font-size: 26px; font-weight: 700; }
       .totals-hint  { font-size: 11px; color: #9aa5b4; }
       &.estimate {
-        background: linear-gradient(135deg, #1B2A47, #3A9FD6); color: #fff;
+        background: linear-gradient(135deg, var(--artes-primary), var(--artes-accent)); color: #fff;
         border: none;
         .totals-label { color: rgba(255,255,255,0.85); }
         .totals-hint  { color: rgba(255,255,255,0.7); }
@@ -207,7 +207,7 @@ import { SponsorInvoiceEditDialogComponent } from '../sponsor-invoice-edit-dialo
       display: flex; justify-content: space-between; align-items: center;
       padding: 14px 18px; background: #f7f9fc;
       border-bottom: 1px solid #eef2f7;
-      strong { color: #1B2A47; font-size: 15px; }
+      strong { color: var(--artes-primary); font-size: 15px; }
       .coachee-email { display: block; color: #9aa5b4; font-size: 12px; margin-top: 2px; }
       .coachee-subtotal { font-size: 16px; font-weight: 700; color: #0f8a5f; }
     }
@@ -226,12 +226,12 @@ import { SponsorInvoiceEditDialogComponent } from '../sponsor-invoice-edit-dialo
       font-size: 10px; padding: 2px 8px; border-radius: 999px;
       background: #f0f4f8; color: #6b7c93; align-self: flex-start;
       &.st-active   { background: #e8f9f2; color: #0f8a5f; }
-      &.st-completed { background: #EBF5FB; color: #3A9FD6; }
+      &.st-completed { background: var(--artes-bg); color: var(--artes-accent); }
       &.st-paused   { background: #fef6e6; color: #b87e08; }
     }
     .eng-meta { font-size: 13px; color: #6b7c93; }
     .eng-rate { font-size: 13px; color: #9aa5b4; }
-    .eng-amt  { font-size: 15px; font-weight: 600; color: #1B2A47; min-width: 80px; text-align: right; }
+    .eng-amt  { font-size: 15px; font-weight: 600; color: var(--artes-primary); min-width: 80px; text-align: right; }
 
     .muted-row { color: #9aa5b4; font-size: 14px; padding: 10px 0; }
     .muted { color: #9aa5b4; font-size: 12px; margin-left: 8px; }
@@ -242,7 +242,7 @@ import { SponsorInvoiceEditDialogComponent } from '../sponsor-invoice-edit-dialo
       display: grid; grid-template-columns: 2fr 100px 110px 1fr 100px;
       gap: 12px; align-items: center;
       padding: 8px 18px; border-bottom: 1px solid #f5f7fa;
-      font-size: 14px; color: #1B2A47;
+      font-size: 14px; color: var(--artes-primary);
       &:last-child { border-bottom: none; }
     }
     .inv-id strong { display: block; }
@@ -261,7 +261,7 @@ import { SponsorInvoiceEditDialogComponent } from '../sponsor-invoice-edit-dialo
       font-size: 10px; padding: 2px 10px; border-radius: 999px; text-align: center;
       background: #f0f4f8; color: #6b7c93;
       &.is-draft  { background: #fef6e6; color: #b87e08; }
-      &.is-sent   { background: #EBF5FB; color: #3A9FD6; }
+      &.is-sent   { background: var(--artes-bg); color: var(--artes-accent); }
       &.is-paid   { background: #e8f9f2; color: #0f8a5f; }
       &.is-overdue { background: #fef2f2; color: #dc2626; }
       &.is-void   { background: #f0f4f8; color: #9aa5b4; }

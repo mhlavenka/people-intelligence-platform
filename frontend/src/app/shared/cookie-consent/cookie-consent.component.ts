@@ -30,7 +30,7 @@ const CONSENT_KEY = 'artes_cookie_consent';
       position: fixed; bottom: 0; left: 0; right: 0; z-index: 10000;
       display: flex; align-items: center; gap: 16px;
       padding: 16px 32px;
-      background: #1B2A47; color: rgba(255,255,255,0.9);
+      background: var(--artes-primary); color: rgba(255,255,255,0.9);
       box-shadow: 0 -4px 24px rgba(0,0,0,0.15);
       animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
@@ -48,7 +48,7 @@ const CONSENT_KEY = 'artes_cookie_consent';
     .cookie-icon { color: #e67e22; font-size: 28px; width: 28px; height: 28px; flex-shrink: 0; }
     .cookie-text {
       flex: 1; font-size: 14px; line-height: 1.5;
-      a { color: #3A9FD6; text-decoration: none; margin-left: 4px; &:hover { text-decoration: underline; } }
+      a { color: var(--artes-accent); text-decoration: none; margin-left: 4px; &:hover { text-decoration: underline; } }
     }
     .cookie-actions { flex-shrink: 0; }
     @media (max-width: 640px) {

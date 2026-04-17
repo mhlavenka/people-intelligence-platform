@@ -331,7 +331,7 @@ const FORMAT_OPTIONS: { key: SessionFormat; label: string; icon: string; hint: s
     .done-state {
       text-align: center; padding: 40px 0;
       .done-icon { margin-bottom: 16px; mat-icon { font-size: 64px; width: 64px; height: 64px; color: #27C4A0; } }
-      h2 { color: #1B2A47; margin: 0 0 8px; }
+      h2 { color: var(--artes-primary); margin: 0 0 8px; }
       p  { color: #5a6a7e; font-size: 15px; margin: 0 0 32px; }
     }
     .done-actions { display: flex; gap: 12px; justify-content: center; }
@@ -346,8 +346,8 @@ const FORMAT_OPTIONS: { key: SessionFormat; label: string; icon: string; hint: s
         font-size: 12px; font-weight: 700; color: #9aa5b4; background: #fff; transition: all 0.2s;
       }
       span { font-size: 13px; color: #9aa5b4; font-weight: 500; }
-      &.active .step-dot { border-color: #3A9FD6; color: #3A9FD6; }
-      &.active span { color: #1B2A47; }
+      &.active .step-dot { border-color: var(--artes-accent); color: var(--artes-accent); }
+      &.active span { color: var(--artes-primary); }
       &.done .step-dot { border-color: #27C4A0; background: #27C4A0; color: #fff; }
       &.done span { color: #27C4A0; }
     }
@@ -355,8 +355,8 @@ const FORMAT_OPTIONS: { key: SessionFormat; label: string; icon: string; hint: s
 
     /* Common step layout */
     .step-content {
-      h2 { display: flex; align-items: center; gap: 8px; color: #1B2A47; font-size: 20px; margin: 0 0 6px;
-           mat-icon { color: #3A9FD6; } }
+      h2 { display: flex; align-items: center; gap: 8px; color: var(--artes-primary); font-size: 20px; margin: 0 0 6px;
+           mat-icon { color: var(--artes-accent); } }
     }
     .step-hint { color: #6b7280; font-size: 14px; margin: 0 0 24px; }
     .step-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
@@ -370,11 +370,11 @@ const FORMAT_OPTIONS: { key: SessionFormat; label: string; icon: string; hint: s
     .template-card {
       border: 2px solid #e8edf4; border-radius: 12px; padding: 14px 16px; cursor: pointer;
       transition: border-color 0.15s, box-shadow 0.15s;
-      &:hover { border-color: #3A9FD6; }
-      &.selected { border-color: #3A9FD6; background: rgba(58,159,214,0.04); box-shadow: 0 0 0 3px rgba(58,159,214,0.1); }
+      &:hover { border-color: var(--artes-accent); }
+      &.selected { border-color: var(--artes-accent); background: rgba(58,159,214,0.04); box-shadow: 0 0 0 3px rgba(58,159,214,0.1); }
     }
     .template-top { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-    .template-title { font-size: 15px; font-weight: 600; color: #1B2A47; }
+    .template-title { font-size: 15px; font-weight: 600; color: var(--artes-primary); }
     .template-qs { font-size: 12px; color: #9aa5b4; margin-top: 4px; }
 
     .type-badge {
@@ -398,11 +398,11 @@ const FORMAT_OPTIONS: { key: SessionFormat; label: string; icon: string; hint: s
       border: 2px solid #e8edf4; border-radius: 12px; padding: 16px 12px; cursor: pointer;
       text-align: center; transition: border-color 0.15s, box-shadow 0.15s;
       mat-icon { font-size: 28px; width: 28px; height: 28px; color: #9aa5b4; display: block; margin: 0 auto 8px; }
-      &:hover { border-color: #3A9FD6; mat-icon { color: #3A9FD6; } }
+      &:hover { border-color: var(--artes-accent); mat-icon { color: var(--artes-accent); } }
       &.selected {
-        border-color: #3A9FD6; background: rgba(58,159,214,0.06); box-shadow: 0 0 0 3px rgba(58,159,214,0.12);
-        mat-icon { color: #3A9FD6; }
-        .format-label { color: #1B2A47; }
+        border-color: var(--artes-accent); background: rgba(58,159,214,0.06); box-shadow: 0 0 0 3px rgba(58,159,214,0.12);
+        mat-icon { color: var(--artes-accent); }
+        .format-label { color: var(--artes-primary); }
       }
     }
     .format-label { font-size: 14px; font-weight: 600; color: #374151; margin-bottom: 4px; }
@@ -414,27 +414,27 @@ const FORMAT_OPTIONS: { key: SessionFormat; label: string; icon: string; hint: s
       display: flex; align-items: center; gap: 14px;
       border: 2px solid #e8edf4; border-radius: 10px; padding: 10px 14px; cursor: pointer;
       transition: border-color 0.15s;
-      &:hover { border-color: #3A9FD6; }
-      &.selected { border-color: #3A9FD6; background: rgba(58,159,214,0.04); }
+      &:hover { border-color: var(--artes-accent); }
+      &.selected { border-color: var(--artes-accent); background: rgba(58,159,214,0.04); }
     }
     .coachee-avatar {
-      width: 36px; height: 36px; border-radius: 50%; background: #3A9FD6; color: #fff;
+      width: 36px; height: 36px; border-radius: 50%; background: var(--artes-accent); color: #fff;
       display: flex; align-items: center; justify-content: center;
       font-size: 13px; font-weight: 700; flex-shrink: 0;
     }
     .coachee-info { flex: 1; }
-    .coachee-name { font-size: 14px; font-weight: 600; color: #1B2A47; }
+    .coachee-name { font-size: 14px; font-weight: 600; color: var(--artes-primary); }
     .coachee-meta { font-size: 12px; color: #9aa5b4; }
-    .check-icon { color: #3A9FD6; font-size: 20px; width: 20px; height: 20px; }
+    .check-icon { color: var(--artes-accent); font-size: 20px; width: 20px; height: 20px; }
 
     /* Session banner */
     .session-banner {
       display: flex; align-items: center; gap: 12px;
       background: rgba(58,159,214,0.08); border-radius: 10px; padding: 12px 16px;
       margin-bottom: 20px;
-      mat-icon { color: #3A9FD6; flex-shrink: 0; font-size: 24px; }
+      mat-icon { color: var(--artes-accent); flex-shrink: 0; font-size: 24px; }
     }
-    .banner-title { font-size: 14px; font-weight: 600; color: #1B2A47; }
+    .banner-title { font-size: 14px; font-weight: 600; color: var(--artes-primary); }
     .banner-meta  { font-size: 13px; color: #5a6a7e; display: flex; align-items: center; gap: 8px; margin-top: 2px; }
     .format-pill  {
       background: rgba(58,159,214,0.15); color: #2080b0; padding: 1px 8px;
@@ -450,8 +450,8 @@ const FORMAT_OPTIONS: { key: SessionFormat; label: string; icon: string; hint: s
 
     /* Questions */
     .question-block { display: flex; flex-direction: column; gap: 20px; }
-    .question-category { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #3A9FD6; }
-    .question-text { font-size: 18px; font-weight: 500; color: #1B2A47; margin: 0; line-height: 1.5; }
+    .question-category { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--artes-accent); }
+    .question-text { font-size: 18px; font-weight: 500; color: var(--artes-primary); margin: 0; line-height: 1.5; }
 
     .scale-container { display: flex; flex-direction: column; gap: 10px; }
     .scale-labels { display: flex; justify-content: space-between; font-size: 12px; color: #9aa5b4; }
@@ -460,8 +460,8 @@ const FORMAT_OPTIONS: { key: SessionFormat; label: string; icon: string; hint: s
       width: 44px; height: 44px; border-radius: 8px; border: 2px solid #e8edf4;
       background: #fff; cursor: pointer; font-size: 14px; font-weight: 600; color: #374151;
       transition: all 0.15s;
-      &:hover { border-color: #3A9FD6; color: #3A9FD6; }
-      &.selected { background: #3A9FD6; border-color: #3A9FD6; color: #fff; }
+      &:hover { border-color: var(--artes-accent); color: var(--artes-accent); }
+      &.selected { background: var(--artes-accent); border-color: var(--artes-accent); color: #fff; }
     }
     .scale-hint { font-size: 13px; color: #6b7280; margin: 0; }
 
@@ -470,8 +470,8 @@ const FORMAT_OPTIONS: { key: SessionFormat; label: string; icon: string; hint: s
       display: flex; align-items: center; gap: 8px; padding: 14px 28px; border-radius: 12px;
       border: 2px solid #e8edf4; background: #fff; cursor: pointer;
       font-size: 15px; font-weight: 600; color: #374151; transition: all 0.15s;
-      &:hover { border-color: #3A9FD6; }
-      &.selected { background: #3A9FD6; border-color: #3A9FD6; color: #fff; }
+      &:hover { border-color: var(--artes-accent); }
+      &.selected { background: var(--artes-accent); border-color: var(--artes-accent); color: #fff; }
       mat-icon { font-size: 20px; }
     }
 

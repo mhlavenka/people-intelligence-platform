@@ -246,7 +246,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: string
     .stat-card {
       background: white; border-radius: 12px; padding: 16px; text-align: center;
       box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-      .stat-num { font-size: 28px; font-weight: 700; color: #1B2A47; }
+      .stat-num { font-size: 28px; font-weight: 700; color: var(--artes-primary); }
       .stat-label { font-size: 12px; color: #5a6a7e; margin-top: 2px; }
     }
 
@@ -270,7 +270,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: string
       color: #6b7c93;
       font: inherit; gap: 6px;
       &:hover {
-        border-color: #3A9FD6; color: #3A9FD6;
+        border-color: var(--artes-accent); color: var(--artes-accent);
         box-shadow: none; transform: translateY(-1px); background: rgba(58,159,214,0.04);
       }
       .add-icon { font-size: 36px; width: 36px; height: 36px; }
@@ -288,23 +288,23 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: string
     .eng-coachee { display: flex; align-items: center; gap: 12px; }
     .coachee-avatar {
       width: 40px; height: 40px; border-radius: 50%;
-      background: linear-gradient(135deg, #3A9FD6, #27C4A0);
+      background: linear-gradient(135deg, var(--artes-accent), #27C4A0);
       display: flex; align-items: center; justify-content: center;
       font-size: 14px; font-weight: 700; color: white; flex-shrink: 0;
     }
     .coachee-avatar-img { object-fit: cover; background: none; }
     .coachee-info {
       display: flex; flex-direction: column; gap: 1px; min-width: 0;
-      strong { font-size: 14px; color: #1B2A47; }
+      strong { font-size: 14px; color: var(--artes-primary); }
       span { font-size: 12px; color: #9aa5b4; }
       .role-label {
         text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;
-        color: #3A9FD6; font-size: 10px; margin-top: 2px;
+        color: var(--artes-accent); font-size: 10px; margin-top: 2px;
       }
     }
 
     .eng-goals { display: flex; gap: 6px; flex-wrap: wrap; }
-    .goal-chip { font-size: 11px; background: #EBF5FB; color: #3A9FD6; padding: 2px 8px; border-radius: 4px; }
+    .goal-chip { font-size: 11px; background: var(--artes-bg); color: var(--artes-accent); padding: 2px 8px; border-radius: 4px; }
     .goal-more { font-size: 11px; color: #9aa5b4; }
 
     .eng-meta {
@@ -325,7 +325,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: string
     }
     .cal-header {
       display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;
-      .cal-month { font-size: 14px; font-weight: 600; color: #1B2A47; }
+      .cal-month { font-size: 14px; font-weight: 600; color: var(--artes-primary); }
     }
     .cal-grid {
       display: grid; grid-template-columns: repeat(7, 1fr);
@@ -340,7 +340,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: string
       display: flex; flex-direction: column; gap: 1px;
       &:nth-child(7n) { border-right: none; }
       &.other { background: #fafbfc; .cal-num { color: #d1d5db; } }
-      &.today { background: #f0f9ff; .cal-num { background: #3A9FD6; color: white; border-radius: 50%; width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; } }
+      &.today { background: #f0f9ff; .cal-num { background: var(--artes-accent); color: white; border-radius: 50%; width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; } }
     }
     .cal-num { font-size: 10px; color: #5a6a7e; margin-bottom: 1px; }
     .cal-event {
@@ -348,7 +348,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: string
       text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
       border-left: 2px solid transparent;
       &.completed { background: #e8faf4; color: #1a9678; border-left-color: #27C4A0; }
-      &.scheduled { background: #EBF5FB; color: #2080b0; border-left-color: #3A9FD6; }
+      &.scheduled { background: var(--artes-bg); color: #2080b0; border-left-color: var(--artes-accent); }
       &.cancelled { background: #f0f4f8; color: #9aa5b4; border-left-color: #c5d0db; }
       &.no_show { background: #fef2f2; color: #c53030; border-left-color: #e53e3e; }
     }
@@ -357,15 +357,15 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: string
 
     .cal-upcoming {
       margin-top: 12px; border-top: 1px solid #f0f4f8; padding-top: 12px;
-      h4 { font-size: 12px; font-weight: 600; color: #1B2A47; margin: 0 0 8px; }
+      h4 { font-size: 12px; font-weight: 600; color: var(--artes-primary); margin: 0 0 8px; }
     }
     .upcoming-item {
       display: flex; align-items: center; gap: 6px; padding: 6px 8px; border-radius: 6px;
       text-decoration: none; font-size: 12px; transition: background 0.15s;
       &:hover { background: #f8fafc; }
     }
-    .upcoming-date { font-weight: 600; color: #1B2A47; min-width: 48px; }
-    .upcoming-time { color: #3A9FD6; min-width: 56px; }
+    .upcoming-date { font-weight: 600; color: var(--artes-primary); min-width: 48px; }
+    .upcoming-time { color: var(--artes-accent); min-width: 56px; }
     .upcoming-name { flex: 1; color: #5a6a7e; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .upcoming-dur { color: #9aa5b4; font-size: 11px; }
 

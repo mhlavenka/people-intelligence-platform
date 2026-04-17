@@ -17,11 +17,11 @@ import { MatIconModule } from '@angular/material/icon';
   styles: [`
     .stat-card {
       background: white; border-radius: 12px; padding: 16px 20px;
-      border-left: 4px solid #3A9FD6; box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+      border-left: 4px solid var(--artes-accent); box-shadow: 0 1px 4px rgba(0,0,0,0.06);
       display: flex; flex-direction: column; gap: 2px; min-width: 0;
     }
     .stat-icon { font-size: 20px; width: 20px; height: 20px; margin-bottom: 4px; }
-    .stat-value { font-size: 24px; font-weight: 700; color: #1B2A47; line-height: 1.2; }
+    .stat-value { font-size: 24px; font-weight: 700; color: var(--artes-primary); line-height: 1.2; }
     .stat-label { font-size: 12px; color: #6b7c93; font-weight: 500; }
   `],
 })

@@ -137,7 +137,7 @@ interface ModuleCard {
       align-items: flex-start;
       justify-content: space-between;
       margin-bottom: 32px;
-      h1 { font-size: 28px; color: #1B2A47; margin: 0 0 4px; }
+      h1 { font-size: 28px; color: var(--artes-primary); margin: 0 0 4px; }
       p  { color: #5a6a7e; margin: 0; }
       .last-updated { font-size: 12px; color: #9aa5b4; }
     }
@@ -189,7 +189,7 @@ interface ModuleCard {
         &.inactive { background: #9aa5b4; }
       }
 
-      h3 { font-size: 16px; color: #1B2A47; margin: 0 0 4px; }
+      h3 { font-size: 16px; color: var(--artes-primary); margin: 0 0 4px; }
       p  { font-size: 13px; color: #5a6a7e; margin: 0 0 16px; }
 
       .card-metric {
@@ -197,12 +197,12 @@ interface ModuleCard {
         align-items: baseline;
         gap: 8px;
         margin-bottom: 16px;
-        .metric-value { font-size: 32px; font-weight: 700; color: #1B2A47; }
+        .metric-value { font-size: 32px; font-weight: 700; color: var(--artes-primary); }
         .metric-value.metric-none { color: #9aa5b4; }
         .metric-label { font-size: 13px; color: #9aa5b4; }
       }
 
-      .card-footer button { font-weight: 600; color: #3A9FD6; }
+      .card-footer button { font-weight: 600; color: var(--artes-accent); }
     }
 
     .module-card--warning { border-color: rgba(240, 165, 0, 0.3); }
@@ -213,7 +213,7 @@ interface ModuleCard {
       background: white; border-radius: 16px;
       box-shadow: 0 2px 12px rgba(0,0,0,0.06); margin-bottom: 28px;
       mat-icon { font-size: 48px; width: 48px; height: 48px; color: #c5d0db; }
-      h3 { font-size: 18px; color: #1B2A47; margin: 0; }
+      h3 { font-size: 18px; color: var(--artes-primary); margin: 0; }
       p  { font-size: 14px; color: #9aa5b4; margin: 0; max-width: 400px; }
     }
 
@@ -226,8 +226,8 @@ interface ModuleCard {
     }
     .section-header {
       display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;
-      h2 { font-size: 18px; color: #1B2A47; margin: 0; display: flex; align-items: center; gap: 8px; }
-      .sh-icon { color: #3A9FD6; font-size: 22px; width: 22px; height: 22px; }
+      h2 { font-size: 18px; color: var(--artes-primary); margin: 0; display: flex; align-items: center; gap: 8px; }
+      .sh-icon { color: var(--artes-accent); font-size: 22px; width: 22px; height: 22px; }
     }
 
     .upcoming-loading { display: flex; justify-content: center; padding: 28px; }
@@ -252,15 +252,15 @@ interface ModuleCard {
     .upcoming-date {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       min-width: 48px; padding: 6px 4px; border-radius: 8px;
-      background: #EBF5FB; color: #1B2A47;
+      background: var(--artes-bg); color: var(--artes-primary);
       .upcoming-day   { font-size: 18px; font-weight: 700; line-height: 1; }
-      .upcoming-month { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; color: #3A9FD6; }
+      .upcoming-month { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; color: var(--artes-accent); }
     }
     .upcoming-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-    .upcoming-title { font-size: 14px; font-weight: 600; color: #1B2A47;
+    .upcoming-title { font-size: 14px; font-weight: 600; color: var(--artes-primary);
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .upcoming-meta { font-size: 12px; color: #5a6a7e; }
-    .upcoming-type { color: #3A9FD6; font-weight: 500; }
+    .upcoming-type { color: var(--artes-accent); font-weight: 500; }
   `],
 })
 export class DashboardComponent implements OnInit {

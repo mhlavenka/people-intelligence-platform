@@ -357,8 +357,8 @@ export interface OrgRow {
   styles: [`
     h2[mat-dialog-title] {
       display: flex; align-items: center; gap: 8px;
-      font-size: 18px; color: #1B2A47;
-      mat-icon { color: #3A9FD6; }
+      font-size: 18px; color: var(--artes-primary);
+      mat-icon { color: var(--artes-accent); }
     }
 
     mat-dialog-content { padding-top: 8px !important; min-width: 560px; }
@@ -418,7 +418,7 @@ export interface OrgRow {
       font-size: 13px; color: #9aa5b4;
       transition: all 0.15s;
       mat-icon { font-size: 16px; width: 16px; height: 16px; }
-      &.checked { background: #e8f4fd; border-color: #3A9FD6; color: #1B2A47; }
+      &.checked { background: #e8f4fd; border-color: var(--artes-accent); color: var(--artes-primary); }
       .module-check-icon { font-size: 14px; width: 14px; height: 14px; color: #27C4A0; margin-left: 4px; }
     }
 
@@ -441,14 +441,14 @@ export interface OrgRow {
       display: flex; flex-direction: column; gap: 2px;
     }
 
-    .logo-meta-label { font-size: 13px; font-weight: 600; color: #1B2A47; }
+    .logo-meta-label { font-size: 13px; font-weight: 600; color: var(--artes-primary); }
     .logo-meta-hint  { font-size: 11px; color: #9aa5b4; }
 
     .logo-meta-btns { display: flex; gap: 6px; align-items: center; margin-top: 6px; }
 
     .logo-pick-btn {
       display: inline-flex; align-items: center; gap: 4px; cursor: pointer;
-      padding: 5px 12px; border-radius: 7px; background: #1B2A47; color: white;
+      padding: 5px 12px; border-radius: 7px; background: var(--artes-primary); color: white;
       font-size: 12px; font-weight: 500; border: none;
       mat-icon { font-size: 15px; width: 15px; height: 15px; }
       &:hover { background: #253659; }
@@ -480,7 +480,7 @@ export interface OrgRow {
     }
     .trial-banner-title {
       display: flex; align-items: center; gap: 6px;
-      font-size: 15px; font-weight: 700; color: #1B2A47;
+      font-size: 15px; font-weight: 700; color: var(--artes-primary);
       mat-icon { color: #7c5cbf; font-size: 20px; width: 20px; height: 20px; }
     }
     .trial-countdown {
@@ -489,7 +489,7 @@ export interface OrgRow {
       background: white; border-radius: 999px; padding: 4px 12px;
       border: 1px solid #e8eef4;
       mat-icon { font-size: 14px; width: 14px; height: 14px; color: #7c5cbf; }
-      strong { color: #1B2A47; font-weight: 700; }
+      strong { color: var(--artes-primary); font-weight: 700; }
       &.urgent {
         background: #fef2f2; border-color: #fca5a5; color: #b91c1c;
         mat-icon, strong { color: #b91c1c; }
@@ -511,7 +511,7 @@ export interface OrgRow {
     .trial-kv {
       display: flex; align-items: baseline; gap: 8px; font-size: 12px;
       span { color: #9aa5b4; min-width: 70px; }
-      strong { color: #1B2A47; font-size: 13px; font-weight: 600; }
+      strong { color: var(--artes-primary); font-size: 13px; font-weight: 600; }
       em { color: #b8c0cc; font-style: normal; font-size: 12px; }
     }
     .trial-chips { display: flex; flex-wrap: wrap; gap: 4px; }
@@ -533,7 +533,7 @@ export interface OrgRow {
       display: flex; align-items: center; gap: 6px;
       font-size: 12px; color: #5a6a7e;
       mat-icon { font-size: 16px; width: 16px; height: 16px; color: #7c5cbf; }
-      strong { color: #1B2A47; font-weight: 700; }
+      strong { color: var(--artes-primary); font-weight: 700; }
     }
     .trial-end-btn {
       display: inline-flex; align-items: center; gap: 6px;

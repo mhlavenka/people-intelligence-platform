@@ -118,7 +118,7 @@ interface AuditEntry {
     .data-table {
       width: 100%; border-collapse: collapse; font-size: 13px; background: white;
       border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-      th { text-align: left; padding: 12px; background: #f8fafc; color: #1B2A47; font-weight: 600; font-size: 12px; }
+      th { text-align: left; padding: 12px; background: #f8fafc; color: var(--artes-primary); font-weight: 600; font-size: 12px; }
       td { padding: 10px 12px; border-bottom: 1px solid #f0f4f8; }
       tr:hover td { background: #fafbfc; }
       code { font-size: 11px; background: #f0f4f8; padding: 2px 6px; border-radius: 4px; }
@@ -126,7 +126,7 @@ interface AuditEntry {
     .erased { opacity: 0.5; }
     .mode-chip {
       font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; text-transform: uppercase;
-      &.identified { background: #EBF5FB; color: #3A9FD6; }
+      &.identified { background: var(--artes-bg); color: var(--artes-accent); }
       &.pseudonymized { background: #FFF8E6; color: #b07800; }
       &.anonymized { background: #e8faf4; color: #1a9678; }
     }
