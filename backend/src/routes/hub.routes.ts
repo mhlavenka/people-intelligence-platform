@@ -66,7 +66,28 @@ router.get('/messages', async (req: AuthRequest, res: Response, next: NextFuncti
       })
     );
 
-    res.json(conversations.filter(c => c.partner !== null));
+    const valid = [];
+    const orphanedSenderIds: mongoose.Types.ObjectId[] = [];
+
+    for (const c of conversations) {
+      if (c.partner) {
+        valid.push(c);
+      } else {
+        const pid = c.lastMsg.fromUserId.toString() === req.user!.userId
+          ? c.lastMsg.toUserId
+          : c.lastMsg.fromUserId;
+        orphanedSenderIds.push(new mongoose.Types.ObjectId(pid));
+      }
+    }
+
+    if (orphanedSenderIds.length) {
+      await Message.updateMany(
+        { organizationId: orgId, toUserId: userId, fromUserId: { $in: orphanedSenderIds }, isRead: false },
+        { isRead: true },
+      ).setOptions({ bypassTenantCheck: true });
+    }
+
+    res.json(valid);
   } catch (e) { next(e); }
 });
 
