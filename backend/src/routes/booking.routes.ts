@@ -17,6 +17,18 @@ import {
   createBooking, cancelBooking, clientCancelBooking, rescheduleBooking,
 } from '../services/booking.service';
 import { registerGoogleWebhook } from '../services/calendarWebhook.service';
+import { registerMicrosoftWebhook } from '../services/microsoftWebhook.service';
+import { getCoachCalendarProvider } from '../services/calendar';
+
+async function registerWebhookForCoach(coachId: string): Promise<void> {
+  const cp = await getCoachCalendarProvider(coachId);
+  if (!cp) return;
+  if (cp.provider.provider === 'microsoft') {
+    await registerMicrosoftWebhook(coachId);
+  } else {
+    await registerGoogleWebhook(coachId);
+  }
+}
 import * as bookingImport from '../controllers/booking-import.controller';
 import Holidays from 'date-holidays';
 import { Organization } from '../models/Organization.model';
@@ -300,7 +312,7 @@ router.put(
 
         // If the watched calendar changed, re-register the push channel.
         if (body.targetCalendarId && body.targetCalendarId !== prevTarget) {
-          registerGoogleWebhook(coachId).catch((err) =>
+          registerWebhookForCoach(coachId).catch((err) =>
             console.error('[Webhook] re-register after settings save failed:', err),
           );
         }
@@ -313,7 +325,7 @@ router.put(
           organizationId,
         });
         if (body.targetCalendarId) {
-          registerGoogleWebhook(coachId).catch((err) =>
+          registerWebhookForCoach(coachId).catch((err) =>
             console.error('[Webhook] register after first settings save failed:', err),
           );
         }

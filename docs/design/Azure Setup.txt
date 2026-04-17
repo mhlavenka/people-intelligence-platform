@@ -71,3 +71,9 @@
     - Redirect URI set to https://artes.helenacoaching.com/api/calendar/auth/microsoft/callback
     - Client secret created and copied
     - API permissions: Calendars.ReadWrite, Calendars.Read, User.Read, offline_access
+
+
+
+
+    We're unable to complete your request
+    unauthorized_client: The client does not exist or is not enabled for consumers. If you are the application developer, configure a new application through the App Registrations in the Azure Portal at https://go.microsoft.com/fwlink/?linkid=2083908.

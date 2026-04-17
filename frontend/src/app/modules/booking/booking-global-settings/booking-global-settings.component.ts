@@ -19,6 +19,7 @@ import {
   CalendarIntegrationService,
   CalendarStatus,
   CalendarItem,
+  CalendarProviderType,
 } from '../../coaching/calendar-integration/calendar-integration.service';
 import {
   BookingService,
@@ -67,13 +68,13 @@ const COMMON_TIMEZONES = [
         <div class="loading"><mat-spinner diameter="40" /></div>
       } @else {
 
-      <!-- Google Calendar Connection -->
+      <!-- Calendar Connection -->
       <section class="card">
         <div class="card-header">
           <mat-icon>cloud_sync</mat-icon>
           <div>
-            <h2>Google Calendar Connection</h2>
-            <p>Connect your Google account to sync bookings and check availability</p>
+            <h2>Calendar Connection</h2>
+            <p>Connect your calendar to sync bookings and check availability</p>
           </div>
         </div>
         <mat-divider />
@@ -81,18 +82,23 @@ const COMMON_TIMEZONES = [
           @if (calendarStatus()?.connected) {
             <div class="status-row connected">
               <mat-icon class="status-icon green">check_circle</mat-icon>
-              <span>Connected</span>
+              <span>{{ calendarStatus()?.provider === 'microsoft' ? 'Microsoft 365' : 'Google Calendar' }}: Connected</span>
               <button mat-stroked-button color="warn" (click)="disconnectCalendar()">
                 <mat-icon>link_off</mat-icon> Disconnect
               </button>
             </div>
           } @else {
-            <div class="status-row">
+            <div class="status-row provider-picker">
               <mat-icon class="status-icon gray">cloud_off</mat-icon>
               <span>Not connected</span>
-              <button mat-flat-button color="primary" (click)="connectCalendar()">
-                <mat-icon>link</mat-icon> Connect Google Calendar
-              </button>
+              <div class="provider-buttons">
+                <button mat-flat-button class="provider-btn google" (click)="connectCalendar('google')">
+                  <mat-icon>event</mat-icon> Google Calendar
+                </button>
+                <button mat-flat-button class="provider-btn microsoft" (click)="connectCalendar('microsoft')">
+                  <mat-icon>calendar_month</mat-icon> Microsoft 365
+                </button>
+              </div>
             </div>
           }
         </div>
@@ -374,6 +380,15 @@ const COMMON_TIMEZONES = [
       .green { color: #27C4A0; }
       .gray { color: #9aa5b4; }
       button { margin-left: auto; }
+      &.provider-picker { flex-wrap: wrap; }
+    }
+    .provider-buttons {
+      display: flex; gap: 10px; margin-left: auto;
+    }
+    .provider-btn {
+      &.google { background: #4285f4 !important; color: #fff !important; }
+      &.microsoft { background: #0078d4 !important; color: #fff !important; }
+      mat-icon { margin-right: 4px; }
     }
 
     .schedule-grid {
@@ -639,10 +654,10 @@ export class BookingGlobalSettingsComponent implements OnInit, OnDestroy {
     });
   }
 
-  connectCalendar(): void {
-    this.calendarSvc.getAuthUrl().subscribe({
+  connectCalendar(provider: CalendarProviderType = 'google'): void {
+    this.calendarSvc.getAuthUrl(provider).subscribe({
       next: ({ url }) => window.location.href = url,
-      error: () => this.snackBar.open('Failed to start Google auth', 'OK', { duration: 3000 }),
+      error: () => this.snackBar.open('Failed to start calendar auth', 'OK', { duration: 3000 }),
     });
   }
 
@@ -651,7 +666,7 @@ export class BookingGlobalSettingsComponent implements OnInit, OnDestroy {
       next: () => {
         this.calendarStatus.set({ connected: false, provider: null, calendarId: null, calendarName: null });
         this.calendars.set([]);
-        this.snackBar.open('Google Calendar disconnected', 'OK', { duration: 3000 });
+        this.snackBar.open('Calendar disconnected', 'OK', { duration: 3000 });
       },
       error: () => this.snackBar.open('Failed to disconnect', 'OK', { duration: 3000 }),
     });

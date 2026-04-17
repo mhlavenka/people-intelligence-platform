@@ -12,6 +12,10 @@ import {
   registerGoogleWebhook,
   stopGoogleWebhook,
 } from '../services/calendarWebhook.service';
+import {
+  registerMicrosoftWebhook,
+  stopMicrosoftWebhook,
+} from '../services/microsoftWebhook.service';
 import { getCalendarProvider, getCoachCalendarProvider } from '../services/calendar';
 
 // ── Public callbacks (no auth required — OAuth providers redirect here) ─────
@@ -115,6 +119,9 @@ router.post(
           'microsoftCalendar.calendarId': calendarId,
           'microsoftCalendar.calendarName': calendarName || calendarId,
         });
+        registerMicrosoftWebhook(req.user!.userId).catch((err) =>
+          console.error('[Webhook] post-select MS registration failed:', err),
+        );
       } else {
         await User.findByIdAndUpdate(req.user!.userId, {
           'googleCalendar.calendarId': calendarId,
@@ -139,6 +146,9 @@ router.delete(
       const user = await User.findById(req.user!.userId).select('googleCalendar.connected microsoftCalendar.connected');
 
       if (user?.microsoftCalendar?.connected) {
+        await stopMicrosoftWebhook(req.user!.userId).catch((err) =>
+          console.error('[Webhook] stop MS on disconnect failed:', err),
+        );
         await User.findByIdAndUpdate(req.user!.userId, {
           'microsoftCalendar.connected': false,
           'microsoftCalendar.accessToken': null,

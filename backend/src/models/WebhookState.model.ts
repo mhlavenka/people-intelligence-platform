@@ -1,20 +1,22 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
 /**
- * One document per coach × watched calendar. Tracks the Google push
- * notification channel we registered so we can renew it before expiry
- * and stop it when the coach disconnects.
+ * One document per coach × watched calendar. Tracks push notification
+ * channels (Google) or subscriptions (Microsoft) so we can renew before
+ * expiry and stop when the coach disconnects.
  *
  * Intentionally NOT tenant-scoped — webhook lookups by channelId must
- * work without a tenant context (Google calls us directly).
+ * work without a tenant context (providers call us directly).
  */
 export interface IWebhookState extends Document {
   coachId: mongoose.Types.ObjectId;
   calendarId: string;
-  channelId: string;       // our opaque id sent to Google (X-Goog-Channel-ID on callbacks)
-  resourceId: string;      // Google's opaque resource id (returned from watch())
-  expiration: Date;        // channel TTL (Google caps around 30 days, default ~7d)
-  lastProcessedAt: Date;   // last time we synced events.list(updatedMin=...)
+  provider: 'google' | 'microsoft';
+  channelId: string;           // Google: our opaque id; Microsoft: Graph subscription id
+  resourceId: string;          // Google: resourceId from watch(); Microsoft: not used (empty string)
+  expiration: Date;            // Google caps ~30 days; Microsoft caps ~3 days
+  lastProcessedAt: Date;       // Google: updatedMin anchor; Microsoft: deltaLink anchor
+  deltaLink?: string;          // Microsoft only: delta token for incremental sync
   createdAt: Date;
   updatedAt: Date;
 }
@@ -23,10 +25,12 @@ const WebhookStateSchema = new Schema<IWebhookState>(
   {
     coachId:         { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     calendarId:      { type: String, required: true },
+    provider:        { type: String, enum: ['google', 'microsoft'], default: 'google' },
     channelId:       { type: String, required: true, unique: true, index: true },
     resourceId:      { type: String, required: true, index: true },
     expiration:      { type: Date, required: true, index: true },
     lastProcessedAt: { type: Date, default: () => new Date() },
+    deltaLink:       { type: String },
   },
   { timestamps: true },
 );
