@@ -140,6 +140,7 @@ const MODULE_SLIDES: ModuleSlide[] = [
     title: 'Intake Management',
     subtitle: 'One Engine, Every Assessment.',
     color: '#f0a500',
+    heroImage: 'assets/module_intake.png',
     paragraphs: [
       'A flexible intake engine powering every module in the platform. Design custom questionnaires with mixed question types (scale, boolean, text, multi-select), deploy them as anonymous self-service surveys, coach-led interviews, or structured assessments \u2014 all from a single template builder.',
       'Privacy-first aggregation ensures that individual responses are never exposed. A minimum group size of 5 respondents per analysis prevents statistical de-anonymisation, while public survey links allow distribution without requiring respondents to create accounts. Coach-led sessions capture richer contextual data with session format, target name, and coachee linkage.',
