@@ -1,0 +1,186 @@
+import mongoose from 'mongoose';
+import { Notification } from '../models/Notification.model';
+import { User } from '../models/User.model';
+
+interface HubNotifyParams {
+  userId: string | mongoose.Types.ObjectId;
+  organizationId: string | mongoose.Types.ObjectId;
+  type: 'idp_generated' | 'survey_response' | 'conflict_alert' | 'message' | 'system';
+  title: string;
+  body: string;
+  link?: string;
+}
+
+export async function createHubNotification(params: HubNotifyParams): Promise<void> {
+  try {
+    await Notification.create({
+      organizationId: params.organizationId,
+      userId: params.userId,
+      type: params.type,
+      title: params.title,
+      body: params.body,
+      link: params.link,
+    });
+  } catch (err) {
+    console.error('[HubNotification] Failed to create notification:', err);
+  }
+}
+
+export async function notifyBookingConfirmed(p: {
+  coachId: string | mongoose.Types.ObjectId;
+  coacheeId?: string | mongoose.Types.ObjectId;
+  organizationId: string | mongoose.Types.ObjectId;
+  clientName: string;
+  coachName: string;
+  startTime: Date;
+}): Promise<void> {
+  const when = fmtDate(p.startTime);
+
+  await createHubNotification({
+    userId: p.coachId,
+    organizationId: p.organizationId,
+    type: 'system',
+    title: 'New Booking Confirmed',
+    body: `${p.clientName} booked a session on ${when}.`,
+    link: '/coaching/bookings',
+  });
+
+  if (p.coacheeId) {
+    await createHubNotification({
+      userId: p.coacheeId,
+      organizationId: p.organizationId,
+      type: 'system',
+      title: 'Session Confirmed',
+      body: `Your session with ${p.coachName} on ${when} is confirmed.`,
+      link: '/coaching/bookings',
+    });
+  }
+}
+
+export async function notifyBookingCancelled(p: {
+  coachId: string | mongoose.Types.ObjectId;
+  coacheeId?: string | mongoose.Types.ObjectId;
+  organizationId: string | mongoose.Types.ObjectId;
+  clientName: string;
+  coachName: string;
+  cancelledBy: string;
+  startTime: Date;
+}): Promise<void> {
+  const when = fmtDate(p.startTime);
+
+  await createHubNotification({
+    userId: p.coachId,
+    organizationId: p.organizationId,
+    type: 'system',
+    title: 'Booking Cancelled',
+    body: `Session with ${p.clientName} on ${when} was cancelled by ${p.cancelledBy}.`,
+    link: '/coaching/bookings',
+  });
+
+  if (p.coacheeId) {
+    await createHubNotification({
+      userId: p.coacheeId,
+      organizationId: p.organizationId,
+      type: 'system',
+      title: 'Session Cancelled',
+      body: `Your session with ${p.coachName} on ${when} has been cancelled.`,
+      link: '/coaching/bookings',
+    });
+  }
+}
+
+export async function notifyBookingRescheduled(p: {
+  coachId: string | mongoose.Types.ObjectId;
+  coacheeId?: string | mongoose.Types.ObjectId;
+  organizationId: string | mongoose.Types.ObjectId;
+  clientName: string;
+  coachName: string;
+  oldTime: Date;
+  newTime: Date;
+  triggeredBy: string;
+}): Promise<void> {
+  const from = fmtDate(p.oldTime);
+  const to = fmtDate(p.newTime);
+
+  if (p.triggeredBy !== 'coach_gcal') {
+    await createHubNotification({
+      userId: p.coachId,
+      organizationId: p.organizationId,
+      type: 'system',
+      title: 'Booking Rescheduled',
+      body: `Session with ${p.clientName} moved from ${from} to ${to}.`,
+      link: '/coaching/bookings',
+    });
+  }
+
+  if (p.coacheeId) {
+    await createHubNotification({
+      userId: p.coacheeId,
+      organizationId: p.organizationId,
+      type: 'system',
+      title: 'Session Rescheduled',
+      body: `Your session with ${p.coachName} has been moved from ${from} to ${to}.`,
+      link: '/coaching/bookings',
+    });
+  }
+}
+
+export async function notifyBookingReminder(p: {
+  coacheeId?: string | mongoose.Types.ObjectId;
+  organizationId: string | mongoose.Types.ObjectId;
+  coachName: string;
+  startTime: Date;
+  type: '24h' | '1h';
+}): Promise<void> {
+  if (!p.coacheeId) return;
+  const when = fmtDate(p.startTime);
+  const label = p.type === '24h' ? 'tomorrow' : 'in 1 hour';
+
+  await createHubNotification({
+    userId: p.coacheeId,
+    organizationId: p.organizationId,
+    type: 'system',
+    title: 'Session Reminder',
+    body: `Your session with ${p.coachName} is ${label} (${when}).`,
+    link: '/coaching/bookings',
+  });
+}
+
+export async function notifyPreSessionForm(p: {
+  coacheeId: string | mongoose.Types.ObjectId;
+  organizationId: string | mongoose.Types.ObjectId;
+  coachName: string;
+  sessionDate: string;
+  templateTitle: string;
+  intakeUrl: string;
+}): Promise<void> {
+  await createHubNotification({
+    userId: p.coacheeId,
+    organizationId: p.organizationId,
+    type: 'survey_response',
+    title: 'Pre-Session Form Ready',
+    body: `${p.coachName} has a pre-session form for your session on ${p.sessionDate}: ${p.templateTitle}`,
+    link: p.intakeUrl,
+  });
+}
+
+export async function notifyPostSessionForm(p: {
+  coacheeId: string | mongoose.Types.ObjectId;
+  organizationId: string | mongoose.Types.ObjectId;
+  coachName: string;
+  sessionDate: string;
+  intakeUrl: string;
+}): Promise<void> {
+  await createHubNotification({
+    userId: p.coacheeId,
+    organizationId: p.organizationId,
+    type: 'survey_response',
+    title: 'Post-Session Reflection',
+    body: `Please complete your reflection for the session on ${p.sessionDate} with ${p.coachName}.`,
+    link: p.intakeUrl,
+  });
+}
+
+function fmtDate(d: Date): string {
+  return d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+}

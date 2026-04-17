@@ -3,6 +3,7 @@ import { CoachingSession } from '../models/CoachingSession.model';
 import { User } from '../models/User.model';
 import { SurveyTemplate } from '../models/SurveyTemplate.model';
 import { sendEmail } from '../services/email.service';
+import { notifyPreSessionForm } from '../services/hubNotification.service';
 import { config } from '../config/env';
 
 const WINDOW_MS = 15 * 60 * 1000;
@@ -56,6 +57,15 @@ export function startPreSessionIntakeJob(): void {
               intakeUrl,
             }),
           });
+
+          notifyPreSessionForm({
+            coacheeId: session.coacheeId,
+            organizationId: session.organizationId,
+            coachName,
+            sessionDate,
+            templateTitle: template.title,
+            intakeUrl,
+          }).catch((err) => console.error('[PreSessionIntake] Hub notification failed:', err));
 
           session.preSessionIntakeSentAt = now;
           await session.save();

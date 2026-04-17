@@ -14,6 +14,11 @@ import {
   sendRescheduleConfirmation,
 } from './bookingNotification.service';
 import {
+  notifyBookingConfirmed,
+  notifyBookingCancelled,
+  notifyBookingRescheduled,
+} from './hubNotification.service';
+import {
   propagateBookingCancel,
   propagateBookingReschedule,
 } from './bookingCoachingSync.service';
@@ -262,6 +267,15 @@ export async function createBooking(
     console.error('[Booking] Failed to send confirmation emails:', err),
   );
 
+  notifyBookingConfirmed({
+    coachId: booking.coachId,
+    coacheeId: booking.coacheeId,
+    organizationId: booking.organizationId,
+    clientName: booking.clientName,
+    coachName,
+    startTime: booking.startTime,
+  }).catch((err) => console.error('[Booking] Hub notification failed:', err));
+
   return booking;
 }
 
@@ -351,6 +365,16 @@ export async function cancelBooking(
     sendCancellationEmail(booking, coachName, coach.email, cancelledBy).catch((err) =>
       console.error('[Booking] Failed to send cancellation email:', err),
     );
+
+    notifyBookingCancelled({
+      coachId: booking.coachId,
+      coacheeId: booking.coacheeId,
+      organizationId: booking.organizationId,
+      clientName: booking.clientName,
+      coachName,
+      cancelledBy,
+      startTime: booking.startTime,
+    }).catch((err) => console.error('[Booking] Hub notification failed:', err));
   }
 
   return booking;
@@ -474,6 +498,17 @@ export async function rescheduleBooking(
     sendRescheduleConfirmation(
       booking, coachName, coach.email, oldStartTime, cancelUrl, triggeredBy, note,
     ).catch((err) => console.error('[Booking] Failed to send reschedule email:', err));
+
+    notifyBookingRescheduled({
+      coachId: booking.coachId,
+      coacheeId: booking.coacheeId,
+      organizationId: booking.organizationId,
+      clientName: booking.clientName,
+      coachName,
+      oldTime: oldStartTime,
+      newTime: newStartTime,
+      triggeredBy,
+    }).catch((err) => console.error('[Booking] Hub notification failed:', err));
   }
 
   console.info(`[Booking] Booking ${booking._id} rescheduled by ${triggeredBy}`);

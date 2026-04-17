@@ -2,6 +2,7 @@ import cron from 'node-cron';
 import { Booking } from '../models/Booking.model';
 import { User } from '../models/User.model';
 import { sendReminder } from '../services/bookingNotification.service';
+import { notifyBookingReminder } from '../services/hubNotification.service';
 
 const WINDOW_MS = 30 * 60 * 1000; // 30-minute window
 
@@ -39,6 +40,13 @@ export function startReminderJob(): void {
         ) {
           try {
             await sendReminder(booking, coachName, '24h');
+            notifyBookingReminder({
+              coacheeId: booking.coacheeId,
+              organizationId: booking.organizationId,
+              coachName,
+              startTime: booking.startTime,
+              type: '24h',
+            }).catch((err) => console.error('[Reminder] Hub notification failed:', err));
             booking.remindersSent.push({ type: '24h', sentAt: now });
             await booking.save();
             console.log(`[Reminder] Sent 24h reminder for booking ${booking._id}`);
@@ -55,6 +63,13 @@ export function startReminderJob(): void {
         ) {
           try {
             await sendReminder(booking, coachName, '1h');
+            notifyBookingReminder({
+              coacheeId: booking.coacheeId,
+              organizationId: booking.organizationId,
+              coachName,
+              startTime: booking.startTime,
+              type: '1h',
+            }).catch((err) => console.error('[Reminder] Hub notification failed:', err));
             booking.remindersSent.push({ type: '1h', sentAt: now });
             await booking.save();
             console.log(`[Reminder] Sent 1h reminder for booking ${booking._id}`);

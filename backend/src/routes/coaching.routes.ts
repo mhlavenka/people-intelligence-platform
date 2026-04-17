@@ -15,6 +15,7 @@ import { cancelBooking } from '../services/booking.service';
 import { BookingSettings } from '../models/BookingSettings.model';
 import { buildPostSessionReflectionPrompt, callClaude } from '../services/ai.service';
 import { sendEmail } from '../services/email.service';
+import { notifyPostSessionForm } from '../services/hubNotification.service';
 import { config } from '../config/env';
 
 async function generateAndSendPostSessionForm(
@@ -85,6 +86,14 @@ async function generateAndSendPostSessionForm(
       intakeUrl,
     }),
   });
+
+  notifyPostSessionForm({
+    coacheeId: session.coacheeId,
+    organizationId: session.organizationId as any,
+    coachName,
+    sessionDate,
+    intakeUrl,
+  }).catch((err) => console.error('[PostSession] Hub notification failed:', err));
 
   console.log(`[PostSession] Sent reflection to ${coachee.email} for session ${session._id}`);
 }
