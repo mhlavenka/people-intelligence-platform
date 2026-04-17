@@ -181,7 +181,7 @@ const MODULE_SLIDES: ModuleSlide[] = [
           <p class="info-sub">AI-powered insights for coaching, conflict resolution, neuroinclusion, and leadership development.</p>
         </div>
 
-        <div class="module-carousel">
+        <div class="module-carousel" (mouseenter)="hoverPause(true)" (mouseleave)="hoverPause(false)">
           @for (m of modules; track m.title; let i = $index) {
             <div class="module-slide" [class.active]="activeSlide() === i" [class.prev]="prevSlide() === i && prevSlide() !== activeSlide()">
               <!-- Header with graphic -->
@@ -255,12 +255,17 @@ const MODULE_SLIDES: ModuleSlide[] = [
               </div>
             </div>
           }
-          <div class="carousel-dots">
-            @for (m of modules; track m.title; let i = $index) {
-              <button class="dot" [class.active]="activeSlide() === i"
-                      [style.background]="activeSlide() === i ? modules[activeSlide()].color : ''"
-                      (click)="goToSlide(i)"></button>
-            }
+          <div class="carousel-controls">
+            <div class="carousel-dots">
+              @for (m of modules; track m.title; let i = $index) {
+                <button class="dot" [class.active]="activeSlide() === i"
+                        [style.background]="activeSlide() === i ? modules[activeSlide()].color : ''"
+                        (click)="goToSlide(i)"></button>
+              }
+            </div>
+            <button class="pause-btn" (click)="togglePause()" [title]="paused() ? 'Play' : 'Pause'">
+              <mat-icon>{{ paused() ? 'play_arrow' : 'pause' }}</mat-icon>
+            </button>
           </div>
         </div>
 
@@ -550,8 +555,18 @@ const MODULE_SLIDES: ModuleSlide[] = [
     .stat-val { font-size: 20px; font-weight: 800; }
     .stat-label { font-size: 9px; color: rgba(255,255,255,0.5); text-align: center; max-width: 100px; }
 
+    .carousel-controls {
+      display: flex; align-items: center; justify-content: center; gap: 12px;
+      margin-top: 16px; flex-shrink: 0;
+    }
     .carousel-dots {
-      display: flex; gap: 8px; justify-content: center; margin-top: 16px; flex-shrink: 0;
+      display: flex; gap: 8px; align-items: center;
+    }
+    .pause-btn {
+      background: none; border: none; cursor: pointer; padding: 2px;
+      color: rgba(255,255,255,0.35); transition: color 0.2s;
+      mat-icon { font-size: 18px; width: 18px; height: 18px; }
+      &:hover { color: rgba(255,255,255,0.8); }
     }
     .dot {
       width: 10px; height: 10px; border-radius: 50%; border: none; cursor: pointer;
@@ -692,9 +707,11 @@ export class LoginComponent implements OnInit, OnDestroy {
   providers    = signal<OAuthProviders | null>(null);
   activeSlide  = signal(0);
   prevSlide    = signal(-1);
+  paused       = signal(false);
   modules      = MODULE_SLIDES;
   private tempToken = '';
   private carouselTimer: ReturnType<typeof setInterval> | null = null;
+  private hovering = false;
 
   constructor(
     private fb: FormBuilder,
@@ -726,11 +743,33 @@ export class LoginComponent implements OnInit, OnDestroy {
   goToSlide(index: number): void {
     this.prevSlide.set(this.activeSlide());
     this.activeSlide.set(index);
-    this.restartCarousel();
+    if (!this.paused()) this.restartCarousel();
+  }
+
+  togglePause(): void {
+    if (this.paused()) {
+      this.paused.set(false);
+      this.startCarousel();
+    } else {
+      this.paused.set(true);
+      this.stopCarousel();
+    }
+  }
+
+  hoverPause(entering: boolean): void {
+    this.hovering = entering;
+    if (this.paused()) return;
+    if (entering) {
+      this.stopCarousel();
+    } else {
+      this.startCarousel();
+    }
   }
 
   private startCarousel(): void {
+    if (this.carouselTimer) return;
     this.carouselTimer = setInterval(() => {
+      if (this.hovering) return;
       this.prevSlide.set(this.activeSlide());
       this.activeSlide.update(i => (i + 1) % this.modules.length);
     }, 10000);

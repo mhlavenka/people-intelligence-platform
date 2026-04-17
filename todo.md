@@ -24,9 +24,6 @@ I. MODULES
 
 II. SYSTEM
 ----------
-
-- login page make carousel pause (a pause button and also on hover)
-
 **Organization setup** 
  - put together users / departments / orgchart in more logical way. Make me a proposed solution before implementing so I can approve
 **Google Test Env**

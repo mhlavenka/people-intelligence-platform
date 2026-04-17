@@ -67,7 +67,7 @@ function isGroup(entry: NavEntry): entry is NavGroup {
         <button class="mobile-menu-btn" (click)="mobileMenuOpen.set(true)">
           <mat-icon>menu</mat-icon>
         </button>
-        <img [src]="orgLogo() || 'assets/artes_icon_512.png'" alt="Logo" class="mobile-logo" />
+        <img src="assets/artes_icon_512.png" alt="ARTES" class="mobile-logo" />
         <span class="mobile-title">{{ orgName() }}</span>
         <button class="mobile-bell-btn" (click)="openHub()">
           <mat-icon [matBadge]="unreadCount() > 0 ? unreadCount() : null" matBadgeColor="warn" matBadgeSize="small">notifications</mat-icon>
@@ -84,18 +84,14 @@ function isGroup(entry: NavEntry): entry is NavGroup {
         <div class="sidebar-header" [class.collapsed]="sidebarCollapsed()">
           @if (sidebarCollapsed()) {
             <!-- Collapsed: logo centred, toggle below -->
-            <img [src]="orgLogo() || 'assets/artes_icon_512.png'" alt="Logo" class="brand-logo" />
+            <img src="assets/artes_icon_512.png" alt="ARTES" class="brand-logo" />
             <button class="expand-btn" (click)="sidebarCollapsed.set(false)" title="Expand sidebar">
               <mat-icon>chevron_right</mat-icon>
             </button>
           } @else {
             <!-- Expanded: logo + text left, toggle right -->
             <div class="brand">
-              @if (orgLogo()) {
-                <img [src]="orgLogo()" alt="Logo" class="brand-logo-wide org-logo" />
-              } @else {
-                <img src="assets/artes_transparent_dark.png" alt="ARTES" class="brand-logo-wide" />
-              }
+              <img src="assets/artes_transparent_dark.png" alt="ARTES" class="brand-logo-wide" />
             </div>
             <button mat-icon-button class="collapse-btn" (click)="sidebarCollapsed.set(true)">
               <mat-icon>chevron_left</mat-icon>
@@ -108,7 +104,11 @@ function isGroup(entry: NavEntry): entry is NavGroup {
         <!-- Org switcher -->
         @if (!sidebarCollapsed()) {
           <div class="org-switcher">
-            <mat-icon>business</mat-icon>
+            @if (orgLogo()) {
+              <img [src]="orgLogo()" alt="" class="org-logo-icon" />
+            } @else {
+              <mat-icon>business</mat-icon>
+            }
             <span class="org-name">{{ orgName() }}</span>
             <mat-icon class="plan-badge">star</mat-icon>
           </div>
@@ -344,6 +344,7 @@ function isGroup(entry: NavEntry): entry is NavGroup {
       border-bottom: 1px solid rgba(255,255,255,0.08);
       font-size: 13px;
       mat-icon { font-size: 18px; color: var(--artes-accent); }
+      .org-logo-icon { width: 22px; height: 22px; border-radius: 4px; object-fit: contain; flex-shrink: 0; }
       .org-name { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
       .plan-badge { font-size: 16px; color: #f0a500; }
     }
