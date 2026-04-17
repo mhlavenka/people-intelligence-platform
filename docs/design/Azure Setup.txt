@@ -32,7 +32,7 @@
     4. Click Add, then immediately copy the Value — you won't see it again
     5. This is your MICROSOFT_CLIENT_SECRET
 
-    value: REDACTED_SECRET
+    value: <stored in .env — rotate if compromised>
     secret ID: da9f754e-9a9b-461c-ba07-3ceed0fae53c
 
     Step 4: Configure API Permissions
@@ -57,8 +57,8 @@
     Add to your .env file on the server:
 
     # Microsoft / Office 365 Calendar
-    MICROSOFT_CLIENT_ID=4ba1d158-dd57-4bb4-b977-d2fe37955bc4
-    MICROSOFT_CLIENT_SECRET=REDACTED_SECRET
+    MICROSOFT_CLIENT_ID=<from Azure Portal → App registrations → Overview>
+    MICROSOFT_CLIENT_SECRET=<from Azure Portal → Certificates & secrets>
     MICROSOFT_TENANT_ID=common
     MICROSOFT_CALENDAR_REDIRECT_URI=https://artes.helenacoaching.com/api/calendar/auth/microsoft/callback
 
