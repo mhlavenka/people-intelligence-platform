@@ -12,7 +12,6 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ApiService } from '../../core/api.service';
 import { AuthService } from '../../core/auth.service';
-import { CalendarIntegrationComponent } from '../coaching/calendar-integration/calendar-integration.component';
 
 interface NotificationSetting {
   key: string;
@@ -65,7 +64,6 @@ const DEFAULT_SETTINGS: Settings = {
     MatProgressSpinnerModule,
     MatSnackBarModule,
     ReactiveFormsModule,
-    CalendarIntegrationComponent,
   ],
   template: `
     <div class="settings-page">
@@ -104,29 +102,31 @@ const DEFAULT_SETTINGS: Settings = {
               </div>
               <mat-divider />
             }
-            <div class="test-email-row">
-              <div class="toggle-icon blue"><mat-icon>send</mat-icon></div>
-              <div class="toggle-info">
-                <div class="toggle-label">Send a test email</div>
-                <div class="toggle-desc">Verify that AWS SES is configured correctly</div>
+            @if (isSystemAdmin()) {
+              <div class="test-email-row">
+                <div class="toggle-icon blue"><mat-icon>send</mat-icon></div>
+                <div class="toggle-info">
+                  <div class="toggle-label">Send a test email</div>
+                  <div class="toggle-desc">Verify that AWS SES is configured correctly</div>
+                </div>
+                <div class="test-email-controls">
+                  <mat-form-field appearance="outline" class="test-email-field">
+                    <mat-label>Recipient</mat-label>
+                    <input matInput type="email" [formControl]="testEmailControl" placeholder="you@example.com" />
+                    <mat-icon matPrefix>alternate_email</mat-icon>
+                  </mat-form-field>
+                  <button mat-stroked-button
+                          (click)="sendTestEmail()"
+                          [disabled]="testEmailLoading() || testEmailControl.invalid">
+                    @if (testEmailLoading()) {
+                      <mat-spinner diameter="16" />
+                    } @else {
+                      <mat-icon>send</mat-icon> Send
+                    }
+                  </button>
+                </div>
               </div>
-              <div class="test-email-controls">
-                <mat-form-field appearance="outline" class="test-email-field">
-                  <mat-label>Recipient</mat-label>
-                  <input matInput type="email" [formControl]="testEmailControl" placeholder="you@example.com" />
-                  <mat-icon matPrefix>alternate_email</mat-icon>
-                </mat-form-field>
-                <button mat-stroked-button
-                        (click)="sendTestEmail()"
-                        [disabled]="testEmailLoading() || testEmailControl.invalid">
-                  @if (testEmailLoading()) {
-                    <mat-spinner diameter="16" />
-                  } @else {
-                    <mat-icon>send</mat-icon> Send
-                  }
-                </button>
-              </div>
-            </div>
+            }
           </div>
         </div>
 
@@ -227,161 +227,11 @@ const DEFAULT_SETTINGS: Settings = {
           </div>
         </div>
 
-        <!-- Google Calendar (coaches only) -->
-        @if (isCoach()) {
-          <app-calendar-integration />
-        }
-
-        <!-- Security / 2FA -->
-        <div class="card">
-          <div class="card-header">
-            <mat-icon>security</mat-icon>
-            <div>
-              <h2>Security</h2>
-              <p>Manage two-factor authentication and account security</p>
-            </div>
-          </div>
-          <mat-divider />
-          <div class="card-body">
-
-            <!-- 2FA: disabled state -->
-            @if (!twoFactorEnabled() && !twoFactorSetupStep()) {
-              <div class="security-row">
-                <div class="security-icon"><mat-icon>phonelink_lock</mat-icon></div>
-                <div class="toggle-info">
-                  <div class="toggle-label">Two-factor authentication</div>
-                  <div class="toggle-desc">Protect your account with Google Authenticator or any TOTP app</div>
-                </div>
-                <button mat-raised-button color="primary" (click)="setup2fa()" [disabled]="twoFactorLoading()">
-                  @if (twoFactorLoading()) { <mat-spinner diameter="18" /> } @else { Enable 2FA }
-                </button>
-              </div>
-            }
-
-            <!-- 2FA: setup flow — scan QR then verify -->
-            @if (twoFactorSetupStep()) {
-              <div class="twofa-setup">
-                @if (twoFactorSetupStep() === 'scan') {
-                  <div class="setup-step">
-                    <h3><span class="step-num">1</span> Scan with Google Authenticator</h3>
-                    <p>Open <strong>Google Authenticator</strong> (or any TOTP app), tap <strong>+</strong> → <em>Scan a QR code</em>.</p>
-                    @if (qrCodeDataUrl()) {
-                      <div class="qr-block">
-                        <img [src]="qrCodeDataUrl()" alt="2FA QR Code" class="qr-img" />
-                      </div>
-                    }
-                    <details class="manual-key">
-                      <summary>Can't scan? Enter key manually</summary>
-                      <code>{{ manualSecret() }}</code>
-                    </details>
-                    <button mat-raised-button color="primary" (click)="twoFactorSetupStep.set('verify')">
-                      Next <mat-icon>arrow_forward</mat-icon>
-                    </button>
-                    <button mat-button (click)="cancelSetup()">Cancel</button>
-                  </div>
-                }
-
-                @if (twoFactorSetupStep() === 'verify') {
-                  <div class="setup-step">
-                    <h3><span class="step-num">2</span> Enter the 6-digit code</h3>
-                    <p>Type the current code shown in your authenticator app to confirm setup.</p>
-                    @if (twoFactorError()) {
-                      <div class="error-banner">{{ twoFactorError() }}</div>
-                    }
-                    <mat-form-field appearance="outline" class="otp-field">
-                      <mat-label>Authenticator code</mat-label>
-                      <input matInput [formControl]="otpControl" inputmode="numeric"
-                             maxlength="6" placeholder="000000" />
-                      <mat-icon matPrefix>pin</mat-icon>
-                    </mat-form-field>
-                    <div class="step-actions">
-                      <button mat-button (click)="twoFactorSetupStep.set('scan')">
-                        <mat-icon>arrow_back</mat-icon> Back
-                      </button>
-                      <button mat-raised-button color="primary"
-                              (click)="enable2fa()" [disabled]="otpControl.invalid || twoFactorLoading()">
-                        @if (twoFactorLoading()) { <mat-spinner diameter="18" /> }
-                        @else { <mat-icon>verified</mat-icon> Confirm & Enable }
-                      </button>
-                    </div>
-                  </div>
-                }
-              </div>
-            }
-
-            <!-- 2FA: enabled state -->
-            @if (twoFactorEnabled()) {
-              @if (twoFactorSetupStep() !== 'disable') {
-                <div class="security-row enabled-row">
-                  <div class="security-icon green"><mat-icon>verified_user</mat-icon></div>
-                  <div class="toggle-info">
-                    <div class="toggle-label">Two-factor authentication
-                      <span class="enabled-badge">Enabled</span>
-                    </div>
-                    <div class="toggle-desc">Your account is protected with Google Authenticator</div>
-                  </div>
-                  <button mat-stroked-button color="warn" (click)="twoFactorSetupStep.set('disable')">
-                    Disable
-                  </button>
-                </div>
-              }
-
-              @if (twoFactorSetupStep() === 'disable') {
-                <div class="twofa-setup">
-                  <div class="setup-step">
-                    @if (twoFactorError()) {
-                      <div class="error-banner">{{ twoFactorError() }}</div>
-                    }
-                    <p>Enter your current authenticator code to confirm disabling 2FA.</p>
-                    <mat-form-field appearance="outline" class="otp-field">
-                      <mat-label>Authenticator code</mat-label>
-                      <input matInput [formControl]="otpControl" inputmode="numeric"
-                             maxlength="6" placeholder="000000" />
-                      <mat-icon matPrefix>pin</mat-icon>
-                    </mat-form-field>
-                    <div class="step-actions">
-                      <button mat-button (click)="cancelSetup()">Cancel</button>
-                      <button mat-raised-button color="warn"
-                              (click)="disable2fa()" [disabled]="otpControl.invalid || twoFactorLoading()">
-                        @if (twoFactorLoading()) { <mat-spinner diameter="18" /> }
-                        @else { Disable 2FA }
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              }
-            }
-
-            <mat-divider />
-
-            <div class="security-row">
-              <div class="security-icon"><mat-icon>devices</mat-icon></div>
-              <div class="toggle-info">
-                <div class="toggle-label">Active sessions</div>
-                <div class="toggle-desc">View and revoke sessions on other devices</div>
-              </div>
-              <button mat-stroked-button disabled>Coming soon</button>
-            </div>
-
-            <mat-divider />
-
-            <div class="security-row">
-              <div class="security-icon warn"><mat-icon>download</mat-icon></div>
-              <div class="toggle-info">
-                <div class="toggle-label">Export personal data</div>
-                <div class="toggle-desc">Download a copy of all data associated with your account</div>
-              </div>
-              <button mat-stroked-button disabled>Coming soon</button>
-            </div>
-
-          </div>
-        </div>
-
       </div>
     </div>
   `,
   styles: [`
-    .settings-page { padding: 32px; max-width: 820px; }
+    .settings-page { padding: 32px; max-width: 1100px; }
 
     .page-header {
       margin-bottom: 28px;
@@ -389,7 +239,8 @@ const DEFAULT_SETTINGS: Settings = {
       p  { color: #5a6a7e; margin: 0; }
     }
 
-    .settings-layout { display: flex; flex-direction: column; gap: 20px; }
+    .settings-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    @media (max-width: 900px) { .settings-layout { grid-template-columns: 1fr; } }
 
     .card {
       background: white; border-radius: 16px;
@@ -440,65 +291,6 @@ const DEFAULT_SETTINGS: Settings = {
       padding: 14px 24px;
     }
 
-    .security-row {
-      display: flex; align-items: center; gap: 14px; padding: 14px 24px;
-    }
-
-    .security-icon {
-      width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
-      background: rgba(58,159,214,0.10); color: #3A9FD6;
-      display: flex; align-items: center; justify-content: center;
-      mat-icon { font-size: 18px; }
-      &.warn  { background: rgba(232,108,58,0.10);  color: #c04a14; }
-      &.green { background: rgba(39,196,160,0.12);  color: #1a9678; }
-    }
-
-    .enabled-badge {
-      display: inline-block; margin-left: 8px;
-      font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 20px;
-      background: rgba(39,196,160,0.15); color: #1a9678;
-    }
-
-    .twofa-setup { padding: 0 24px 16px; }
-
-    .setup-step {
-      background: #f8fafc; border-radius: 12px; padding: 20px;
-      h3 {
-        font-size: 15px; color: #1B2A47; margin: 0 0 8px; font-weight: 600;
-        display: flex; align-items: center; gap: 8px;
-      }
-      p { font-size: 13px; color: #5a6a7e; margin: 0 0 16px; line-height: 1.5; }
-    }
-
-    .step-num {
-      display: inline-flex; align-items: center; justify-content: center;
-      width: 22px; height: 22px; border-radius: 50%;
-      background: #3A9FD6; color: white; font-size: 12px; font-weight: 700;
-    }
-
-    .qr-block {
-      display: flex; justify-content: center; margin: 0 0 16px;
-      img.qr-img { width: 180px; height: 180px; border-radius: 8px; border: 1px solid #e5eaf0; }
-    }
-
-    .manual-key {
-      font-size: 12px; color: #5a6a7e; margin-bottom: 16px;
-      summary { cursor: pointer; margin-bottom: 8px; }
-      code {
-        display: block; padding: 8px 12px; background: #eef2f7; border-radius: 6px;
-        font-family: monospace; letter-spacing: 2px; word-break: break-all;
-      }
-    }
-
-    .otp-field { width: 200px; display: block; }
-
-    .step-actions { display: flex; align-items: center; gap: 12px; margin-top: 16px; }
-
-    .error-banner {
-      background: #fef2f2; border: 1px solid #fecaca; color: #dc2626;
-      padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 14px;
-    }
-
     .info-box {
       display: flex; align-items: flex-start; gap: 10px;
       margin: 8px 24px 14px; padding: 12px 14px;
@@ -513,15 +305,6 @@ export class SettingsComponent implements OnInit {
 
   testEmailLoading = signal(false);
   testEmailControl = new FormControl('', [Validators.required, Validators.email]);
-
-  // 2FA state
-  twoFactorEnabled    = signal(false);
-  twoFactorSetupStep  = signal<'' | 'scan' | 'verify' | 'disable'>('');
-  qrCodeDataUrl       = signal('');
-  manualSecret        = signal('');
-  twoFactorLoading    = signal(false);
-  twoFactorError      = signal('');
-  otpControl          = new FormControl('', [Validators.required, Validators.minLength(6), Validators.maxLength(6)]);
 
   notificationItems = [
     { key: 'conflict_analysis', label: 'Conflict analysis completed',    description: 'Notify when a new AI conflict analysis is ready',             icon: 'analytics',   iconClass: 'red' },
@@ -549,6 +332,10 @@ export class SettingsComponent implements OnInit {
     return this.auth.currentUser()?.role === 'coach';
   }
 
+  isSystemAdmin(): boolean {
+    return this.auth.currentUser()?.role === 'system_admin';
+  }
+
   ngOnInit(): void {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
@@ -562,77 +349,13 @@ export class SettingsComponent implements OnInit {
       } catch { /* use defaults */ }
     }
 
-    // Load current 2FA status + pre-fill test email address
-    this.api.get<{ twoFactorEnabled: boolean; email: string }>('/users/me').subscribe({
+    // Pre-fill test email address
+    this.api.get<{ email: string }>('/users/me').subscribe({
       next: (user) => {
-        this.twoFactorEnabled.set(user.twoFactorEnabled ?? false);
         if (user.email) this.testEmailControl.setValue(user.email);
       },
       error: () => {},
     });
-  }
-
-  setup2fa(): void {
-    this.twoFactorLoading.set(true);
-    this.twoFactorError.set('');
-    this.api.post<{ qrCodeDataUrl: string; secret: string }>('/users/me/2fa/setup', {}).subscribe({
-      next: (res) => {
-        this.qrCodeDataUrl.set(res.qrCodeDataUrl);
-        this.manualSecret.set(res.secret);
-        this.twoFactorSetupStep.set('scan');
-        this.twoFactorLoading.set(false);
-      },
-      error: (err) => {
-        this.twoFactorError.set(err.error?.error || 'Setup failed. Please try again.');
-        this.twoFactorLoading.set(false);
-      },
-    });
-  }
-
-  enable2fa(): void {
-    if (this.otpControl.invalid) return;
-    this.twoFactorLoading.set(true);
-    this.twoFactorError.set('');
-    const otp = this.otpControl.value!.replace(/\s/g, '');
-    this.api.post<{ message: string }>('/users/me/2fa/enable', { otp }).subscribe({
-      next: () => {
-        this.twoFactorEnabled.set(true);
-        this.twoFactorSetupStep.set('');
-        this.otpControl.reset();
-        this.twoFactorLoading.set(false);
-        this.snackBar.open('Two-factor authentication enabled', undefined, { duration: 3000 });
-      },
-      error: (err) => {
-        this.twoFactorError.set(err.error?.error || 'Invalid code. Please try again.');
-        this.twoFactorLoading.set(false);
-      },
-    });
-  }
-
-  disable2fa(): void {
-    if (this.otpControl.invalid) return;
-    this.twoFactorLoading.set(true);
-    this.twoFactorError.set('');
-    const otp = this.otpControl.value!.replace(/\s/g, '');
-    this.api.delete<{ message: string }>('/users/me/2fa', { body: { otp } }).subscribe({
-      next: () => {
-        this.twoFactorEnabled.set(false);
-        this.twoFactorSetupStep.set('');
-        this.otpControl.reset();
-        this.twoFactorLoading.set(false);
-        this.snackBar.open('Two-factor authentication disabled', undefined, { duration: 3000 });
-      },
-      error: (err) => {
-        this.twoFactorError.set(err.error?.error || 'Invalid code. Please try again.');
-        this.twoFactorLoading.set(false);
-      },
-    });
-  }
-
-  cancelSetup(): void {
-    this.twoFactorSetupStep.set('');
-    this.otpControl.reset();
-    this.twoFactorError.set('');
   }
 
   sendTestEmail(): void {

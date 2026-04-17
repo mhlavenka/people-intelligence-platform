@@ -27,8 +27,7 @@ calendarCallbackRouter.get('/auth/google/callback', async (req: Request, res: Re
 
     await exchangeCodeForTokens(code, userId);
 
-    // Redirect to the frontend settings page
-    res.redirect(`${config.frontendUrl}/settings?calendarConnected=true`);
+    res.redirect(`${config.frontendUrl}/booking/settings?calendarConnected=true`);
   } catch (e) { next(e); }
 });
 
