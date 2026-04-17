@@ -183,7 +183,7 @@ const MODULE_SLIDES: ModuleSlide[] = [
 
         <div class="module-carousel">
           @for (m of modules; track m.title; let i = $index) {
-            <div class="module-slide" [class.active]="activeSlide() === i">
+            <div class="module-slide" [class.active]="activeSlide() === i" [class.prev]="prevSlide() === i && prevSlide() !== activeSlide()">
               <!-- Header with graphic -->
               <div class="slide-header">
                 <div class="slide-graphic">
@@ -265,11 +265,18 @@ const MODULE_SLIDES: ModuleSlide[] = [
         </div>
 
         <div class="info-bottom">
-          <div class="trust-bar">
-            <span>Built by</span>
-            <a href="https://www.headsoft.net" target="_blank">HeadSoft Tech</a>
-            <span class="sep">&times;</span>
-            <a href="https://www.helenacoaching.com" target="_blank">Helena Coaching</a>
+          <div class="bottom-row">
+            <div class="trust-bar">
+              <span>Built by</span>
+              <a href="https://www.headsoft.net" target="_blank">HeadSoft Tech</a>
+              <span class="sep">&times;</span>
+              <a href="https://www.helenacoaching.com" target="_blank">Helena Coaching</a>
+            </div>
+            <div class="legal-bar">
+              <a routerLink="/termsofservice">Terms</a>
+              <a routerLink="/privacystatement">Privacy</a>
+              <a routerLink="/eula">EULA</a>
+            </div>
           </div>
         </div>
       </div>
@@ -377,6 +384,11 @@ const MODULE_SLIDES: ModuleSlide[] = [
 
           <div class="auth-brand-footer mobile-only">
             <p><a href="https://www.headsoft.net" target="_blank"><img class="icon-logo" src="assets/headsoft-logo-black.jpeg"/>HeadSoft Tech</a> | <a href="https://www.helenacoaching.com" target="_blank"><img class="icon-logo" src="assets/Helena-H-Icon_transparent-1024-px.png"/>Helena Coaching</a></p>
+            <div class="legal-bar">
+              <a routerLink="/termsofservice">Terms</a>
+              <a routerLink="/privacystatement">Privacy</a>
+              <a routerLink="/eula">EULA</a>
+            </div>
           </div>
 
         } @else {
@@ -454,22 +466,28 @@ const MODULE_SLIDES: ModuleSlide[] = [
     .info-sub { font-size: 15px; color: rgba(255,255,255,0.7); line-height: 1.6; margin: 0; max-width: 480px; }
 
     /* Module carousel */
-    .module-carousel { flex: 3; position: relative; z-index: 1; display: flex; flex-direction: column; min-height: 0; }
+    .module-carousel { flex: 3; position: relative; z-index: 1; display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
 
     .module-slide {
-      display: none; flex-direction: column; gap: 0;
+      display: flex; flex-direction: column; gap: 0;
       background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
       border-radius: 16px; padding: 24px; backdrop-filter: blur(8px);
-      animation: slideIn 0.5s ease;
-      flex: 1; min-height: 0; overflow-y: auto;
-      &.active { display: flex; }
+      position: absolute; inset: 0;
+      opacity: 0; transform: translateX(40px) scale(0.97);
+      pointer-events: none;
+      transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+                  transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow-y: auto;
+      &.active {
+        position: relative;
+        opacity: 1; transform: translateX(0) scale(1);
+        pointer-events: auto;
+      }
+      &.prev {
+        opacity: 0; transform: translateX(-40px) scale(0.97);
+      }
       &::-webkit-scrollbar { width: 4px; }
       &::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
-    }
-
-    @keyframes slideIn {
-      from { opacity: 0; transform: translateY(16px); }
-      to { opacity: 1; transform: translateY(0); }
     }
 
     .slide-header { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; }
@@ -543,10 +561,21 @@ const MODULE_SLIDES: ModuleSlide[] = [
     }
 
     .info-bottom { position: relative; z-index: 1; margin-top: 24px; flex-shrink: 0; }
+    .bottom-row {
+      display: flex; align-items: center; justify-content: space-between;
+    }
     .trust-bar {
       display: flex; align-items: center; gap: 8px; font-size: 13px; color: rgba(255,255,255,0.45);
       a { color: rgba(255,255,255,0.7); text-decoration: none; &:hover { color: white; } }
       .sep { color: rgba(255,255,255,0.25); }
+    }
+    .info-bottom .legal-bar {
+      display: flex; gap: 12px;
+      a { font-size: 12px; color: rgba(255,255,255,0.35); text-decoration: none; &:hover { color: rgba(255,255,255,0.7); } }
+    }
+    .auth-brand-footer .legal-bar {
+      display: flex; gap: 12px; justify-content: center; margin-top: 8px;
+      a { font-size: 11px; color: #9aa5b4; text-decoration: none; &:hover { color: #3A9FD6; } }
     }
 
     /* ── Mobile brand bar ────────────────────────────────────────── */
@@ -662,6 +691,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   twoFactorStep = signal(false);
   providers    = signal<OAuthProviders | null>(null);
   activeSlide  = signal(0);
+  prevSlide    = signal(-1);
   modules      = MODULE_SLIDES;
   private tempToken = '';
   private carouselTimer: ReturnType<typeof setInterval> | null = null;
@@ -694,12 +724,14 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
 
   goToSlide(index: number): void {
+    this.prevSlide.set(this.activeSlide());
     this.activeSlide.set(index);
     this.restartCarousel();
   }
 
   private startCarousel(): void {
     this.carouselTimer = setInterval(() => {
+      this.prevSlide.set(this.activeSlide());
       this.activeSlide.update(i => (i + 1) % this.modules.length);
     }, 10000);
   }

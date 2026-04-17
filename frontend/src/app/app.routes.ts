@@ -499,5 +499,27 @@ export const routes: Routes = [
         (m) => m.PublicBookingComponent
       ),
   },
+  // ── Legal pages (public, no auth) ──────────────────────────────────────────
+  {
+    path: 'termsofservice',
+    loadComponent: () =>
+      import('./modules/legal/terms-of-service.component').then(
+        (m) => m.TermsOfServiceComponent
+      ),
+  },
+  {
+    path: 'privacystatement',
+    loadComponent: () =>
+      import('./modules/legal/privacy-statement.component').then(
+        (m) => m.PrivacyStatementComponent
+      ),
+  },
+  {
+    path: 'eula',
+    loadComponent: () =>
+      import('./modules/legal/eula.component').then(
+        (m) => m.EulaComponent
+      ),
+  },
   { path: '**', redirectTo: 'dashboard' },
 ];

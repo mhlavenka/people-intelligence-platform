@@ -220,17 +220,27 @@ function isGroup(entry: NavEntry): entry is NavGroup {
         </div>
       </aside>
 
-      <!-- Main content -->
-      <main class="main-content">
-        @if (inactivityWarning()) {
-          <div class="inactivity-banner">
-            <mat-icon>timer</mat-icon>
-            <span>You've been inactive. You'll be logged out in 2 minutes.</span>
-            <button (click)="authService.startActivityTracking()">Stay logged in</button>
+      <!-- Main content area -->
+      <div class="content-area">
+        <main class="main-content">
+          @if (inactivityWarning()) {
+            <div class="inactivity-banner">
+              <mat-icon>timer</mat-icon>
+              <span>You've been inactive. You'll be logged out in 2 minutes.</span>
+              <button (click)="authService.startActivityTracking()">Stay logged in</button>
+            </div>
+          }
+          <router-outlet />
+        </main>
+        <footer class="app-footer">
+          <span>Built by <a href="https://www.headsoft.net" target="_blank">HeadSoft Tech</a> &times; <a href="https://www.helenacoaching.com" target="_blank">Helena Coaching</a></span>
+          <div class="footer-legal">
+            <a routerLink="/termsofservice" target="_blank">Terms</a>
+            <a routerLink="/privacystatement" target="_blank">Privacy</a>
+            <a routerLink="/eula" target="_blank">EULA</a>
           </div>
-        }
-        <router-outlet />
-      </main>
+        </footer>
+      </div>
     </div>
   `,
   styles: [`
@@ -479,11 +489,25 @@ function isGroup(entry: NavEntry): entry is NavGroup {
       }
     }
 
+    .content-area {
+      flex: 1; display: flex; flex-direction: column;
+      min-width: 0; overflow: hidden;
+    }
+
     .main-content {
       flex: 1;
       overflow-y: auto;
       background: #EBF5FB;
     }
+
+    .app-footer {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 24px; flex-shrink: 0;
+      background: #e2edf5; border-top: 1px solid #d4dfe9;
+      font-size: 12px; color: #6b7c93;
+      a { color: #6b7c93; text-decoration: none; &:hover { color: #3A9FD6; } }
+    }
+    .footer-legal { display: flex; gap: 14px; }
 
     .inactivity-banner {
       display: flex;
@@ -548,7 +572,7 @@ function isGroup(entry: NavEntry): entry is NavGroup {
       .app-layout.collapsed .sidebar { width: 280px !important; transform: translateX(-100%); }
       .app-layout.collapsed .sidebar.mobile-open { transform: translateX(0); }
 
-      .main-content { padding-top: 56px; }
+      .content-area { padding-top: 56px; }
 
       .sidebar-header.collapsed { flex-direction: row !important; padding: 20px 16px 16px !important; }
       .sidebar-header.collapsed .expand-btn { display: none; }
