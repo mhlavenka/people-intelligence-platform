@@ -9,6 +9,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ApiService } from '../../core/api.service';
+import { EmptyStateComponent } from '../../shared/empty-state/empty-state.component';
 
 interface LineItem {
   description: string;
@@ -97,6 +98,7 @@ interface AvailablePlan {
     MatTooltipModule,
     MatProgressSpinnerModule,
     DatePipe,
+    EmptyStateComponent,
   ],
   template: `
     <div class="billing-page">
@@ -373,10 +375,7 @@ interface AvailablePlan {
                   <h2 class="card-title">Payment History</h2>
                 </div>
                 @if (paidInvoices().length === 0) {
-                  <div class="empty-state">
-                    <mat-icon class="empty-icon">receipt_long</mat-icon>
-                    <p class="empty-text">No payment history yet.</p>
-                  </div>
+                  <app-empty-state icon="receipt_long" title="No payment history" message="No payment history yet."></app-empty-state>
                 } @else {
                   <div class="history-table-wrapper">
                     <table class="history-table">
@@ -1094,28 +1093,6 @@ interface AvailablePlan {
       &:hover { color: #1B2A47; }
     }
 
-    /* Empty state */
-    .empty-state {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 48px 24px;
-      gap: 10px;
-    }
-
-    .empty-icon {
-      font-size: 40px;
-      width: 40px;
-      height: 40px;
-      color: #d1d5db;
-    }
-
-    .empty-text {
-      font-size: 14px;
-      color: #9ca3af;
-      margin: 0;
-    }
 
     /* ── Plan Tiers card ─────────────────────────── */
     .tiers-card .card-header { padding-bottom: 0; align-items: center; }

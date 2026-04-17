@@ -763,8 +763,7 @@ const RADIUS_OPTIONS = [
 
     .module-row {
       display: flex; align-items: center; gap: 16px;
-      padding: 14px 16px; border-radius: 12px;
-      background: #f8fafc; border: 1px solid #e8edf4; transition: all 0.15s;
+      padding: 14px 16px; 
       &.enabled { border-color: #d1e9f5; background: #f0f9ff; }
     }
 
@@ -782,14 +781,14 @@ const RADIUS_OPTIONS = [
 
     .module-block {
       display: flex; flex-direction: column;
+      border-radius: 12px;
+      background: #f8fafc; border: 1px solid #e8edf4; transition: all 0.15s;
     }
     .module-sub-settings {
       margin: -4px 0 0 20px;
       padding: 4px 12px 10px 20px;
-      border-left: 2px solid #d1e9f5;
       display: flex; flex-direction: column; gap: 10px;
       background: linear-gradient(180deg, rgba(240,249,255,0.4) 0%, transparent 100%);
-      border-bottom-left-radius: 8px;
     }
     .sub-row {
       display: flex; align-items: center; gap: 12px;

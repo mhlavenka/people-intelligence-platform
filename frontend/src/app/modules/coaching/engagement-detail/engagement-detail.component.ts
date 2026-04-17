@@ -383,7 +383,7 @@ interface Session {
                           <div class="intake-body">
                             <div class="intake-title">Send post-session reflection</div>
                             <div class="intake-sub">
-                              {{ (s.topics?.length || s.sharedNotes || s.coachNotes)
+                              {{ (s.topics.length || s.sharedNotes || s.coachNotes)
                                   ? 'Generate questions from session notes'
                                   : 'Provide a topic summary to generate questions' }}
                             </div>

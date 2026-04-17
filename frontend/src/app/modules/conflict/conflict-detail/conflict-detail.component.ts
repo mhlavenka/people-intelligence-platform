@@ -9,9 +9,13 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { ApiService } from '../../../core/api.service';
+import { SurveyResponsesDialogComponent } from '../../survey/survey-responses-dialog/survey-responses-dialog.component';
+import { MiniGaugeComponent } from '../../../shared/mini-gauge/mini-gauge.component';
+import { RiskBadgeComponent } from '../../../shared/risk-badge/risk-badge.component';
 
 type ScriptSection =
   | { key: string; label: string; type: 'string'; value: string }
@@ -58,7 +62,8 @@ interface RecommendedActions {
     CommonModule, RouterLink,
     MatButtonModule, MatIconModule, MatTabsModule,
     MatChipsModule, MatDividerModule, MatProgressSpinnerModule,
-    MatTooltipModule, MatSnackBarModule, MatExpansionModule, MatCheckboxModule,
+    MatTooltipModule, MatSnackBarModule, MatDialogModule, MatExpansionModule, MatCheckboxModule,
+    MiniGaugeComponent, RiskBadgeComponent,
   ],
   template: `
     @if (loading()) {
@@ -89,11 +94,12 @@ interface RecommendedActions {
                 <mat-icon>corporate_fare</mat-icon>
                 {{ analysis()!.departmentId || 'All Departments' }}
               </span>
-              @if (analysis()!.intakeTemplateId?.title; as tplTitle) {
-                <span class="meta-chip">
+              @if (analysis()!.intakeTemplateId; as tpl) {
+                <a class="meta-chip meta-link" (click)="viewIntakeResponses(tpl._id)">
                   <mat-icon>assignment</mat-icon>
-                  {{ tplTitle }}
-                </span>
+                  {{ tpl.title }}
+                  <mat-icon class="link-arrow">open_in_new</mat-icon>
+                </a>
               }
             </div>
           </div>
@@ -102,9 +108,7 @@ interface RecommendedActions {
               <div class="score-num">{{ analysis()!.riskScore }}</div>
               <div class="score-label">Risk Score</div>
             </div>
-            <span class="risk-badge" [class]="analysis()!.riskLevel">
-              {{ analysis()!.riskLevel | titlecase }} Risk
-            </span>
+            <app-risk-badge [level]="analysis()!.riskLevel" [label]="(analysis()!.riskLevel | titlecase) + ' Risk'" />
           </div>
         </div>
 
@@ -146,18 +150,9 @@ interface RecommendedActions {
                         <div class="sub-row" [class.clickable]="!!subAnalysisFor(ct)"
                              (click)="subAnalysisFor(ct) && toggleNarrative(ct)">
                           <div class="sub-left">
-                            <svg class="mini-gauge" viewBox="0 0 80 52" xmlns="http://www.w3.org/2000/svg" style="overflow:visible">
-                              <path d="M10,44 A30,30 0 0,1 70,44" fill="none" stroke="#e8edf4" stroke-width="8" stroke-linecap="round"/>
-                              <path [attr.d]="gaugeArcFor(ct)" fill="none"
-                                    [attr.stroke]="subAnalysisFor(ct) ? riskColor(subAnalysisFor(ct)!.riskLevel) : 'none'"
-                                    stroke-width="8" stroke-linecap="round"/>
-                              <text x="40" y="43" text-anchor="middle"
-                                    [attr.font-size]="subAnalysisFor(ct) ? 13 : 10"
-                                    font-weight="700"
-                                    [attr.fill]="subAnalysisFor(ct) ? riskColor(subAnalysisFor(ct)!.riskLevel) : '#b0bec5'">
-                                {{ subAnalysisFor(ct)?.riskScore ?? '--' }}
-                              </text>
-                            </svg>
+                            <app-mini-gauge [score]="subAnalysisFor(ct)?.riskScore ?? 0"
+                                            [riskLevel]="subAnalysisFor(ct)?.riskLevel ?? ''"
+                                            size="sm" />
                           </div>
                           <div class="sub-center">
                             <div class="sub-type-label">{{ ct }}</div>
@@ -173,7 +168,7 @@ interface RecommendedActions {
                           </div>
                           <div class="sub-right">
                             @if (subAnalysisFor(ct); as sub) {
-                              <span class="risk-badge" [class]="sub.riskLevel">{{ sub.riskLevel | titlecase }}</span>
+                              <app-risk-badge [level]="sub.riskLevel" [label]="sub.riskLevel | titlecase" />
                               <mat-icon class="expand-icon" [class.expanded]="expandedNarratives().has(ct)">expand_more</mat-icon>
                             }
                             @if (!subAnalysisFor(ct)) {
@@ -462,6 +457,11 @@ interface RecommendedActions {
       font-size: 13px; color: #5a6a7e;
       mat-icon { font-size: 15px; width: 15px; height: 15px; color: #9aa5b4; }
     }
+    .meta-link {
+      cursor: pointer; text-decoration: none; transition: color 0.15s;
+      &:hover { color: #3A9FD6; mat-icon { color: #3A9FD6; } }
+      .link-arrow { font-size: 12px; width: 12px; height: 12px; margin-left: 2px; }
+    }
     .header-right {
       display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0;
     }
@@ -470,14 +470,6 @@ interface RecommendedActions {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       .score-num  { font-size: 28px; font-weight: 700; line-height: 1; }
       .score-label { font-size: 10px; margin-top: 3px; opacity: 0.8; }
-      &.low      { background: rgba(39,196,160,0.15); color: #1a9678; }
-      &.medium   { background: rgba(240,165,0,0.15);  color: #b07800; }
-      &.high     { background: rgba(232,108,58,0.15); color: #c04a14; }
-      &.critical { background: rgba(229,62,62,0.15);  color: #c53030; }
-    }
-    .risk-badge {
-      display: inline-block; padding: 3px 12px; border-radius: 999px;
-      font-size: 11px; font-weight: 700; text-transform: uppercase;
       &.low      { background: rgba(39,196,160,0.15); color: #1a9678; }
       &.medium   { background: rgba(240,165,0,0.15);  color: #b07800; }
       &.high     { background: rgba(232,108,58,0.15); color: #c04a14; }
@@ -524,7 +516,7 @@ interface RecommendedActions {
       display: flex; align-items: center; gap: 14px; padding: 12px 14px;
       &.clickable { cursor: pointer; &:hover { background: rgba(58,159,214,0.04); } }
     }
-    .sub-left { flex-shrink: 0; .mini-gauge { width: 72px; height: 46px; display: block; } }
+    .sub-left { flex-shrink: 0; }
     .sub-center { flex: 1; min-width: 0; }
     .sub-type-label { font-size: 13px; font-weight: 600; color: #1B2A47; margin-bottom: 6px; }
     .sub-score-bar-wrap {
@@ -544,7 +536,6 @@ interface RecommendedActions {
     }
     .sub-right {
       flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 6px;
-      .risk-badge { margin-top: 0; }
       button { display: flex; align-items: center; gap: 4px; font-size: 12px; white-space: nowrap;
         mat-icon { font-size: 16px; width: 16px; height: 16px; }
         mat-spinner { margin: 0 2px; }
@@ -663,6 +654,7 @@ export class ConflictDetailComponent implements OnInit {
   private router = inject(Router);
   private api = inject(ApiService);
   private snack = inject(MatSnackBar);
+  private dialog = inject(MatDialog);
 
   loading = signal(true);
   analysis = signal<ConflictAnalysis | null>(null);
@@ -765,23 +757,6 @@ export class ConflictDetailComponent implements OnInit {
     });
   }
 
-  gaugeArcFor(ct: string): string {
-    const sub = this.subAnalysisFor(ct);
-    if (!sub || sub.riskScore <= 0) return '';
-    return this.miniGaugeArc(sub.riskScore);
-  }
-
-  miniGaugeArc(score: number): string {
-    const pct = Math.min(Math.max(score, 0), 100) / 100;
-    const startAngle = Math.PI;
-    const endAngle = startAngle + pct * Math.PI;
-    const r = 30, cx = 40, cy = 44;
-    const x1 = cx + r * Math.cos(startAngle);
-    const y1 = cy + r * Math.sin(startAngle);
-    const x2 = cx + r * Math.cos(endAngle);
-    const y2 = cy + r * Math.sin(endAngle);
-    return `M${x1.toFixed(2)},${y1.toFixed(2)} A${r},${r} 0 0,1 ${x2.toFixed(2)},${y2.toFixed(2)}`;
-  }
 
   riskColor(level: string): string {
     const map: Record<string, string> = { low: '#27C4A0', medium: '#f0a500', high: '#e86c3a', critical: '#e53e3e' };
@@ -845,6 +820,19 @@ export class ConflictDetailComponent implements OnInit {
         this.snack.open('Escalation submitted', 'OK', { duration: 3000 });
       },
       error: () => this.snack.open('Escalation failed', 'OK', { duration: 3000 }),
+    });
+  }
+
+  viewIntakeResponses(templateId: string): void {
+    this.api.get<Record<string, unknown>>(`/surveys/templates/${templateId}`).subscribe({
+      next: (template) => {
+        this.dialog.open(SurveyResponsesDialogComponent, {
+          width: '760px',
+          maxHeight: '90vh',
+          data: template,
+        });
+      },
+      error: () => this.snack.open('Failed to load template', 'OK', { duration: 3000 }),
     });
   }
 }

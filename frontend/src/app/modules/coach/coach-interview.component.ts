@@ -9,6 +9,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ApiService } from '../../core/api.service';
+import { EmptyStateComponent } from '../../shared/empty-state/empty-state.component';
 
 interface SurveyTemplate {
   _id: string;
@@ -56,6 +57,7 @@ const FORMAT_OPTIONS: { key: SessionFormat; label: string; icon: string; hint: s
     MatInputModule,
     MatProgressBarModule,
     MatProgressSpinnerModule,
+    EmptyStateComponent,
   ],
   template: `
     <div class="interview-page">
@@ -112,10 +114,7 @@ const FORMAT_OPTIONS: { key: SessionFormat; label: string; icon: string; hint: s
               <p class="step-hint">Select an interview or assessment template to conduct with your coachee.</p>
 
               @if (templates().length === 0) {
-                <div class="empty-state">
-                  <mat-icon>inbox</mat-icon>
-                  <p>No interview or assessment templates available. Ask your admin to create one under Intake Templates.</p>
-                </div>
+                <app-empty-state icon="inbox" title="No templates available" message="No interview or assessment templates available. Ask your admin to create one under Intake Templates."></app-empty-state>
               } @else {
                 <div class="template-list">
                   @for (t of templates(); track t._id) {
@@ -365,11 +364,6 @@ const FORMAT_OPTIONS: { key: SessionFormat; label: string; icon: string; hint: s
     .optional { font-weight: 400; color: #9aa5b4; }
     .full-width { width: 100%; }
 
-    .empty-state {
-      text-align: center; padding: 40px 20px; color: #9aa5b4;
-      mat-icon { font-size: 48px; width: 48px; height: 48px; display: block; margin: 0 auto 12px; }
-      p { font-size: 14px; margin: 0; }
-    }
 
     /* Template cards */
     .template-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 8px; }

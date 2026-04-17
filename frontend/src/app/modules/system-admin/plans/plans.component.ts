@@ -10,6 +10,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { ApiService } from '../../../core/api.service';
 import { PlanEditDialogComponent } from '../plan-edit-dialog/plan-edit-dialog.component';
 import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog.component';
+import { EmptyStateComponent } from '../../../shared/empty-state/empty-state.component';
 
 interface PlanLimits {
   maxAIAnalyses: number;
@@ -51,6 +52,7 @@ const MODULE_DEFS = [
     MatSnackBarModule,
     MatDividerModule,
     MatTooltipModule,
+    EmptyStateComponent,
   ],
   template: `
     <div class="page">
@@ -73,10 +75,7 @@ const MODULE_DEFS = [
 
         <!-- Plans list -->
         @if (plans().length === 0) {
-          <div class="empty-state">
-            <mat-icon class="empty-icon">sell</mat-icon>
-            <p>No plans yet. Create your first subscription plan.</p>
-          </div>
+          <app-empty-state icon="sell" title="No plans yet" message="Create your first subscription plan."></app-empty-state>
         } @else {
           <div class="plans-grid">
             @for (plan of sortedPlans(); track plan._id) {
@@ -284,13 +283,6 @@ const MODULE_DEFS = [
     }
     .sort-label { font-size: 11px; color: #d1d5db; }
 
-    /* ── Empty state ─────────────────────────────────── */
-    .empty-state {
-      display: flex; flex-direction: column; align-items: center;
-      padding: 80px 0; gap: 12px;
-      .empty-icon { font-size: 48px; width: 48px; height: 48px; color: #d1d5db; }
-      p { font-size: 14px; color: #9ca3af; margin: 0; }
-    }
   `],
 })
 export class PlansComponent implements OnInit {

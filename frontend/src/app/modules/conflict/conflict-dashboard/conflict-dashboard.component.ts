@@ -11,6 +11,8 @@ import { MatExpansionModule } from '@angular/material/expansion';
 import { ApiService } from '../../../core/api.service';
 import { ConflictAnalyzeDialogComponent } from '../conflict-analyze-dialog/conflict-analyze-dialog.component';
 import { ConflictIdpDialogComponent } from '../conflict-idp-dialog/conflict-idp-dialog.component';
+import { MiniGaugeComponent } from '../../../shared/mini-gauge/mini-gauge.component';
+import { RiskBadgeComponent } from '../../../shared/risk-badge/risk-badge.component';
 
 interface ConflictMilestone {
   _id: string;
@@ -63,6 +65,8 @@ interface ConflictAnalysis {
     MatTooltipModule,
     MatExpansionModule,
     DatePipe,
+    MiniGaugeComponent,
+    RiskBadgeComponent,
   ],
   template: `
     <div class="conflict-page">
@@ -118,13 +122,8 @@ interface ConflictAnalysis {
               <div class="analysis-card" [class]="'accent-' + a.riskLevel">
                 <div class="analysis-card-top">
                   <div class="mini-gauge-wrap">
-                    <svg viewBox="0 0 100 60" class="mini-gauge-svg">
-                      <path d="M 10 52 A 40 40 0 0 1 90 52" fill="none" stroke="#e8edf4" stroke-width="10" stroke-linecap="round"/>
-                      <path [attr.d]="miniGaugeArc(a.riskScore)" fill="none"
-                            [attr.stroke]="riskColor(a.riskLevel)" stroke-width="10" stroke-linecap="round"/>
-                      <text x="50" y="48" text-anchor="middle" class="mini-score">{{ a.riskScore }}</text>
-                    </svg>
-                    <span class="risk-badge" [class]="a.riskLevel">{{ a.riskLevel }}</span>
+                    <app-mini-gauge [score]="a.riskScore" [riskLevel]="a.riskLevel" size="sm" />
+                    <app-risk-badge [level]="a.riskLevel" />
                   </div>
 
                   <div class="analysis-meta">
@@ -571,18 +570,6 @@ interface ConflictAnalysis {
     .mini-gauge-wrap {
       display: flex; flex-direction: column; align-items: center; gap: 4px;
     }
-    .mini-gauge-svg {
-      width: 80px;
-      .mini-score { font-size: 18px; font-weight: 700; fill: #1B2A47; }
-    }
-    .risk-badge {
-      padding: 2px 8px; border-radius: 999px; font-size: 10px; font-weight: 700;
-      text-transform: uppercase; letter-spacing: 0.3px;
-      &.low      { background: rgba(39,196,160,0.15); color: #1a9678; }
-      &.medium   { background: rgba(240,165,0,0.15);  color: #b07800; }
-      &.high     { background: rgba(232,108,58,0.15); color: #c04a14; }
-      &.critical { background: rgba(229,62,62,0.15);  color: #c53030; }
-    }
 
     .new-analysis-card {
       border: 2px dashed #d0d8e4; border-left-width: 2px;
@@ -859,37 +846,6 @@ export class ConflictDashboardComponent implements OnInit {
     });
   }
 
-  riskColor(level: string): string {
-    const map: Record<string, string> = { low: '#27C4A0', medium: '#f0a500', high: '#e86c3a', critical: '#e53e3e' };
-    return map[level] ?? '#9aa5b4';
-  }
-
-  miniGaugeArc(score: number): string {
-    if (score <= 0) return '';
-    const angle = (score / 100) * Math.PI;
-    const x = (50 - 40 * Math.cos(angle)).toFixed(2);
-    const y = (52 - 40 * Math.sin(angle)).toFixed(2);
-    return `M 10 52 A 40 40 0 0 1 ${x} ${y}`;
-  }
-
-  gaugeColor(): string { return this.riskColor(this.avgLevel()); }
-
-  gaugeArcPath(): string {
-    const score = this.avgRiskScore();
-    if (score <= 0) return '';
-    const angle = (score / 100) * Math.PI;
-    const x = (80 - 64 * Math.cos(angle)).toFixed(2);
-    const y = (80 - 64 * Math.sin(angle)).toFixed(2);
-    return `M 16 80 A 64 64 0 0 1 ${x} ${y}`;
-  }
-
-  private avgLevel(): string {
-    const s = this.avgRiskScore();
-    if (s <= 25) return 'low';
-    if (s <= 50) return 'medium';
-    if (s <= 75) return 'high';
-    return 'critical';
-  }
 
   constructor(private api: ApiService, private dialog: MatDialog, private snackBar: MatSnackBar, private router: Router) {}
 

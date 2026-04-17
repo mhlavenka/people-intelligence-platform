@@ -10,6 +10,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
 import { ApiService } from '../../../core/api.service';
+import { EmptyStateComponent } from '../../../shared/empty-state/empty-state.component';
 import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog.component';
 
 interface ScoreRecord {
@@ -52,7 +53,7 @@ const COMPOSITE_LABELS: Record<string, string> = {
   imports: [
     CommonModule, DatePipe, RouterLink, MatIconModule, MatButtonModule,
     MatProgressSpinnerModule, MatTooltipModule, MatExpansionModule,
-    MatDividerModule, MatSnackBarModule,
+    MatDividerModule, MatSnackBarModule, EmptyStateComponent,
   ],
   template: `
     <div class="records-page">
@@ -70,12 +71,9 @@ const COMPOSITE_LABELS: Record<string, string> = {
       @if (loading()) {
         <div class="loading-center"><mat-spinner diameter="36" /></div>
       } @else if (records().length === 0) {
-        <div class="empty-state">
-          <mat-icon>psychology</mat-icon>
-          <h3>No assessments imported yet</h3>
-          <p>Import your first EQi 2.0 PDF report to get started.</p>
+        <app-empty-state icon="psychology" title="No assessments imported yet" message="Import your first EQi 2.0 PDF report to get started.">
           <a mat-raised-button color="primary" routerLink="/eq-import"><mat-icon>upload_file</mat-icon> Import Assessment</a>
-        </div>
+        </app-empty-state>
       } @else {
         <div class="stats-bar">
           <div class="stat-box"><div class="stat-num">{{ records().length }}</div><div class="stat-label">Total Imported</div></div>

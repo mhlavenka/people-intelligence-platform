@@ -7,6 +7,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ApiService } from '../../../core/api.service';
+import { EmptyStateComponent } from '../../../shared/empty-state/empty-state.component';
 
 interface BillingSession {
   _id: string;
@@ -43,6 +44,7 @@ interface BillingData {
   imports: [
     CommonModule, DatePipe, CurrencyPipe, RouterLink, MatIconModule,
     MatButtonModule, MatProgressSpinnerModule, MatDividerModule, MatTooltipModule,
+    EmptyStateComponent,
   ],
   template: `
     <div class="billing-page">
@@ -92,11 +94,7 @@ interface BillingData {
 
         <!-- Engagements -->
         @if (data()!.engagements.length === 0) {
-          <div class="empty-state">
-            <mat-icon>money_off</mat-icon>
-            <h3>No billable engagements</h3>
-            <p>This coachee has no engagements with rebilling enabled.</p>
-          </div>
+          <app-empty-state icon="money_off" title="No billable engagements" message="This coachee has no engagements with rebilling enabled."></app-empty-state>
         }
 
         @for (eng of data()!.engagements; track eng.engagementId) {
@@ -203,13 +201,6 @@ interface BillingData {
       }
     }
 
-    .empty-state {
-      text-align: center; padding: 48px; color: #9aa5b4;
-      background: white; border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-      mat-icon { font-size: 48px; width: 48px; height: 48px; display: block; margin: 0 auto 12px; }
-      h3 { color: #1B2A47; margin-bottom: 8px; }
-      p { margin: 0; }
-    }
 
     .eng-billing-card {
       background: white; border-radius: 14px; box-shadow: 0 2px 12px rgba(0,0,0,0.06);

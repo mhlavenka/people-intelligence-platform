@@ -11,6 +11,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { Sponsor, SponsorService } from '../sponsor.service';
 import { SponsorDialogComponent } from '../sponsor-dialog/sponsor-dialog.component';
 import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog.component';
+import { AvatarComponent } from '../../../shared/avatar/avatar.component';
 import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
@@ -20,6 +21,7 @@ import { HttpErrorResponse } from '@angular/common/http';
     CommonModule, RouterLink,
     MatButtonModule, MatIconModule, MatProgressSpinnerModule,
     MatMenuModule, MatTooltipModule, MatDialogModule,
+    AvatarComponent,
   ],
   template: `
     <div class="page">
@@ -47,9 +49,7 @@ import { HttpErrorResponse } from '@angular/common/http';
             <div class="card" [class.inactive]="!s.isActive">
               <div class="card-top">
                 <div class="ident">
-                  <div class="avatar">
-                    {{ initials(s) }}
-                  </div>
+                  <app-avatar [firstName]="sponsorFirstName(s)" [lastName]="sponsorLastName(s)" [size]="44" />
                   <div class="ident-body">
                     <strong>{{ s.name }}</strong>
                     <span class="email">{{ s.email }}</span>
@@ -141,13 +141,6 @@ import { HttpErrorResponse } from '@angular/common/http';
     }
     .card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
     .ident { display: flex; gap: 12px; min-width: 0; }
-    .avatar {
-      width: 44px; height: 44px; border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      background: linear-gradient(135deg, #3A9FD6, #27C4A0);
-      color: #fff; font-weight: 600; font-size: 15px;
-      flex-shrink: 0;
-    }
     .ident-body {
       display: flex; flex-direction: column; gap: 2px; min-width: 0;
       strong { font-size: 14px; color: #1B2A47; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -184,9 +177,12 @@ export class SponsorListComponent implements OnInit {
 
   ngOnInit(): void { this.load(); }
 
-  initials(s: Sponsor): string {
-    const parts = s.name.trim().split(/\s+/);
-    return ((parts[0]?.[0] || '') + (parts[1]?.[0] || '')).toUpperCase();
+  sponsorFirstName(s: Sponsor): string {
+    return s.name.trim().split(/\s+/)[0] || '';
+  }
+
+  sponsorLastName(s: Sponsor): string {
+    return s.name.trim().split(/\s+/)[1] || '';
   }
 
   load(): void {

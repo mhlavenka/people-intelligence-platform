@@ -7,6 +7,8 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ApiService } from '../../../core/api.service';
+import { MiniGaugeComponent } from '../../../shared/mini-gauge/mini-gauge.component';
+import { RiskBadgeComponent } from '../../../shared/risk-badge/risk-badge.component';
 
 type ScriptSection =
   | { key: string; label: string; type: 'string'; value: string }
@@ -40,6 +42,8 @@ interface ConflictAnalysis {
     MatChipsModule,
     MatDividerModule,
     MatProgressSpinnerModule,
+    MiniGaugeComponent,
+    RiskBadgeComponent,
   ],
   template: `
     <h2 mat-dialog-title>
@@ -69,7 +73,7 @@ interface ConflictAnalysis {
               <span>{{ tplTitle }}</span>
             </div>
           }
-          <div class="risk-badge" [class]="data.riskLevel">{{ data.riskLevel | titlecase }} Risk</div>
+          <app-risk-badge [level]="data.riskLevel" [label]="(data.riskLevel | titlecase) + ' Risk'" />
         </div>
       </div>
 
@@ -89,24 +93,17 @@ interface ConflictAnalysis {
             @for (ct of data.conflictTypes; track ct) {
               <div class="sub-row" [class]="subAnalysisFor(ct)?.riskLevel || ''">
                 <div class="sub-left">
-                  <svg class="mini-gauge" viewBox="0 0 80 52" xmlns="http://www.w3.org/2000/svg" style="overflow:visible">
-                    <path d="M10,44 A30,30 0 0,1 70,44" fill="none" stroke="#e8edf4" stroke-width="8" stroke-linecap="round"/>
-                    <path [attr.d]="gaugeArcFor(ct)"
-                          fill="none"
-                          [attr.stroke]="subAnalysisFor(ct) ? riskColor(subAnalysisFor(ct)!.riskLevel) : 'none'"
-                          stroke-width="8" stroke-linecap="round"/>
-                    <text x="40" y="43" text-anchor="middle"
-                          [attr.font-size]="subAnalysisFor(ct) ? 13 : 10"
-                          font-weight="700"
-                          [attr.fill]="subAnalysisFor(ct) ? riskColor(subAnalysisFor(ct)!.riskLevel) : '#b0bec5'">{{ subAnalysisFor(ct)?.riskScore ?? '--' }}</text>
-                  </svg>
+                  <app-mini-gauge
+                    [score]="subAnalysisFor(ct)?.riskScore ?? 0"
+                    [riskLevel]="subAnalysisFor(ct)?.riskLevel ?? ''"
+                    size="sm" />
                 </div>
 
                 <div class="sub-center">
                   <div class="sub-type-label">{{ ct }}</div>
                   @if (subAnalysisFor(ct); as sub) {
                     <div class="sub-score-bar-wrap">
-                      <div class="sub-score-bar" [style.width.%]="sub.riskScore" [style.background]="riskColor(sub.riskLevel)"></div>
+                      <div class="sub-score-bar" [class]="sub.riskLevel" [style.width.%]="sub.riskScore"></div>
                     </div>
                     <div class="sub-narrative">
                       @if (isNarrativeExpanded(ct)) {
@@ -125,7 +122,7 @@ interface ConflictAnalysis {
 
                 <div class="sub-right">
                   @if (subAnalysisFor(ct); as sub) {
-                    <span class="risk-badge" [class]="sub.riskLevel">{{ sub.riskLevel | titlecase }}</span>
+                    <app-risk-badge [level]="sub.riskLevel" />
                   }
                   @if (!subAnalysisFor(ct)) {
                     <button mat-stroked-button color="primary"
@@ -262,15 +259,6 @@ interface ConflictAnalysis {
       }
     }
 
-    .risk-badge {
-      display: inline-block; padding: 3px 12px; border-radius: 999px;
-      font-size: 12px; font-weight: 700; text-transform: uppercase; margin-top: 4px;
-      &.low      { background: rgba(39,196,160,0.15); color: #1a9678; }
-      &.medium   { background: rgba(240,165,0,0.15);  color: #b07800; }
-      &.high     { background: rgba(232,108,58,0.15); color: #c04a14; }
-      &.critical { background: rgba(229,62,62,0.15);  color: #c53030; }
-    }
-
     .section {
       padding: 16px 0;
       h3 {
@@ -313,8 +301,7 @@ interface ConflictAnalysis {
     }
 
     .sub-left {
-      flex-shrink: 0;
-      .mini-gauge { width: 72px; height: 46px; display: block; }
+      flex-shrink: 0; width: 72px;
     }
 
     .sub-center {
@@ -333,6 +320,10 @@ interface ConflictAnalysis {
 
     .sub-score-bar {
       height: 100%; border-radius: 4px; transition: width 0.5s ease;
+      &.low      { background: #27C4A0; }
+      &.medium   { background: #f0a500; }
+      &.high     { background: #e86c3a; }
+      &.critical { background: #e53e3e; }
     }
 
     .sub-score-bar-placeholder {
@@ -350,7 +341,6 @@ interface ConflictAnalysis {
 
     .sub-right {
       flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 6px;
-      .risk-badge { margin-top: 0; }
       button {
         display: flex; align-items: center; gap: 4px; font-size: 12px; white-space: nowrap;
         mat-icon { font-size: 16px; width: 16px; height: 16px; }
@@ -469,32 +459,6 @@ export class ConflictDetailDialogComponent implements OnInit {
       next.has(conflictType) ? next.delete(conflictType) : next.add(conflictType);
       return next;
     });
-  }
-
-  gaugeArcFor(conflictType: string): string {
-    const sub = this.subAnalysisFor(conflictType);
-    if (!sub || sub.riskScore <= 0) return '';
-    return this.miniGaugeArc(sub.riskScore);
-  }
-
-  miniGaugeArc(score: number): string {
-    const pct = Math.min(Math.max(score, 0), 100) / 100;
-    const startAngle = Math.PI;
-    const endAngle   = startAngle + pct * Math.PI;
-    const r = 30;
-    const cx = 40, cy = 44;
-    const x1 = cx + r * Math.cos(startAngle);
-    const y1 = cy + r * Math.sin(startAngle);
-    const x2 = cx + r * Math.cos(endAngle);
-    const y2 = cy + r * Math.sin(endAngle);
-    return `M${x1.toFixed(2)},${y1.toFixed(2)} A${r},${r} 0 0,1 ${x2.toFixed(2)},${y2.toFixed(2)}`;
-  }
-
-  riskColor(level: string): string {
-    const map: Record<string, string> = {
-      low: '#27C4A0', medium: '#f0a500', high: '#e86c3a', critical: '#e53e3e',
-    };
-    return map[level] ?? '#9aa5b4';
   }
 
   private splitWords(s: string): string {

@@ -8,6 +8,8 @@ import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ApiService } from '../../../core/api.service';
+import { MiniGaugeComponent } from '../../../shared/mini-gauge/mini-gauge.component';
+import { RiskBadgeComponent } from '../../../shared/risk-badge/risk-badge.component';
 import { ConflictAnalyzeDialogComponent } from '../conflict-analyze-dialog/conflict-analyze-dialog.component';
 
 interface ConflictAnalysis {
@@ -30,6 +32,7 @@ interface ConflictAnalysis {
   imports: [
     CommonModule, MatIconModule, MatButtonModule, MatProgressSpinnerModule,
     MatDialogModule, MatSnackBarModule, MatTooltipModule,
+    MiniGaugeComponent, RiskBadgeComponent,
   ],
   template: `
     <!-- Module banner -->
@@ -74,13 +77,8 @@ interface ConflictAnalysis {
             <div class="analysis-card" [class]="'accent-' + a.riskLevel" (click)="viewAnalysis(a)">
               <div class="analysis-card-top">
                 <div class="mini-gauge-wrap">
-                  <svg viewBox="0 0 100 60" class="mini-gauge-svg">
-                    <path d="M 10 52 A 40 40 0 0 1 90 52" fill="none" stroke="#e8edf4" stroke-width="10" stroke-linecap="round"/>
-                    <path [attr.d]="miniGaugeArc(a.riskScore)" fill="none"
-                          [attr.stroke]="riskColor(a.riskLevel)" stroke-width="10" stroke-linecap="round"/>
-                    <text x="50" y="48" text-anchor="middle" class="mini-score">{{ a.riskScore }}</text>
-                  </svg>
-                  <span class="risk-badge" [class]="a.riskLevel">{{ a.riskLevel }}</span>
+                  <app-mini-gauge [score]="a.riskScore" [riskLevel]="a.riskLevel" />
+                  <app-risk-badge [level]="a.riskLevel" />
                 </div>
                 <div class="analysis-meta">
                   <div class="meta-name">
@@ -239,14 +237,7 @@ interface ConflictAnalysis {
     }
     .analysis-card-top { display: flex; align-items: flex-start; gap: 16px; }
     .mini-gauge-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-    .mini-gauge-svg { width: 80px; .mini-score { font-size: 18px; font-weight: 700; fill: #1B2A47; } }
-    .risk-badge {
-      padding: 2px 8px; border-radius: 999px; font-size: 10px; font-weight: 700; text-transform: uppercase;
-      &.low      { background: rgba(39,196,160,0.15); color: #1a9678; }
-      &.medium   { background: rgba(240,165,0,0.15);  color: #b07800; }
-      &.high     { background: rgba(232,108,58,0.15); color: #c04a14; }
-      &.critical { background: rgba(229,62,62,0.15);  color: #c53030; }
-    }
+    app-mini-gauge { width: 80px; }
     .new-analysis-card {
       border: 2px dashed #d0d8e4; border-left-width: 2px;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -321,13 +312,4 @@ export class ConflictAnalysisComponent implements OnInit {
     ref.afterClosed().subscribe((result) => { if (result) this.loadAnalyses(); });
   }
 
-  riskColor(level: string): string {
-    return ({ low: '#27C4A0', medium: '#f0a500', high: '#e86c3a', critical: '#e53e3e' } as Record<string, string>)[level] ?? '#9aa5b4';
-  }
-
-  miniGaugeArc(score: number): string {
-    if (score <= 0) return '';
-    const angle = (score / 100) * Math.PI;
-    return `M 10 52 A 40 40 0 0 1 ${(50 - 40 * Math.cos(angle)).toFixed(2)} ${(52 - 40 * Math.sin(angle)).toFixed(2)}`;
-  }
 }

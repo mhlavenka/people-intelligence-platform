@@ -11,6 +11,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatTableModule } from '@angular/material/table';
 import { ApiService } from '../../../core/api.service';
+import { AvatarComponent } from '../../../shared/avatar/avatar.component';
 
 type EngagementStatus = 'prospect' | 'contracted' | 'active' | 'paused' | 'completed' | 'alumni';
 type FilterKey = 'all' | EngagementStatus | 'none';
@@ -84,6 +85,7 @@ const STATUS_PRIORITY: EngagementStatus[] = ['active', 'contracted', 'prospect',
     CommonModule, RouterLink, FormsModule,
     MatIconModule, MatButtonModule, MatProgressSpinnerModule,
     MatFormFieldModule, MatInputModule, MatTooltipModule, MatTableModule,
+    AvatarComponent,
   ],
   template: `
     <div class="page">
@@ -137,13 +139,7 @@ const STATUS_PRIORITY: EngagementStatus[] = ['active', 'contracted', 'prospect',
                 <th mat-header-cell *matHeaderCellDef>Name</th>
                 <td mat-cell *matCellDef="let r">
                   <div class="name-cell">
-                    <div class="avatar">
-                      @if (r.profilePicture) {
-                        <img [src]="r.profilePicture" alt="" />
-                      } @else {
-                        {{ initials(r) }}
-                      }
-                    </div>
+                    <app-avatar [firstName]="r.firstName" [lastName]="r.lastName" [profilePicture]="r.profilePicture || ''" [size]="36" />
                     <div class="n-col">
                       <strong>{{ r.firstName }} {{ r.lastName }}</strong>
                       @if (r.department) { <span class="dept">{{ r.department }}</span> }
@@ -275,13 +271,6 @@ const STATUS_PRIORITY: EngagementStatus[] = ['active', 'contracted', 'prospect',
     .coachees-table td { color: #1B2A47; font-size: 14px; }
 
     .name-cell { display: flex; align-items: center; gap: 10px; }
-    .avatar {
-      width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
-      display: flex; align-items: center; justify-content: center;
-      background: linear-gradient(135deg, #3A9FD6, #27C4A0);
-      color: #fff; font-weight: 600; font-size: 13px; overflow: hidden;
-      img { width: 100%; height: 100%; object-fit: cover; }
-    }
     .n-col { display: flex; flex-direction: column; gap: 2px; }
     .n-col strong { color: #1B2A47; font-size: 14px; }
     .n-col .dept { font-size: 12px; color: #9aa5b4; }
@@ -420,10 +409,6 @@ export class CoacheesListComponent implements OnInit {
 
   statusLabel(s: EngagementStatus | 'none'): string { return STATUS_LABEL[s] ?? s; }
   statusColor(s: EngagementStatus | 'none'): string { return STATUS_COLOR[s] ?? '#9aa5b4'; }
-
-  initials(r: Row): string {
-    return `${r.firstName[0] ?? ''}${r.lastName[0] ?? ''}`.toUpperCase();
-  }
 
   /** Return the engagement whose status is literally 'active' (the one the
    *  Open link should target). Falls back to primaryEngagement otherwise. */

@@ -11,6 +11,7 @@ import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../../core/api.service';
 import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog.component';
 import { MatDialog } from '@angular/material/dialog';
+import { EmptyStateComponent } from '../../../shared/empty-state/empty-state.component';
 
 interface AuditEntry {
   _id: string;
@@ -33,6 +34,7 @@ interface AuditEntry {
   imports: [
     CommonModule, DatePipe, MatIconModule, MatButtonModule, MatProgressSpinnerModule,
     MatSelectModule, MatFormFieldModule, MatTooltipModule, MatSnackBarModule, FormsModule,
+    EmptyStateComponent,
   ],
   template: `
     <div class="audit-page">
@@ -58,10 +60,7 @@ interface AuditEntry {
       @if (loading()) {
         <div class="loading-center"><mat-spinner diameter="36" /></div>
       } @else if (entries().length === 0) {
-        <div class="empty-state">
-          <mat-icon>receipt_long</mat-icon>
-          <p>No imports recorded yet.</p>
-        </div>
+        <app-empty-state icon="receipt_long" title="No imports" message="No imports recorded yet."></app-empty-state>
       } @else {
         <table class="data-table">
           <thead>

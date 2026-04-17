@@ -16,21 +16,6 @@ import { MatIconModule } from '@angular/material/icon';
         </div>
       </div>
 
-      <nav class="conflict-nav">
-        <a routerLink="analysis" routerLinkActive="active" class="nav-tab">
-          <mat-icon>analytics</mat-icon>
-          <span>Analysis</span>
-        </a>
-        <a routerLink="skill-development" routerLinkActive="active" class="nav-tab">
-          <mat-icon>psychology</mat-icon>
-          <span>Conflict IDPs</span>
-        </a>
-        <a routerLink="skill-building" routerLinkActive="active" class="nav-tab">
-          <mat-icon>school</mat-icon>
-          <span>Knowledge Building</span>
-        </a>
-      </nav>
-
       <router-outlet />
     </div>
   `,

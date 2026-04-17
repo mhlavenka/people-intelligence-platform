@@ -11,6 +11,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDividerModule } from '@angular/material/divider';
 import { ApiService } from '../../core/api.service';
+import { AvatarComponent } from '../../shared/avatar/avatar.component';
 
 interface HubUser {
   _id: string;
@@ -58,6 +59,7 @@ interface NotificationDoc {
     MatProgressSpinnerModule,
     MatTooltipModule,
     MatDividerModule,
+    AvatarComponent,
   ],
   template: `
     <div class="hub-dialog">
@@ -102,7 +104,7 @@ interface NotificationDoc {
                       <button class="user-chip"
                               [class.selected]="composeTo()?._id === u._id"
                               (click)="composeTo.set(u)">
-                        <div class="mini-avatar">{{ initials(u) }}</div>
+                        <app-avatar [firstName]="u.firstName" [lastName]="u.lastName" [size]="32" />
                         <div class="user-chip-info">
                           <span>{{ u.firstName }} {{ u.lastName }}</span>
                           <span class="role-label">{{ u.role | titlecase }}</span>
@@ -137,7 +139,7 @@ interface NotificationDoc {
                   @for (c of conversations(); track c.partner._id) {
                     <button class="conversation-item"
                             (click)="openThread(c)">
-                      <div class="conv-avatar">{{ initials(c.partner) }}</div>
+                      <app-avatar [firstName]="c.partner.firstName" [lastName]="c.partner.lastName" [size]="38" />
                       <div class="conv-info">
                         <div class="conv-name">
                           {{ c.partner.firstName }} {{ c.partner.lastName }}
@@ -159,7 +161,7 @@ interface NotificationDoc {
                 <button class="back-btn" (click)="activeThread.set(null)">
                   <mat-icon>arrow_back</mat-icon>
                 </button>
-                <div class="thread-avatar">{{ initials(activeThread()!.partner) }}</div>
+                <app-avatar [firstName]="activeThread()!.partner.firstName" [lastName]="activeThread()!.partner.lastName" [size]="40" />
                 <div class="thread-name">
                   {{ activeThread()!.partner.firstName }} {{ activeThread()!.partner.lastName }}
                 </div>
@@ -333,13 +335,6 @@ interface NotificationDoc {
       &:hover { background: #f8fbff; }
     }
 
-    .conv-avatar, .thread-avatar, .mini-avatar {
-      width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0;
-      background: linear-gradient(135deg, #3A9FD6, #27C4A0);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 13px; font-weight: 700; color: white;
-    }
-    .mini-avatar { width: 32px; height: 32px; font-size: 11px; }
 
     .conv-info { flex: 1; overflow: hidden; }
     .conv-name {
@@ -529,10 +524,6 @@ export class MessageHubDialogComponent implements OnInit {
       next: (u) => this.myId.set(u._id),
       error: () => {},
     });
-  }
-
-  initials(u: HubUser): string {
-    return `${u.firstName[0]}${u.lastName[0]}`.toUpperCase();
   }
 
   startCompose(): void {

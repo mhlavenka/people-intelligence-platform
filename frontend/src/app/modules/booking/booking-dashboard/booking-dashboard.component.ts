@@ -24,6 +24,7 @@ import { RescheduleDialogComponent } from '../reschedule-dialog/reschedule-dialo
 import { BookingService, BookingRecord, AvailabilityConfig } from '../booking.service';
 import { BookingImportComponent } from '../booking-import/booking-import.component';
 import { AuthService } from '../../../core/auth.service';
+import { EmptyStateComponent } from '../../../shared/empty-state/empty-state.component';
 
 type DayBuckets = {
   upcoming: BookingRecord[];
@@ -42,6 +43,7 @@ type DayBuckets = {
     MatSelectModule, MatFormFieldModule,
     MatDatepickerModule, MatNativeDateModule,
     BookingImportComponent,
+    EmptyStateComponent,
   ],
   template: `
     <div class="dashboard-container">
@@ -171,17 +173,11 @@ type DayBuckets = {
         @if (loading()) {
           <div class="loading"><mat-spinner diameter="36" /></div>
         } @else if (!bookings().length) {
-          <div class="empty-state">
-            <mat-icon>event_busy</mat-icon>
-            <h3>No {{ activeTab() }} bookings</h3>
-            <p>
-              @switch (activeTab()) {
-                @case ('upcoming') { When clients book sessions, they'll appear here. }
-                @case ('past') { Completed sessions will appear here. }
-                @case ('cancelled') { Cancelled sessions will appear here. }
-              }
-            </p>
-          </div>
+          <app-empty-state icon="event_busy" title="No {{ activeTab() }} bookings"
+            [message]="activeTab() === 'upcoming' ? 'When clients book sessions, they will appear here.'
+                      : activeTab() === 'past' ? 'Completed sessions will appear here.'
+                      : 'Cancelled sessions will appear here.'">
+          </app-empty-state>
         } @else {
           <div class="booking-table">
             <div class="table-header">
@@ -396,11 +392,6 @@ type DayBuckets = {
     }
     .loading {
       display: flex; justify-content: center; padding: 60px 0;
-    }
-    .empty-state {
-      text-align: center; padding: 60px 24px; color: #6b7c93;
-      mat-icon { font-size: 48px; width: 48px; height: 48px; color: #c8d3df; }
-      h3 { margin: 12px 0 4px; color: #1B2A47; }
     }
 
     .booking-table { margin-top: 16px; }

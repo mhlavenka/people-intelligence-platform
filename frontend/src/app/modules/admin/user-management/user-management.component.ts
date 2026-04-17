@@ -17,6 +17,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { ApiService } from '../../../core/api.service';
 import { UserDialogComponent, OrgUser } from '../user-dialog/user-dialog.component';
 import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog.component';
+import { AvatarComponent } from '../../../shared/avatar/avatar.component';
 
 const ROLE_META: Record<string, { label: string; color: string }> = {
   admin:      { label: 'Admin',      color: '#1B2A47' },
@@ -45,6 +46,7 @@ const ROLE_META: Record<string, { label: string; color: string }> = {
     MatInputModule,
     MatFormFieldModule,
     MatDividerModule,
+    AvatarComponent,
   ],
   template: `
     <div class="users-page">
@@ -108,13 +110,7 @@ const ROLE_META: Record<string, { label: string; color: string }> = {
               <th mat-header-cell *matHeaderCellDef>User</th>
               <td mat-cell *matCellDef="let u">
                 <div class="user-cell">
-                  @if (u.profilePicture) {
-                    <img class="avatar avatar-img" [class.inactive]="!u.isActive" [src]="u.profilePicture" alt="" />
-                  } @else {
-                    <div class="avatar" [class.inactive]="!u.isActive">
-                      {{ initials(u) }}
-                    </div>
-                  }
+                  <app-avatar [firstName]="u.firstName" [lastName]="u.lastName" [profilePicture]="u.profilePicture || ''" [size]="36" [bgColor]="u.isActive ? '#3A9FD6' : '#d1d5db'" />
                   <div class="user-info">
                     <span class="user-name">{{ u.firstName }} {{ u.lastName }}</span>
                     <span class="user-email">{{ u.email }}</span>
@@ -283,14 +279,6 @@ const ROLE_META: Record<string, { label: string; color: string }> = {
 
     .user-cell { display: flex; align-items: center; gap: 12px; padding: 4px 0; }
 
-    .avatar {
-      width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
-      background: linear-gradient(135deg, #3A9FD6, #27C4A0);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 12px; font-weight: 700; color: white;
-      &.inactive { background: #d1d5db; }
-    }
-    .avatar-img { object-fit: cover; }
 
     .user-info { display: flex; flex-direction: column; }
     .user-name  { font-size: 14px; font-weight: 500; color: #1B2A47; }
@@ -359,8 +347,6 @@ export class UserManagementComponent implements OnInit {
   });
 
   roleMeta = (role: string) => ROLE_META[role] ?? { label: role, color: '#5a6a7e' };
-  initials  = (u: OrgUser) => `${u.firstName[0]}${u.lastName[0]}`.toUpperCase();
-
   constructor(
     private api: ApiService,
     private dialog: MatDialog,
