@@ -46,10 +46,10 @@ import { BookingResult, PublicBookingService } from '../booking.service';
             </div>
           </div>
 
-          @if (booking()!.googleMeetLink) {
-            <a class="meet-btn" [href]="booking()!.googleMeetLink" target="_blank">
+          @if (booking()!.meetingLink || booking()!.googleMeetLink) {
+            <a class="meet-btn" [href]="booking()!.meetingLink || booking()!.googleMeetLink" target="_blank">
               <span class="material-icons">videocam</span>
-              <span>Join Google Meet</span>
+              <span>{{ booking()!.calendarProvider === 'microsoft' ? 'Join Teams Meeting' : 'Join Google Meet' }}</span>
             </a>
           }
 
@@ -372,7 +372,7 @@ export class BookingConfirmComponent implements OnInit {
       action: 'TEMPLATE',
       text: 'Coaching Session',
       dates: `${start}/${end}`,
-      details: b.googleMeetLink ? `Google Meet: ${b.googleMeetLink}` : 'Coaching session',
+      details: (b.meetingLink || b.googleMeetLink) ? `Meeting: ${b.meetingLink || b.googleMeetLink}` : 'Coaching session',
     });
     return `https://calendar.google.com/calendar/render?${params.toString()}`;
   }
@@ -390,7 +390,7 @@ export class BookingConfirmComponent implements OnInit {
       `DTSTART:${start}`,
       `DTEND:${end}`,
       `SUMMARY:Coaching Session with ${this.coachName()}`,
-      b.googleMeetLink ? `LOCATION:${b.googleMeetLink}` : '',
+      (b.meetingLink || b.googleMeetLink) ? `LOCATION:${b.meetingLink || b.googleMeetLink}` : '',
       'END:VEVENT',
       'END:VCALENDAR',
     ].filter(Boolean).join('\r\n');

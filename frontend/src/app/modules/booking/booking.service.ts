@@ -55,6 +55,9 @@ export interface BookingRecord {
   endTime: string;
   clientTimezone: string;
   coachTimezone: string;
+  calendarEventId?: string;
+  calendarProvider?: 'google' | 'microsoft';
+  meetingLink?: string;
   googleEventId?: string;
   googleMeetLink?: string;
   status: 'confirmed' | 'cancelled' | 'completed';
@@ -96,7 +99,9 @@ export interface BookingResult {
   endTime: string;
   clientTimezone: string;
   coachTimezone: string;
+  meetingLink?: string;
   googleMeetLink?: string;
+  calendarProvider?: 'google' | 'microsoft';
   status: string;
 }
 

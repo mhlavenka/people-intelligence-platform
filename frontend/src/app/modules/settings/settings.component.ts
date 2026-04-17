@@ -315,7 +315,7 @@ export class SettingsComponent implements OnInit {
     { key: 'bookingRescheduled', label: 'Booking rescheduled',     description: 'Notify when a booking is rescheduled',                           icon: 'event_repeat',   iconClass: 'orange' },
     { key: 'engagementCreated',  label: 'New engagement',          description: 'Notify when a coach starts a coaching engagement with you',      icon: 'handshake',      iconClass: 'blue' },
     { key: 'directMessages',     label: 'Direct messages',         description: 'Notify when someone sends you a message in the hub',             icon: 'mail',           iconClass: 'navy' },
-    { key: 'googleCalendarInvites', label: 'Google Calendar invites', description: 'Receive Google Calendar invites when sessions are scheduled for you', icon: 'event',       iconClass: 'green' },
+    { key: 'googleCalendarInvites', label: 'Calendar invites', description: 'Receive calendar invites when sessions are scheduled for you', icon: 'event',       iconClass: 'green' },
   ];
 
   timezones = [

@@ -125,8 +125,9 @@ export async function createBooking(
   if (!slotFree) throw new SlotUnavailableError();
 
   // Create calendar event via provider
-  let googleEventId: string | undefined;
-  let googleMeetLink: string | undefined;
+  let calendarEventId: string | undefined;
+  let meetingLink: string | undefined;
+  let calendarProvider: 'google' | 'microsoft' | undefined;
 
   const cp = await getCoachCalendarProvider(cfg.coachId.toString());
   if (cp && targetCalendarId) {
@@ -139,8 +140,9 @@ export async function createBooking(
         attendeeEmail: data.clientEmail,
         enableVideoConference: cfg.googleMeetEnabled,
       });
-      googleEventId = result.eventId;
-      googleMeetLink = result.meetLink;
+      calendarEventId = result.eventId;
+      meetingLink = result.meetLink;
+      calendarProvider = cp.provider.provider;
     } catch (err) {
       console.error('[Booking] Failed to create calendar event:', err);
     }
@@ -167,8 +169,11 @@ export async function createBooking(
     endTime,
     clientTimezone: data.clientTimezone || 'UTC',
     coachTimezone: cfg.timezone,
-    googleEventId,
-    googleMeetLink,
+    calendarEventId,
+    calendarProvider,
+    meetingLink,
+    googleEventId: calendarEventId,
+    googleMeetLink: meetingLink,
     cancelToken,
     status: 'confirmed',
     remindersSent: [],

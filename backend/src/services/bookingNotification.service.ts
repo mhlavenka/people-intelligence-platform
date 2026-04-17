@@ -43,7 +43,7 @@ function generateICS(
     end: booking.endTime,
     summary: `Coaching Session — ${coachName}`,
     description: booking.topic || 'Coaching session',
-    location: booking.googleMeetLink || undefined,
+    location: booking.meetingLink || booking.googleMeetLink || undefined,
     status: method === ICalCalendarMethod.CANCEL ? ICalEventStatus.CANCELLED : undefined,
     organizer: { name: coachName, email: coachEmail },
     attendees: [
@@ -153,10 +153,12 @@ export async function sendBookingConfirmation(
 
   const icsContent = generateICS(booking, coachName, coachEmail);
 
-  const meetSection = booking.googleMeetLink
+  const link = booking.meetingLink || booking.googleMeetLink;
+  const linkLabel = booking.calendarProvider === 'microsoft' ? 'Teams Meeting' : 'Google Meet';
+  const meetSection = link
     ? `<p style="margin:0 0 8px;">
-         <strong>Google Meet:</strong>
-         <a href="${booking.googleMeetLink}" style="color:#3A9FD6;">${booking.googleMeetLink}</a>
+         <strong>${linkLabel}:</strong>
+         <a href="${link}" style="color:#3A9FD6;">${link}</a>
        </p>`
     : '';
 
@@ -295,12 +297,14 @@ export async function sendRescheduleConfirmation(
   const newClientDt = DateTime.fromJSDate(booking.startTime).setZone(booking.clientTimezone);
   const newCoachDt = DateTime.fromJSDate(booking.startTime).setZone(booking.coachTimezone);
 
-  const meetSection = booking.googleMeetLink
-    ? `<a href="${booking.googleMeetLink}"
+  const rscLink = booking.meetingLink || booking.googleMeetLink;
+  const rscLabel = booking.calendarProvider === 'microsoft' ? 'Join Teams Meeting' : 'Join Google Meet';
+  const meetSection = rscLink
+    ? `<a href="${rscLink}"
          style="display:inline-block;background:#3A9FD6;color:#ffffff;
                 padding:14px 28px;border-radius:6px;text-decoration:none;
                 font-weight:600;font-size:15px;margin-top:12px;">
-        Join Google Meet
+        ${rscLabel}
       </a>`
     : '';
 
@@ -393,12 +397,14 @@ export async function sendReminder(
   );
   const timeLabel = type === '24h' ? 'tomorrow' : 'in 1 hour';
 
-  const meetSection = booking.googleMeetLink
-    ? `<a href="${booking.googleMeetLink}"
+  const remLink = booking.meetingLink || booking.googleMeetLink;
+  const remLabel = booking.calendarProvider === 'microsoft' ? 'Join Teams Meeting' : 'Join Google Meet';
+  const meetSection = remLink
+    ? `<a href="${remLink}"
          style="display:inline-block;background:#3A9FD6;color:#ffffff;
                 padding:14px 28px;border-radius:6px;text-decoration:none;
                 font-weight:600;font-size:15px;margin-top:12px;">
-        Join Google Meet
+        ${remLabel}
       </a>`
     : '';
 

@@ -18,6 +18,12 @@
     - Application (client) ID → this is your MICROSOFT_CLIENT_ID
     - Directory (tenant) ID → use common instead (since you selected multi-tenant)
 
+    Application (client) ID:
+    Object ID:     f83c2fa0-12ec-4aa1-83f5-32b319c5b356
+    Directory (tenant) ID:     e638274c-1f59-40ed-83fe-afdfc9c186db
+
+
+
     Step 3: Create a Client Secret
 
     1. Go to Certificates & secrets → Client secrets → New client secret
@@ -25,6 +31,9 @@
     3. Expiry: 24 months (set a calendar reminder to rotate before it expires)
     4. Click Add, then immediately copy the Value — you won't see it again
     5. This is your MICROSOFT_CLIENT_SECRET
+
+    value: REDACTED_SECRET
+    secret ID: da9f754e-9a9b-461c-ba07-3ceed0fae53c
 
     Step 4: Configure API Permissions
 
@@ -49,7 +58,7 @@
 
     # Microsoft / Office 365 Calendar
     MICROSOFT_CLIENT_ID=4ba1d158-dd57-4bb4-b977-d2fe37955bc4
-    MICROSOFT_CLIENT_SECRET=fdc083d1-d445-45db-87f7-d4b22cf9d510
+    MICROSOFT_CLIENT_SECRET=REDACTED_SECRET
     MICROSOFT_TENANT_ID=common
     MICROSOFT_CALENDAR_REDIRECT_URI=https://artes.helenacoaching.com/api/calendar/auth/microsoft/callback
 
@@ -71,9 +80,3 @@
     - Redirect URI set to https://artes.helenacoaching.com/api/calendar/auth/microsoft/callback
     - Client secret created and copied
     - API permissions: Calendars.ReadWrite, Calendars.Read, User.Read, offline_access
-
-
-
-
-    We're unable to complete your request
-    unauthorized_client: The client does not exist or is not enabled for consumers. If you are the application developer, configure a new application through the App Registrations in the Azure Portal at https://go.microsoft.com/fwlink/?linkid=2083908.

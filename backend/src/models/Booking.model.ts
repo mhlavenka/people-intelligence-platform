@@ -30,8 +30,11 @@ export interface IBooking extends Document {
   endTime: Date;
   clientTimezone: string;
   coachTimezone: string;
-  googleEventId?: string;
-  googleMeetLink?: string;
+  calendarEventId?: string;
+  calendarProvider?: 'google' | 'microsoft';
+  meetingLink?: string;
+  googleEventId?: string;    // alias for calendarEventId (backward compat)
+  googleMeetLink?: string;   // alias for meetingLink (backward compat)
   cancelToken?: string;
   status: 'confirmed' | 'cancelled' | 'completed';
   cancelledAt?: Date;
@@ -85,8 +88,11 @@ const BookingSchema = new Schema<IBooking>(
     endTime:     { type: Date, required: true },
     clientTimezone: { type: String, default: 'UTC' },
     coachTimezone:  { type: String, default: 'America/Toronto' },
-    googleEventId:  { type: String },
-    googleMeetLink: { type: String },
+    calendarEventId:  { type: String },
+    calendarProvider: { type: String, enum: ['google', 'microsoft'] },
+    meetingLink:      { type: String },
+    googleEventId:    { type: String },
+    googleMeetLink:   { type: String },
     cancelToken:    { type: String },
     status: {
       type: String,

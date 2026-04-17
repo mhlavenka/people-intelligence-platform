@@ -155,9 +155,9 @@ type DayBuckets = {
                         </span>
                       </div>
                     </div>
-                    @if (b.googleMeetLink) {
-                      <a mat-icon-button [href]="b.googleMeetLink" target="_blank"
-                         matTooltip="Join Google Meet">
+                    @if (b.meetingLink || b.googleMeetLink) {
+                      <a mat-icon-button [href]="b.meetingLink || b.googleMeetLink" target="_blank"
+                         [matTooltip]="b.calendarProvider === 'microsoft' ? 'Join Teams Meeting' : 'Join Google Meet'">
                         <mat-icon>videocam</mat-icon>
                       </a>
                     }
@@ -210,9 +210,9 @@ type DayBuckets = {
                   </span>
                 </span>
                 <span class="col-actions">
-                  @if (b.googleMeetLink) {
-                    <a mat-icon-button [href]="b.googleMeetLink" target="_blank"
-                       matTooltip="Open Google Meet">
+                  @if (b.meetingLink || b.googleMeetLink) {
+                    <a mat-icon-button [href]="b.meetingLink || b.googleMeetLink" target="_blank"
+                       [matTooltip]="b.calendarProvider === 'microsoft' ? 'Join Teams Meeting' : 'Join Google Meet'">
                       <mat-icon>videocam</mat-icon>
                     </a>
                   }
