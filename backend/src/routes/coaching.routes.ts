@@ -268,10 +268,15 @@ router.post(
           sendEmail({
             to: coachee.email,
             subject: 'New coaching engagement started',
-            html: `<p>Hi ${coachee.firstName},</p>
-              <p><strong>${coachName}</strong> has started a coaching engagement with you.</p>
-              <p>You can view your sessions, goals, and progress in ARTES.</p>
-              <p><a href="${config.frontendUrl}/coaching">View in ARTES</a></p>`,
+            html: `
+              <h2 style="color:#1B2A47;margin:0 0 12px;font-size:22px;">New Coaching Engagement</h2>
+              <p style="color:#5a6a7e;margin:0 0 16px;line-height:1.6;">
+                Hi ${coachee.firstName}, <strong>${coachName}</strong> has started a coaching engagement with you.
+              </p>
+              <p style="color:#5a6a7e;margin:0 0 24px;line-height:1.6;">
+                You can view your sessions, goals, and progress in ARTES.
+              </p>
+              <a href="${config.frontendUrl}/coaching" style="display:inline-block;background:#3A9FD6;color:#ffffff;padding:14px 28px;border-radius:6px;text-decoration:none;font-weight:600;font-size:15px;">View in ARTES</a>`,
           }).catch(err => console.error('[Coaching] Failed to send engagement email:', err));
 
           createHubNotification({
@@ -506,14 +511,17 @@ router.post(
           sendEmail({
             to: coachee.email,
             subject: `New coaching session scheduled — ${sessionDate}`,
-            html: `<p>Hi ${coachee.firstName},</p>
-              <p><strong>${coachName}</strong> has scheduled a coaching session with you:</p>
-              <p style="background:#f8fafc;border-left:4px solid #27C4A0;padding:12px 16px;border-radius:0 8px 8px 0;">
-                <strong>${sessionDate}</strong> at ${sessionTime}<br/>
-                Duration: ${session.duration} minutes
-                ${session.googleMeetLink ? `<br/><a href="${session.googleMeetLink}">Join Google Meet</a>` : ''}
+            html: `
+              <h2 style="color:#1B2A47;margin:0 0 12px;font-size:22px;">New Session Scheduled</h2>
+              <p style="color:#5a6a7e;margin:0 0 16px;line-height:1.6;">
+                Hi ${coachee.firstName}, <strong>${coachName}</strong> has scheduled a coaching session with you.
               </p>
-              <p><a href="${config.frontendUrl}/coaching">View in ARTES</a></p>`,
+              <div style="background:#f0f9f4;border-left:4px solid #27C4A0;padding:14px 18px;border-radius:0 8px 8px 0;margin:0 0 20px;">
+                <p style="margin:0 0 4px;color:#1B2A47;font-weight:600;">${sessionDate}</p>
+                <p style="margin:0;color:#5a6a7e;">${sessionTime} &middot; ${session.duration} minutes</p>
+              </div>
+              ${session.googleMeetLink ? `<a href="${session.googleMeetLink}" style="display:inline-block;background:#3A9FD6;color:#ffffff;padding:14px 28px;border-radius:6px;text-decoration:none;font-weight:600;font-size:15px;margin:0 8px 12px 0;">Join Google Meet</a>` : ''}
+              <a href="${config.frontendUrl}/coaching" style="display:inline-block;background:#1B2A47;color:#ffffff;padding:14px 28px;border-radius:6px;text-decoration:none;font-weight:600;font-size:15px;">View in ARTES</a>`,
           }).catch(err => console.error('[Coaching] Failed to send session email:', err));
 
           createHubNotification({

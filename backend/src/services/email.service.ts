@@ -78,6 +78,11 @@ export async function sendEmail(params: {
   text?: string;
 }): Promise<void> {
   const recipients = Array.isArray(params.to) ? params.to : [params.to];
+  const isAlreadyWrapped = params.html.trimStart().startsWith('<!DOCTYPE')
+    || params.html.trimStart().startsWith('<!doctype');
+  if (!isAlreadyWrapped) {
+    params.html = brandedHtml(params.subject, params.html);
+  }
 
   if (isDev && !config.aws.sesFromEmail) {
     console.log(
