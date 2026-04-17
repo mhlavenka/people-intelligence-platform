@@ -104,9 +104,10 @@ router.get('/me/notification-preferences', async (req: AuthRequest, res: Respons
     }).select('notificationPreferences');
     if (!user) { res.status(404).json({ error: 'User not found' }); return; }
     const defaults = {
+      calendarInvites: false,
       sessionScheduled: true, sessionReminders: true, sessionForms: true,
       bookingConfirmed: true, bookingCancelled: true, bookingRescheduled: true,
-      engagementCreated: true, directMessages: true, googleCalendarInvites: false,
+      engagementCreated: true, directMessages: true,
     };
     res.json({ ...defaults, ...user.notificationPreferences });
   } catch (e) { next(e); }
@@ -116,9 +117,10 @@ router.get('/me/notification-preferences', async (req: AuthRequest, res: Respons
 router.put('/me/notification-preferences', async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const allowed = [
+      'calendarInvites',
       'sessionScheduled', 'sessionReminders', 'sessionForms',
       'bookingConfirmed', 'bookingCancelled', 'bookingRescheduled',
-      'engagementCreated', 'directMessages', 'googleCalendarInvites',
+      'engagementCreated', 'directMessages',
     ];
     const prefs: Record<string, boolean> = {};
     for (const key of allowed) {

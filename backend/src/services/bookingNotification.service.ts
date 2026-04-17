@@ -3,6 +3,13 @@ import ical, { ICalCalendarMethod, ICalEventStatus } from 'ical-generator';
 import { SESClient, SendRawEmailCommand } from '@aws-sdk/client-ses';
 import { config } from '../config/env';
 import { IBooking } from '../models/Booking.model';
+import { User } from '../models/User.model';
+
+export async function shouldSuppressBookingEmail(booking: IBooking): Promise<boolean> {
+  if (!booking.coacheeId) return false;
+  const user = await User.findById(booking.coacheeId).select('notificationPreferences').lean();
+  return user?.notificationPreferences?.calendarInvites === true;
+}
 
 // ─── SES client ─────────────────────────────────────────────────────────────
 

@@ -10,6 +10,7 @@ import {
   sendBookingConfirmation,
   sendCancellationEmail,
   sendRescheduleConfirmation,
+  shouldSuppressBookingEmail,
 } from './bookingNotification.service';
 import {
   notifyBookingConfirmed,
@@ -186,9 +187,13 @@ export async function createBooking(
   const coachName = `${coach.firstName} ${coach.lastName}`;
   const cancelUrl = `${config.frontendUrl}/book/${coachSlug}/cancel/${booking._id}/${cancelToken}`;
 
-  sendBookingConfirmation(booking, coachName, coach.email, cancelUrl).catch((err) =>
-    console.error('[Booking] Failed to send confirmation emails:', err),
-  );
+  shouldSuppressBookingEmail(booking).then((suppress) => {
+    if (!suppress) {
+      sendBookingConfirmation(booking, coachName, coach!.email, cancelUrl).catch((err) =>
+        console.error('[Booking] Failed to send confirmation emails:', err),
+      );
+    }
+  });
 
   notifyBookingConfirmed({
     coachId: booking.coachId,
@@ -274,9 +279,13 @@ export async function cancelBooking(
   const coach = await User.findById(booking.coachId).select('firstName lastName email');
   if (coach) {
     const coachName = `${coach.firstName} ${coach.lastName}`;
-    sendCancellationEmail(booking, coachName, coach.email, cancelledBy).catch((err) =>
-      console.error('[Booking] Failed to send cancellation email:', err),
-    );
+    shouldSuppressBookingEmail(booking).then((suppress) => {
+      if (!suppress) {
+        sendCancellationEmail(booking, coachName, coach!.email, cancelledBy).catch((err) =>
+          console.error('[Booking] Failed to send cancellation email:', err),
+        );
+      }
+    });
 
     notifyBookingCancelled({
       coachId: booking.coachId,
@@ -398,9 +407,13 @@ export async function rescheduleBooking(
     const coachName = `${coach.firstName} ${coach.lastName}`;
     const cancelUrl =
       `${config.frontendUrl}/book/${cfg.coachSlug}/cancel/${booking._id}/${newCancelToken}`;
-    sendRescheduleConfirmation(
-      booking, coachName, coach.email, oldStartTime, cancelUrl, triggeredBy, note,
-    ).catch((err) => console.error('[Booking] Failed to send reschedule email:', err));
+    shouldSuppressBookingEmail(booking).then((suppress) => {
+      if (!suppress) {
+        sendRescheduleConfirmation(
+          booking, coachName, coach!.email, oldStartTime, cancelUrl, triggeredBy, note,
+        ).catch((err) => console.error('[Booking] Failed to send reschedule email:', err));
+      }
+    });
 
     notifyBookingRescheduled({
       coachId: booking.coachId,

@@ -59,6 +59,7 @@ export interface IUser extends Document {
 }
 
 export interface INotificationPreferences {
+  calendarInvites: boolean;
   sessionScheduled: boolean;
   sessionReminders: boolean;
   sessionForms: boolean;
@@ -67,7 +68,7 @@ export interface INotificationPreferences {
   bookingRescheduled: boolean;
   engagementCreated: boolean;
   directMessages: boolean;
-  googleCalendarInvites: boolean;
+  googleCalendarInvites: boolean; // deprecated — use calendarInvites
 }
 
 const PasskeyCredentialSchema = new Schema({
@@ -144,6 +145,7 @@ const UserSchema = new Schema<IUser>(
       bookingRescheduled: { type: Boolean, default: true },
       engagementCreated:  { type: Boolean, default: true },
       directMessages:     { type: Boolean, default: true },
+      calendarInvites:       { type: Boolean, default: false },
       googleCalendarInvites: { type: Boolean, default: false },
     },
   },

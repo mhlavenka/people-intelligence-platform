@@ -114,7 +114,7 @@ export const googleCalendarProvider: ICalendarProvider = {
     if (params.attendeeEmail) {
       const coachee = await User.findOne({ email: params.attendeeEmail })
         .select('notificationPreferences').lean();
-      if (coachee?.notificationPreferences?.googleCalendarInvites !== false) {
+      if (coachee?.notificationPreferences?.calendarInvites !== false) {
         event.attendees = [{ email: params.attendeeEmail }];
       }
     }
@@ -158,7 +158,7 @@ export const googleCalendarProvider: ICalendarProvider = {
     if (params.attendeeEmail) {
       const coachee = await User.findOne({ email: params.attendeeEmail })
         .select('notificationPreferences').lean();
-      if (coachee?.notificationPreferences?.googleCalendarInvites !== false) {
+      if (coachee?.notificationPreferences?.calendarInvites !== false) {
         event.attendees = [{ email: params.attendeeEmail }];
       }
     }

@@ -85,7 +85,49 @@ const DEFAULT_SETTINGS: Settings = {
           </div>
           <mat-divider />
           <div class="card-body">
-            @for (n of notificationItems; track n.key) {
+            <!-- Booking notifications: calendar invites vs email -->
+            <div class="group-label">Booking & session notifications</div>
+            <div class="group-desc">Choose how you receive booking updates — via calendar invites or email. When calendar invites are on, booking emails are automatically suppressed to avoid duplicates.</div>
+
+            <div class="toggle-row">
+              <div class="toggle-icon green">
+                <mat-icon>event</mat-icon>
+              </div>
+              <div class="toggle-info">
+                <div class="toggle-label">Calendar invites</div>
+                <div class="toggle-desc">Receive calendar invites (Google/Outlook) when sessions are booked, changed, or cancelled</div>
+              </div>
+              <mat-slide-toggle
+                color="primary"
+                [checked]="settings().notifications['calendarInvites']"
+                (change)="toggleCalendarInvites($event.checked)"
+              />
+            </div>
+            <mat-divider />
+
+            @for (n of bookingNotificationItems; track n.key) {
+              <div class="toggle-row" [class.suppressed]="settings().notifications['calendarInvites']">
+                <div class="toggle-icon" [class]="n.iconClass">
+                  <mat-icon>{{ n.icon }}</mat-icon>
+                </div>
+                <div class="toggle-info">
+                  <div class="toggle-label">{{ n.label }}</div>
+                  <div class="toggle-desc">{{ n.description }}</div>
+                </div>
+                <mat-slide-toggle
+                  color="primary"
+                  [checked]="settings().notifications[n.key]"
+                  [disabled]="settings().notifications['calendarInvites']"
+                  (change)="setNotification(n.key, $event.checked)"
+                />
+              </div>
+              <mat-divider />
+            }
+
+            <!-- Other notifications -->
+            <div class="group-label" style="margin-top: 20px;">Other notifications</div>
+
+            @for (n of otherNotificationItems; track n.key) {
               <div class="toggle-row">
                 <div class="toggle-icon" [class]="n.iconClass">
                   <mat-icon>{{ n.icon }}</mat-icon>
@@ -256,9 +298,18 @@ const DEFAULT_SETTINGS: Settings = {
 
     .card-body { padding: 8px 0; }
 
+    .group-label {
+      font-size: 13px; font-weight: 600; color: #1B2A47;
+      padding: 16px 24px 0; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .group-desc {
+      font-size: 12px; color: #9aa5b4; padding: 2px 24px 8px; line-height: 1.4;
+    }
     .toggle-row, .test-email-row {
       display: flex; align-items: center; gap: 14px;
       padding: 14px 24px;
+      transition: opacity 0.2s;
+      &.suppressed { opacity: 0.45; }
     }
 
     .test-email-controls {
@@ -306,16 +357,18 @@ export class SettingsComponent implements OnInit {
   testEmailLoading = signal(false);
   testEmailControl = new FormControl('', [Validators.required, Validators.email]);
 
-  notificationItems = [
+  bookingNotificationItems = [
+    { key: 'bookingConfirmed',   label: 'Booking confirmed',       description: 'Email when a booking is confirmed',                              icon: 'event_available',iconClass: 'green' },
+    { key: 'bookingCancelled',   label: 'Booking cancelled',       description: 'Email when a booking is cancelled',                              icon: 'event_busy',     iconClass: 'red' },
+    { key: 'bookingRescheduled', label: 'Booking rescheduled',     description: 'Email when a booking is rescheduled',                            icon: 'event_repeat',   iconClass: 'orange' },
+    { key: 'sessionReminders',   label: 'Session reminders',       description: 'Email reminders 24h and 1h before sessions',                    icon: 'alarm',          iconClass: 'blue' },
+  ];
+
+  otherNotificationItems = [
     { key: 'sessionScheduled',   label: 'Session scheduled',       description: 'Notify when a coaching session is created or assigned to you',   icon: 'event_note',     iconClass: 'green' },
-    { key: 'sessionReminders',   label: 'Session reminders',       description: 'Receive 24h and 1h reminders before upcoming sessions',          icon: 'alarm',          iconClass: 'blue' },
     { key: 'sessionForms',       label: 'Session forms',           description: 'Notify when pre-session or post-session forms are ready',        icon: 'assignment',     iconClass: 'navy' },
-    { key: 'bookingConfirmed',   label: 'Booking confirmed',       description: 'Notify when a booking is confirmed (coach and coachee)',         icon: 'event_available',iconClass: 'green' },
-    { key: 'bookingCancelled',   label: 'Booking cancelled',       description: 'Notify when a booking is cancelled',                             icon: 'event_busy',     iconClass: 'red' },
-    { key: 'bookingRescheduled', label: 'Booking rescheduled',     description: 'Notify when a booking is rescheduled',                           icon: 'event_repeat',   iconClass: 'orange' },
     { key: 'engagementCreated',  label: 'New engagement',          description: 'Notify when a coach starts a coaching engagement with you',      icon: 'handshake',      iconClass: 'blue' },
     { key: 'directMessages',     label: 'Direct messages',         description: 'Notify when someone sends you a message in the hub',             icon: 'mail',           iconClass: 'navy' },
-    { key: 'googleCalendarInvites', label: 'Calendar invites', description: 'Receive calendar invites when sessions are scheduled for you', icon: 'event',       iconClass: 'green' },
   ];
 
   timezones = [
@@ -387,6 +440,27 @@ export class SettingsComponent implements OnInit {
         const msg = err.error?.error || 'Failed to send test email';
         this.snackBar.open(msg, 'Dismiss', { duration: 5000 });
       },
+    });
+  }
+
+  toggleCalendarInvites(on: boolean): void {
+    const updates: Record<string, boolean> = { calendarInvites: on };
+    if (on) {
+      for (const item of this.bookingNotificationItems) {
+        updates[item.key] = false;
+      }
+    } else {
+      for (const item of this.bookingNotificationItems) {
+        updates[item.key] = true;
+      }
+    }
+    this.settings.update((s) => ({
+      ...s,
+      notifications: { ...s.notifications, ...updates },
+    }));
+    this.api.put('/users/me/notification-preferences', this.settings().notifications).subscribe({
+      next: () => this.snackBar.open('Notification preferences saved', undefined, { duration: 1500 }),
+      error: () => this.snackBar.open('Failed to save preferences', 'Dismiss', { duration: 3000 }),
     });
   }
 

@@ -1,7 +1,7 @@
 import cron from 'node-cron';
 import { Booking } from '../models/Booking.model';
 import { User } from '../models/User.model';
-import { sendReminder } from '../services/bookingNotification.service';
+import { sendReminder, shouldSuppressBookingEmail } from '../services/bookingNotification.service';
 import { notifyBookingReminder } from '../services/hubNotification.service';
 
 const WINDOW_MS = 30 * 60 * 1000; // 30-minute window
@@ -39,7 +39,8 @@ export function startReminderJob(): void {
           startMs <= in24h.getTime() + WINDOW_MS
         ) {
           try {
-            await sendReminder(booking, coachName, '24h');
+            const suppress = await shouldSuppressBookingEmail(booking);
+            if (!suppress) await sendReminder(booking, coachName, '24h');
             notifyBookingReminder({
               coacheeId: booking.coacheeId,
               engagementId: booking.engagementId,
@@ -63,7 +64,8 @@ export function startReminderJob(): void {
           startMs <= in1h.getTime() + WINDOW_MS
         ) {
           try {
-            await sendReminder(booking, coachName, '1h');
+            const suppress1h = await shouldSuppressBookingEmail(booking);
+            if (!suppress1h) await sendReminder(booking, coachName, '1h');
             notifyBookingReminder({
               coacheeId: booking.coacheeId,
               engagementId: booking.engagementId,
