@@ -18,7 +18,7 @@ import { ApiService } from '../../../core/api.service';
 import {
   CalendarIntegrationService,
   CalendarStatus,
-  GoogleCalendar,
+  CalendarItem,
 } from '../../coaching/calendar-integration/calendar-integration.service';
 import {
   BookingService,
@@ -488,7 +488,7 @@ export class BookingGlobalSettingsComponent implements OnInit, OnDestroy {
   loading = signal(true);
   saveState = signal<SaveState>('idle');
   calendarStatus = signal<CalendarStatus | null>(null);
-  calendars = signal<GoogleCalendar[]>([]);
+  calendars = signal<CalendarItem[]>([]);
 
   // Debounced auto-save plumbing.
   private saveDebounceMs = 800;
@@ -634,7 +634,7 @@ export class BookingGlobalSettingsComponent implements OnInit, OnDestroy {
 
   private loadCalendars(): void {
     this.calendarSvc.listCalendars().subscribe({
-      next: (cals: GoogleCalendar[]) => this.calendars.set(cals),
+      next: (cals: CalendarItem[]) => this.calendars.set(cals),
       error: () => this.calendars.set([]),
     });
   }
@@ -649,7 +649,7 @@ export class BookingGlobalSettingsComponent implements OnInit, OnDestroy {
   disconnectCalendar(): void {
     this.calendarSvc.disconnect().subscribe({
       next: () => {
-        this.calendarStatus.set({ connected: false, calendarId: null, calendarName: null });
+        this.calendarStatus.set({ connected: false, provider: null, calendarId: null, calendarName: null });
         this.calendars.set([]);
         this.snackBar.open('Google Calendar disconnected', 'OK', { duration: 3000 });
       },

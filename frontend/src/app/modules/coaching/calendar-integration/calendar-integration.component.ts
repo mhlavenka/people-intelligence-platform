@@ -13,7 +13,8 @@ import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-d
 import {
   CalendarIntegrationService,
   CalendarStatus,
-  GoogleCalendar,
+  CalendarItem,
+  CalendarProviderType,
 } from './calendar-integration.service';
 
 @Component({
@@ -29,8 +30,8 @@ import {
       <div class="card-header">
         <mat-icon>calendar_month</mat-icon>
         <div>
-          <h2>Google Calendar Sync</h2>
-          <p>Automatically sync coaching sessions to your Google Calendar</p>
+          <h2>Calendar Sync</h2>
+          <p>Automatically sync coaching sessions to your calendar</p>
         </div>
       </div>
       <mat-divider />
@@ -48,14 +49,24 @@ import {
               </div>
               <div class="info">
                 <div class="label">Not connected</div>
-                <div class="desc">Connect your Google Calendar to automatically sync coaching sessions.</div>
+                <div class="desc">Connect your calendar to automatically sync coaching sessions.</div>
               </div>
-              <button mat-raised-button class="connect-btn"
-                      (click)="connect()" [disabled]="connecting()">
+            </div>
+            <div class="provider-buttons">
+              <button mat-raised-button class="connect-btn google"
+                      (click)="connect('google')" [disabled]="connecting()">
                 @if (connecting()) {
                   <mat-spinner diameter="18" />
                 } @else {
-                  <mat-icon>link</mat-icon> Connect Google Calendar
+                  <mat-icon>event</mat-icon> Google Calendar
+                }
+              </button>
+              <button mat-raised-button class="connect-btn microsoft"
+                      (click)="connect('microsoft')" [disabled]="connecting()">
+                @if (connecting()) {
+                  <mat-spinner diameter="18" />
+                } @else {
+                  <mat-icon>calendar_month</mat-icon> Microsoft 365
                 }
               </button>
             </div>
@@ -68,7 +79,7 @@ import {
                 <mat-icon>check_circle</mat-icon>
               </div>
               <div class="info">
-                <div class="label">Google Account Connected <span class="badge">Connected</span></div>
+                <div class="label">{{ providerLabel() }} Connected <span class="badge">Connected</span></div>
                 <div class="desc">Select a calendar to sync sessions to.</div>
               </div>
             </div>
@@ -92,7 +103,7 @@ import {
               }
             </div>
             <div class="disconnect-link">
-              <a (click)="disconnect()">Disconnect Google Calendar</a>
+              <a (click)="disconnect()">Disconnect calendar</a>
             </div>
           }
 
@@ -188,9 +199,14 @@ import {
       background: rgba(39,196,160,0.15); color: #1a9678;
     }
 
+    .provider-buttons {
+      display: flex; gap: 12px; margin-top: 14px; padding-left: 54px; flex-wrap: wrap;
+    }
     .connect-btn {
-      background: #1B2A47 !important; color: white !important;
+      color: white !important;
       mat-icon { margin-right: 4px; }
+      &.google { background: #4285f4 !important; }
+      &.microsoft { background: #0078d4 !important; }
     }
 
     .calendar-picker {
@@ -223,7 +239,7 @@ export class CalendarIntegrationComponent implements OnInit {
   changingCalendar = signal(false);
 
   status = signal<CalendarStatus | null>(null);
-  calendars = signal<GoogleCalendar[]>([]);
+  calendars = signal<CalendarItem[]>([]);
   selectedCalendarId = '';
   private selectedCalendarName = '';
 
@@ -252,15 +268,20 @@ export class CalendarIntegrationComponent implements OnInit {
     });
   }
 
-  connect(): void {
+  providerLabel(): string {
+    const p = this.status()?.provider;
+    return p === 'microsoft' ? 'Microsoft 365' : 'Google Calendar';
+  }
+
+  connect(provider: CalendarProviderType = 'google'): void {
     this.connecting.set(true);
-    this.calService.getAuthUrl().subscribe({
+    this.calService.getAuthUrl(provider).subscribe({
       next: (res) => {
         window.location.href = res.url;
       },
       error: () => {
         this.connecting.set(false);
-        this.snack.open('Failed to start Google Calendar connection', 'Dismiss', { duration: 4000 });
+        this.snack.open('Failed to start calendar connection', 'Dismiss', { duration: 4000 });
       },
     });
   }
@@ -310,8 +331,8 @@ export class CalendarIntegrationComponent implements OnInit {
     const ref = this.dialog.open(ConfirmDialogComponent, {
       width: '420px',
       data: {
-        title: 'Disconnect Google Calendar',
-        message: 'This will stop syncing new sessions to Google Calendar. Existing calendar events will remain.',
+        title: `Disconnect ${this.providerLabel()}`,
+        message: `This will stop syncing new sessions to ${this.providerLabel()}. Existing calendar events will remain.`,
         confirmLabel: 'Disconnect',
         confirmColor: 'warn',
         icon: 'link_off',
@@ -321,7 +342,7 @@ export class CalendarIntegrationComponent implements OnInit {
       if (!confirmed) return;
       this.calService.disconnect().subscribe({
         next: () => {
-          this.snack.open('Google Calendar disconnected', undefined, { duration: 2000 });
+          this.snack.open('Calendar disconnected', undefined, { duration: 2000 });
           this.changingCalendar.set(false);
           this.loadStatus();
         },

@@ -34,6 +34,10 @@ II. SYSTEM
 **Multilingual**
  - design done, need to implement
 
+**Legal**
+- terms of service
+- privacy statement
+
 
 **Placeholders**
  - Billing - contact us to upgrade - create form to send a contact us to system admin via SES. Alternatively let the organization admin upgrade / choose a plan

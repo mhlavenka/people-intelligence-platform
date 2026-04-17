@@ -22,7 +22,7 @@ import {
 } from '../booking.service';
 import {
   CalendarIntegrationService,
-  GoogleCalendar,
+  CalendarItem,
 } from '../../coaching/calendar-integration/calendar-integration.service';
 
 type State = 'idle' | 'loading' | 'preview' | 'importing' | 'done';
@@ -542,7 +542,7 @@ export class BookingImportComponent implements OnInit {
   result = signal<ImportResultResponse | null>(null);
 
   // Calendar picker state.
-  calendars = signal<GoogleCalendar[]>([]);
+  calendars = signal<CalendarItem[]>([]);
   defaultCalendarId = signal<string | null>(null);
   loadingCalendars = signal<boolean>(true);
   selectedCalendarId: string | null = null;

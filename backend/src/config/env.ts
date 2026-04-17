@@ -36,11 +36,13 @@ export const config = {
       clientId: process.env['MICROSOFT_CLIENT_ID'] || '',
       clientSecret: process.env['MICROSOFT_CLIENT_SECRET'] || '',
       tenantId: process.env['MICROSOFT_TENANT_ID'] || 'common',
+      calendarRedirectUri: process.env['MICROSOFT_CALENDAR_REDIRECT_URI'] || '',
     },
   },
   booking: {
     cancelTokenSecret: process.env['CANCEL_TOKEN_JWT_SECRET'] || 'cancel-token-fallback',
     webhookSecret: process.env['GOOGLE_WEBHOOK_SECRET'] || '',
+    microsoftWebhookSecret: process.env['MICROSOFT_WEBHOOK_SECRET'] || '',
     apiBaseUrl: process.env['API_BASE_URL'] || 'http://localhost:3030',
     // Gate Google Calendar push-notification subscriptions. Keep OFF until
     // the public HTTPS path /api/webhooks/gcal is reachable from Google

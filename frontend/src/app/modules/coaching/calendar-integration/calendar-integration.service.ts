@@ -2,13 +2,16 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from '../../../core/api.service';
 
+export type CalendarProviderType = 'google' | 'microsoft';
+
 export interface CalendarStatus {
   connected: boolean;
+  provider: CalendarProviderType | null;
   calendarId: string | null;
   calendarName: string | null;
 }
 
-export interface GoogleCalendar {
+export interface CalendarItem {
   id: string;
   summary: string;
 }
@@ -17,16 +20,16 @@ export interface GoogleCalendar {
 export class CalendarIntegrationService {
   constructor(private api: ApiService) {}
 
-  getAuthUrl(): Observable<{ url: string }> {
-    return this.api.get<{ url: string }>('/calendar/auth/google');
+  getAuthUrl(provider: CalendarProviderType = 'google'): Observable<{ url: string }> {
+    return this.api.get<{ url: string }>(`/calendar/auth/${provider}`);
   }
 
   getStatus(): Observable<CalendarStatus> {
     return this.api.get<CalendarStatus>('/calendar/status');
   }
 
-  listCalendars(): Observable<GoogleCalendar[]> {
-    return this.api.get<GoogleCalendar[]>('/calendar/calendars');
+  listCalendars(): Observable<CalendarItem[]> {
+    return this.api.get<CalendarItem[]>('/calendar/calendars');
   }
 
   selectCalendar(calendarId: string, calendarName: string): Observable<unknown> {

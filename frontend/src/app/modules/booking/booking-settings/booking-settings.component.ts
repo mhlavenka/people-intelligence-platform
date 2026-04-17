@@ -16,6 +16,7 @@ import { ApiService } from '../../../core/api.service';
 import {
   CalendarIntegrationService,
   CalendarStatus,
+  CalendarProviderType,
 } from '../../coaching/calendar-integration/calendar-integration.service';
 import {
   BookingService,
@@ -58,17 +59,27 @@ import {
       }
 
       <!-- Calendar connection status -->
-      <div class="cal-status-bar" [class.connected]="calendarStatus()?.connected">
-        <mat-icon>{{ calendarStatus()?.connected ? 'cloud_done' : 'cloud_off' }}</mat-icon>
-        <span>
-          Google Calendar: {{ calendarStatus()?.connected ? 'Connected' : 'Not connected' }}
-        </span>
-        @if (!calendarStatus()?.connected) {
-          <button mat-stroked-button (click)="connectCalendar()">
-            <mat-icon>link</mat-icon> Connect
-          </button>
-        }
-      </div>
+      @if (calendarStatus()?.connected) {
+        <div class="cal-status-bar connected">
+          <mat-icon>cloud_done</mat-icon>
+          <span>{{ calendarStatus()?.provider === 'microsoft' ? 'Microsoft 365' : 'Google Calendar' }}: Connected</span>
+          @if (calendarStatus()?.calendarName) {
+            <span class="cal-name">({{ calendarStatus()?.calendarName }})</span>
+          }
+        </div>
+      } @else {
+        <div class="cal-provider-picker">
+          <span class="picker-label">Connect your calendar</span>
+          <div class="picker-buttons">
+            <button mat-stroked-button class="provider-btn google" (click)="connectCalendar('google')">
+              <mat-icon>event</mat-icon> Google Calendar
+            </button>
+            <button mat-stroked-button class="provider-btn microsoft" (click)="connectCalendar('microsoft')">
+              <mat-icon>calendar_month</mat-icon> Microsoft 365
+            </button>
+          </div>
+        </div>
+      }
 
       @if (loading()) {
         <div class="loading"><mat-spinner diameter="40" /></div>
@@ -160,6 +171,24 @@ import {
       mat-icon { font-size: 20px; width: 20px; height: 20px; }
       button { margin-left: auto; }
       &.connected { background: #f0f9f4; color: #0f8a5f; }
+      .cal-name { color: #6b7c93; font-size: 13px; }
+    }
+    .cal-provider-picker {
+      padding: 16px 20px; border-radius: 10px; margin-bottom: 20px;
+      background: #f7f9fc; border: 1px solid #e8eef4;
+    }
+    .picker-label {
+      display: block; font-size: 14px; font-weight: 600; color: #1B2A47; margin-bottom: 12px;
+    }
+    .picker-buttons {
+      display: flex; gap: 12px; flex-wrap: wrap;
+    }
+    .provider-btn {
+      flex: 1; min-width: 180px; padding: 10px 16px !important;
+      border-radius: 8px !important; font-size: 14px !important;
+      mat-icon { margin-right: 6px; }
+      &.google { border-color: #4285f4 !important; color: #4285f4 !important; }
+      &.microsoft { border-color: #0078d4 !important; color: #0078d4 !important; }
     }
     .loading {
       display: flex; justify-content: center; padding: 60px 0;
@@ -313,10 +342,10 @@ export class BookingSettingsComponent implements OnInit {
     this.snackBar.open('Public page link copied!', 'OK', { duration: 2000 });
   }
 
-  connectCalendar(): void {
-    this.calendarSvc.getAuthUrl().subscribe({
+  connectCalendar(provider: CalendarProviderType = 'google'): void {
+    this.calendarSvc.getAuthUrl(provider).subscribe({
       next: ({ url }) => window.location.href = url,
-      error: () => this.snackBar.open('Failed to start Google auth', 'OK', { duration: 3000 }),
+      error: () => this.snackBar.open('Failed to start calendar auth', 'OK', { duration: 3000 }),
     });
   }
 

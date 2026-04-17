@@ -12,8 +12,9 @@ import {
   registerGoogleWebhook,
   stopGoogleWebhook,
 } from '../services/calendarWebhook.service';
+import { getCalendarProvider, getCoachCalendarProvider } from '../services/calendar';
 
-// ── Public callback (no auth required — Google redirects here) ──────────────
+// ── Public callbacks (no auth required — OAuth providers redirect here) ─────
 export const calendarCallbackRouter = Router();
 
 calendarCallbackRouter.get('/auth/google/callback', async (req: Request, res: Response, next: NextFunction) => {
@@ -28,6 +29,22 @@ calendarCallbackRouter.get('/auth/google/callback', async (req: Request, res: Re
     await exchangeCodeForTokens(code, userId);
 
     res.redirect(`${config.frontendUrl}/booking/settings?calendarConnected=true`);
+  } catch (e) { next(e); }
+});
+
+calendarCallbackRouter.get('/auth/microsoft/callback', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const code = req.query['code'] as string;
+    const userId = req.query['state'] as string;
+    if (!code || !userId) {
+      res.status(400).json({ error: 'Missing code or state' });
+      return;
+    }
+
+    const provider = getCalendarProvider('microsoft');
+    await provider.exchangeCodeForTokens(code, userId);
+
+    res.redirect(`${config.frontendUrl}/booking/settings?calendarConnected=true&provider=microsoft`);
   } catch (e) { next(e); }
 });
 
@@ -47,14 +64,35 @@ router.get(
   },
 );
 
-/** List the coach's Google calendars (for the calendar picker). */
+/** Generate Microsoft OAuth consent URL. */
+router.get(
+  '/auth/microsoft',
+  requirePermission('MANAGE_CALENDAR'),
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const provider = getCalendarProvider('microsoft');
+      const url = provider.getAuthUrl(req.user!.userId);
+      res.json({ url });
+    } catch (e) { next(e); }
+  },
+);
+
+/** List the coach's calendars (from whichever provider is connected). */
 router.get(
   '/calendars',
   requirePermission('MANAGE_CALENDAR'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
-      const calendars = await listCoachCalendars(req.user!.userId);
-      res.json(calendars);
+      const cp = await getCoachCalendarProvider(req.user!.userId);
+      if (!cp) {
+        // Fall back to Google legacy path for backward compat
+        const calendars = await listCoachCalendars(req.user!.userId);
+        res.json(calendars);
+        return;
+      }
+      const calendars = await cp.provider.listCalendars(req.user!.userId);
+      // Normalize to { id, summary } for backward compat with frontend
+      res.json(calendars.map((c) => ({ id: c.id, summary: c.name })));
     } catch (e) { next(e); }
   },
 );
@@ -70,42 +108,60 @@ router.post(
         res.status(400).json({ error: 'calendarId is required' });
         return;
       }
-      await User.findByIdAndUpdate(req.user!.userId, {
-        'googleCalendar.calendarId': calendarId,
-        'googleCalendar.calendarName': calendarName || calendarId,
-      });
 
-      // (Re-)register the push-notification channel for the new target calendar.
-      // No-op when webhooks are disabled by config.
-      registerGoogleWebhook(req.user!.userId).catch((err) =>
-        console.error('[Webhook] post-select registration failed:', err),
-      );
+      const user = await User.findById(req.user!.userId).select('googleCalendar.connected microsoftCalendar.connected');
+      if (user?.microsoftCalendar?.connected) {
+        await User.findByIdAndUpdate(req.user!.userId, {
+          'microsoftCalendar.calendarId': calendarId,
+          'microsoftCalendar.calendarName': calendarName || calendarId,
+        });
+      } else {
+        await User.findByIdAndUpdate(req.user!.userId, {
+          'googleCalendar.calendarId': calendarId,
+          'googleCalendar.calendarName': calendarName || calendarId,
+        });
+        registerGoogleWebhook(req.user!.userId).catch((err) =>
+          console.error('[Webhook] post-select registration failed:', err),
+        );
+      }
 
       res.json({ message: 'Calendar selected', calendarId, calendarName });
     } catch (e) { next(e); }
   },
 );
 
-/** Disconnect Google Calendar — remove tokens. */
+/** Disconnect calendar — remove tokens for whichever provider is connected. */
 router.delete(
   '/disconnect',
   requirePermission('MANAGE_CALENDAR'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
-      // Stop the push-notification channel before we lose the tokens.
-      await stopGoogleWebhook(req.user!.userId).catch((err) =>
-        console.error('[Webhook] stop on disconnect failed:', err),
-      );
+      const user = await User.findById(req.user!.userId).select('googleCalendar.connected microsoftCalendar.connected');
 
-      await User.findByIdAndUpdate(req.user!.userId, {
-        'googleCalendar.connected': false,
-        'googleCalendar.accessToken': null,
-        'googleCalendar.refreshToken': null,
-        'googleCalendar.tokenExpiry': null,
-        'googleCalendar.calendarId': null,
-        'googleCalendar.calendarName': null,
-      });
-      res.json({ message: 'Google Calendar disconnected' });
+      if (user?.microsoftCalendar?.connected) {
+        await User.findByIdAndUpdate(req.user!.userId, {
+          'microsoftCalendar.connected': false,
+          'microsoftCalendar.accessToken': null,
+          'microsoftCalendar.refreshToken': null,
+          'microsoftCalendar.tokenExpiry': null,
+          'microsoftCalendar.calendarId': null,
+          'microsoftCalendar.calendarName': null,
+        });
+        res.json({ message: 'Microsoft Calendar disconnected' });
+      } else {
+        await stopGoogleWebhook(req.user!.userId).catch((err) =>
+          console.error('[Webhook] stop on disconnect failed:', err),
+        );
+        await User.findByIdAndUpdate(req.user!.userId, {
+          'googleCalendar.connected': false,
+          'googleCalendar.accessToken': null,
+          'googleCalendar.refreshToken': null,
+          'googleCalendar.tokenExpiry': null,
+          'googleCalendar.calendarId': null,
+          'googleCalendar.calendarName': null,
+        });
+        res.json({ message: 'Google Calendar disconnected' });
+      }
     } catch (e) { next(e); }
   },
 );
