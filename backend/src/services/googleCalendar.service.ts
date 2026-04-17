@@ -124,7 +124,10 @@ export async function createCalendarEvent(
   };
 
   if (session.coacheeEmail) {
-    event.attendees = [{ email: session.coacheeEmail }];
+    const coachee = await User.findOne({ email: session.coacheeEmail }).select('notificationPreferences').lean();
+    if (coachee?.notificationPreferences?.googleCalendarInvites !== false) {
+      event.attendees = [{ email: session.coacheeEmail }];
+    }
   }
   if (session.meetingLink) {
     event.location = session.meetingLink;
@@ -176,7 +179,10 @@ export async function updateCalendarEvent(
   };
 
   if (session.coacheeEmail) {
-    event.attendees = [{ email: session.coacheeEmail }];
+    const coachee = await User.findOne({ email: session.coacheeEmail }).select('notificationPreferences').lean();
+    if (coachee?.notificationPreferences?.googleCalendarInvites !== false) {
+      event.attendees = [{ email: session.coacheeEmail }];
+    }
   }
   if (session.meetingLink) {
     event.location = session.meetingLink;

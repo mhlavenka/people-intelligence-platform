@@ -106,7 +106,7 @@ router.get('/me/notification-preferences', async (req: AuthRequest, res: Respons
     const defaults = {
       sessionScheduled: true, sessionReminders: true, sessionForms: true,
       bookingConfirmed: true, bookingCancelled: true, bookingRescheduled: true,
-      engagementCreated: true, directMessages: true,
+      engagementCreated: true, directMessages: true, googleCalendarInvites: false,
     };
     res.json({ ...defaults, ...user.notificationPreferences });
   } catch (e) { next(e); }
@@ -118,7 +118,7 @@ router.put('/me/notification-preferences', async (req: AuthRequest, res: Respons
     const allowed = [
       'sessionScheduled', 'sessionReminders', 'sessionForms',
       'bookingConfirmed', 'bookingCancelled', 'bookingRescheduled',
-      'engagementCreated', 'directMessages',
+      'engagementCreated', 'directMessages', 'googleCalendarInvites',
     ];
     const prefs: Record<string, boolean> = {};
     for (const key of allowed) {

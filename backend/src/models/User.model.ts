@@ -66,6 +66,7 @@ export interface INotificationPreferences {
   bookingRescheduled: boolean;
   engagementCreated: boolean;
   directMessages: boolean;
+  googleCalendarInvites: boolean;
 }
 
 const PasskeyCredentialSchema = new Schema({
@@ -134,6 +135,7 @@ const UserSchema = new Schema<IUser>(
       bookingRescheduled: { type: Boolean, default: true },
       engagementCreated:  { type: Boolean, default: true },
       directMessages:     { type: Boolean, default: true },
+      googleCalendarInvites: { type: Boolean, default: false },
     },
   },
   { timestamps: true }
