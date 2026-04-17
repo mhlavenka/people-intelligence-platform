@@ -52,8 +52,20 @@ export interface IUser extends Document {
   isCoachee: boolean;                       // true when this user is (or has been) in a coaching engagement — independent of their org role. An hr_manager being coached is role='hr_manager' + isCoachee=true; a purely external client is role='coachee' + isCoachee=true.
   canChooseCoach?: boolean;                  // per-user override for Organization.coacheeCanChooseCoach; undefined = inherit org default
   googleCalendar?: IGoogleCalendar;
+  notificationPreferences?: INotificationPreferences;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface INotificationPreferences {
+  sessionScheduled: boolean;
+  sessionReminders: boolean;
+  sessionForms: boolean;
+  bookingConfirmed: boolean;
+  bookingCancelled: boolean;
+  bookingRescheduled: boolean;
+  engagementCreated: boolean;
+  directMessages: boolean;
 }
 
 const PasskeyCredentialSchema = new Schema({
@@ -112,6 +124,16 @@ const UserSchema = new Schema<IUser>(
       accessToken:  { type: String, select: false },
       refreshToken: { type: String, select: false },
       tokenExpiry:  { type: Date },
+    },
+    notificationPreferences: {
+      sessionScheduled:   { type: Boolean, default: true },
+      sessionReminders:   { type: Boolean, default: true },
+      sessionForms:       { type: Boolean, default: true },
+      bookingConfirmed:   { type: Boolean, default: true },
+      bookingCancelled:   { type: Boolean, default: true },
+      bookingRescheduled: { type: Boolean, default: true },
+      engagementCreated:  { type: Boolean, default: true },
+      directMessages:     { type: Boolean, default: true },
     },
   },
   { timestamps: true }

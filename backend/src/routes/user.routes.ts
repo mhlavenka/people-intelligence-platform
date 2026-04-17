@@ -96,6 +96,44 @@ router.post('/me/public-slug', async (req: AuthRequest, res: Response, next: Nex
   } catch (e) { next(e); }
 });
 
+/** Get notification preferences. */
+router.get('/me/notification-preferences', async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const user = await User.findOne({
+      _id: req.user!.userId, organizationId: req.user!.organizationId,
+    }).select('notificationPreferences');
+    if (!user) { res.status(404).json({ error: 'User not found' }); return; }
+    const defaults = {
+      sessionScheduled: true, sessionReminders: true, sessionForms: true,
+      bookingConfirmed: true, bookingCancelled: true, bookingRescheduled: true,
+      engagementCreated: true, directMessages: true,
+    };
+    res.json({ ...defaults, ...user.notificationPreferences });
+  } catch (e) { next(e); }
+});
+
+/** Update notification preferences. */
+router.put('/me/notification-preferences', async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const allowed = [
+      'sessionScheduled', 'sessionReminders', 'sessionForms',
+      'bookingConfirmed', 'bookingCancelled', 'bookingRescheduled',
+      'engagementCreated', 'directMessages',
+    ];
+    const prefs: Record<string, boolean> = {};
+    for (const key of allowed) {
+      if (typeof req.body[key] === 'boolean') prefs[key] = req.body[key];
+    }
+    const user = await User.findOneAndUpdate(
+      { _id: req.user!.userId, organizationId: req.user!.organizationId },
+      { notificationPreferences: prefs },
+      { new: true },
+    ).select('notificationPreferences');
+    if (!user) { res.status(404).json({ error: 'User not found' }); return; }
+    res.json(user.notificationPreferences);
+  } catch (e) { next(e); }
+});
+
 /** Upload profile picture (own). */
 router.post('/me/avatar', avatarUpload.single('avatar'), async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {

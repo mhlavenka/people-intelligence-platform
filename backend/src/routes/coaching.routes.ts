@@ -15,7 +15,7 @@ import { cancelBooking } from '../services/booking.service';
 import { BookingSettings } from '../models/BookingSettings.model';
 import { buildPostSessionReflectionPrompt, callClaude } from '../services/ai.service';
 import { sendEmail } from '../services/email.service';
-import { notifyPostSessionForm } from '../services/hubNotification.service';
+import { notifyPostSessionForm, createHubNotification, isNotificationEnabled } from '../services/hubNotification.service';
 import { config } from '../config/env';
 
 async function generateAndSendPostSessionForm(
@@ -257,6 +257,37 @@ router.post(
         { path: 'coacheeId', select: 'firstName lastName email department profilePicture' },
         { path: 'coachId', select: 'firstName lastName' },
       ]);
+
+      // Notify coachee about the new engagement
+      try {
+        const coachee = await User.findById(engagement.coacheeId).select('firstName email');
+        const coach = await User.findById(engagement.coachId).select('firstName lastName');
+        if (coachee && coach && await isNotificationEnabled(engagement.coacheeId, 'engagementCreated')) {
+          const coachName = `${coach.firstName} ${coach.lastName}`;
+
+          sendEmail({
+            to: coachee.email,
+            subject: 'New coaching engagement started',
+            html: `<p>Hi ${coachee.firstName},</p>
+              <p><strong>${coachName}</strong> has started a coaching engagement with you.</p>
+              <p>You can view your sessions, goals, and progress in ARTES.</p>
+              <p><a href="${config.frontendUrl}/coaching">View in ARTES</a></p>`,
+          }).catch(err => console.error('[Coaching] Failed to send engagement email:', err));
+
+          createHubNotification({
+            userId: engagement.coacheeId,
+            organizationId: engagement.organizationId,
+            type: 'system',
+            title: 'New Coaching Engagement',
+            body: `${coachName} started a coaching engagement with you.`,
+            link: '/coaching',
+            category: 'engagementCreated',
+          }).catch(err => console.error('[Coaching] Hub notification failed:', err));
+        }
+      } catch (notifyErr) {
+        console.error('[Coaching] Notification failed:', notifyErr);
+      }
+
       res.status(201).json(populated);
     } catch (e) { next(e); }
   }
@@ -460,6 +491,45 @@ router.post(
         { path: 'coacheeId', select: 'firstName lastName profilePicture' },
         { path: 'coachId', select: 'firstName lastName' },
       ]);
+
+      // Notify coachee about the new session
+      try {
+        const coachee = await User.findById(session.coacheeId).select('firstName email');
+        const coach = await User.findById(session.coachId).select('firstName lastName');
+        if (coachee && coach && await isNotificationEnabled(session.coacheeId, 'sessionScheduled')) {
+          const coachName = `${coach.firstName} ${coach.lastName}`;
+          const sessionDate = session.date.toLocaleDateString('en-GB', {
+            weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+          });
+          const sessionTime = session.date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+
+          sendEmail({
+            to: coachee.email,
+            subject: `New coaching session scheduled — ${sessionDate}`,
+            html: `<p>Hi ${coachee.firstName},</p>
+              <p><strong>${coachName}</strong> has scheduled a coaching session with you:</p>
+              <p style="background:#f8fafc;border-left:4px solid #27C4A0;padding:12px 16px;border-radius:0 8px 8px 0;">
+                <strong>${sessionDate}</strong> at ${sessionTime}<br/>
+                Duration: ${session.duration} minutes
+                ${session.googleMeetLink ? `<br/><a href="${session.googleMeetLink}">Join Google Meet</a>` : ''}
+              </p>
+              <p><a href="${config.frontendUrl}/coaching">View in ARTES</a></p>`,
+          }).catch(err => console.error('[Coaching] Failed to send session email:', err));
+
+          createHubNotification({
+            userId: session.coacheeId,
+            organizationId: session.organizationId,
+            type: 'system',
+            title: 'New Session Scheduled',
+            body: `${coachName} scheduled a session on ${sessionDate} at ${sessionTime}.`,
+            link: '/coaching',
+            category: 'sessionScheduled',
+          }).catch(err => console.error('[Coaching] Hub notification failed:', err));
+        }
+      } catch (notifyErr) {
+        console.error('[Coaching] Notification failed:', notifyErr);
+      }
+
       res.status(201).json(populated);
     } catch (e) { next(e); }
   }

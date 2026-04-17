@@ -1,6 +1,8 @@
 import mongoose from 'mongoose';
 import { Notification } from '../models/Notification.model';
-import { User } from '../models/User.model';
+import { User, INotificationPreferences } from '../models/User.model';
+
+export type NotificationCategory = keyof INotificationPreferences;
 
 interface HubNotifyParams {
   userId: string | mongoose.Types.ObjectId;
@@ -9,10 +11,29 @@ interface HubNotifyParams {
   title: string;
   body: string;
   link?: string;
+  category?: NotificationCategory;
+}
+
+export async function isNotificationEnabled(
+  userId: string | mongoose.Types.ObjectId,
+  category: NotificationCategory,
+): Promise<boolean> {
+  try {
+    const user = await User.findById(userId).select('notificationPreferences').lean();
+    if (!user?.notificationPreferences) return true;
+    const val = user.notificationPreferences[category];
+    return val !== false;
+  } catch {
+    return true;
+  }
 }
 
 export async function createHubNotification(params: HubNotifyParams): Promise<void> {
   try {
+    if (params.category) {
+      const enabled = await isNotificationEnabled(params.userId, params.category);
+      if (!enabled) return;
+    }
     await Notification.create({
       organizationId: params.organizationId,
       userId: params.userId,
@@ -43,6 +64,7 @@ export async function notifyBookingConfirmed(p: {
     title: 'New Booking Confirmed',
     body: `${p.clientName} booked a session on ${when}.`,
     link: '/coaching/bookings',
+    category: 'bookingConfirmed',
   });
 
   if (p.coacheeId) {
@@ -53,6 +75,7 @@ export async function notifyBookingConfirmed(p: {
       title: 'Session Confirmed',
       body: `Your session with ${p.coachName} on ${when} is confirmed.`,
       link: '/coaching/bookings',
+      category: 'bookingConfirmed',
     });
   }
 }
@@ -75,6 +98,7 @@ export async function notifyBookingCancelled(p: {
     title: 'Booking Cancelled',
     body: `Session with ${p.clientName} on ${when} was cancelled by ${p.cancelledBy}.`,
     link: '/coaching/bookings',
+    category: 'bookingCancelled',
   });
 
   if (p.coacheeId) {
@@ -85,6 +109,7 @@ export async function notifyBookingCancelled(p: {
       title: 'Session Cancelled',
       body: `Your session with ${p.coachName} on ${when} has been cancelled.`,
       link: '/coaching/bookings',
+      category: 'bookingCancelled',
     });
   }
 }
@@ -110,6 +135,7 @@ export async function notifyBookingRescheduled(p: {
       title: 'Booking Rescheduled',
       body: `Session with ${p.clientName} moved from ${from} to ${to}.`,
       link: '/coaching/bookings',
+      category: 'bookingRescheduled',
     });
   }
 
@@ -121,6 +147,7 @@ export async function notifyBookingRescheduled(p: {
       title: 'Session Rescheduled',
       body: `Your session with ${p.coachName} has been moved from ${from} to ${to}.`,
       link: '/coaching/bookings',
+      category: 'bookingRescheduled',
     });
   }
 }
@@ -143,6 +170,7 @@ export async function notifyBookingReminder(p: {
     title: 'Session Reminder',
     body: `Your session with ${p.coachName} is ${label} (${when}).`,
     link: '/coaching/bookings',
+    category: 'sessionReminders',
   });
 }
 
@@ -161,6 +189,7 @@ export async function notifyPreSessionForm(p: {
     title: 'Pre-Session Form Ready',
     body: `${p.coachName} has a pre-session form for your session on ${p.sessionDate}: ${p.templateTitle}`,
     link: p.intakeUrl,
+    category: 'sessionForms',
   });
 }
 
@@ -178,6 +207,7 @@ export async function notifyPostSessionForm(p: {
     title: 'Post-Session Reflection',
     body: `Please complete your reflection for the session on ${p.sessionDate} with ${p.coachName}.`,
     link: p.intakeUrl,
+    category: 'sessionForms',
   });
 }
 

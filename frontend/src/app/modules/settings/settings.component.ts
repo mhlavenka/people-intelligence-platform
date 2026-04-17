@@ -307,12 +307,14 @@ export class SettingsComponent implements OnInit {
   testEmailControl = new FormControl('', [Validators.required, Validators.email]);
 
   notificationItems = [
-    { key: 'conflict_analysis', label: 'Conflict analysis completed',    description: 'Notify when a new AI conflict analysis is ready',             icon: 'analytics',   iconClass: 'red' },
-    { key: 'escalation_alerts', label: 'Escalation alerts',              description: 'Notify when a conflict is escalated to HR or coach',          icon: 'warning_amber',iconClass: 'orange' },
-    { key: 'idp_milestones',    label: 'IDP milestone updates',          description: 'Notify when a development plan milestone status changes',      icon: 'trending_up', iconClass: 'blue' },
-    { key: 'new_idp_assigned',  label: 'New IDP assigned to you',        description: 'Notify when a coach creates a development plan for you',      icon: 'assignment_ind',iconClass: 'navy' },
-    { key: 'survey_reminders',  label: 'Survey reminders',               description: 'Receive reminders for surveys you have not yet completed',    icon: 'assignment',  iconClass: 'green' },
-    { key: 'weekly_digest',     label: 'Weekly digest',                  description: 'Summary of key activity across all modules every Monday',     icon: 'summarize',   iconClass: 'blue' },
+    { key: 'sessionScheduled',   label: 'Session scheduled',       description: 'Notify when a coaching session is created or assigned to you',   icon: 'event_note',     iconClass: 'green' },
+    { key: 'sessionReminders',   label: 'Session reminders',       description: 'Receive 24h and 1h reminders before upcoming sessions',          icon: 'alarm',          iconClass: 'blue' },
+    { key: 'sessionForms',       label: 'Session forms',           description: 'Notify when pre-session or post-session forms are ready',        icon: 'assignment',     iconClass: 'navy' },
+    { key: 'bookingConfirmed',   label: 'Booking confirmed',       description: 'Notify when a booking is confirmed (coach and coachee)',         icon: 'event_available',iconClass: 'green' },
+    { key: 'bookingCancelled',   label: 'Booking cancelled',       description: 'Notify when a booking is cancelled',                             icon: 'event_busy',     iconClass: 'red' },
+    { key: 'bookingRescheduled', label: 'Booking rescheduled',     description: 'Notify when a booking is rescheduled',                           icon: 'event_repeat',   iconClass: 'orange' },
+    { key: 'engagementCreated',  label: 'New engagement',          description: 'Notify when a coach starts a coaching engagement with you',      icon: 'handshake',      iconClass: 'blue' },
+    { key: 'directMessages',     label: 'Direct messages',         description: 'Notify when someone sends you a message in the hub',             icon: 'mail',           iconClass: 'navy' },
   ];
 
   timezones = [
@@ -349,6 +351,17 @@ export class SettingsComponent implements OnInit {
       } catch { /* use defaults */ }
     }
 
+    // Load notification preferences from API
+    this.api.get<Record<string, boolean>>('/users/me/notification-preferences').subscribe({
+      next: (prefs) => {
+        this.settings.update(s => ({
+          ...s,
+          notifications: { ...s.notifications, ...prefs },
+        }));
+      },
+      error: () => {},
+    });
+
     // Pre-fill test email address
     this.api.get<{ email: string }>('/users/me').subscribe({
       next: (user) => {
@@ -381,7 +394,10 @@ export class SettingsComponent implements OnInit {
       ...s,
       notifications: { ...s.notifications, [key]: value },
     }));
-    this.persist();
+    this.api.put('/users/me/notification-preferences', this.settings().notifications).subscribe({
+      next: () => this.snackBar.open('Notification preference saved', undefined, { duration: 1500 }),
+      error: () => this.snackBar.open('Failed to save preference', 'Dismiss', { duration: 3000 }),
+    });
   }
 
   updateSetting(key: keyof Settings, value: unknown): void {
