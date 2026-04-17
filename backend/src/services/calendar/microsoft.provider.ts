@@ -1,4 +1,3 @@
-import { ConfidentialClientApplication } from '@azure/msal-node';
 import { Client } from '@microsoft/microsoft-graph-client';
 import { config } from '../../config/env';
 import { User } from '../../models/User.model';
@@ -18,17 +17,6 @@ const SCOPES = [
   'offline_access',
 ];
 
-const msalConfig = {
-  auth: {
-    clientId: config.oauth.microsoft.clientId,
-    authority: `https://login.microsoftonline.com/${config.oauth.microsoft.tenantId}`,
-    clientSecret: config.oauth.microsoft.clientSecret,
-  },
-};
-
-function getMsalClient(): ConfidentialClientApplication {
-  return new ConfidentialClientApplication(msalConfig);
-}
 
 async function getAuthenticatedGraphClient(coachId: string): Promise<Client> {
   const coach = await User.findById(coachId).select(
@@ -42,19 +30,42 @@ async function getAuthenticatedGraphClient(coachId: string): Promise<Client> {
   const expiry = coach.microsoftCalendar.tokenExpiry?.getTime() ?? 0;
 
   if (Date.now() >= expiry - 60_000) {
-    const msalClient = getMsalClient();
-    const result = await msalClient.acquireTokenByRefreshToken({
-      refreshToken: coach.microsoftCalendar.refreshToken,
-      scopes: SCOPES,
+    const body = new URLSearchParams({
+      client_id: config.oauth.microsoft.clientId,
+      client_secret: config.oauth.microsoft.clientSecret,
+      refresh_token: coach.microsoftCalendar.refreshToken,
+      grant_type: 'refresh_token',
+      scope: SCOPES.join(' '),
     });
 
-    if (!result) throw new Error('Failed to refresh Microsoft token');
+    const response = await fetch(
+      `https://login.microsoftonline.com/${config.oauth.microsoft.tenantId}/oauth2/v2.0/token`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: body.toString(),
+      },
+    );
 
-    accessToken = result.accessToken;
-    const newExpiry = result.expiresOn ? new Date(result.expiresOn) : undefined;
+    const data = await response.json() as {
+      access_token?: string;
+      refresh_token?: string;
+      expires_in?: number;
+      error?: string;
+    };
+
+    if (!response.ok || !data.access_token) {
+      throw new Error(`Failed to refresh Microsoft token: ${data.error}`);
+    }
+
+    accessToken = data.access_token;
+    const newExpiry = data.expires_in
+      ? new Date(Date.now() + data.expires_in * 1000)
+      : undefined;
 
     await User.findByIdAndUpdate(coachId, {
       'microsoftCalendar.accessToken': accessToken,
+      'microsoftCalendar.refreshToken': data.refresh_token || coach.microsoftCalendar.refreshToken,
       'microsoftCalendar.tokenExpiry': newExpiry,
     });
   }
@@ -68,14 +79,6 @@ export const microsoftCalendarProvider: ICalendarProvider = {
   provider: 'microsoft',
 
   getAuthUrl(userId: string): string {
-    const msalClient = getMsalClient();
-    const authUrl = msalClient.getAuthCodeUrl({
-      scopes: SCOPES,
-      redirectUri: config.oauth.microsoft.calendarRedirectUri,
-      state: userId,
-      prompt: 'consent',
-    });
-    // getAuthCodeUrl returns a Promise<string> but we need sync — build manually
     const params = new URLSearchParams({
       client_id: config.oauth.microsoft.clientId,
       response_type: 'code',
@@ -89,32 +92,49 @@ export const microsoftCalendarProvider: ICalendarProvider = {
   },
 
   async exchangeCodeForTokens(code: string, userId: string): Promise<void> {
-    const msalClient = getMsalClient();
-    const result = await msalClient.acquireTokenByCode({
+    // Direct HTTP token exchange — more reliable than MSAL for the common endpoint
+    const body = new URLSearchParams({
+      client_id: config.oauth.microsoft.clientId,
+      client_secret: config.oauth.microsoft.clientSecret,
       code,
-      scopes: SCOPES,
-      redirectUri: config.oauth.microsoft.calendarRedirectUri,
+      redirect_uri: config.oauth.microsoft.calendarRedirectUri,
+      grant_type: 'authorization_code',
+      scope: SCOPES.join(' '),
     });
 
-    if (!result) throw new Error('Failed to exchange Microsoft authorization code');
+    const response = await fetch(
+      `https://login.microsoftonline.com/${config.oauth.microsoft.tenantId}/oauth2/v2.0/token`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: body.toString(),
+      },
+    );
 
-    // MSAL doesn't directly expose the refresh token in acquireTokenByCode result.
-    // We need to extract it from the token cache.
-    const cache = msalClient.getTokenCache().serialize();
-    const cacheData = JSON.parse(cache);
-    const refreshTokens = cacheData.RefreshToken || {};
-    const refreshTokenEntry = Object.values(refreshTokens)[0] as { secret?: string } | undefined;
-    const refreshToken = refreshTokenEntry?.secret;
+    const data = await response.json() as {
+      access_token?: string;
+      refresh_token?: string;
+      expires_in?: number;
+      error?: string;
+      error_description?: string;
+    };
 
-    if (!refreshToken) {
+    if (!response.ok || data.error) {
+      throw new Error(`Microsoft token exchange failed: ${data.error_description || data.error}`);
+    }
+    if (!data.refresh_token) {
       throw new Error('Microsoft did not return a refresh token — ensure offline_access scope is requested');
     }
 
+    const tokenExpiry = data.expires_in
+      ? new Date(Date.now() + data.expires_in * 1000)
+      : undefined;
+
     await User.findByIdAndUpdate(userId, {
       'microsoftCalendar.connected': true,
-      'microsoftCalendar.accessToken': result.accessToken,
-      'microsoftCalendar.refreshToken': refreshToken,
-      'microsoftCalendar.tokenExpiry': result.expiresOn ? new Date(result.expiresOn) : undefined,
+      'microsoftCalendar.accessToken': data.access_token,
+      'microsoftCalendar.refreshToken': data.refresh_token,
+      'microsoftCalendar.tokenExpiry': tokenExpiry,
     });
   },
 

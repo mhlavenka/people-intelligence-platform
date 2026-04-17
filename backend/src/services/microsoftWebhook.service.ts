@@ -1,5 +1,4 @@
 import { Client } from '@microsoft/microsoft-graph-client';
-import { ConfidentialClientApplication } from '@azure/msal-node';
 import { config } from '../config/env';
 import { User } from '../models/User.model';
 import { Booking } from '../models/Booking.model';
@@ -13,16 +12,6 @@ const SCOPES = ['Calendars.ReadWrite', 'Calendars.Read', 'User.Read', 'offline_a
 
 // ─── Auth helpers ──────────────────────────────────────────────────────────
 
-function getMsalClient(): ConfidentialClientApplication {
-  return new ConfidentialClientApplication({
-    auth: {
-      clientId: config.oauth.microsoft.clientId,
-      authority: `https://login.microsoftonline.com/${config.oauth.microsoft.tenantId}`,
-      clientSecret: config.oauth.microsoft.clientSecret,
-    },
-  });
-}
-
 async function getGraphClient(coachId: string): Promise<Client> {
   const coach = await User.findById(coachId).select(
     '+microsoftCalendar.accessToken +microsoftCalendar.refreshToken microsoftCalendar.connected microsoftCalendar.tokenExpiry',
@@ -35,17 +24,41 @@ async function getGraphClient(coachId: string): Promise<Client> {
   const expiry = coach.microsoftCalendar.tokenExpiry?.getTime() ?? 0;
 
   if (Date.now() >= expiry - 60_000) {
-    const msalClient = getMsalClient();
-    const result = await msalClient.acquireTokenByRefreshToken({
-      refreshToken: coach.microsoftCalendar.refreshToken,
-      scopes: SCOPES,
+    const body = new URLSearchParams({
+      client_id: config.oauth.microsoft.clientId,
+      client_secret: config.oauth.microsoft.clientSecret,
+      refresh_token: coach.microsoftCalendar.refreshToken,
+      grant_type: 'refresh_token',
+      scope: SCOPES.join(' '),
     });
-    if (!result) throw new Error('Failed to refresh Microsoft token');
 
-    accessToken = result.accessToken;
+    const response = await fetch(
+      `https://login.microsoftonline.com/${config.oauth.microsoft.tenantId}/oauth2/v2.0/token`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: body.toString(),
+      },
+    );
+
+    const data = await response.json() as {
+      access_token?: string;
+      refresh_token?: string;
+      expires_in?: number;
+      error?: string;
+    };
+
+    if (!response.ok || !data.access_token) {
+      throw new Error(`Failed to refresh Microsoft token: ${data.error}`);
+    }
+
+    accessToken = data.access_token;
     await User.findByIdAndUpdate(coachId, {
       'microsoftCalendar.accessToken': accessToken,
-      'microsoftCalendar.tokenExpiry': result.expiresOn ? new Date(result.expiresOn) : undefined,
+      'microsoftCalendar.refreshToken': data.refresh_token || coach.microsoftCalendar.refreshToken,
+      'microsoftCalendar.tokenExpiry': data.expires_in
+        ? new Date(Date.now() + data.expires_in * 1000)
+        : undefined,
     });
   }
 
