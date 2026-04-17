@@ -50,6 +50,7 @@ export async function createHubNotification(params: HubNotifyParams): Promise<vo
 export async function notifyBookingConfirmed(p: {
   coachId: string | mongoose.Types.ObjectId;
   coacheeId?: string | mongoose.Types.ObjectId;
+  engagementId?: string | mongoose.Types.ObjectId;
   organizationId: string | mongoose.Types.ObjectId;
   clientName: string;
   coachName: string;
@@ -63,7 +64,7 @@ export async function notifyBookingConfirmed(p: {
     type: 'system',
     title: 'New Booking Confirmed',
     body: `${p.clientName} booked a session on ${when}.`,
-    link: '/coaching/bookings',
+    link: '/booking',
     category: 'bookingConfirmed',
   });
 
@@ -74,7 +75,7 @@ export async function notifyBookingConfirmed(p: {
       type: 'system',
       title: 'Session Confirmed',
       body: `Your session with ${p.coachName} on ${when} is confirmed.`,
-      link: '/coaching/bookings',
+      link: coacheeLink(p.engagementId),
       category: 'bookingConfirmed',
     });
   }
@@ -83,6 +84,7 @@ export async function notifyBookingConfirmed(p: {
 export async function notifyBookingCancelled(p: {
   coachId: string | mongoose.Types.ObjectId;
   coacheeId?: string | mongoose.Types.ObjectId;
+  engagementId?: string | mongoose.Types.ObjectId;
   organizationId: string | mongoose.Types.ObjectId;
   clientName: string;
   coachName: string;
@@ -97,7 +99,7 @@ export async function notifyBookingCancelled(p: {
     type: 'system',
     title: 'Booking Cancelled',
     body: `Session with ${p.clientName} on ${when} was cancelled by ${p.cancelledBy}.`,
-    link: '/coaching/bookings',
+    link: '/booking',
     category: 'bookingCancelled',
   });
 
@@ -108,7 +110,7 @@ export async function notifyBookingCancelled(p: {
       type: 'system',
       title: 'Session Cancelled',
       body: `Your session with ${p.coachName} on ${when} has been cancelled.`,
-      link: '/coaching/bookings',
+      link: coacheeLink(p.engagementId),
       category: 'bookingCancelled',
     });
   }
@@ -117,6 +119,7 @@ export async function notifyBookingCancelled(p: {
 export async function notifyBookingRescheduled(p: {
   coachId: string | mongoose.Types.ObjectId;
   coacheeId?: string | mongoose.Types.ObjectId;
+  engagementId?: string | mongoose.Types.ObjectId;
   organizationId: string | mongoose.Types.ObjectId;
   clientName: string;
   coachName: string;
@@ -134,7 +137,7 @@ export async function notifyBookingRescheduled(p: {
       type: 'system',
       title: 'Booking Rescheduled',
       body: `Session with ${p.clientName} moved from ${from} to ${to}.`,
-      link: '/coaching/bookings',
+      link: '/booking',
       category: 'bookingRescheduled',
     });
   }
@@ -146,7 +149,7 @@ export async function notifyBookingRescheduled(p: {
       type: 'system',
       title: 'Session Rescheduled',
       body: `Your session with ${p.coachName} has been moved from ${from} to ${to}.`,
-      link: '/coaching/bookings',
+      link: coacheeLink(p.engagementId),
       category: 'bookingRescheduled',
     });
   }
@@ -154,6 +157,7 @@ export async function notifyBookingRescheduled(p: {
 
 export async function notifyBookingReminder(p: {
   coacheeId?: string | mongoose.Types.ObjectId;
+  engagementId?: string | mongoose.Types.ObjectId;
   organizationId: string | mongoose.Types.ObjectId;
   coachName: string;
   startTime: Date;
@@ -169,7 +173,7 @@ export async function notifyBookingReminder(p: {
     type: 'system',
     title: 'Session Reminder',
     body: `Your session with ${p.coachName} is ${label} (${when}).`,
-    link: '/coaching/bookings',
+    link: coacheeLink(p.engagementId),
     category: 'sessionReminders',
   });
 }
@@ -209,6 +213,10 @@ export async function notifyPostSessionForm(p: {
     link: p.intakeUrl,
     category: 'sessionForms',
   });
+}
+
+function coacheeLink(engagementId?: string | mongoose.Types.ObjectId): string {
+  return engagementId ? `/coaching/${engagementId}` : '/coaching';
 }
 
 function fmtDate(d: Date): string {

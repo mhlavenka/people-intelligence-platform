@@ -281,7 +281,7 @@ Two tabs:
 
 **`booking-page-editor.component.ts` / `.html` / `.scss`**
 
-- Form fields: Page title, description, slug (with live preview of URL: `app.pip.com/book/{slug}`)
+- Form fields: Page title, description, slug (with live preview of URL: `app.artes.com/book/{slug}`)
 - Session types manager: add/edit/delete session type cards inline
 - Custom questions builder: add question, set type (text/textarea/select), mark required
 - Confirmation type toggle: "Auto-confirm" vs "Manual approval"

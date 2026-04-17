@@ -1,56 +1,13 @@
 import crypto from 'crypto';
 import { calendar as calendarApi } from '@googleapis/calendar';
-import { OAuth2Client } from 'google-auth-library';
 import { config } from '../config/env';
-import { User } from '../models/User.model';
 import { BookingSettings } from '../models/BookingSettings.model';
 import { AvailabilityConfig } from '../models/AvailabilityConfig.model';
 import { Booking } from '../models/Booking.model';
 import { WebhookState } from '../models/WebhookState.model';
 import { cancelBooking, rescheduleBooking } from './booking.service';
 import { invalidateSlotCache } from './availability.service';
-
-// ─── OAuth client helper ────────────────────────────────────────────────────
-// Kept local to avoid a circular import back into booking.service.
-
-function createOAuth2Client() {
-  return new OAuth2Client(
-    config.oauth.google.clientId,
-    config.oauth.google.clientSecret,
-    config.oauth.google.calendarRedirectUri,
-  );
-}
-
-async function getAuthenticatedClient(coachId: string) {
-  const coach = await User.findById(coachId).select(
-    '+googleCalendar.accessToken +googleCalendar.refreshToken googleCalendar.connected googleCalendar.tokenExpiry',
-  );
-  if (!coach?.googleCalendar?.connected || !coach.googleCalendar.refreshToken) {
-    throw new Error('Google Calendar not connected');
-  }
-
-  const client = createOAuth2Client();
-  client.setCredentials({
-    access_token: coach.googleCalendar.accessToken,
-    refresh_token: coach.googleCalendar.refreshToken,
-    expiry_date: coach.googleCalendar.tokenExpiry?.getTime(),
-  });
-
-  const now = Date.now();
-  const expiry = coach.googleCalendar.tokenExpiry?.getTime() ?? 0;
-  if (now >= expiry - 60_000) {
-    const { credentials } = await client.refreshAccessToken();
-    client.setCredentials(credentials);
-    await User.findByIdAndUpdate(coachId, {
-      'googleCalendar.accessToken': credentials.access_token,
-      'googleCalendar.tokenExpiry': credentials.expiry_date
-        ? new Date(credentials.expiry_date)
-        : undefined,
-    });
-  }
-
-  return client;
-}
+import { getGoogleAuthenticatedClient } from './calendar';
 
 // ─── Target calendar resolution ─────────────────────────────────────────────
 
@@ -93,7 +50,7 @@ export async function registerGoogleWebhook(coachId: string): Promise<void> {
   // Stop the previous channel for this coach×calendar before creating a new one
   await stopGoogleWebhook(coachId, { silent: true });
 
-  const auth = await getAuthenticatedClient(coachId);
+  const auth = await getGoogleAuthenticatedClient(coachId);
   const calendar = calendarApi({ version: 'v3', auth });
 
   const channelId = `artes-${coachId}-${crypto.randomBytes(8).toString('hex')}`;
@@ -153,7 +110,7 @@ export async function stopGoogleWebhook(
 
   if (config.booking.webhooksEnabled) {
     try {
-      const auth = await getAuthenticatedClient(coachId);
+      const auth = await getGoogleAuthenticatedClient(coachId);
       const calendar = calendarApi({ version: 'v3', auth });
       await calendar.channels.stop({
         requestBody: { id: state.channelId, resourceId: state.resourceId },
@@ -252,7 +209,7 @@ export async function handleGoogleNotification(headers: {
   }> = [];
 
   try {
-    const auth = await getAuthenticatedClient(coachId);
+    const auth = await getGoogleAuthenticatedClient(coachId);
     const calendar = calendarApi({ version: 'v3', auth });
     const res = await calendar.events.list({
       calendarId: state.calendarId,

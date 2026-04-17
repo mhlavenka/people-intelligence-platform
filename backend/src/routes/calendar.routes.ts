@@ -116,13 +116,26 @@ router.get(
   requirePermission('MANAGE_CALENDAR'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
-      const user = await User.findById(req.user!.userId).select('googleCalendar');
+      const user = await User.findById(req.user!.userId).select('googleCalendar microsoftCalendar');
       const gc = user?.googleCalendar;
-      res.json({
-        connected: gc?.connected ?? false,
-        calendarId: gc?.calendarId ?? null,
-        calendarName: gc?.calendarName ?? null,
-      });
+      const mc = user?.microsoftCalendar;
+      if (gc?.connected) {
+        res.json({
+          connected: true,
+          provider: 'google',
+          calendarId: gc.calendarId ?? null,
+          calendarName: gc.calendarName ?? null,
+        });
+      } else if (mc?.connected) {
+        res.json({
+          connected: true,
+          provider: 'microsoft',
+          calendarId: mc.calendarId ?? null,
+          calendarName: mc.calendarName ?? null,
+        });
+      } else {
+        res.json({ connected: false, provider: null, calendarId: null, calendarName: null });
+      }
     } catch (e) { next(e); }
   },
 );

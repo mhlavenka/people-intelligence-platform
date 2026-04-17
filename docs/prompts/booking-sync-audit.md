@@ -208,7 +208,7 @@ Integration points that call `registerGoogleWebhook` when webhooks are enabled:
 - `startWebhookRenewalJob` — hourly cron; re-registers any channel expiring within 2 days
 
 Deployment checklist (when the vhost is ready):
-1. Point `https://pip.helenacoaching.com/api/webhooks/gcal` (or whichever public host maps to the artes backend) at PM2 `artes-backend:3030`.
+1. Point `https://artes.helenacoaching.com/api/webhooks/gcal` (or whichever public host maps to the artes backend) at PM2 `artes-backend:3030`.
 2. Set `BOOKING_WEBHOOKS_ENABLED=true` in the backend env.
 3. Set `PUBLIC_API_BASE_URL=https://<public-host>` so `webhookAddress()` registers the correct HTTPS URL with Google.
 4. Set `GOOGLE_WEBHOOK_SECRET` to any random string; this is echoed back by Google as `X-Goog-Channel-Token` and the handler verifies it.

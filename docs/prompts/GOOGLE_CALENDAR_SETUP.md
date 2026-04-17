@@ -11,7 +11,7 @@ Follow these steps to enable Google Calendar sync for coaches.
 5. Application type: **Web Application**
 6. Name: `ARTES`
 7. Authorized redirect URIs: add your callback URL:
-   - Production: `https://pip.helenacoaching.com/api/calendar/auth/google/callback`
+   - Production: `https://artes.helenacoaching.com/api/calendar/auth/google/callback`
    - Local dev: `http://localhost:3030/api/calendar/auth/google/callback`
 8. Copy the **Client ID** and **Client Secret**
 9. Enable Calndar API !!
@@ -32,7 +32,7 @@ Add to your `.env` file:
 ```
 GOOGLE_CLIENT_ID=your_client_id_here
 GOOGLE_CLIENT_SECRET=your_client_secret_here
-GOOGLE_CALENDAR_REDIRECT_URI=https://pip.helenacoaching.com/api/calendar/auth/google/callback
+GOOGLE_CALENDAR_REDIRECT_URI=https://artes.helenacoaching.com/api/calendar/auth/google/callback
 ```
 
 ## 4. How It Works

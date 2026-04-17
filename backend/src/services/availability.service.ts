@@ -1,12 +1,10 @@
 import { DateTime, Interval } from 'luxon';
 import NodeCache from 'node-cache';
-import { calendar as calendarApi } from '@googleapis/calendar';
-import { OAuth2Client } from 'google-auth-library';
 import { AvailabilityConfig, IAvailabilityConfig } from '../models/AvailabilityConfig.model';
 import { BookingSettings, IBookingSettings } from '../models/BookingSettings.model';
 import { Booking } from '../models/Booking.model';
 import { User } from '../models/User.model';
-import { config } from '../config/env';
+import { getCoachCalendarProvider } from './calendar';
 
 // ─── Cache ──────────────────────────────────────────────────────────────────
 
@@ -38,46 +36,7 @@ interface BusyPeriod {
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
-function createOAuth2Client() {
-  return new OAuth2Client(
-    config.oauth.google.clientId,
-    config.oauth.google.clientSecret,
-    config.oauth.google.calendarRedirectUri,
-  );
-}
-
-async function getAuthenticatedClient(coachId: string) {
-  const coach = await User.findById(coachId).select(
-    '+googleCalendar.accessToken +googleCalendar.refreshToken googleCalendar.connected googleCalendar.tokenExpiry',
-  );
-  if (!coach?.googleCalendar?.connected || !coach.googleCalendar.refreshToken) {
-    throw new Error('Google Calendar not connected');
-  }
-
-  const client = createOAuth2Client();
-  client.setCredentials({
-    access_token: coach.googleCalendar.accessToken,
-    refresh_token: coach.googleCalendar.refreshToken,
-    expiry_date: coach.googleCalendar.tokenExpiry?.getTime(),
-  });
-
-  const now = Date.now();
-  const expiry = coach.googleCalendar.tokenExpiry?.getTime() ?? 0;
-  if (now >= expiry - 60_000) {
-    const { credentials } = await client.refreshAccessToken();
-    client.setCredentials(credentials);
-    await User.findByIdAndUpdate(coachId, {
-      'googleCalendar.accessToken': credentials.access_token,
-      'googleCalendar.tokenExpiry': credentials.expiry_date
-        ? new Date(credentials.expiry_date)
-        : undefined,
-    });
-  }
-
-  return client;
-}
-
-async function fetchGoogleBusyPeriods(
+async function fetchCalendarBusyPeriods(
   coachId: string,
   calendarIds: string[],
   timeMin: string,
@@ -85,42 +44,17 @@ async function fetchGoogleBusyPeriods(
 ): Promise<BusyPeriod[]> {
   if (!calendarIds.length) return [];
 
-  // Google's freebusy API returns only BUSY periods by default — events marked
-  // as FREE (e.g. all-day placeholder events, availability blocks from other
-  // tools) are intentionally excluded. This matches Calendly's behavior: only
-  // BUSY events block availability. Do NOT add `timeZone` or any other option
-  // here that could alter this contract.
-  // Ref: calendar.freebusy.query returns `busy[]` containing periods where
-  // `transparency === 'opaque'`.
-  const uniqueIds = Array.from(new Set(calendarIds.filter(Boolean)));
-
   try {
-    const auth = await getAuthenticatedClient(coachId);
-    const calendar = calendarApi({ version: 'v3', auth });
-    const res = await calendar.freebusy.query({
-      requestBody: {
-        timeMin,
-        timeMax,
-        items: uniqueIds.map((id) => ({ id })),
-      },
-    });
+    const cp = await getCoachCalendarProvider(coachId);
+    if (!cp) return [];
 
-    const busyPeriods: BusyPeriod[] = [];
-    const calendars = res.data.calendars ?? {};
-    for (const calId of Object.keys(calendars)) {
-      const busy = calendars[calId]?.busy ?? [];
-      for (const b of busy) {
-        if (b.start && b.end) {
-          busyPeriods.push({
-            start: DateTime.fromISO(b.start, { zone: 'utc' }),
-            end: DateTime.fromISO(b.end, { zone: 'utc' }),
-          });
-        }
-      }
-    }
-    return busyPeriods;
+    const rawBusy = await cp.provider.queryFreebusy(coachId, calendarIds, timeMin, timeMax);
+    return rawBusy.map((b) => ({
+      start: DateTime.fromISO(b.start, { zone: 'utc' }),
+      end: DateTime.fromISO(b.end, { zone: 'utc' }),
+    }));
   } catch (err) {
-    console.error('[Availability] Failed to fetch Google busy periods:', err);
+    console.error('[Availability] Failed to fetch calendar busy periods:', err);
     return [];
   }
 }
@@ -287,12 +221,12 @@ export async function getAvailableSlots(
   const rangeStartUtc = freebusyFloor.toUTC().toISO()!;
   const rangeEndUtc = rangeEnd.toUTC().toISO()!;
 
-  const [googleBusy, bookingBusy] = await Promise.all([
-    fetchGoogleBusyPeriods(cfg.coachId.toString(), calendarIds, rangeStartUtc, rangeEndUtc),
+  const [calendarBusy, bookingBusy] = await Promise.all([
+    fetchCalendarBusyPeriods(cfg.coachId.toString(), calendarIds, rangeStartUtc, rangeEndUtc),
     fetchBookingBusyPeriods(cfg.coachId.toString(), rangeStart.toJSDate(), rangeEnd.toJSDate()),
   ]);
 
-  const allBusy = [...googleBusy, ...bookingBusy];
+  const allBusy = [...calendarBusy, ...bookingBusy];
 
   const available: AvailableSlot[] = [];
   for (const slot of candidates) {

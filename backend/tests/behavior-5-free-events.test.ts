@@ -5,7 +5,8 @@
  * We verify our code doesn't pass any option that would change that.
  */
 
-jest.mock('googleapis', () => require('./mocks/googleapis.mock'));
+jest.mock('@googleapis/calendar', () => require('./mocks/googleapis.mock'));
+jest.mock('google-auth-library', () => require('./mocks/googleapis.mock'));
 jest.mock('@aws-sdk/client-ses', () => require('./mocks/ses.mock'));
 jest.mock('node-cron', () => require('./mocks/node-cron.mock'));
 

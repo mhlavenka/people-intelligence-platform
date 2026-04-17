@@ -1,6 +1,7 @@
 /** BEHAVIOR 1 — Create booking writes GCal event */
 
-jest.mock('googleapis', () => require('./mocks/googleapis.mock'));
+jest.mock('@googleapis/calendar', () => require('./mocks/googleapis.mock'));
+jest.mock('google-auth-library', () => require('./mocks/googleapis.mock'));
 jest.mock('@aws-sdk/client-ses', () => require('./mocks/ses.mock'));
 jest.mock('node-cron', () => require('./mocks/node-cron.mock'));
 

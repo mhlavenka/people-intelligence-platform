@@ -52,6 +52,7 @@ export interface IUser extends Document {
   isCoachee: boolean;                       // true when this user is (or has been) in a coaching engagement — independent of their org role. An hr_manager being coached is role='hr_manager' + isCoachee=true; a purely external client is role='coachee' + isCoachee=true.
   canChooseCoach?: boolean;                  // per-user override for Organization.coacheeCanChooseCoach; undefined = inherit org default
   googleCalendar?: IGoogleCalendar;
+  microsoftCalendar?: IGoogleCalendar;
   notificationPreferences?: INotificationPreferences;
   createdAt: Date;
   updatedAt: Date;
@@ -119,6 +120,14 @@ const UserSchema = new Schema<IUser>(
     passkeys:      [PasskeyCredentialSchema],
     oauthAccounts: [OAuthAccountSchema],
     googleCalendar: {
+      connected:    { type: Boolean, default: false },
+      calendarId:   { type: String },
+      calendarName: { type: String },
+      accessToken:  { type: String, select: false },
+      refreshToken: { type: String, select: false },
+      tokenExpiry:  { type: Date },
+    },
+    microsoftCalendar: {
       connected:    { type: Boolean, default: false },
       calendarId:   { type: String },
       calendarName: { type: String },

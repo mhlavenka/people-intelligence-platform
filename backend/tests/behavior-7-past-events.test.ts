@@ -1,6 +1,7 @@
 /** BEHAVIOR 7 — Past events have no effect on availability / reminders */
 
-jest.mock('googleapis', () => require('./mocks/googleapis.mock'));
+jest.mock('@googleapis/calendar', () => require('./mocks/googleapis.mock'));
+jest.mock('google-auth-library', () => require('./mocks/googleapis.mock'));
 jest.mock('@aws-sdk/client-ses', () => require('./mocks/ses.mock'));
 jest.mock('node-cron', () => require('./mocks/node-cron.mock'));
 

@@ -1,0 +1,82 @@
+    Azure AD App Registration for Office 365 Calendar Integration
+
+    Step 1: Register the App
+
+    1. Go to https://portal.azure.com → Microsoft Entra ID (formerly Azure Active Directory) → App registrations → New
+    registration
+    2. Fill in:
+      - Name: ARTES Coaching Platform
+      - Supported account types: "Accounts in any organizational directory and personal Microsoft accounts" (multi-tenant +
+    personal)
+      - Redirect URI: Select Web, enter:
+      https://artes.helenacoaching.com/api/calendar/auth/microsoft/callback
+    3. Click Register
+
+    Step 2: Note the IDs
+
+    From the app's Overview page, copy:
+    - Application (client) ID → this is your MICROSOFT_CLIENT_ID
+    - Directory (tenant) ID → use common instead (since you selected multi-tenant)
+
+    Application (client) ID:     4ba1d158-dd57-4bb4-b977-d2fe37955bc4
+    Object ID:     f83c2fa0-12ec-4aa1-83f5-32b319c5b356
+    Directory (tenant) ID:     e638274c-1f59-40ed-83fe-afdfc9c186db
+
+
+
+    Step 3: Create a Client Secret
+
+    1. Go to Certificates & secrets → Client secrets → New client secret
+    2. Description: ARTES Production
+    3. Expiry: 24 months (set a calendar reminder to rotate before it expires)
+    4. Click Add, then immediately copy the Value — you won't see it again
+    5. This is your MICROSOFT_CLIENT_SECRET
+
+    REDACTED_SECRET
+    fdc083d1-d445-45db-87f7-d4b22cf9d510
+
+    Step 4: Configure API Permissions
+
+    1. Go to API permissions → Add a permission → Microsoft Graph → Delegated permissions
+    2. Add these scopes:
+      - Calendars.ReadWrite — create/update/delete events
+      - Calendars.Read — list calendars, freebusy
+      - User.Read — basic profile (email, name)
+      - offline_access — refresh token (long-lived access)
+    3. Click Add permissions
+    4. Do NOT click "Grant admin consent" — each coach will consent individually via OAuth
+
+    Step 5: Configure Token Settings (Optional but Recommended)
+
+    1. Go to Authentication
+    2. Under Implicit grant and hybrid flows, leave both checkboxes unchecked (we use authorization code flow, not implicit)
+    3. Under Advanced settings, set Allow public client flows to No
+
+    Step 6: Set Environment Variables on EC2
+
+    Add to your .env file on the server:
+
+    # Microsoft / Office 365 Calendar
+    MICROSOFT_CLIENT_ID=<Application (client) ID from Step 2>
+    MICROSOFT_CLIENT_SECRET=<Client secret Value from Step 3>
+    MICROSOFT_TENANT_ID=common
+    MICROSOFT_CALENDAR_REDIRECT_URI=https://artes.helenacoaching.com/api/calendar/auth/microsoft/callback
+
+    These first three are already defined in backend/src/config/env.ts (lines 35–39). You'll need to add
+    MICROSOFT_CALENDAR_REDIRECT_URI to the config during Phase 2 implementation.
+
+    Step 7: Webhook Notification URL (for Phase 2)
+
+    Microsoft Graph change notifications also require HTTPS. When we implement webhooks, the notification URL will be:
+
+    https://artes.helenacoaching.com/api/webhooks/outlook
+
+    Your existing Apache vhost already covers this via ProxyPass /api http://localhost:3030/api. No additional vhost changes
+    needed.
+
+    Verification Checklist
+
+    - App registered with multi-tenant + personal accounts
+    - Redirect URI set to https://artes.helenacoaching.com/api/calendar/auth/microsoft/callback
+    - Client secret created and copied
+    - API permissions: Calendars.ReadWrite, Calendars.Read, User.Read, offline_access

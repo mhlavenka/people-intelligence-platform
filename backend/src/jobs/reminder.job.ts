@@ -42,6 +42,7 @@ export function startReminderJob(): void {
             await sendReminder(booking, coachName, '24h');
             notifyBookingReminder({
               coacheeId: booking.coacheeId,
+              engagementId: booking.engagementId,
               organizationId: booking.organizationId,
               coachName,
               startTime: booking.startTime,
@@ -65,6 +66,7 @@ export function startReminderJob(): void {
             await sendReminder(booking, coachName, '1h');
             notifyBookingReminder({
               coacheeId: booking.coacheeId,
+              engagementId: booking.engagementId,
               organizationId: booking.organizationId,
               coachName,
               startTime: booking.startTime,

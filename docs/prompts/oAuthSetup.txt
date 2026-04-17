@@ -4,7 +4,7 @@
   2. Create a project (or select existing)
   3. APIs & Services > Credentials > Create Credentials > OAuth 2.0 Client ID
   4. Application type: Web application
-  5. Add Authorized redirect URI: https://pip.helenacoaching.com/auth/oauth/callback
+  5. Add Authorized redirect URI: https://artes.helenacoaching.com/auth/oauth/callback
   6. Copy the Client ID and Client Secret
   7. SSH into the server and add to /opt/apps/artes/backend/.env:
   GOOGLE_CLIENT_ID="xxxxx.apps.googleusercontent.com"
@@ -20,7 +20,7 @@
   2. New registration
     - Name: "ARTES"
     - Supported account types: Accounts in any organizational directory (multi-tenant) or single tenant
-    - Redirect URI: Web > https://pip.helenacoaching.com/auth/oauth/callback
+    - Redirect URI: Web > https://artes.helenacoaching.com/auth/oauth/callback
   3. From the app's Overview, copy the Application (client) ID
   4. Go to Certificates & secrets > New client secret — copy the Value
   5. SSH into the server and add to /opt/apps/artes/backend/.env:

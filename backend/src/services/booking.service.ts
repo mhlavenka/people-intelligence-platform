@@ -1,7 +1,5 @@
 import jwt from 'jsonwebtoken';
 import { DateTime } from 'luxon';
-import { calendar as calendarApi } from '@googleapis/calendar';
-import { OAuth2Client } from 'google-auth-library';
 import { config } from '../config/env';
 import { AvailabilityConfig } from '../models/AvailabilityConfig.model';
 import { BookingSettings } from '../models/BookingSettings.model';
@@ -23,6 +21,7 @@ import {
   propagateBookingReschedule,
 } from './bookingCoachingSync.service';
 import { CoachingSession } from '../models/CoachingSession.model';
+import { getCoachCalendarProvider, getGoogleAuthenticatedClient } from './calendar';
 
 const DEFAULT_RESCHEDULE_DEADLINE_HOURS = 24;
 
@@ -40,44 +39,8 @@ function isWithinDeadline(startTime: Date, deadlineHours: number): boolean {
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
-function createOAuth2Client() {
-  return new OAuth2Client(
-    config.oauth.google.clientId,
-    config.oauth.google.clientSecret,
-    config.oauth.google.calendarRedirectUri,
-  );
-}
-
-export async function getAuthenticatedClient(coachId: string) {
-  const coach = await User.findById(coachId).select(
-    '+googleCalendar.accessToken +googleCalendar.refreshToken',
-  );
-  if (!coach?.googleCalendar?.connected || !coach.googleCalendar.refreshToken) {
-    throw new Error('Google Calendar not connected');
-  }
-
-  const client = createOAuth2Client();
-  client.setCredentials({
-    access_token: coach.googleCalendar.accessToken,
-    refresh_token: coach.googleCalendar.refreshToken,
-    expiry_date: coach.googleCalendar.tokenExpiry?.getTime(),
-  });
-
-  const now = Date.now();
-  const expiry = coach.googleCalendar.tokenExpiry?.getTime() ?? 0;
-  if (now >= expiry - 60_000) {
-    const { credentials } = await client.refreshAccessToken();
-    client.setCredentials(credentials);
-    await User.findByIdAndUpdate(coachId, {
-      'googleCalendar.accessToken': credentials.access_token,
-      'googleCalendar.tokenExpiry': credentials.expiry_date
-        ? new Date(credentials.expiry_date)
-        : undefined,
-    });
-  }
-
-  return client;
-}
+// Re-exported for booking-import.controller.ts backward compat
+export { getGoogleAuthenticatedClient as getAuthenticatedClient } from './calendar';
 
 class SlotUnavailableError extends Error {
   statusCode = 409;
@@ -95,7 +58,6 @@ async function isSlotFree(
   start: Date,
   end: Date,
 ): Promise<boolean> {
-  // Check existing bookings first
   const existingBooking = await Booking.findOne({
     coachId,
     status: 'confirmed',
@@ -105,26 +67,17 @@ async function isSlotFree(
 
   if (existingBooking) return false;
 
-  // Check Google Calendar
   if (calendarIds.length) {
     try {
-      const auth = await getAuthenticatedClient(coachId);
-      const calendar = calendarApi({ version: 'v3', auth });
-      const res = await calendar.freebusy.query({
-        requestBody: {
-          timeMin: start.toISOString(),
-          timeMax: end.toISOString(),
-          items: calendarIds.map((id) => ({ id })),
-        },
-      });
-
-      const calendars = res.data.calendars ?? {};
-      for (const calId of Object.keys(calendars)) {
-        if ((calendars[calId]?.busy ?? []).length > 0) return false;
+      const cp = await getCoachCalendarProvider(coachId);
+      if (cp) {
+        const busy = await cp.provider.queryFreebusy(
+          coachId, calendarIds, start.toISOString(), end.toISOString(),
+        );
+        if (busy.length > 0) return false;
       }
     } catch (err) {
-      console.error('[Booking] Failed to check Google freebusy:', err);
-      // Continue — don't block booking if Google API fails
+      console.error('[Booking] Failed to check calendar freebusy:', err);
     }
   }
 
@@ -149,9 +102,7 @@ export async function createBooking(
     .setOptions({ bypassTenantCheck: true });
   if (!cfg) throw Object.assign(new Error('Booking not available'), { statusCode: 404 });
 
-  const coach = await User.findById(cfg.coachId).select(
-    'firstName lastName email +googleCalendar.accessToken +googleCalendar.refreshToken googleCalendar.connected googleCalendar.tokenExpiry googleCalendar.calendarId',
-  );
+  const coach = await User.findById(cfg.coachId).select('firstName lastName email');
   if (!coach) throw Object.assign(new Error('Coach not found'), { statusCode: 404 });
 
   // Load shared calendar settings
@@ -165,8 +116,6 @@ export async function createBooking(
   const startTime = new Date(data.startTime);
   const endTime = new Date(data.endTime);
 
-  // Race condition protection: re-check availability.
-  // B8: always include targetCalendarId, dedup against conflictCalendarIds.
   const calendarIds = Array.from(
     new Set(
       [targetCalendarId, ...(conflictCalendarIds || [])].filter(Boolean) as string[],
@@ -175,56 +124,25 @@ export async function createBooking(
   const slotFree = await isSlotFree(cfg.coachId.toString(), calendarIds, startTime, endTime);
   if (!slotFree) throw new SlotUnavailableError();
 
-  // Create Google Calendar event
+  // Create calendar event via provider
   let googleEventId: string | undefined;
   let googleMeetLink: string | undefined;
 
-  if (coach.googleCalendar?.connected && targetCalendarId) {
+  const cp = await getCoachCalendarProvider(cfg.coachId.toString());
+  if (cp && targetCalendarId) {
     try {
-      const auth = await getAuthenticatedClient(cfg.coachId.toString());
-      const calendar = calendarApi({ version: 'v3', auth });
-
-      const event: Record<string, unknown> = {
+      const result = await cp.provider.createEvent(cfg.coachId.toString(), targetCalendarId, {
         summary: `${cfg.name || 'Coaching Session'} — ${data.clientName}`,
         description: data.topic || 'Coaching session booked via ARTES',
-        start: { dateTime: startTime.toISOString() },
-        end: { dateTime: endTime.toISOString() },
-        attendees: [
-          { email: data.clientEmail },
-          { email: coach.email },
-        ],
-        reminders: {
-          useDefault: false,
-          overrides: [
-            { method: 'email', minutes: 1440 },
-            { method: 'popup', minutes: 30 },
-          ],
-        },
-      };
-
-      if (cfg.googleMeetEnabled) {
-        event.conferenceData = {
-          createRequest: {
-            requestId: `artes-booking-${Date.now()}`,
-            conferenceSolutionKey: { type: 'hangoutsMeet' },
-          },
-        };
-      }
-
-      const res = await calendar.events.insert({
-        calendarId: targetCalendarId,
-        requestBody: event,
-        conferenceDataVersion: cfg.googleMeetEnabled ? 1 : 0,
-        sendUpdates: 'none',
+        startTime,
+        endTime,
+        attendeeEmail: data.clientEmail,
+        enableVideoConference: cfg.googleMeetEnabled,
       });
-
-      googleEventId = res.data.id ?? undefined;
-      googleMeetLink = res.data.conferenceData?.entryPoints?.find(
-        (ep) => ep.entryPointType === 'video',
-      )?.uri ?? undefined;
+      googleEventId = result.eventId;
+      googleMeetLink = result.meetLink;
     } catch (err) {
-      console.error('[Booking] Failed to create Google Calendar event:', err);
-      // Continue — save booking even if calendar creation fails
+      console.error('[Booking] Failed to create calendar event:', err);
     }
   }
 
@@ -270,6 +188,7 @@ export async function createBooking(
   notifyBookingConfirmed({
     coachId: booking.coachId,
     coacheeId: booking.coacheeId,
+    engagementId: booking.engagementId,
     organizationId: booking.organizationId,
     clientName: booking.clientName,
     coachName,
@@ -290,39 +209,27 @@ export async function cancelBooking(
     throw Object.assign(new Error('Booking is not active'), { statusCode: 400 });
   }
 
-  // Delete/cancel Google Calendar event. Idempotent: a 404 from Google means
-  // the event was already removed (e.g. the coach deleted it manually in GCal,
-  // which itself triggered this cancellation via webhook). Never let a GCal
-  // failure block the MongoDB update — the booking must still be cancelled locally.
   if (!booking.googleEventId) {
-    console.warn(`[Booking] Booking ${booking._id} has no googleEventId — skipping GCal delete`);
+    console.warn(`[Booking] Booking ${booking._id} has no calendarEventId — skipping delete`);
   } else {
-    const coach = await User.findById(booking.coachId).select(
-      '+googleCalendar.accessToken +googleCalendar.refreshToken googleCalendar.connected googleCalendar.tokenExpiry googleCalendar.calendarId',
-    );
     const shared = await BookingSettings.findOne({ coachId: booking.coachId })
       .setOptions({ bypassTenantCheck: true });
-    const cfg = await AvailabilityConfig.findOne({ coachId: booking.coachId })
+    const cfgDel = await AvailabilityConfig.findOne({ coachId: booking.coachId })
       .setOptions({ bypassTenantCheck: true });
-    const calId = shared?.targetCalendarId || cfg?.targetCalendarId;
+    const calId = shared?.targetCalendarId || cfgDel?.targetCalendarId;
+    const cp = await getCoachCalendarProvider(booking.coachId.toString());
 
-    if (coach?.googleCalendar?.connected && calId) {
+    if (cp && calId) {
       try {
-        const auth = await getAuthenticatedClient(booking.coachId.toString());
-        const calendar = calendarApi({ version: 'v3', auth });
-        await calendar.events.delete({
-          calendarId: calId,
-          eventId: booking.googleEventId,
-          sendUpdates: 'none',
-        });
+        await cp.provider.deleteEvent(booking.coachId.toString(), calId, booking.googleEventId);
       } catch (err) {
         const code = (err as { code?: number })?.code;
         if (code === 404 || code === 410) {
           console.info(
-            `[Booking] GCal event ${booking.googleEventId} already gone (${code}) — skipping`,
+            `[Booking] Calendar event ${booking.googleEventId} already gone (${code}) — skipping`,
           );
         } else {
-          console.error(`[Booking] Failed to delete GCal event ${booking.googleEventId}:`, err);
+          console.error(`[Booking] Failed to delete calendar event ${booking.googleEventId}:`, err);
         }
       }
     }
@@ -369,6 +276,7 @@ export async function cancelBooking(
     notifyBookingCancelled({
       coachId: booking.coachId,
       coacheeId: booking.coacheeId,
+      engagementId: booking.engagementId,
       organizationId: booking.organizationId,
       clientName: booking.clientName,
       coachName,
@@ -421,38 +329,28 @@ export async function rescheduleBooking(
 
   const oldStartTime = booking.startTime;
 
-  // Update GCal event only when the change didn't originate there.
   if (triggeredBy !== 'coach_gcal' && booking.googleEventId) {
-    const coach = await User.findById(booking.coachId).select(
-      '+googleCalendar.accessToken +googleCalendar.refreshToken googleCalendar.connected googleCalendar.tokenExpiry',
-    );
     const shared = await BookingSettings.findOne({ coachId: booking.coachId })
       .setOptions({ bypassTenantCheck: true });
-    const cfg = await AvailabilityConfig.findOne({ coachId: booking.coachId })
+    const cfgResc = await AvailabilityConfig.findOne({ coachId: booking.coachId })
       .setOptions({ bypassTenantCheck: true });
-    const calId = shared?.targetCalendarId || cfg?.targetCalendarId;
+    const calId = shared?.targetCalendarId || cfgResc?.targetCalendarId;
+    const cp = await getCoachCalendarProvider(booking.coachId.toString());
 
-    if (coach?.googleCalendar?.connected && calId) {
+    if (cp && calId) {
       try {
-        const auth = await getAuthenticatedClient(booking.coachId.toString());
-        const calendar = calendarApi({ version: 'v3', auth });
-        await calendar.events.patch({
-          calendarId: calId,
-          eventId: booking.googleEventId,
-          requestBody: {
-            start: { dateTime: newStartTime.toISOString() },
-            end: { dateTime: newEndTime.toISOString() },
-          },
-          sendUpdates: 'none',
+        await cp.provider.updateEvent(booking.coachId.toString(), calId, booking.googleEventId, {
+          startTime: newStartTime,
+          endTime: newEndTime,
         });
       } catch (err) {
         const code = (err as { code?: number })?.code;
         if (code === 404 || code === 410) {
           console.warn(
-            `[Booking] GCal event ${booking.googleEventId} gone during reschedule — continuing`,
+            `[Booking] Calendar event ${booking.googleEventId} gone during reschedule — continuing`,
           );
         } else {
-          console.error(`[Booking] Failed to patch GCal event ${booking.googleEventId}:`, err);
+          console.error(`[Booking] Failed to update calendar event ${booking.googleEventId}:`, err);
         }
       }
     }
@@ -502,6 +400,7 @@ export async function rescheduleBooking(
     notifyBookingRescheduled({
       coachId: booking.coachId,
       coacheeId: booking.coacheeId,
+      engagementId: booking.engagementId,
       organizationId: booking.organizationId,
       clientName: booking.clientName,
       coachName,

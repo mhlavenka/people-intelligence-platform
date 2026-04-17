@@ -1,5 +1,6 @@
 /**
- * googleapis mock. The individual method mocks are exported so tests can
+ * @googleapis/calendar + google-auth-library mock.
+ * The individual method mocks are exported so tests can
  * assert / configure them. Reset between tests via `resetGoogleMocks()`.
  */
 
@@ -17,12 +18,16 @@ export const calendarMock = {
   freebusy: {
     query: jest.fn(),
   },
+  calendarList: {
+    list: jest.fn().mockResolvedValue({ data: { items: [] } }),
+  },
 };
 
 export function resetGoogleMocks(): void {
   Object.values(calendarMock.events).forEach((fn) => (fn as jest.Mock).mockReset());
   (calendarMock.channels.stop as jest.Mock).mockReset();
   (calendarMock.freebusy.query as jest.Mock).mockReset();
+  (calendarMock.calendarList.list as jest.Mock).mockReset();
 
   calendarMock.events.insert.mockResolvedValue({
     data: { id: 'gcal-event-id', conferenceData: null },
@@ -35,19 +40,27 @@ export function resetGoogleMocks(): void {
   });
   calendarMock.channels.stop.mockResolvedValue({ data: {} });
   calendarMock.freebusy.query.mockResolvedValue({ data: { calendars: {} } });
+  calendarMock.calendarList.list.mockResolvedValue({ data: { items: [] } });
 }
 
-export const google = {
-  auth: {
-    OAuth2: jest.fn().mockImplementation(() => ({
-      setCredentials: jest.fn(),
-      refreshAccessToken: jest.fn().mockResolvedValue({
-        credentials: {
-          access_token: 'fake-new-access',
-          expiry_date: Date.now() + 3600_000,
-        },
-      }),
-    })),
-  },
-  calendar: jest.fn(() => calendarMock),
-};
+// Mock for @googleapis/calendar
+export const calendar = jest.fn(() => calendarMock);
+
+// Mock for google-auth-library
+export const OAuth2Client = jest.fn().mockImplementation(() => ({
+  generateAuthUrl: jest.fn().mockReturnValue('https://mock-auth-url'),
+  getToken: jest.fn().mockResolvedValue({
+    tokens: {
+      access_token: 'fake-access',
+      refresh_token: 'fake-refresh',
+      expiry_date: Date.now() + 3600_000,
+    },
+  }),
+  setCredentials: jest.fn(),
+  refreshAccessToken: jest.fn().mockResolvedValue({
+    credentials: {
+      access_token: 'fake-new-access',
+      expiry_date: Date.now() + 3600_000,
+    },
+  }),
+}));
