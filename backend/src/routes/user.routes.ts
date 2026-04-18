@@ -67,7 +67,7 @@ router.put('/me', async (req: AuthRequest, res: Response, next: NextFunction) =>
     const { firstName, lastName, bio, publicSlug, preferredLanguage } = req.body;
     const update: Record<string, unknown> = { firstName, lastName };
     if (preferredLanguage !== undefined) {
-      if (['en', 'fr'].includes(preferredLanguage)) {
+      if (['en', 'fr', 'es'].includes(preferredLanguage)) {
         update['preferredLanguage'] = preferredLanguage;
       }
     }

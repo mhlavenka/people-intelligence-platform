@@ -113,8 +113,8 @@ const DEFAULT_SETTINGS: Settings = {
                   <mat-icon>{{ n.icon }}</mat-icon>
                 </div>
                 <div class="toggle-info">
-                  <div class="toggle-label">{{ n.label }}</div>
-                  <div class="toggle-desc">{{ n.description }}</div>
+                  <div class="toggle-label">{{ n.labelKey | translate }}</div>
+                  <div class="toggle-desc">{{ n.descKey | translate }}</div>
                 </div>
                 <mat-slide-toggle
                   color="primary"
@@ -135,8 +135,8 @@ const DEFAULT_SETTINGS: Settings = {
                   <mat-icon>{{ n.icon }}</mat-icon>
                 </div>
                 <div class="toggle-info">
-                  <div class="toggle-label">{{ n.label }}</div>
-                  <div class="toggle-desc">{{ n.description }}</div>
+                  <div class="toggle-label">{{ n.labelKey | translate }}</div>
+                  <div class="toggle-desc">{{ n.descKey | translate }}</div>
                 </div>
                 <mat-slide-toggle
                   color="primary"
@@ -192,6 +192,7 @@ const DEFAULT_SETTINGS: Settings = {
                             (ngModelChange)="changeLanguage($event)">
                   <mat-option value="en">English</mat-option>
                   <mat-option value="fr">Fran\u00e7ais</mat-option>
+                  <mat-option value="es">Español</mat-option>
                 </mat-select>
               </mat-form-field>
 
@@ -354,17 +355,17 @@ export class SettingsComponent implements OnInit {
   testEmailControl = new FormControl('', [Validators.required, Validators.email]);
 
   bookingNotificationItems = [
-    { key: 'bookingConfirmed',   label: 'Booking confirmed',       description: 'Email when a booking is confirmed',                              icon: 'event_available',iconClass: 'green' },
-    { key: 'bookingCancelled',   label: 'Booking cancelled',       description: 'Email when a booking is cancelled',                              icon: 'event_busy',     iconClass: 'red' },
-    { key: 'bookingRescheduled', label: 'Booking rescheduled',     description: 'Email when a booking is rescheduled',                            icon: 'event_repeat',   iconClass: 'orange' },
-    { key: 'sessionReminders',   label: 'Session reminders',       description: 'Email reminders 24h and 1h before sessions',                    icon: 'alarm',          iconClass: 'blue' },
+    { key: 'bookingConfirmed',   labelKey: 'SETTINGS.notif.bookingConfirmed',   descKey: 'SETTINGS.notif.bookingConfirmedDesc',   icon: 'event_available',iconClass: 'green' },
+    { key: 'bookingCancelled',   labelKey: 'SETTINGS.notif.bookingCancelled',   descKey: 'SETTINGS.notif.bookingCancelledDesc',   icon: 'event_busy',     iconClass: 'red' },
+    { key: 'bookingRescheduled', labelKey: 'SETTINGS.notif.bookingRescheduled', descKey: 'SETTINGS.notif.bookingRescheduledDesc', icon: 'event_repeat',   iconClass: 'orange' },
+    { key: 'sessionReminders',   labelKey: 'SETTINGS.notif.sessionReminders',   descKey: 'SETTINGS.notif.sessionRemindersDesc',   icon: 'alarm',          iconClass: 'blue' },
   ];
 
   otherNotificationItems = [
-    { key: 'sessionScheduled',   label: 'Session scheduled',       description: 'Notify when a coaching session is created or assigned to you',   icon: 'event_note',     iconClass: 'green' },
-    { key: 'sessionForms',       label: 'Session forms',           description: 'Notify when pre-session or post-session forms are ready',        icon: 'assignment',     iconClass: 'navy' },
-    { key: 'engagementCreated',  label: 'New engagement',          description: 'Notify when a coach starts a coaching engagement with you',      icon: 'handshake',      iconClass: 'blue' },
-    { key: 'directMessages',     label: 'Direct messages',         description: 'Notify when someone sends you a message in the hub',             icon: 'mail',           iconClass: 'navy' },
+    { key: 'sessionScheduled',   labelKey: 'SETTINGS.notif.sessionScheduled',   descKey: 'SETTINGS.notif.sessionScheduledDesc',   icon: 'event_note',     iconClass: 'green' },
+    { key: 'sessionForms',       labelKey: 'SETTINGS.notif.sessionForms',       descKey: 'SETTINGS.notif.sessionFormsDesc',       icon: 'assignment',     iconClass: 'navy' },
+    { key: 'engagementCreated',  labelKey: 'SETTINGS.notif.engagementCreated',  descKey: 'SETTINGS.notif.engagementCreatedDesc',  icon: 'handshake',      iconClass: 'blue' },
+    { key: 'directMessages',     labelKey: 'SETTINGS.notif.directMessages',     descKey: 'SETTINGS.notif.directMessagesDesc',     icon: 'mail',           iconClass: 'navy' },
   ];
 
   timezones = [

@@ -139,7 +139,7 @@ const UserSchema = new Schema<IUser>(
     },
     preferredLanguage: {
       type: String,
-      enum: ['en', 'fr'],
+      enum: ['en', 'fr', 'es'],
     },
     notificationPreferences: {
       sessionScheduled:   { type: Boolean, default: true },

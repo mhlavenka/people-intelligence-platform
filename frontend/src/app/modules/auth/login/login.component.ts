@@ -299,6 +299,7 @@ const MODULE_SLIDES: ModuleSlide[] = [
         <div class="lang-switcher">
           <button class="lang-btn" [class.active]="translate.currentLang === 'en'" (click)="switchLang('en')">EN</button>
           <button class="lang-btn" [class.active]="translate.currentLang === 'fr'" (click)="switchLang('fr')">FR</button>
+          <button class="lang-btn" [class.active]="translate.currentLang === 'es'" (click)="switchLang('es')">ES</button>
         </div>
         @if (!twoFactorStep()) {
           <!-- Step 1: email + password -->

@@ -9,7 +9,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatDialog } from '@angular/material/dialog';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AuthService } from '../../../core/auth.service';
 import { ApiService } from '../../../core/api.service';
 import { ThemeService, OrgTheme } from '../../../core/theme.service';
@@ -21,6 +21,7 @@ interface OrgInfo {
   theme?: OrgTheme;
   modules?: string[];
   logoUrl?: string;
+  defaultLanguage?: string;
 }
 
 import { AppRole } from '../../../core/auth.service';
@@ -699,6 +700,7 @@ export class AppShellComponent implements OnInit, OnDestroy {
     private router: Router,
     private api: ApiService,
     private themeService: ThemeService,
+    private translateService: TranslateService,
     private dialog: MatDialog,
     private orgCtx: OrgContextService,
   ) {}
@@ -726,6 +728,15 @@ export class AppShellComponent implements OnInit, OnDestroy {
         this.orgName.set(org.name);
         this.orgLogo.set(org.logoUrl || '');
         this.themeService.apply(org.theme);
+
+        // Apply language: user preference > org default > current
+        const userLang = this.authService.currentUser()?.preferredLanguage;
+        const orgLang = org.defaultLanguage;
+        const effectiveLang = userLang || orgLang || 'en';
+        if (effectiveLang !== this.translateService.currentLang) {
+          this.translateService.use(effectiveLang);
+          localStorage.setItem('artes_language', effectiveLang);
+        }
       },
       error: () => {},
     });

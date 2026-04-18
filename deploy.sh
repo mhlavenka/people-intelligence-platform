@@ -67,6 +67,19 @@ echo "════════════════════════�
 echo "  ARTES Deploy  —  target: $TARGET"
 echo "═══════════════════════════════════════════════════════"
 
+# Pre-deploy: check translations are in sync
+step "Checking translation files…"
+if node scripts/check-translations.js; then
+  ok "Translations in sync"
+else
+  echo ""
+  read -rp "   Translation check failed. Deploy anyway? (y/N) " ans
+  if [[ "$ans" != "y" && "$ans" != "Y" ]]; then
+    echo "   Aborted."
+    exit 1
+  fi
+fi
+
 case "$TARGET" in
   frontend) deploy_frontend ;;
   backend)  deploy_backend  ;;
