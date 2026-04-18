@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import { Component, OnInit, signal, computed, inject, OnDestroy } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
@@ -7,7 +7,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { Subscription } from 'rxjs';
 import { ApiService } from '../../../core/api.service';
 import { AuthService, AppRole } from '../../../core/auth.service';
 import { OrgContextService } from '../../../core/org-context.service';
@@ -264,10 +265,12 @@ interface ModuleCard {
     .upcoming-type { color: var(--artes-accent); font-weight: 500; }
   `],
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private api = inject(ApiService);
   private bookingSvc = inject(BookingService);
+  private translateSvc = inject(TranslateService);
+  private langSub?: Subscription;
   orgCtx = inject(OrgContextService);
 
   firstName = signal('');
@@ -299,63 +302,64 @@ export class DashboardComponent implements OnInit {
 
 
   private defaultCards(): ModuleCard[] {
+    const t = (key: string) => this.translateSvc.instant(key);
     return [
       {
-        title: 'Conflict Intelligence\u2122',
-        subtitle: 'Workplace conflict detection and mediation escalation',
+        title: t('DASHBOARD.conflictTitle'),
+        subtitle: t('DASHBOARD.conflictSubtitle'),
         icon: 'warning_amber',
         color: 'linear-gradient(135deg, #e86c3a, #e53e3e)',
         route: '/conflict',
         metric: null,
-        metricLabel: 'active analyses',
+        metricLabel: t('DASHBOARD.activeAnalyses'),
         status: 'active',
         module: 'conflict',
         roles: ['admin', 'hr_manager', 'manager', 'coach'],
       },
       {
-        title: 'Neuro-Inclusion Compass\u2122',
-        subtitle: 'Organizational neuroinclusion maturity assessment',
+        title: t('DASHBOARD.neuroTitle'),
+        subtitle: t('DASHBOARD.neuroSubtitle'),
         icon: 'psychology',
         color: 'linear-gradient(135deg, #27C4A0, #1a9678)',
         route: '/neuroinclusion',
         metric: null,
-        metricLabel: 'avg maturity score',
+        metricLabel: t('DASHBOARD.avgMaturityScore'),
         status: 'active',
         module: 'neuroinclusion',
         roles: ['admin', 'hr_manager', 'manager'],
       },
       {
-        title: 'Leadership & Succession Hub\u2122',
-        subtitle: 'AI-generated IDPs and succession planning',
+        title: t('DASHBOARD.successionTitle'),
+        subtitle: t('DASHBOARD.successionSubtitle'),
         icon: 'trending_up',
         color: 'linear-gradient(135deg, #3A9FD6, #2080b0)',
         route: '/succession',
         metric: null,
-        metricLabel: 'active IDPs',
+        metricLabel: t('DASHBOARD.activeIDPs'),
         status: 'active',
         module: 'succession',
         roles: ['admin', 'hr_manager', 'coach', 'coachee'],
       },
       {
-        title: 'Coaching',
-        subtitle: 'Manage coaching engagements and sessions',
+        title: t('DASHBOARD.coachingTitle'),
+        subtitle: t('DASHBOARD.coachingSubtitle'),
         icon: 'psychology_alt',
         color: 'linear-gradient(135deg, #7c5cbf, #5a3ea0)',
         route: '/coaching',
         metric: null,
-        metricLabel: 'active engagements',
+        metricLabel: t('DASHBOARD.activeEngagements'),
         status: 'active',
         module: 'coaching',
         roles: ['admin', 'hr_manager', 'coach', 'coachee'],
       },
       {
-        title: 'Intakes',
-        subtitle: 'Active intake templates and responses collected',
+        title: t('DASHBOARD.intakesTitle'),
+        subtitle: t('DASHBOARD.intakesSubtitle'),
         icon: 'assignment',
         color: 'linear-gradient(135deg, #9aa5b4, #5a6a7e)',
         route: '/intakes',
         metric: null,
-        metricLabel: 'responses collected',
+        metricLabel: t('DASHBOARD.responsesCollected'),
         status: 'active',
         roles: ['admin', 'hr_manager', 'coach'],
       },
@@ -378,7 +382,7 @@ export class DashboardComponent implements OnInit {
       }
       if (card.route === '/intakes') {
         const { responses, activeSurveys } = stats.surveys;
-        return { ...card, metric: String(activeSurveys), metricLabel: `active intakes \u00b7 ${responses} responses` };
+        return { ...card, metric: String(activeSurveys), metricLabel: this.translateSvc.instant('DASHBOARD.activeIntakesResponses', { responses }) };
       }
       return card;
     }));
@@ -387,6 +391,10 @@ export class DashboardComponent implements OnInit {
   ngOnInit(): void {
     const user = this.authService.currentUser();
     if (user) this.firstName.set(user.firstName);
+
+    this.langSub = this.translateSvc.onLangChange.subscribe(() => {
+      this.moduleCards.set(this.defaultCards());
+    });
 
     if (this.showUpcoming()) {
       this.bookingSvc.getBookings('upcoming', 1, 10).subscribe({
@@ -405,5 +413,9 @@ export class DashboardComponent implements OnInit {
       next: (stats) => this.applyStats(stats),
       error: () => {},
     });
+  }
+
+  ngOnDestroy(): void {
+    this.langSub?.unsubscribe();
   }
 }

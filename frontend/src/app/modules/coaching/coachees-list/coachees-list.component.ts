@@ -13,7 +13,7 @@ import { MatTableModule } from '@angular/material/table';
 import { ApiService } from '../../../core/api.service';
 import { AvatarComponent } from '../../../shared/avatar/avatar.component';
 
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 type EngagementStatus = 'prospect' | 'contracted' | 'active' | 'paused' | 'completed' | 'alumni';
 type FilterKey = 'all' | EngagementStatus | 'none';
 
@@ -56,14 +56,14 @@ interface Row {
   sessionsPurchased: number;
 }
 
-const STATUS_LABEL: Record<EngagementStatus | 'none', string> = {
-  prospect:   'Prospect',
-  contracted: 'Contracted',
-  active:     'Active',
-  paused:     'Paused',
-  completed:  'Completed',
-  alumni:     'Alumni',
-  none:       'No engagement',
+const STATUS_LABEL_KEY: Record<EngagementStatus | 'none', string> = {
+  prospect:   'COACHING.prospect',
+  contracted: 'COACHING.contracted',
+  active:     'COACHING.active',
+  paused:     'COACHING.paused',
+  completed:  'COACHING.completed',
+  alumni:     'COACHING.alumni',
+  none:       'COACHING.noEngagement',
 };
 
 const STATUS_COLOR: Record<EngagementStatus | 'none', string> = {
@@ -125,7 +125,7 @@ const STATUS_PRIORITY: EngagementStatus[] = ['active', 'contracted', 'prospect',
         <mat-form-field appearance="outline" class="search">
           <mat-icon matPrefix>search</mat-icon>
           <input matInput type="search" [ngModel]="search()" (ngModelChange)="search.set($event)"
-                 placeholder="Search name, email or department" />
+                 [placeholder]="'COACHING.searchPlaceholder' | translate" />
         </mat-form-field>
 
         @if (!filtered().length) {
@@ -138,7 +138,7 @@ const STATUS_PRIORITY: EngagementStatus[] = ['active', 'contracted', 'prospect',
             <table mat-table [dataSource]="filtered()" class="coachees-table">
 
               <ng-container matColumnDef="name">
-                <th mat-header-cell *matHeaderCellDef>Name</th>
+                <th mat-header-cell *matHeaderCellDef>{{ 'COACHING.nameColumn' | translate }}</th>
                 <td mat-cell *matCellDef="let r">
                   <div class="name-cell">
                     <app-avatar [firstName]="r.firstName" [lastName]="r.lastName" [profilePicture]="r.profilePicture || ''" [size]="36" />
@@ -151,12 +151,12 @@ const STATUS_PRIORITY: EngagementStatus[] = ['active', 'contracted', 'prospect',
               </ng-container>
 
               <ng-container matColumnDef="email">
-                <th mat-header-cell *matHeaderCellDef>Email</th>
+                <th mat-header-cell *matHeaderCellDef>{{ 'COACHING.emailColumn' | translate }}</th>
                 <td mat-cell *matCellDef="let r" class="muted">{{ r.email }}</td>
               </ng-container>
 
               <ng-container matColumnDef="status">
-                <th mat-header-cell *matHeaderCellDef>Status</th>
+                <th mat-header-cell *matHeaderCellDef>{{ 'COACHING.statusColumn' | translate }}</th>
                 <td mat-cell *matCellDef="let r">
                   <span class="status-chip"
                         [style.background]="statusColor(r.primaryStatus) + '22'"
@@ -167,7 +167,7 @@ const STATUS_PRIORITY: EngagementStatus[] = ['active', 'contracted', 'prospect',
               </ng-container>
 
               <ng-container matColumnDef="sponsor">
-                <th mat-header-cell *matHeaderCellDef>Sponsor</th>
+                <th mat-header-cell *matHeaderCellDef>{{ 'COACHING.sponsorColumn' | translate }}</th>
                 <td mat-cell *matCellDef="let r">
                   @if (r.sponsorName) {
                     <div class="sponsor-cell">
@@ -181,18 +181,18 @@ const STATUS_PRIORITY: EngagementStatus[] = ['active', 'contracted', 'prospect',
               </ng-container>
 
               <ng-container matColumnDef="engagement">
-                <th mat-header-cell *matHeaderCellDef>Active engagement</th>
+                <th mat-header-cell *matHeaderCellDef>{{ 'COACHING.activeEngagement' | translate }}</th>
                 <td mat-cell *matCellDef="let r">
                   @if (activeEngagement(r); as e) {
                     <a [routerLink]="['/coaching', e._id]" class="eng-link" (click)="$event.stopPropagation()">
                       <mat-icon>play_circle</mat-icon>
-                      Open
+                      {{ 'DASHBOARD.open' | translate }}
                     </a>
                   } @else if (r.primaryEngagement) {
                     <a [routerLink]="['/coaching', r.primaryEngagement._id]" class="eng-link muted-link"
                        (click)="$event.stopPropagation()">
                       <mat-icon>history</mat-icon>
-                      Last engagement
+                      {{ 'COACHING.lastEngagement' | translate }}
                     </a>
                   } @else {
                     <span class="muted">—</span>
@@ -201,7 +201,7 @@ const STATUS_PRIORITY: EngagementStatus[] = ['active', 'contracted', 'prospect',
               </ng-container>
 
               <ng-container matColumnDef="sessions">
-                <th mat-header-cell *matHeaderCellDef>Sessions</th>
+                <th mat-header-cell *matHeaderCellDef>{{ 'COACHING.sessionsColumn' | translate }}</th>
                 <td mat-cell *matCellDef="let r">
                   @if (r.sessionsPurchased) {
                     <div class="sess-cell">
@@ -312,7 +312,7 @@ export class CoacheesListComponent implements OnInit {
 
   columns = ['name', 'email', 'sponsor', 'status', 'engagement', 'sessions'];
 
-  constructor(private api: ApiService, private router: Router) {}
+  constructor(private api: ApiService, private router: Router, private translate: TranslateService) {}
 
   ngOnInit(): void {
     forkJoin({
@@ -385,14 +385,14 @@ export class CoacheesListComponent implements OnInit {
     };
     for (const r of all) by[r.primaryStatus] += 1;
     return [
-      { key: 'all' as FilterKey,        label: 'All',          count: all.length,   color: '#1B2A47' },
-      { key: 'active' as FilterKey,     label: 'Active',       count: by['active'],     color: STATUS_COLOR.active },
-      { key: 'contracted' as FilterKey, label: 'Contracted',   count: by['contracted'], color: STATUS_COLOR.contracted },
-      { key: 'prospect' as FilterKey,   label: 'Prospect',     count: by['prospect'],   color: STATUS_COLOR.prospect },
-      { key: 'paused' as FilterKey,     label: 'Paused',       count: by['paused'],     color: STATUS_COLOR.paused },
-      { key: 'completed' as FilterKey,  label: 'Completed',    count: by['completed'],  color: STATUS_COLOR.completed },
-      { key: 'alumni' as FilterKey,     label: 'Alumni',       count: by['alumni'],     color: STATUS_COLOR.alumni },
-      { key: 'none' as FilterKey,       label: 'No engagement', count: by['none'],      color: STATUS_COLOR.none },
+      { key: 'all' as FilterKey,        label: this.translate.instant('COACHING.allFilter'),      count: all.length,   color: '#1B2A47' },
+      { key: 'active' as FilterKey,     label: this.translate.instant('COACHING.active'),         count: by['active'],     color: STATUS_COLOR.active },
+      { key: 'contracted' as FilterKey, label: this.translate.instant('COACHING.contracted'),     count: by['contracted'], color: STATUS_COLOR.contracted },
+      { key: 'prospect' as FilterKey,   label: this.translate.instant('COACHING.prospect'),       count: by['prospect'],   color: STATUS_COLOR.prospect },
+      { key: 'paused' as FilterKey,     label: this.translate.instant('COACHING.paused'),         count: by['paused'],     color: STATUS_COLOR.paused },
+      { key: 'completed' as FilterKey,  label: this.translate.instant('COACHING.completed'),      count: by['completed'],  color: STATUS_COLOR.completed },
+      { key: 'alumni' as FilterKey,     label: this.translate.instant('COACHING.alumni'),         count: by['alumni'],     color: STATUS_COLOR.alumni },
+      { key: 'none' as FilterKey,       label: this.translate.instant('COACHING.noEngagement'),   count: by['none'],      color: STATUS_COLOR.none },
     ];
   });
 
@@ -409,7 +409,7 @@ export class CoacheesListComponent implements OnInit {
     });
   });
 
-  statusLabel(s: EngagementStatus | 'none'): string { return STATUS_LABEL[s] ?? s; }
+  statusLabel(s: EngagementStatus | 'none'): string { return this.translate.instant(STATUS_LABEL_KEY[s] ?? s); }
   statusColor(s: EngagementStatus | 'none'): string { return STATUS_COLOR[s] ?? '#9aa5b4'; }
 
   /** Return the engagement whose status is literally 'active' (the one the

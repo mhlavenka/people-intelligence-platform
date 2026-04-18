@@ -81,7 +81,7 @@ interface SurveyTemplate {
               (click)="activeModuleFilter.set(tab.key)"
             >
               <mat-icon>{{ tab.icon }}</mat-icon>
-              {{ tab.label }}
+              {{ tab.labelKey | translate }}
               <span class="tab-count">{{ countByModule(tab.key) }}</span>
             </button>
           }
@@ -104,7 +104,7 @@ interface SurveyTemplate {
             (click)="activeTypeFilter.set(tab.key)"
           >
             <mat-icon>{{ tab.icon }}</mat-icon>
-            {{ tab.label }}
+            {{ tab.labelKey | translate }}
             <span class="tab-count">{{ countByType(tab.key) }}</span>
           </button>
         }
@@ -155,7 +155,7 @@ interface SurveyTemplate {
                   <mat-slide-toggle
                     [checked]="t.isActive"
                     (change)="toggleActive(t)"
-                    [matTooltip]="t.isActive ? 'Deactivate' : 'Activate'"
+                    [matTooltip]="t.isActive ? ('SURVEY.deactivate' | translate) : ('SURVEY.activate' | translate)"
                     color="primary"
                   ></mat-slide-toggle>
                   <button mat-icon-button [matMenuTriggerFor]="cardMenu">
@@ -192,11 +192,11 @@ interface SurveyTemplate {
               <div class="card-meta">
                 <span class="meta-item">
                   <mat-icon>quiz</mat-icon>
-                  {{ t.questions.length }} questions
+                  {{ t.questions.length }} {{ 'SURVEY.questions' | translate }}
                 </span>
                 <span class="meta-item">
                   <mat-icon>people</mat-icon>
-                  {{ t.responseCount ?? 0 }} responses
+                  {{ t.responseCount ?? 0 }} {{ 'SURVEY.responses' | translate }}
                 </span>
                 <span class="meta-item">
                   <mat-icon>calendar_today</mat-icon>
@@ -227,7 +227,7 @@ interface SurveyTemplate {
                   <mat-icon>edit</mat-icon> {{ 'COMMON.edit' | translate }}
                 </button>
                 <button mat-raised-button color="primary" (click)="viewResponses(t)"
-                        [matTooltip]="(t.responseCount ?? 0) === 0 ? 'No responses yet' : ''">
+                        [matTooltip]="(t.responseCount ?? 0) === 0 ? ('SURVEY.noResponsesYet' | translate) : ''">
                   <mat-icon>bar_chart</mat-icon>
                   {{ t.responseCount ?? 0 }}
                 </button>
@@ -390,18 +390,18 @@ export class SurveyManagementComponent implements OnInit {
   showInactive       = signal(false);
 
   moduleTabs = [
-    { key: 'all',            label: 'All Modules',    icon: 'apps' },
-    { key: 'conflict',       label: 'Conflict',       icon: 'warning_amber' },
-    { key: 'neuroinclusion', label: 'Neuro-Inclusion', icon: 'psychology' },
-    { key: 'succession',     label: 'Succession',     icon: 'trending_up' },
-    { key: 'coaching',       label: 'Coaching',       icon: 'self_improvement' },
+    { key: 'all',            labelKey: 'SURVEY.allModules',       icon: 'apps' },
+    { key: 'conflict',       labelKey: 'SURVEY.moduleConflict',       icon: 'warning_amber' },
+    { key: 'neuroinclusion', labelKey: 'SURVEY.moduleNeuroInclusion', icon: 'psychology' },
+    { key: 'succession',     labelKey: 'SURVEY.moduleSuccession',     icon: 'trending_up' },
+    { key: 'coaching',       labelKey: 'SURVEY.moduleCoaching',       icon: 'self_improvement' },
   ];
 
   intakeTypeTabs = [
-    { key: 'all',        label: 'All Types',  icon: 'assignment' },
-    { key: 'survey',     label: 'Survey',     icon: 'poll' },
-    { key: 'interview',  label: 'Interview',  icon: 'record_voice_over' },
-    { key: 'assessment', label: 'Assessment', icon: 'fact_check' },
+    { key: 'all',        labelKey: 'SURVEY.allTypes',       icon: 'assignment' },
+    { key: 'survey',     labelKey: 'SURVEY.typeSurvey',     icon: 'poll' },
+    { key: 'interview',  labelKey: 'SURVEY.typeInterview',  icon: 'record_voice_over' },
+    { key: 'assessment', labelKey: 'SURVEY.typeAssessment', icon: 'fact_check' },
   ];
 
   filteredTemplates = computed(() => {
@@ -436,17 +436,18 @@ export class SurveyManagementComponent implements OnInit {
     : type === 'coaching' ? 'self_improvement'
     : 'trending_up';
 
-  moduleLabel = (type: string) =>
-    type === 'conflict' ? 'Conflict'
-    : type === 'neuroinclusion' ? 'Neuro-Inclusion'
-    : type === 'coaching' ? 'Coaching'
-    : 'Succession';
+  moduleLabel = (type: string) => {
+    const map: Record<string, string> = { conflict: 'SURVEY.moduleConflict', neuroinclusion: 'SURVEY.moduleNeuroInclusion', coaching: 'SURVEY.moduleCoaching', succession: 'SURVEY.moduleSuccession' };
+    return this.translateSvc.instant(map[type] ?? type);
+  };
 
   intakeTypeIcon = (type: string) =>
     type === 'interview' ? 'record_voice_over' : type === 'assessment' ? 'fact_check' : 'poll';
 
-  intakeTypeLabel = (type: string) =>
-    type === 'interview' ? 'Interview' : type === 'assessment' ? 'Assessment' : 'Survey';
+  intakeTypeLabel = (type: string) => {
+    const map: Record<string, string> = { interview: 'SURVEY.typeInterview', assessment: 'SURVEY.typeAssessment', survey: 'SURVEY.typeSurvey' };
+    return this.translateSvc.instant(map[type] ?? type);
+  };
 
   questionIcon = (type: string) =>
     type === 'scale' ? 'linear_scale' : type === 'boolean' ? 'toggle_on'
@@ -455,7 +456,8 @@ export class SurveyManagementComponent implements OnInit {
   constructor(
     private api: ApiService,
     private dialog: MatDialog,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private translateSvc: TranslateService,
   ) {}
 
   ngOnInit(): void {
@@ -522,8 +524,8 @@ export class SurveyManagementComponent implements OnInit {
     this.api.put(`/surveys/templates/${template._id}`, { isActive: newValue }).subscribe({
       next: () => {
         this.snackBar.open(
-          `Template ${newValue ? 'activated' : 'deactivated'}`,
-          'Close',
+          this.translateSvc.instant(newValue ? 'SURVEY.templateActivated' : 'SURVEY.templateDeactivated'),
+          this.translateSvc.instant('COMMON.close'),
           { duration: 2500 }
         );
       },
@@ -531,7 +533,7 @@ export class SurveyManagementComponent implements OnInit {
         this.templates.update((list) =>
           list.map((t) => (t._id === template._id ? { ...t, isActive: template.isActive } : t))
         );
-        this.snackBar.open('Failed to update template status', 'Close', { duration: 3000 });
+        this.snackBar.open(this.translateSvc.instant('SURVEY.updateStatusFailed'), this.translateSvc.instant('COMMON.close'), { duration: 3000 });
       },
     });
   }
@@ -546,10 +548,10 @@ export class SurveyManagementComponent implements OnInit {
       isGlobal: false,
     }).subscribe({
       next: () => {
-        this.snackBar.open('Template copied — activate it when ready', 'Close', { duration: 3500 });
+        this.snackBar.open(this.translateSvc.instant('SURVEY.templateCopied'), this.translateSvc.instant('COMMON.close'), { duration: 3500 });
         this.loadTemplates();
       },
-      error: () => this.snackBar.open('Copy failed', 'Close', { duration: 2500 }),
+      error: () => this.snackBar.open(this.translateSvc.instant('SURVEY.copyFailed'), this.translateSvc.instant('COMMON.close'), { duration: 2500 }),
     });
   }
 
@@ -558,9 +560,9 @@ export class SurveyManagementComponent implements OnInit {
     const ref = this.dialog.open(ConfirmDialogComponent, {
       width: '440px',
       data: {
-        title: 'Clear All Responses',
-        message: `Delete all ${count} response${count !== 1 ? 's' : ''} for "${template.title}"? This cannot be undone and will reset all analytics for this intake.`,
-        confirmLabel: 'Clear Responses',
+        title: this.translateSvc.instant('SURVEY.clearAllResponses'),
+        message: this.translateSvc.instant('SURVEY.clearResponsesConfirm', { count, title: template.title }),
+        confirmLabel: this.translateSvc.instant('SURVEY.clearResponses'),
       },
     });
     ref.afterClosed().subscribe((confirmed) => {
@@ -570,9 +572,9 @@ export class SurveyManagementComponent implements OnInit {
           this.templates.update((list) =>
             list.map((t) => (t._id === template._id ? { ...t, responseCount: 0 } : t))
           );
-          this.snackBar.open(`${res.deletedCount ?? count} responses cleared`, 'Close', { duration: 2500 });
+          this.snackBar.open(this.translateSvc.instant('SURVEY.responsesCleared', { count: res.deletedCount ?? count }), this.translateSvc.instant('COMMON.close'), { duration: 2500 });
         },
-        error: () => this.snackBar.open('Failed to clear responses', 'Close', { duration: 2500 }),
+        error: () => this.snackBar.open(this.translateSvc.instant('SURVEY.clearResponsesFailed'), this.translateSvc.instant('COMMON.close'), { duration: 2500 }),
       });
     });
   }
@@ -580,7 +582,7 @@ export class SurveyManagementComponent implements OnInit {
   copySurveyLink(template: SurveyTemplate): void {
     const url = `${window.location.origin}/intake/${template._id}`;
     navigator.clipboard.writeText(url).then(() => {
-      this.snackBar.open('Intake link copied!', 'Close', { duration: 2500 });
+      this.snackBar.open(this.translateSvc.instant('SURVEY.linkCopied'), this.translateSvc.instant('COMMON.close'), { duration: 2500 });
     });
   }
 
@@ -596,9 +598,9 @@ export class SurveyManagementComponent implements OnInit {
     const ref = this.dialog.open(ConfirmDialogComponent, {
       width: '420px',
       data: {
-        title: 'Delete Template',
-        message: `Delete "${template.title}"? This cannot be undone.`,
-        confirmLabel: 'Delete',
+        title: this.translateSvc.instant('SURVEY.deleteTemplate'),
+        message: this.translateSvc.instant('SURVEY.deleteTemplateConfirm', { title: template.title }),
+        confirmLabel: this.translateSvc.instant('COMMON.delete'),
       },
     });
     ref.afterClosed().subscribe((confirmed) => {
@@ -606,9 +608,9 @@ export class SurveyManagementComponent implements OnInit {
       this.api.delete(`/surveys/templates/${template._id}`).subscribe({
         next: () => {
           this.templates.update((list) => list.filter((t) => t._id !== template._id));
-          this.snackBar.open('Template deleted', 'Close', { duration: 2500 });
+          this.snackBar.open(this.translateSvc.instant('SURVEY.templateDeleted'), this.translateSvc.instant('COMMON.close'), { duration: 2500 });
         },
-        error: () => this.snackBar.open('Delete failed', 'Close', { duration: 2500 }),
+        error: () => this.snackBar.open(this.translateSvc.instant('SURVEY.deleteFailed'), this.translateSvc.instant('COMMON.close'), { duration: 2500 }),
       });
     });
   }

@@ -30,10 +30,10 @@ II. SYSTEM
  - need to switch to prod and have the app approved by google
 **Multilingual**
  - design done, need to implement
-   - there is still a lot of untranslated strings in all modules - example bookings dashboard tabs, buttons, table column titles, mini calendar statuses 
    - make sure that all future changes ad keys to all language files that exist (might be adding languages) 
    - Add a line to CLAUDE.md like: All new UI strings must use `{{ 'KEY' | translate }}` — add keys to both `frontend/src/assets/i18n/en.json` and `fr.json` in the same change.
-   - Add a pre-deploy test that will validate missing translations - if not passed will prompt and add
+   - Add a pre-deploy test that will search for missing translations - if not passed will prompt and add
+   - add spanish
 
      That way every future Claude Code session picks it up from the project instructions.
 

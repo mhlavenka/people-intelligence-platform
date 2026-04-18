@@ -10,7 +10,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ApiService } from '../../core/api.service';
 import { EmptyStateComponent } from '../../shared/empty-state/empty-state.component';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 interface SurveyTemplate {
   _id: string;
@@ -40,10 +40,10 @@ type Step = 'template' | 'setup' | 'questions' | 'done';
 
 const STEP_INDEX: Record<Step, number> = { template: 0, setup: 1, questions: 2, done: 3 };
 
-const FORMAT_OPTIONS: { key: SessionFormat; label: string; icon: string; hint: string }[] = [
-  { key: 'individual', label: 'Individual',  icon: 'person',       hint: 'One coachee — select from your list' },
-  { key: 'team',       label: 'Team',        icon: 'group',        hint: 'A named team or working group' },
-  { key: 'group',      label: 'Group',       icon: 'groups',       hint: 'A broader group or cohort session' },
+const FORMAT_KEYS: { key: SessionFormat; labelKey: string; icon: string; hintKey: string }[] = [
+  { key: 'individual', labelKey: 'COACH.individual',  icon: 'person',       hintKey: 'COACH.individualHint' },
+  { key: 'team',       labelKey: 'COACH.team',        icon: 'group',        hintKey: 'COACH.teamHint' },
+  { key: 'group',      labelKey: 'COACH.group',       icon: 'groups',       hintKey: 'COACH.groupHint' },
 ];
 
 @Component({
@@ -68,23 +68,22 @@ const FORMAT_OPTIONS: { key: SessionFormat; label: string; icon: string; hint: s
         @if (loading()) {
           <div class="center-state">
             <mat-spinner diameter="40" />
-            <p>Loading…</p>
+            <p>{{ 'COMMON.loading' | translate }}</p>
           </div>
 
         } @else if (step() === 'done') {
           <div class="done-state">
             <div class="done-icon"><mat-icon>check_circle</mat-icon></div>
-            <h2>{{ "COACH.sessionRecorded" | translate }}</h2>
+            <h2>{{ 'COACH.sessionRecorded' | translate }}</h2>
             <p>
-              {{ sessionFormat() === 'individual' ? 'Interview' : (selectedTemplate()?.intakeType === 'assessment' ? 'Assessment' : 'Interview') }}
-              for <strong>{{ targetName() || (selectedCoachee()?.firstName + ' ' + selectedCoachee()?.lastName) }}</strong> has been saved.
+              {{ 'COACH.sessionSavedFor' | translate:{ name: targetName() || (selectedCoachee()?.firstName + ' ' + selectedCoachee()?.lastName) } }}
             </p>
             <div class="done-actions">
               <button mat-stroked-button (click)="reset()">
-                <mat-icon>add</mat-icon> New Session
+                <mat-icon>add</mat-icon> {{ 'COACH.newSession' | translate }}
               </button>
               <button mat-raised-button color="primary" (click)="router.navigate(['/dashboard'])">
-                <mat-icon>dashboard</mat-icon> Dashboard
+                <mat-icon>dashboard</mat-icon> {{ 'NAV.dashboard' | translate }}
               </button>
             </div>
           </div>
@@ -95,28 +94,28 @@ const FORMAT_OPTIONS: { key: SessionFormat; label: string; icon: string; hint: s
           <div class="steps-bar">
             <div class="step-item" [class.active]="step() === 'template'" [class.done]="stepIndex() > 0">
               <div class="step-dot">{{ stepIndex() > 0 ? '✓' : '1' }}</div>
-              <span>Template</span>
+              <span>{{ 'COACH.stepTemplate' | translate }}</span>
             </div>
             <div class="step-connector"></div>
             <div class="step-item" [class.active]="step() === 'setup'" [class.done]="stepIndex() > 1">
               <div class="step-dot">{{ stepIndex() > 1 ? '✓' : '2' }}</div>
-              <span>Setup</span>
+              <span>{{ 'COACH.stepSetup' | translate }}</span>
             </div>
             <div class="step-connector"></div>
             <div class="step-item" [class.active]="step() === 'questions'">
               <div class="step-dot">3</div>
-              <span>Session</span>
+              <span>{{ 'COACH.stepSession' | translate }}</span>
             </div>
           </div>
 
           <!-- ── Step 1: Template ── -->
           @if (step() === 'template') {
             <div class="step-content">
-              <h2><mat-icon>assignment</mat-icon> Choose a Template</h2>
-              <p class="step-hint">Select an interview or assessment template to conduct with your coachee.</p>
+              <h2><mat-icon>assignment</mat-icon> {{ 'COACH.chooseTemplate' | translate }}</h2>
+              <p class="step-hint">{{ 'COACH.chooseTemplateHint' | translate }}</p>
 
               @if (templates().length === 0) {
-                <app-empty-state icon="inbox" title="No templates available" message="No interview or assessment templates available. Ask your admin to create one under Intake Templates."></app-empty-state>
+                <app-empty-state icon="inbox" [title]="'COACH.noTemplatesTitle' | translate" [message]="'COACH.noTemplatesMessage' | translate"></app-empty-state>
               } @else {
                 <div class="template-list">
                   @for (t of templates(); track t._id) {
@@ -130,7 +129,7 @@ const FORMAT_OPTIONS: { key: SessionFormat; label: string; icon: string; hint: s
                         <span class="module-badge" [class]="t.moduleType">{{ moduleLabelFor(t.moduleType) }}</span>
                       </div>
                       <div class="template-title">{{ t.title }}</div>
-                      <div class="template-qs">{{ t.questions.length }} questions</div>
+                      <div class="template-qs">{{ t.questions.length }} {{ 'SURVEY.questions' | translate }}</div>
                     </div>
                   }
                 </div>
@@ -138,7 +137,7 @@ const FORMAT_OPTIONS: { key: SessionFormat; label: string; icon: string; hint: s
                   <button mat-raised-button color="primary"
                           [disabled]="!selectedTemplateId()"
                           (click)="step.set('setup')">
-                    Next <mat-icon>arrow_forward</mat-icon>
+                    {{ 'COMMON.next' | translate }} <mat-icon>arrow_forward</mat-icon>
                   </button>
                 </div>
               }
@@ -148,33 +147,33 @@ const FORMAT_OPTIONS: { key: SessionFormat; label: string; icon: string; hint: s
           <!-- ── Step 2: Setup (format + target + coachee if individual) ── -->
           @if (step() === 'setup') {
             <div class="step-content">
-              <h2><mat-icon>tune</mat-icon> Session Setup</h2>
-              <p class="step-hint">Choose the session format and identify the target.</p>
+              <h2><mat-icon>tune</mat-icon> {{ 'COACH.sessionSetup' | translate }}</h2>
+              <p class="step-hint">{{ 'COACH.sessionSetupHint' | translate }}</p>
 
               <!-- Format picker -->
-              <div class="field-label">Session Format</div>
+              <div class="field-label">{{ 'COACH.sessionFormat' | translate }}</div>
               <div class="format-options">
                 @for (f of formatOptions; track f.key) {
                   <div class="format-card" [class.selected]="sessionFormat() === f.key"
                        (click)="sessionFormat.set(f.key)">
                     <mat-icon>{{ f.icon }}</mat-icon>
-                    <div class="format-label">{{ f.label }}</div>
-                    <div class="format-hint">{{ f.hint }}</div>
+                    <div class="format-label">{{ f.labelKey | translate }}</div>
+                    <div class="format-hint">{{ f.hintKey | translate }}</div>
                   </div>
                 }
               </div>
 
               <!-- Target name -->
               <div class="field-label" style="margin-top:20px">
-                {{ sessionFormat() === 'individual' ? 'Coachee Name / Identifier' : 'Team / Group Name' }}
+                {{ sessionFormat() === 'individual' ? ('COACH.coacheeNameLabel' | translate) : ('COACH.teamGroupNameLabel' | translate) }}
               </div>
               <mat-form-field appearance="outline" class="full-width">
                 <mat-label>
                   {{ sessionFormat() === 'individual'
-                      ? 'e.g. Jane Smith — Q2 coaching session'
+                      ? ('COACH.coacheeNamePlaceholder' | translate)
                       : sessionFormat() === 'team'
-                        ? 'e.g. Engineering Team — Sprint retrospective'
-                        : 'e.g. Leadership Cohort 2026' }}
+                        ? ('COACH.teamNamePlaceholder' | translate)
+                        : ('COACH.groupNamePlaceholder' | translate) }}
                 </mat-label>
                 <input matInput [(ngModel)]="targetNameValue" />
                 <mat-icon matSuffix>label</mat-icon>
@@ -182,9 +181,9 @@ const FORMAT_OPTIONS: { key: SessionFormat; label: string; icon: string; hint: s
 
               <!-- Coachee picker (individual only) -->
               @if (sessionFormat() === 'individual') {
-                <div class="field-label" style="margin-top:4px">Select Coachee <span class="optional">(optional)</span></div>
+                <div class="field-label" style="margin-top:4px">{{ 'COACH.selectCoachee' | translate }} <span class="optional">({{ 'COACH.optional' | translate }})</span></div>
                 @if (coachees().length === 0) {
-                  <p class="step-hint">No coachees found in your organization.</p>
+                  <p class="step-hint">{{ 'COACH.noCoacheesFound' | translate }}</p>
                 } @else {
                   <div class="coachee-list">
                     @for (c of coachees(); track c._id) {
@@ -206,12 +205,12 @@ const FORMAT_OPTIONS: { key: SessionFormat; label: string; icon: string; hint: s
 
               <div class="step-actions">
                 <button mat-stroked-button (click)="step.set('template')">
-                  <mat-icon>arrow_back</mat-icon> Back
+                  <mat-icon>arrow_back</mat-icon> {{ 'COMMON.back' | translate }}
                 </button>
                 <button mat-raised-button color="primary"
                         [disabled]="!sessionFormat() || !targetNameValue.trim()"
                         (click)="startSession()">
-                  Start Session <mat-icon>play_arrow</mat-icon>
+                  {{ 'COACH.startSession' | translate }} <mat-icon>play_arrow</mat-icon>
                 </button>
               </div>
             </div>
@@ -232,7 +231,7 @@ const FORMAT_OPTIONS: { key: SessionFormat; label: string; icon: string; hint: s
               </div>
 
               <div class="progress-row">
-                <span>Question {{ currentIndex() + 1 }} of {{ selectedTemplate()!.questions.length }}</span>
+                <span>{{ 'SURVEY.questionOf' | translate:{ current: currentIndex() + 1, total: selectedTemplate()!.questions.length } }}</span>
                 <mat-progress-bar mode="determinate" [value]="progress()"></mat-progress-bar>
               </div>
 
@@ -244,8 +243,8 @@ const FORMAT_OPTIONS: { key: SessionFormat; label: string; icon: string; hint: s
                   @if (q.type === 'scale') {
                     <div class="scale-container">
                       <div class="scale-labels">
-                        <span>1 — Strongly Disagree</span>
-                        <span>10 — Strongly Agree</span>
+                        <span>1 — {{ 'COACH.stronglyDisagree' | translate }}</span>
+                        <span>10 — {{ 'COACH.stronglyAgree' | translate }}</span>
                       </div>
                       <div class="scale-buttons">
                         @for (n of scaleValues; track n) {
@@ -255,7 +254,7 @@ const FORMAT_OPTIONS: { key: SessionFormat; label: string; icon: string; hint: s
                         }
                       </div>
                       @if (answers()[q.id] !== undefined) {
-                        <p class="scale-hint">Selected: <strong>{{ answers()[q.id] }}</strong></p>
+                        <p class="scale-hint">{{ 'COACH.selected' | translate }}: <strong>{{ answers()[q.id] }}</strong></p>
                       }
                     </div>
                   }
@@ -265,19 +264,19 @@ const FORMAT_OPTIONS: { key: SessionFormat; label: string; icon: string; hint: s
                       <button type="button" class="bool-btn"
                               [class.selected]="answers()[q.id] === true"
                               (click)="setAnswer(q.id, true)">
-                        <mat-icon>thumb_up</mat-icon> Yes
+                        <mat-icon>thumb_up</mat-icon> {{ 'COMMON.yes' | translate }}
                       </button>
                       <button type="button" class="bool-btn"
                               [class.selected]="answers()[q.id] === false"
                               (click)="setAnswer(q.id, false)">
-                        <mat-icon>thumb_down</mat-icon> No
+                        <mat-icon>thumb_down</mat-icon> {{ 'COMMON.no' | translate }}
                       </button>
                     </div>
                   }
 
                   @if (q.type === 'text') {
                     <mat-form-field appearance="outline" class="full-width">
-                      <mat-label>Response</mat-label>
+                      <mat-label>{{ 'COACH.response' | translate }}</mat-label>
                       <textarea matInput rows="4"
                                 [value]="answers()[q.id]"
                                 (input)="setAnswer(q.id, $any($event.target).value)">
@@ -287,13 +286,13 @@ const FORMAT_OPTIONS: { key: SessionFormat; label: string; icon: string; hint: s
 
                   <div class="question-nav">
                     <button mat-stroked-button (click)="prevQuestion()" [disabled]="currentIndex() === 0">
-                      <mat-icon>arrow_back</mat-icon> Previous
+                      <mat-icon>arrow_back</mat-icon> {{ 'COACH.previous' | translate }}
                     </button>
                     @if (currentIndex() < selectedTemplate()!.questions.length - 1) {
                       <button mat-raised-button color="primary"
                               [disabled]="answers()[q.id] === undefined"
                               (click)="nextQuestion()">
-                        Next <mat-icon>arrow_forward</mat-icon>
+                        {{ 'COMMON.next' | translate }} <mat-icon>arrow_forward</mat-icon>
                       </button>
                     } @else {
                       <button mat-raised-button color="primary"
@@ -304,7 +303,7 @@ const FORMAT_OPTIONS: { key: SessionFormat; label: string; icon: string; hint: s
                         } @else {
                           <mat-icon>send</mat-icon>
                         }
-                        {{ submitting() ? 'Saving…' : 'Submit Session' }}
+                        {{ submitting() ? ('COACH.saving' | translate) : ('COACH.submitSession' | translate) }}
                       </button>
                     }
                   </div>
@@ -505,7 +504,7 @@ export class CoachInterviewComponent implements OnInit {
   currentIndex = signal(0);
   answers = signal<Record<string, string | number | boolean>>({});
 
-  readonly formatOptions = FORMAT_OPTIONS;
+  readonly formatOptions = FORMAT_KEYS;
   readonly scaleValues   = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
   selectedTemplate = computed(() => this.templates().find((t) => t._id === this.selectedTemplateId()) ?? null);
@@ -592,10 +591,12 @@ export class CoachInterviewComponent implements OnInit {
     this.step.set('template');
   }
 
+  private translateSvc = inject(TranslateService);
+
   moduleLabelFor(moduleType: string): string {
     const map: Record<string, string> = {
-      conflict: 'Conflict', neuroinclusion: 'Neuro-Inclusion', succession: 'Succession', coaching: 'Coaching',
+      conflict: 'SURVEY.moduleConflict', neuroinclusion: 'SURVEY.moduleNeuroInclusion', succession: 'SURVEY.moduleSuccession', coaching: 'SURVEY.moduleCoaching',
     };
-    return map[moduleType] ?? moduleType;
+    return this.translateSvc.instant(map[moduleType] ?? moduleType);
   }
 }

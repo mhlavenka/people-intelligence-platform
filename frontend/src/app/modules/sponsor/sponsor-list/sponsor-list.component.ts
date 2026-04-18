@@ -13,7 +13,7 @@ import { SponsorDialogComponent } from '../sponsor-dialog/sponsor-dialog.compone
 import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog.component';
 import { AvatarComponent } from '../../../shared/avatar/avatar.component';
 import { HttpErrorResponse } from '@angular/common/http';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-sponsor-list',
@@ -76,13 +76,13 @@ import { TranslateModule } from '@ngx-translate/core';
 
               <div class="badges">
                 @if (s.coacheeId) {
-                  <span class="badge self-pay">Self-pay</span>
+                  <span class="badge self-pay">{{ 'SPONSOR.selfPay' | translate }}</span>
                 }
                 <span class="badge eng-count" [class.zero]="!s.activeEngagements">
-                  {{ s.activeEngagements || 0 }} active · {{ s.totalEngagements || 0 }} total
+                  {{ s.activeEngagements || 0 }} {{ 'COMMON.active' | translate | lowercase }} · {{ s.totalEngagements || 0 }} {{ 'COMMON.total' | translate }}
                 </span>
                 @if (s.defaultHourlyRate) {
-                  <span class="badge rate">{{ s.defaultHourlyRate | currency }}/hr</span>
+                  <span class="badge rate">{{ s.defaultHourlyRate | currency }}/{{ 'SPONSOR.perHour' | translate }}</span>
                 }
               </div>
 
@@ -90,14 +90,14 @@ import { TranslateModule } from '@ngx-translate/core';
                 <a mat-stroked-button color="primary"
                    class="billing-btn"
                    [routerLink]="['/billing/sponsors', s._id]">
-                  <mat-icon>receipt_long</mat-icon> View billing
+                  <mat-icon>receipt_long</mat-icon> {{ 'SPONSOR.viewBilling' | translate }}
                 </a>
               </div>
             </div>
           }
           <button type="button" class="card new-card" (click)="newSponsor()">
             <mat-icon>add</mat-icon>
-            <span>New sponsor</span>
+            <span>{{ 'SPONSOR.newSponsor' | translate }}</span>
           </button>
         </div>
       }
@@ -175,6 +175,7 @@ export class SponsorListComponent implements OnInit {
     private sponsorSvc: SponsorService,
     private dialog: MatDialog,
     private snack: MatSnackBar,
+    private translate: TranslateService,
   ) {}
 
   ngOnInit(): void { this.load(); }
@@ -191,7 +192,7 @@ export class SponsorListComponent implements OnInit {
     this.loading.set(true);
     this.sponsorSvc.list().subscribe({
       next: (list) => { this.sponsors.set(list); this.loading.set(false); },
-      error: () => { this.loading.set(false); this.snack.open('Failed to load sponsors', 'OK', { duration: 3000 }); },
+      error: () => { this.loading.set(false); this.snack.open(this.translate.instant('SPONSOR.loadFailed'), this.translate.instant('COMMON.ok'), { duration: 3000 }); },
     });
   }
 
@@ -208,18 +209,18 @@ export class SponsorListComponent implements OnInit {
   confirmDelete(s: Sponsor): void {
     const ref = this.dialog.open(ConfirmDialogComponent, {
       data: {
-        title: 'Delete sponsor',
-        message: `Delete ${s.name}? Engagements that reference this sponsor will need a new one.`,
-        confirmLabel: 'Delete',
+        title: this.translate.instant('SPONSOR.deleteSponsor'),
+        message: this.translate.instant('SPONSOR.deleteSponsorConfirm', { name: s.name }),
+        confirmLabel: this.translate.instant('COMMON.delete'),
         confirmColor: 'warn',
       },
     });
     ref.afterClosed().subscribe((confirmed) => {
       if (!confirmed) return;
       this.sponsorSvc.delete(s._id).subscribe({
-        next: () => { this.snack.open('Sponsor deleted', 'OK', { duration: 2500 }); this.load(); },
+        next: () => { this.snack.open(this.translate.instant('SPONSOR.sponsorDeleted'), this.translate.instant('COMMON.ok'), { duration: 2500 }); this.load(); },
         error: (err: HttpErrorResponse) => {
-          this.snack.open(err?.error?.error || 'Failed to delete', 'OK', { duration: 4000 });
+          this.snack.open(err?.error?.error || this.translate.instant('SPONSOR.deleteFailed'), this.translate.instant('COMMON.ok'), { duration: 4000 });
         },
       });
     });
