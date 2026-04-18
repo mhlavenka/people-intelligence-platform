@@ -51,7 +51,7 @@ interface BillingData {
   template: `
     <div class="billing-page">
       <div class="page-header">
-        <a [routerLink]="backLink()" class="back-link"><mat-icon>arrow_back</mat-icon> Back to Engagement</a>
+        <a [routerLink]="backLink()" class="back-link"><mat-icon>arrow_back</mat-icon> {{ 'COACHING.backToEngagement' | translate }}</a>
       </div>
 
       @if (loading()) {
@@ -74,7 +74,7 @@ interface BillingData {
           </div>
           <div class="header-badge">
             <mat-icon>receipt_long</mat-icon>
-            Coachee Billing
+            {{ 'COACHING.coacheeBilling' | translate }}
           </div>
         </div>
 
@@ -82,15 +82,15 @@ interface BillingData {
         <div class="summary-row">
           <div class="summary-card">
             <div class="sum-num">{{ data()!.summary.totalEngagements }}</div>
-            <div class="sum-label">Billable Engagements</div>
+            <div class="sum-label">{{ 'COACHING.billableEngagements' | translate }}</div>
           </div>
           <div class="summary-card">
             <div class="sum-num">{{ data()!.summary.totalHours }}h</div>
-            <div class="sum-label">Total Hours</div>
+            <div class="sum-label">{{ 'COACHING.totalHours' | translate }}</div>
           </div>
           <div class="summary-card accent">
             <div class="sum-num">{{ data()!.summary.totalAmount | currency:'CAD':'symbol':'1.2-2' }}</div>
-            <div class="sum-label">Total Billed</div>
+            <div class="sum-label">{{ 'COACHING.totalBilled' | translate }}</div>
           </div>
         </div>
 

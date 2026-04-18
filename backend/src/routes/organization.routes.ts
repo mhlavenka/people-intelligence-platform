@@ -9,7 +9,7 @@ router.use(authenticateToken);
 router.get('/me', async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const org = await Organization.findById(req.user!.organizationId);
-    if (!org) { res.status(404).json({ error: 'Organization not found' }); return; }
+    if (!org) { res.status(404).json({ error: req.t('errors.organizationNotFound') }); return; }
     res.json(org);
   } catch (e) { next(e); }
 });
@@ -25,7 +25,7 @@ router.put(
       const org = await Organization.findByIdAndUpdate(
         req.user!.organizationId, safeBody, { new: true, runValidators: true }
       );
-      if (!org) { res.status(404).json({ error: 'Organization not found' }); return; }
+      if (!org) { res.status(404).json({ error: req.t('errors.organizationNotFound') }); return; }
       res.json(org);
     } catch (e) { next(e); }
   }
@@ -34,12 +34,12 @@ router.put(
 router.get('/:orgId', async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     if (req.user!.organizationId !== req.params['orgId']) {
-      res.status(403).json({ error: 'Access denied' });
+      res.status(403).json({ error: req.t('errors.accessDenied') });
       return;
     }
     const org = await Organization.findById(req.params['orgId']);
     if (!org) {
-      res.status(404).json({ error: 'Organization not found' });
+      res.status(404).json({ error: req.t('errors.organizationNotFound') });
       return;
     }
     res.json(org);
@@ -54,7 +54,7 @@ router.put(
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       if (req.user!.organizationId !== req.params['orgId']) {
-        res.status(403).json({ error: 'Access denied' });
+        res.status(403).json({ error: req.t('errors.accessDenied') });
         return;
       }
       const org = await Organization.findByIdAndUpdate(req.params['orgId'], req.body, {
@@ -62,7 +62,7 @@ router.put(
         runValidators: true,
       });
       if (!org) {
-        res.status(404).json({ error: 'Organization not found' });
+        res.status(404).json({ error: req.t('errors.organizationNotFound') });
         return;
       }
       res.json(org);

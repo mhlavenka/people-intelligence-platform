@@ -16,23 +16,23 @@ import { TranslateModule } from '@ngx-translate/core';
   template: `
     <div class="journal-page">
       <div class="page-header">
-        <a [routerLink]="'/journal/engagement/' + engagementId" class="back-link"><mat-icon>arrow_back</mat-icon> Back to Notes</a>
-        <h1><mat-icon>auto_awesome</mat-icon> Engagement Insights</h1>
+        <a [routerLink]="'/journal/engagement/' + engagementId" class="back-link"><mat-icon>arrow_back</mat-icon> {{ 'JOURNAL.backToNotes' | translate }}</a>
+        <h1><mat-icon>auto_awesome</mat-icon> {{ 'JOURNAL.engagementInsights' | translate }}</h1>
       </div>
 
       @if (!data() && !loading() && !error()) {
         <div class="generate-prompt">
           <mat-icon>insights</mat-icon>
           <h3>{{ 'JOURNAL.generateCrossSession' | translate }}</h3>
-          <p>Analyze patterns across all completed session notes for this engagement.</p>
-          <button mat-flat-button color="primary" (click)="generate()"><mat-icon>auto_awesome</mat-icon> Generate Insights</button>
+          <p>{{ 'JOURNAL.analyzePatterns' | translate }}</p>
+          <button mat-flat-button color="primary" (click)="generate()"><mat-icon>auto_awesome</mat-icon> {{ 'JOURNAL.generateInsightsBtn' | translate }}</button>
         </div>
       }
 
       @if (loading()) {
         <div class="loading-center">
           <mat-spinner diameter="36" />
-          <span>Analyzing session patterns...</span>
+          <span>{{ 'JOURNAL.analyzingPatterns' | translate }}</span>
         </div>
       }
 
@@ -43,7 +43,7 @@ import { TranslateModule } from '@ngx-translate/core';
       @if (data()) {
         <div class="report">
           <div class="report-actions">
-            <button mat-stroked-button (click)="generate()" [disabled]="loading()"><mat-icon>refresh</mat-icon> Regenerate</button>
+            <button mat-stroked-button (click)="generate()" [disabled]="loading()"><mat-icon>refresh</mat-icon> {{ 'JOURNAL.regenerate' | translate }}</button>
           </div>
 
           <div class="report-section">
@@ -71,7 +71,7 @@ import { TranslateModule } from '@ngx-translate/core';
           }
 
           <div class="report-section highlight">
-            <h3><mat-icon>lightbulb</mat-icon> Suggested Next Focus</h3>
+            <h3><mat-icon>lightbulb</mat-icon> {{ 'JOURNAL.suggestedNextFocus' | translate }}</h3>
             <p>{{ data()!.suggestedNextFocus }}</p>
           </div>
         </div>

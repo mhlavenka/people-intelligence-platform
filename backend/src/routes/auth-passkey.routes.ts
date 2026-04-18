@@ -47,7 +47,7 @@ router.post(
         _id: req.user!.userId,
         organizationId: req.user!.organizationId,
       });
-      if (!user) { res.status(404).json({ error: 'User not found' }); return; }
+      if (!user) { res.status(404).json({ error: req.t('errors.userNotFound') }); return; }
 
       const existingCredentials = (user.passkeys || []).map((pk) => ({
         id: pk.credentialId,
@@ -84,10 +84,10 @@ router.post(
         _id: req.user!.userId,
         organizationId: req.user!.organizationId,
       });
-      if (!user) { res.status(404).json({ error: 'User not found' }); return; }
+      if (!user) { res.status(404).json({ error: req.t('errors.userNotFound') }); return; }
 
       const expectedChallenge = getChallenge(`reg:${user._id}`);
-      if (!expectedChallenge) { res.status(400).json({ error: 'Challenge expired. Please try again.' }); return; }
+      if (!expectedChallenge) { res.status(400).json({ error: req.t('errors.challengeExpired') }); return; }
 
       const { credential, label } = req.body as {
         credential: RegistrationResponseJSON;
@@ -102,7 +102,7 @@ router.post(
       });
 
       if (!verification.verified || !verification.registrationInfo) {
-        res.status(400).json({ error: 'Passkey verification failed' });
+        res.status(400).json({ error: req.t('errors.passkeyVerificationFailed') });
         return;
       }
 
@@ -131,11 +131,11 @@ router.post(
 router.post('/login-options', async (req, res, next) => {
   try {
     const { email } = req.body;
-    if (!email) { res.status(400).json({ error: 'Email is required' }); return; }
+    if (!email) { res.status(400).json({ error: req.t('errors.emailRequired') }); return; }
 
     const user = await User.findOne({ email: email.toLowerCase() }).setOptions({ bypassTenantCheck: true });
     if (!user || !user.isActive || !user.passkeys?.length) {
-      res.status(400).json({ error: 'No passkey registered for this account' });
+      res.status(400).json({ error: req.t('errors.noPasskeyRegistered') });
       return;
     }
 
@@ -165,14 +165,14 @@ router.post('/login-verify', async (req, res, next) => {
     };
 
     const user = await User.findById(userId).setOptions({ bypassTenantCheck: true });
-    if (!user || !user.isActive) { res.status(401).json({ error: 'Invalid credentials' }); return; }
+    if (!user || !user.isActive) { res.status(401).json({ error: req.t('errors.invalidCredentials') }); return; }
 
     const expectedChallenge = getChallenge(`auth:${user._id}`);
-    if (!expectedChallenge) { res.status(400).json({ error: 'Challenge expired' }); return; }
+    if (!expectedChallenge) { res.status(400).json({ error: req.t('errors.challengeExpiredShort') }); return; }
 
     const credId = credential.id;
     const passkey = user.passkeys.find((pk) => pk.credentialId === credId);
-    if (!passkey) { res.status(401).json({ error: 'Unknown passkey' }); return; }
+    if (!passkey) { res.status(401).json({ error: req.t('errors.unknownPasskey') }); return; }
 
     const verification = await verifyAuthenticationResponse({
       response: credential,
@@ -188,7 +188,7 @@ router.post('/login-verify', async (req, res, next) => {
     });
 
     if (!verification.verified) {
-      res.status(401).json({ error: 'Passkey verification failed' });
+      res.status(401).json({ error: req.t('errors.passkeyVerificationFailed') });
       return;
     }
 
@@ -225,7 +225,7 @@ router.get(
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const user = await User.findOne({ _id: req.user!.userId, organizationId: req.user!.organizationId });
-      if (!user) { res.status(404).json({ error: 'User not found' }); return; }
+      if (!user) { res.status(404).json({ error: req.t('errors.userNotFound') }); return; }
       res.json(user.passkeys.map((pk) => ({
         credentialId: pk.credentialId,
         label: pk.label,
@@ -242,7 +242,7 @@ router.delete(
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const user = await User.findOne({ _id: req.user!.userId, organizationId: req.user!.organizationId });
-      if (!user) { res.status(404).json({ error: 'User not found' }); return; }
+      if (!user) { res.status(404).json({ error: req.t('errors.userNotFound') }); return; }
       user.passkeys = user.passkeys.filter((pk) => pk.credentialId !== req.params['credentialId']);
       await user.save();
       res.json({ message: 'Passkey removed', passkeyCount: user.passkeys.length });

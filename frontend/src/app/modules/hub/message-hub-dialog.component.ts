@@ -80,7 +80,7 @@ interface NotificationDoc {
         <mat-tab>
           <ng-template mat-tab-label>
             <mat-icon>mail_outline</mat-icon>
-            <span>Messages</span>
+            <span>{{ 'HUB.messages' | translate }}</span>
             @if (unreadMessages() > 0) {
               <span class="tab-badge">{{ unreadMessages() }}</span>
             }
@@ -91,7 +91,7 @@ interface NotificationDoc {
               <!-- Inbox list -->
               <div class="inbox-toolbar">
                 <button mat-stroked-button (click)="startCompose()">
-                  <mat-icon>edit</mat-icon> New Message
+                  <mat-icon>edit</mat-icon> {{ 'HUB.newMessage' | translate }}
                 </button>
               </div>
 
@@ -100,7 +100,7 @@ interface NotificationDoc {
               } @else if (composing()) {
                 <!-- Compose -->
                 <div class="compose-panel">
-                  <div class="compose-label">To</div>
+                  <div class="compose-label">{{ 'HUB.to' | translate }}</div>
                   <div class="user-list">
                     @for (u of orgUsers(); track u._id) {
                       <button class="user-chip"
@@ -119,7 +119,7 @@ interface NotificationDoc {
                             placeholder="Write your message…"
                             rows="5"></textarea>
                   <div class="compose-actions">
-                    <button mat-stroked-button (click)="composing.set(false)">Cancel</button>
+                    <button mat-stroked-button (click)="composing.set(false)">{{ 'COMMON.cancel' | translate }}</button>
                     <button mat-raised-button color="primary"
                             [disabled]="!composeTo() || !composeContent.trim() || sending()"
                             (click)="sendMessage()">
@@ -131,9 +131,9 @@ interface NotificationDoc {
               } @else if (conversations().length === 0) {
                 <div class="empty-state">
                   <mat-icon>mail_outline</mat-icon>
-                  <p>No messages yet</p>
+                  <p>{{ 'HUB.noConversations' | translate }}</p>
                   <button mat-stroked-button (click)="startCompose()">
-                    Start a conversation
+                    {{ 'HUB.startConversation' | translate }}
                   </button>
                 </div>
               } @else {
@@ -207,7 +207,7 @@ interface NotificationDoc {
         <mat-tab>
           <ng-template mat-tab-label>
             <mat-icon>notifications_none</mat-icon>
-            <span>Alerts</span>
+            <span>{{ 'HUB.notifications' | translate }}</span>
             @if (unreadNotifications() > 0) {
               <span class="tab-badge">{{ unreadNotifications() }}</span>
             }
@@ -220,7 +220,7 @@ interface NotificationDoc {
               @if (notifications().length > 0) {
                 <div class="notif-toolbar">
                   <button mat-button (click)="markAllRead()" [disabled]="unreadNotifications() === 0">
-                    <mat-icon>done_all</mat-icon> Mark all read
+                    <mat-icon>done_all</mat-icon> {{ 'HUB.markAllRead' | translate }}
                   </button>
                 </div>
               }
@@ -228,7 +228,7 @@ interface NotificationDoc {
               @if (notifications().length === 0) {
                 <div class="empty-state">
                   <mat-icon>notifications_none</mat-icon>
-                  <p>No notifications yet</p>
+                  <p>{{ 'HUB.noNotifications' | translate }}</p>
                 </div>
               } @else {
                 <div class="notif-list">

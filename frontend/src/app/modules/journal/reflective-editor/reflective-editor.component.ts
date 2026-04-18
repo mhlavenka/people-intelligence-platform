@@ -37,7 +37,7 @@ const MOODS: { value: JournalMood; icon: string; label: string }[] = [
     <div class="journal-page">
       <div class="page-header">
         <a routerLink="/journal/reflective" class="back-link"><mat-icon>arrow_back</mat-icon> Back to Journal</a>
-        <h1>{{ isEdit ? 'Edit' : 'New' }} Reflective Entry</h1>
+        <h1>{{ isEdit ? ('JOURNAL.editReflectiveEntry' | translate) : ('JOURNAL.newReflectiveEntryTitle' | translate) }}</h1>
       </div>
 
       @if (loading()) {
@@ -58,7 +58,7 @@ const MOODS: { value: JournalMood; icon: string; label: string }[] = [
           </div>
 
           <!-- Mood selector -->
-          <label class="field-label">How are you feeling?</label>
+          <label class="field-label">{{ 'JOURNAL.howAreYouFeeling' | translate }}</label>
           <div class="mood-selector">
             @for (m of moods; track m.value) {
               <button class="mood-btn" [class.selected]="mood === m.value" (click)="mood = m.value">
@@ -75,7 +75,7 @@ const MOODS: { value: JournalMood; icon: string; label: string }[] = [
           </mat-form-field>
 
           <!-- Tags -->
-          <label class="field-label">Tags</label>
+          <label class="field-label">{{ 'JOURNAL.tags' | translate }}</label>
           <div class="chip-row">
             @for (tag of tags; track $index) {
               <span class="editable-chip">
@@ -89,8 +89,8 @@ const MOODS: { value: JournalMood; icon: string; label: string }[] = [
 
           <!-- Supervision toggle -->
           <div class="toggle-row">
-            <mat-slide-toggle [(ngModel)]="isSupervisionReady">Flag for Supervision</mat-slide-toggle>
-            <span class="toggle-hint">Mark this entry for inclusion in your supervision digest</span>
+            <mat-slide-toggle [(ngModel)]="isSupervisionReady">{{ 'JOURNAL.flagForSupervision' | translate }}</mat-slide-toggle>
+            <span class="toggle-hint">{{ 'JOURNAL.flagForSupervisionHint' | translate }}</span>
           </div>
 
           <!-- Actions -->

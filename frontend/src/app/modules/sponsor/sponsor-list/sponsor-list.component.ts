@@ -40,7 +40,7 @@ import { TranslateModule } from '@ngx-translate/core';
         <div class="empty">
           <mat-icon>account_balance</mat-icon>
           <h3>{{ "SPONSOR.noSponsors" | translate }}</h3>
-          <p>Create your first sponsor to start tracking coaching billing.</p>
+          <p>{{ "SPONSOR.noSponsorsDesc" | translate }}</p>
           <button mat-flat-button color="primary" (click)="newSponsor()">
             <mat-icon>add</mat-icon> {{ "SPONSOR.newSponsor" | translate }}
           </button>
@@ -63,13 +63,13 @@ import { TranslateModule } from '@ngx-translate/core';
                 </button>
                 <mat-menu #menu="matMenu">
                   <a mat-menu-item [routerLink]="['/billing/sponsors', s._id]">
-                    <mat-icon>receipt_long</mat-icon> View billing
+                    <mat-icon>receipt_long</mat-icon> {{ 'SPONSOR.viewBilling' | translate }}
                   </a>
                   <button mat-menu-item (click)="edit(s)">
-                    <mat-icon>edit</mat-icon> Edit
+                    <mat-icon>edit</mat-icon> {{ 'COMMON.edit' | translate }}
                   </button>
                   <button mat-menu-item class="delete-item" (click)="confirmDelete(s)">
-                    <mat-icon>delete</mat-icon> Delete
+                    <mat-icon>delete</mat-icon> {{ 'COMMON.delete' | translate }}
                   </button>
                 </mat-menu>
               </div>

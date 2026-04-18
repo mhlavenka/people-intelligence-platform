@@ -45,7 +45,8 @@ router.post('/assess', async (req: AuthRequest, res: Response, next: NextFunctio
     const org = await Organization.findById(organizationId);
     const prompt = buildNeuroinclustionGapPrompt(
       { respondentRole, dimensions, overallMaturityScore },
-      { name: org?.name || '', industry: org?.industry }
+      { name: org?.name || '', industry: org?.industry },
+      req.language
     );
 
     const aiResponse = await callClaude(prompt);

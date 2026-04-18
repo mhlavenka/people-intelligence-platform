@@ -102,7 +102,7 @@ router.get(
         _id: req.params['id'],
         organizationId: req.user!.organizationId,
       }).populate('coacheeId', 'firstName lastName email');
-      if (!sponsor) { res.status(404).json({ error: 'Sponsor not found' }); return; }
+      if (!sponsor) { res.status(404).json({ error: req.t('errors.sponsorNotFound') }); return; }
       res.json(sponsor);
     } catch (e) { next(e); }
   },
@@ -116,7 +116,7 @@ router.post(
     try {
       const { name, email, organization, phone, billingAddress, defaultHourlyRate, notes, coacheeId } = req.body;
       if (!name || !email) {
-        res.status(400).json({ error: 'name and email are required' });
+        res.status(400).json({ error: req.t('errors.nameAndEmailRequired') });
         return;
       }
       try {
@@ -129,7 +129,7 @@ router.post(
         res.status(201).json(sponsor);
       } catch (err) {
         if ((err as { code?: number })?.code === 11000) {
-          res.status(409).json({ error: 'A sponsor with that email already exists in this organization.' });
+          res.status(409).json({ error: req.t('errors.sponsorEmailExists') });
           return;
         }
         throw err;
@@ -149,7 +149,7 @@ router.post(
         organizationId: req.user!.organizationId,
         role: 'coachee',
       }).select('_id firstName lastName email');
-      if (!coachee) { res.status(404).json({ error: 'Coachee not found' }); return; }
+      if (!coachee) { res.status(404).json({ error: req.t('errors.coacheeNotFoundShort') }); return; }
 
       // Idempotent: return the existing sponsor when one already exists
       const existing = await Sponsor.findOne({
@@ -185,11 +185,11 @@ router.put(
           update,
           { new: true, runValidators: true },
         );
-        if (!sponsor) { res.status(404).json({ error: 'Sponsor not found' }); return; }
+        if (!sponsor) { res.status(404).json({ error: req.t('errors.sponsorNotFound') }); return; }
         res.json(sponsor);
       } catch (err) {
         if ((err as { code?: number })?.code === 11000) {
-          res.status(409).json({ error: 'A sponsor with that email already exists in this organization.' });
+          res.status(409).json({ error: req.t('errors.sponsorEmailExists') });
           return;
         }
         throw err;
@@ -212,7 +212,7 @@ router.delete(
       });
       if (activeRefs > 0) {
         res.status(400).json({
-          error: `Cannot delete: ${activeRefs} active engagement(s) reference this sponsor.`,
+          error: req.t('errors.cannotDeleteSponsorActive', { count: activeRefs }),
         });
         return;
       }
@@ -220,7 +220,7 @@ router.delete(
         _id: req.params['id'],
         organizationId: req.user!.organizationId,
       });
-      if (!sponsor) { res.status(404).json({ error: 'Sponsor not found' }); return; }
+      if (!sponsor) { res.status(404).json({ error: req.t('errors.sponsorNotFound') }); return; }
       res.json({ message: 'Sponsor deleted' });
     } catch (e) { next(e); }
   },
@@ -235,7 +235,7 @@ router.get(
       const orgId = req.user!.organizationId;
       const sponsor = await Sponsor.findOne({ _id: req.params['id'], organizationId: orgId })
         .populate('coacheeId', 'firstName lastName email');
-      if (!sponsor) { res.status(404).json({ error: 'Sponsor not found' }); return; }
+      if (!sponsor) { res.status(404).json({ error: req.t('errors.sponsorNotFound') }); return; }
 
       // Sponsor billing is org-wide: show every engagement billed to this
       // sponsor regardless of coach. A coach viewing the page sees all
@@ -350,7 +350,7 @@ router.post(
     try {
       const orgId = req.user!.organizationId;
       const sponsor = await Sponsor.findOne({ _id: req.params['id'], organizationId: orgId });
-      if (!sponsor) { res.status(404).json({ error: 'Sponsor not found' }); return; }
+      if (!sponsor) { res.status(404).json({ error: req.t('errors.sponsorNotFound') }); return; }
 
       // Skip engagements that already appear in any non-void invoice for
       // this sponsor (drafts count too — re-generating shouldn't double-bill).
@@ -377,11 +377,11 @@ router.post(
       );
 
       if (!allEngagements.length) {
-        res.status(400).json({ error: 'This sponsor has no billable engagements yet.' });
+        res.status(400).json({ error: req.t('errors.noBillableEngagements') });
         return;
       }
       if (!engagements.length) {
-        res.status(400).json({ error: 'All engagements for this sponsor have already been invoiced.' });
+        res.status(400).json({ error: req.t('errors.allEngagementsInvoiced') });
         return;
       }
 
@@ -404,7 +404,7 @@ router.post(
 
       if (!lineItems.length) {
         res.status(400).json({
-          error: 'No billable amount found — set hourly rate + sessions purchased on engagements first.',
+          error: req.t('errors.noBillableAmount'),
         });
         return;
       }
@@ -496,7 +496,7 @@ router.post(
       }
 
       if (!invoice) {
-        res.status(500).json({ error: 'Could not allocate a unique invoice number.' });
+        res.status(500).json({ error: req.t('errors.couldNotAllocateInvoiceNumber') });
         return;
       }
       res.status(201).json(invoice);
@@ -512,14 +512,14 @@ router.get(
     try {
       const orgId = req.user!.organizationId;
       const sponsor = await Sponsor.findOne({ _id: req.params['id'], organizationId: orgId });
-      if (!sponsor) { res.status(404).json({ error: 'Sponsor not found' }); return; }
+      if (!sponsor) { res.status(404).json({ error: req.t('errors.sponsorNotFound') }); return; }
 
       const invoice = await Invoice.findOne({
         _id: req.params['invoiceId'],
         organizationId: orgId,
         sponsorId: sponsor._id,
       }).lean();
-      if (!invoice) { res.status(404).json({ error: 'Invoice not found' }); return; }
+      if (!invoice) { res.status(404).json({ error: req.t('errors.invoiceNotFound') }); return; }
 
       res.json({ invoice, sponsor });
     } catch (e) { next(e); }
@@ -538,9 +538,9 @@ router.put(
         organizationId: orgId,
         sponsorId: req.params['id'],
       });
-      if (!invoice) { res.status(404).json({ error: 'Invoice not found' }); return; }
+      if (!invoice) { res.status(404).json({ error: req.t('errors.invoiceNotFound') }); return; }
       if (invoice.status !== 'draft') {
-        res.status(400).json({ error: `Cannot edit invoice in status "${invoice.status}". Void it first.` });
+        res.status(400).json({ error: req.t('errors.cannotEditInvoiceStatus', { status: invoice.status }) });
         return;
       }
 
@@ -581,16 +581,16 @@ router.post(
     try {
       const orgId = req.user!.organizationId;
       const sponsor = await Sponsor.findOne({ _id: req.params['id'], organizationId: orgId });
-      if (!sponsor) { res.status(404).json({ error: 'Sponsor not found' }); return; }
+      if (!sponsor) { res.status(404).json({ error: req.t('errors.sponsorNotFound') }); return; }
 
       const invoice = await Invoice.findOne({
         _id: req.params['invoiceId'],
         organizationId: orgId,
         sponsorId: sponsor._id,
       });
-      if (!invoice) { res.status(404).json({ error: 'Invoice not found' }); return; }
+      if (!invoice) { res.status(404).json({ error: req.t('errors.invoiceNotFound') }); return; }
       if (invoice.status !== 'draft' && invoice.status !== 'overdue') {
-        res.status(400).json({ error: `Cannot send invoice in status "${invoice.status}".` });
+        res.status(400).json({ error: req.t('errors.cannotSendInvoiceStatus', { status: invoice.status }) });
         return;
       }
 
@@ -661,7 +661,7 @@ router.patch(
         { status: 'void' },
         { new: true },
       );
-      if (!invoice) { res.status(404).json({ error: 'Invoice not found' }); return; }
+      if (!invoice) { res.status(404).json({ error: req.t('errors.invoiceNotFound') }); return; }
       res.json(invoice);
     } catch (e) { next(e); }
   },
@@ -679,10 +679,10 @@ router.delete(
         organizationId: orgId,
         sponsorId: req.params['id'],
       });
-      if (!invoice) { res.status(404).json({ error: 'Invoice not found' }); return; }
+      if (!invoice) { res.status(404).json({ error: req.t('errors.invoiceNotFound') }); return; }
       if (invoice.status !== 'draft' && invoice.status !== 'void') {
         res.status(400).json({
-          error: `Cannot delete an invoice in status "${invoice.status}". Void it first.`,
+          error: req.t('errors.cannotDeleteInvoiceStatus', { status: invoice.status }),
         });
         return;
       }

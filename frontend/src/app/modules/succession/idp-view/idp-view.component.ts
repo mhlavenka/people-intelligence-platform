@@ -91,15 +91,15 @@ interface IDP {
       <div class="module-banner">
         <div class="banner-insight">
           <mat-icon class="banner-icon">emoji_events</mat-icon>
-          <p><strong>Methodology:</strong> Transforms Helena's high-touch succession planning and leadership coaching into a scalable platform. Every IDP is structured around the proven GROW model (Goal → Reality → Options → Will Do) with EQi-informed competency mapping and AI-generated 90-day milestones.</p>
+          <p [innerHTML]="'SUCCESSION.methodology' | translate"></p>
         </div>
         <div class="banner-features">
-          <span class="feature-pill"><mat-icon>account_tree</mat-icon> Competency Gap Mapper</span>
-          <span class="feature-pill"><mat-icon>auto_awesome</mat-icon> AI-Generated IDPs (GROW)</span>
-          <span class="feature-pill"><mat-icon>leaderboard</mat-icon> Succession Scorecard</span>
-          <span class="feature-pill"><mat-icon>book</mat-icon> Coaching Journal</span>
-          <span class="feature-pill"><mat-icon>group</mat-icon> Stakeholder Alignment</span>
-          <span class="feature-pill"><mat-icon>video_call</mat-icon> Helena Coaching Integration</span>
+          <span class="feature-pill"><mat-icon>account_tree</mat-icon> {{ 'SUCCESSION.pillCompetency' | translate }}</span>
+          <span class="feature-pill"><mat-icon>auto_awesome</mat-icon> {{ 'SUCCESSION.pillAIIDP' | translate }}</span>
+          <span class="feature-pill"><mat-icon>leaderboard</mat-icon> {{ 'SUCCESSION.pillScorecard' | translate }}</span>
+          <span class="feature-pill"><mat-icon>book</mat-icon> {{ 'SUCCESSION.pillJournal' | translate }}</span>
+          <span class="feature-pill"><mat-icon>group</mat-icon> {{ 'SUCCESSION.pillStakeholder' | translate }}</span>
+          <span class="feature-pill"><mat-icon>video_call</mat-icon> {{ 'SUCCESSION.pillHelena' | translate }}</span>
         </div>
       </div>
 
@@ -110,7 +110,7 @@ interface IDP {
             <div class="section-icon blue"><mat-icon>leaderboard</mat-icon></div>
             <div>
               <h3>{{ "SUCCESSION.successionScorecard" | translate }}</h3>
-              <p>Board-ready reporting on next-generation leadership bench strength. Share with executives and board members to demonstrate succession health at a glance.</p>
+              <p>{{ 'SUCCESSION.scorecardDesc' | translate }}</p>
             </div>
           </div>
         </div>

@@ -65,15 +65,15 @@ router.post(
         _id: engagementId,
         organizationId: orgId,
       });
-      if (!engagement) { res.status(404).json({ error: 'Engagement not found' }); return; }
+      if (!engagement) { res.status(404).json({ error: req.t('errors.engagementNotFound') }); return; }
 
       // Role-scope: coachees can only create on engagements they're part of;
       // coaches only on engagements they own.
       if (req.user!.role === 'coachee' && engagement.coacheeId.toString() !== req.user!.userId) {
-        res.status(403).json({ error: 'Forbidden' }); return;
+        res.status(403).json({ error: req.t('errors.forbidden') }); return;
       }
       if (req.user!.role === 'coach' && engagement.coachId.toString() !== req.user!.userId) {
-        res.status(403).json({ error: 'Forbidden' }); return;
+        res.status(403).json({ error: req.t('errors.forbidden') }); return;
       }
 
       // If a note already exists for the same sessionId, return it (idempotent).
@@ -126,7 +126,7 @@ router.get(
         ...journalScope(req),
         _id: req.params['noteId'],
       }).lean();
-      if (!note) { res.status(404).json({ error: 'Note not found' }); return; }
+      if (!note) { res.status(404).json({ error: req.t('errors.noteNotFound') }); return; }
       res.json(note);
     } catch (e) { next(e); }
   }
@@ -147,7 +147,7 @@ router.put(
         ...journalScope(req),
         _id: req.params['noteId'],
       });
-      if (!note) { res.status(404).json({ error: 'Note not found' }); return; }
+      if (!note) { res.status(404).json({ error: req.t('errors.noteNotFound') }); return; }
 
       if (req.user!.role === 'coachee') {
         if (req.body.coacheePre !== undefined) note.coacheePre = req.body.coacheePre;
@@ -176,7 +176,7 @@ router.delete(
         organizationId: req.user!.organizationId,
         coachId: req.user!.userId,
       });
-      if (!note) { res.status(404).json({ error: 'Note not found' }); return; }
+      if (!note) { res.status(404).json({ error: req.t('errors.noteNotFound') }); return; }
       res.json({ message: 'Note deleted' });
     } catch (e) { next(e); }
   }
@@ -197,10 +197,10 @@ router.post(
         organizationId: req.user!.organizationId,
         coachId: req.user!.userId,
       });
-      if (!note) { res.status(404).json({ error: 'Note not found' }); return; }
+      if (!note) { res.status(404).json({ error: req.t('errors.noteNotFound') }); return; }
 
       if (note.status !== 'complete') {
-        res.status(400).json({ error: 'Note must be marked complete before generating AI summary' });
+        res.status(400).json({ error: req.t('errors.noteNotComplete') });
         return;
       }
 
@@ -208,7 +208,7 @@ router.post(
         preSession: note.preSession,
         inSession: note.inSession,
         postSession: note.postSession,
-      });
+      }, req.language);
 
       const raw = await callClaude(prompt, undefined, 1024);
       const parsed = JSON.parse(extractJson(raw));
@@ -281,7 +281,7 @@ router.get(
         organizationId: req.user!.organizationId,
         coachId: req.user!.userId,
       }).lean();
-      if (!entry) { res.status(404).json({ error: 'Entry not found' }); return; }
+      if (!entry) { res.status(404).json({ error: req.t('errors.entryNotFound') }); return; }
       res.json(entry);
     } catch (e) { next(e); }
   }
@@ -302,7 +302,7 @@ router.put(
         req.body,
         { new: true, runValidators: true }
       );
-      if (!entry) { res.status(404).json({ error: 'Entry not found' }); return; }
+      if (!entry) { res.status(404).json({ error: req.t('errors.entryNotFound') }); return; }
       res.json(entry);
     } catch (e) { next(e); }
   }
@@ -319,7 +319,7 @@ router.delete(
         organizationId: req.user!.organizationId,
         coachId: req.user!.userId,
       });
-      if (!entry) { res.status(404).json({ error: 'Entry not found' }); return; }
+      if (!entry) { res.status(404).json({ error: req.t('errors.entryNotFound') }); return; }
       res.json({ message: 'Entry deleted' });
     } catch (e) { next(e); }
   }
@@ -345,7 +345,7 @@ router.get(
         .lean();
 
       if (notes.length < 2) {
-        res.status(400).json({ error: 'At least 2 completed session notes are required for insights' });
+        res.status(400).json({ error: req.t('errors.minTwoSessionNotes') });
         return;
       }
 
@@ -358,7 +358,8 @@ router.get(
           postSession: n.postSession,
           aiSummary: n.aiSummary,
           aiThemes: n.aiThemes,
-        }))
+        })),
+        req.language
       );
 
       const raw = await callClaude(prompt, undefined, 2048);
@@ -393,7 +394,7 @@ router.get(
       ]);
 
       if (entries.length === 0 && notes.length === 0) {
-        res.status(400).json({ error: 'No supervision-ready entries or session reflections found' });
+        res.status(400).json({ error: req.t('errors.noSupervisionEntries') });
         return;
       }
 
@@ -410,7 +411,8 @@ router.get(
           sessionDate: n.sessionDate.toISOString().split('T')[0],
           postSession: n.postSession,
           aiThemes: n.aiThemes,
-        }))
+        })),
+        req.language
       );
 
       const raw = await callClaude(prompt, undefined, 2048);

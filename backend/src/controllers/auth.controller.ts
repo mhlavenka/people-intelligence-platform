@@ -81,7 +81,7 @@ export async function register(req: Request, res: Response, next: NextFunction):
 
     const existingOrg = await Organization.findOne({ slug: orgSlug }).setOptions({ bypassTenantCheck: true });
     if (existingOrg) {
-      res.status(409).json({ error: 'Organization slug already taken' });
+      res.status(409).json({ error: req.t('errors.orgSlugTaken') });
       return;
     }
 
@@ -121,6 +121,7 @@ export async function register(req: Request, res: Response, next: NextFunction):
         profilePicture: user.profilePicture,
         isCoachee: user.isCoachee === true,
         canChooseCoach: true,
+        preferredLanguage: user.preferredLanguage,
       },
     });
   } catch (error) {
@@ -134,13 +135,13 @@ export async function login(req: Request, res: Response, next: NextFunction): Pr
 
     const user = await User.findOne({ email: email.toLowerCase() }).setOptions({ bypassTenantCheck: true });
     if (!user || !user.isActive) {
-      res.status(401).json({ error: 'Invalid credentials' });
+      res.status(401).json({ error: req.t('errors.invalidCredentials') });
       return;
     }
 
     const valid = await bcrypt.compare(password, user.passwordHash);
     if (!valid) {
-      res.status(401).json({ error: 'Invalid credentials' });
+      res.status(401).json({ error: req.t('errors.invalidCredentials') });
       return;
     }
 
@@ -176,6 +177,7 @@ export async function login(req: Request, res: Response, next: NextFunction): Pr
         profilePicture: user.profilePicture,
         isCoachee: user.isCoachee === true,
         canChooseCoach: await resolveCanChooseCoach(user),
+        preferredLanguage: user.preferredLanguage,
       },
     });
   } catch (error) {
@@ -187,7 +189,7 @@ export async function refresh(req: Request, res: Response, next: NextFunction): 
   try {
     const { refreshToken } = req.body;
     if (!refreshToken) {
-      res.status(401).json({ error: 'Refresh token required' });
+      res.status(401).json({ error: req.t('errors.refreshTokenRequired') });
       return;
     }
 
@@ -195,7 +197,7 @@ export async function refresh(req: Request, res: Response, next: NextFunction): 
     const tokens = generateTokens(decoded);
     res.json(tokens);
   } catch {
-    res.status(401).json({ error: 'Invalid refresh token' });
+    res.status(401).json({ error: req.t('errors.invalidRefreshToken') });
     next;
   }
 }
@@ -204,7 +206,7 @@ export async function verify2fa(req: Request, res: Response, next: NextFunction)
   try {
     const { tempToken, otp } = req.body;
     if (!tempToken || !otp) {
-      res.status(400).json({ error: 'tempToken and otp are required.' });
+      res.status(400).json({ error: req.t('errors.tempTokenAndOtpRequired') });
       return;
     }
 
@@ -212,12 +214,12 @@ export async function verify2fa(req: Request, res: Response, next: NextFunction)
     try {
       pending = jwt.verify(tempToken, config.jwt.secret) as typeof pending;
     } catch {
-      res.status(401).json({ error: 'Invalid or expired token. Please log in again.' });
+      res.status(401).json({ error: req.t('errors.invalidOrExpiredTokenLogin') });
       return;
     }
 
     if (!pending.pending2fa) {
-      res.status(400).json({ error: 'Invalid token type.' });
+      res.status(400).json({ error: req.t('errors.invalidTokenType') });
       return;
     }
 
@@ -227,13 +229,13 @@ export async function verify2fa(req: Request, res: Response, next: NextFunction)
       .setOptions({ bypassTenantCheck: true });
 
     if (!user || !user.twoFactorEnabled || !user.twoFactorSecret) {
-      res.status(401).json({ error: 'Invalid credentials.' });
+      res.status(401).json({ error: req.t('errors.invalidCredentialsDot') });
       return;
     }
 
     const valid = authenticator.verify({ token: otp.replace(/\s/g, ''), secret: user.twoFactorSecret });
     if (!valid) {
-      res.status(401).json({ error: 'Invalid authenticator code. Please try again.' });
+      res.status(401).json({ error: req.t('errors.invalidAuthenticatorCode') });
       return;
     }
 
@@ -258,6 +260,7 @@ export async function verify2fa(req: Request, res: Response, next: NextFunction)
         profilePicture: user.profilePicture,
         isCoachee: user.isCoachee === true,
         canChooseCoach: await resolveCanChooseCoach(user),
+        preferredLanguage: user.preferredLanguage,
       },
     });
   } catch (error) {

@@ -296,6 +296,10 @@ const MODULE_SLIDES: ModuleSlide[] = [
 
       <!-- Right: Login Card -->
       <div class="auth-card">
+        <div class="lang-switcher">
+          <button class="lang-btn" [class.active]="translate.currentLang === 'en'" (click)="switchLang('en')">EN</button>
+          <button class="lang-btn" [class.active]="translate.currentLang === 'fr'" (click)="switchLang('fr')">FR</button>
+        </div>
         @if (!twoFactorStep()) {
           <!-- Step 1: email + password -->
           <div class="auth-brand">
@@ -602,6 +606,18 @@ const MODULE_SLIDES: ModuleSlide[] = [
     .auth-card {
       flex: 1; display: flex; flex-direction: column; justify-content: center;
       padding: 48px 56px; max-width: 520px; margin: 0 auto;
+      position: relative;
+    }
+    .lang-switcher {
+      position: absolute; top: 16px; right: 16px;
+      display: flex; gap: 4px;
+    }
+    .lang-btn {
+      background: none; border: 1px solid #d4dfe9; border-radius: 4px;
+      padding: 4px 10px; font-size: 12px; font-weight: 600;
+      color: #6b7c93; cursor: pointer; transition: all 0.15s;
+      &:hover { border-color: var(--artes-accent); color: var(--artes-accent); }
+      &.active { background: var(--artes-primary); color: #fff; border-color: var(--artes-primary); }
     }
 
     .auth-brand {
@@ -720,7 +736,7 @@ export class LoginComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private api: ApiService,
     private router: Router,
-    private translate: TranslateService,
+    public translate: TranslateService,
   ) {
     this.form = this.fb.group({
       email:    ['', [Validators.required, Validators.email]],
@@ -785,6 +801,11 @@ export class LoginComponent implements OnInit, OnDestroy {
   private restartCarousel(): void {
     this.stopCarousel();
     this.startCarousel();
+  }
+
+  switchLang(lang: string): void {
+    this.translate.use(lang);
+    localStorage.setItem('artes_language', lang);
   }
 
   onSubmit(): void {

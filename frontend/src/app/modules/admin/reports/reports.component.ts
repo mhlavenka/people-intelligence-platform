@@ -72,16 +72,16 @@ const ROLE_LABELS: Record<string, string> = {
           </div>
           @if (engagement()) {
             <div class="stats-grid">
-              <div class="stat-box"><div class="stat-num">{{ engagement()!.users.total }}</div><div class="stat-label">Total Users</div></div>
-              <div class="stat-box"><div class="stat-num">{{ engagement()!.users.active }}</div><div class="stat-label">Active</div></div>
-              <div class="stat-box"><div class="stat-num">{{ engagement()!.users.recentLogins }}</div><div class="stat-label">Logged in (30d)</div></div>
-              <div class="stat-box"><div class="stat-num">{{ engagement()!.activity['surveyResponses'] }}</div><div class="stat-label">Survey Responses</div></div>
-              <div class="stat-box"><div class="stat-num">{{ engagement()!.activity['conflictAnalyses'] }}</div><div class="stat-label">Analyses</div></div>
-              <div class="stat-box"><div class="stat-num">{{ engagement()!.activity['journalEntries'] }}</div><div class="stat-label">Journal Entries</div></div>
+              <div class="stat-box"><div class="stat-num">{{ engagement()!.users.total }}</div><div class="stat-label">{{ 'ADMIN.totalUsers' | translate }}</div></div>
+              <div class="stat-box"><div class="stat-num">{{ engagement()!.users.active }}</div><div class="stat-label">{{ 'ADMIN.activeUsers' | translate }}</div></div>
+              <div class="stat-box"><div class="stat-num">{{ engagement()!.users.recentLogins }}</div><div class="stat-label">{{ 'ADMIN.recentLogins' | translate }}</div></div>
+              <div class="stat-box"><div class="stat-num">{{ engagement()!.activity['surveyResponses'] }}</div><div class="stat-label">{{ 'ADMIN.surveyResponses' | translate }}</div></div>
+              <div class="stat-box"><div class="stat-num">{{ engagement()!.activity['conflictAnalyses'] }}</div><div class="stat-label">{{ 'ADMIN.conflictAnalyses' | translate }}</div></div>
+              <div class="stat-box"><div class="stat-num">{{ engagement()!.activity['journalEntries'] }}</div><div class="stat-label">{{ 'ADMIN.journalEntries' | translate }}</div></div>
             </div>
             <div class="breakdown-row">
               <div class="breakdown-col">
-                <h4>By Role</h4>
+                <h4>{{ 'ADMIN.byRole' | translate }}</h4>
                 @for (entry of objectEntries(engagement()!.roleBreakdown); track entry[0]) {
                   <div class="breakdown-item">
                     <span class="breakdown-key">{{ roleLabel(entry[0]) }}</span>
@@ -90,9 +90,9 @@ const ROLE_LABELS: Record<string, string> = {
                 }
               </div>
               <div class="breakdown-col">
-                <h4>By Department</h4>
+                <h4>{{ 'ADMIN.byDepartment' | translate }}</h4>
                 @if (engagement()!.deptBreakdown.length === 0) {
-                  <div class="breakdown-empty">No department data</div>
+                  <div class="breakdown-empty">{{ 'ADMIN.noDeptData' | translate }}</div>
                 } @else {
                   @for (d of engagement()!.deptBreakdown; track d.department) {
                     <div class="breakdown-item">
@@ -111,8 +111,8 @@ const ROLE_LABELS: Record<string, string> = {
           <div class="report-header">
             <mat-icon>warning_amber</mat-icon>
             <div>
-              <h2>Conflict Risk Overview</h2>
-              <p>Risk distribution, department breakdown, and trends</p>
+              <h2>{{ 'ADMIN.conflictRiskOverview' | translate }}</h2>
+              <p>{{ 'ADMIN.conflictRiskDesc' | translate }}</p>
             </div>
             @if (conflict()) {
               <span class="report-total" [style.color]="riskColor(conflict()!.avgRiskScore)">Avg: {{ conflict()!.avgRiskScore }}/100</span>
@@ -120,16 +120,16 @@ const ROLE_LABELS: Record<string, string> = {
           </div>
           @if (conflict()) {
             <div class="stats-grid">
-              <div class="stat-box low"><div class="stat-num">{{ conflict()!.byLevel['low'] || 0 }}</div><div class="stat-label">Low</div></div>
-              <div class="stat-box medium"><div class="stat-num">{{ conflict()!.byLevel['medium'] || 0 }}</div><div class="stat-label">Medium</div></div>
-              <div class="stat-box high"><div class="stat-num">{{ conflict()!.byLevel['high'] || 0 }}</div><div class="stat-label">High</div></div>
-              <div class="stat-box critical"><div class="stat-num">{{ conflict()!.byLevel['critical'] || 0 }}</div><div class="stat-label">Critical</div></div>
-              <div class="stat-box"><div class="stat-num">{{ conflict()!.escalated }}</div><div class="stat-label">Escalated</div></div>
-              <div class="stat-box"><div class="stat-num">{{ conflict()!.total }}</div><div class="stat-label">Total Analyses</div></div>
+              <div class="stat-box low"><div class="stat-num">{{ conflict()!.byLevel['low'] || 0 }}</div><div class="stat-label">{{ 'CONFLICT.lowRisk' | translate }}</div></div>
+              <div class="stat-box medium"><div class="stat-num">{{ conflict()!.byLevel['medium'] || 0 }}</div><div class="stat-label">{{ 'CONFLICT.mediumRisk' | translate }}</div></div>
+              <div class="stat-box high"><div class="stat-num">{{ conflict()!.byLevel['high'] || 0 }}</div><div class="stat-label">{{ 'CONFLICT.highRisk' | translate }}</div></div>
+              <div class="stat-box critical"><div class="stat-num">{{ conflict()!.byLevel['critical'] || 0 }}</div><div class="stat-label">{{ 'CONFLICT.critical' | translate }}</div></div>
+              <div class="stat-box"><div class="stat-num">{{ conflict()!.escalated }}</div><div class="stat-label">{{ 'ADMIN.escalations' | translate }}</div></div>
+              <div class="stat-box"><div class="stat-num">{{ conflict()!.total }}</div><div class="stat-label">{{ 'ADMIN.totalAnalyses' | translate }}</div></div>
             </div>
 
             @if (conflict()!.trend.length > 0) {
-              <h4>Monthly Risk Trend</h4>
+              <h4>{{ 'ADMIN.monthlyRiskTrend' | translate }}</h4>
               <div class="bar-chart">
                 @for (item of conflict()!.trend; track item.period) {
                   <div class="bar-col" [matTooltip]="'Avg: ' + item.avgScore + '/100 (' + item.count + ' analyses)'">
@@ -147,28 +147,28 @@ const ROLE_LABELS: Record<string, string> = {
           <div class="report-header">
             <mat-icon>trending_up</mat-icon>
             <div>
-              <h2>Development Plan Progress</h2>
-              <p>IDP status, milestone completion, and individual progress</p>
+              <h2>{{ 'ADMIN.devPlanProgress' | translate }}</h2>
+              <p>{{ 'ADMIN.devPlanProgressDesc' | translate }}</p>
             </div>
           </div>
           @if (idpReport()) {
             <div class="stats-grid">
-              <div class="stat-box"><div class="stat-num">{{ idpReport()!.total }}</div><div class="stat-label">Total Plans</div></div>
-              <div class="stat-box"><div class="stat-num">{{ idpReport()!.byStatus['active'] || 0 }}</div><div class="stat-label">Active</div></div>
-              <div class="stat-box"><div class="stat-num">{{ idpReport()!.byStatus['completed'] || 0 }}</div><div class="stat-label">Completed</div></div>
-              <div class="stat-box"><div class="stat-num">{{ idpReport()!.milestones.rate }}%</div><div class="stat-label">Milestone Rate</div><div class="stat-sub">{{ idpReport()!.milestones.completed }}/{{ idpReport()!.milestones.total }}</div></div>
+              <div class="stat-box"><div class="stat-num">{{ idpReport()!.total }}</div><div class="stat-label">{{ 'ADMIN.totalPlans' | translate }}</div></div>
+              <div class="stat-box"><div class="stat-num">{{ idpReport()!.byStatus['active'] || 0 }}</div><div class="stat-label">{{ 'COMMON.active' | translate }}</div></div>
+              <div class="stat-box"><div class="stat-num">{{ idpReport()!.byStatus['completed'] || 0 }}</div><div class="stat-label">{{ 'ADMIN.completed' | translate }}</div></div>
+              <div class="stat-box"><div class="stat-num">{{ idpReport()!.milestones.rate }}%</div><div class="stat-label">{{ 'ADMIN.milestoneRate' | translate }}</div><div class="stat-sub">{{ idpReport()!.milestones.completed }}/{{ idpReport()!.milestones.total }}</div></div>
             </div>
 
             @if (idpReport()!.plans.length > 0) {
               <table class="data-table">
                 <thead>
                   <tr>
-                    <th>Person</th>
-                    <th>Goal</th>
-                    <th>Module</th>
-                    <th>Status</th>
-                    <th>Milestones</th>
-                    <th>Created</th>
+                    <th>{{ 'ADMIN.person' | translate }}</th>
+                    <th>{{ 'ADMIN.goalHeader' | translate }}</th>
+                    <th>{{ 'ADMIN.module' | translate }}</th>
+                    <th>{{ 'COMMON.status' | translate }}</th>
+                    <th>{{ 'ADMIN.milestonesHeader' | translate }}</th>
+                    <th>{{ 'COMMON.created' | translate }}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -193,8 +193,8 @@ const ROLE_LABELS: Record<string, string> = {
           <div class="report-header">
             <mat-icon>assignment</mat-icon>
             <div>
-              <h2>Survey & Intake Activity</h2>
-              <p>Template usage and response trends</p>
+              <h2>{{ 'ADMIN.surveyIntakeActivity' | translate }}</h2>
+              <p>{{ 'ADMIN.surveyIntakeActivityDesc' | translate }}</p>
             </div>
             @if (survey()) {
               <span class="report-total">{{ survey()!.totalResponses }} responses</span>
@@ -205,9 +205,9 @@ const ROLE_LABELS: Record<string, string> = {
               <table class="data-table">
                 <thead>
                   <tr>
-                    <th>Template</th>
-                    <th>Module</th>
-                    <th>Responses</th>
+                    <th>{{ 'ADMIN.templateHeader' | translate }}</th>
+                    <th>{{ 'ADMIN.module' | translate }}</th>
+                    <th>{{ 'ADMIN.responsesHeader' | translate }}</th>
                   </tr>
                 </thead>
                 <tbody>

@@ -26,7 +26,7 @@ calendarCallbackRouter.get('/auth/google/callback', async (req: Request, res: Re
     const code = req.query['code'] as string;
     const userId = req.query['state'] as string;
     if (!code || !userId) {
-      res.status(400).json({ error: 'Missing code or state' });
+      res.status(400).json({ error: req.t('errors.missingCodeOrState') });
       return;
     }
 
@@ -41,7 +41,7 @@ calendarCallbackRouter.get('/auth/microsoft/callback', async (req: Request, res:
     const code = req.query['code'] as string;
     const userId = req.query['state'] as string;
     if (!code || !userId) {
-      res.status(400).json({ error: 'Missing code or state' });
+      res.status(400).json({ error: req.t('errors.missingCodeOrState') });
       return;
     }
 
@@ -109,7 +109,7 @@ router.post(
     try {
       const { calendarId, calendarName } = req.body;
       if (!calendarId) {
-        res.status(400).json({ error: 'calendarId is required' });
+        res.status(400).json({ error: req.t('errors.calendarIdRequired') });
         return;
       }
 

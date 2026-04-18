@@ -77,7 +77,7 @@ const ROLE_META: Record<string, { label: string; color: string }> = {
         <mat-form-field appearance="outline" class="search-field">
           <mat-label>{{ "ADMIN.searchUsers" | translate }}</mat-label>
           <mat-icon matPrefix>search</mat-icon>
-          <input matInput [ngModel]="searchQuery()" (ngModelChange)="searchQuery.set($event)" placeholder="Name or email…" />
+          <input matInput [ngModel]="searchQuery()" (ngModelChange)="searchQuery.set($event)" [placeholder]="'ADMIN.searchPlaceholder' | translate" />
           @if (searchQuery()) {
             <button mat-icon-button matSuffix (click)="searchQuery.set('')">
               <mat-icon>close</mat-icon>
@@ -87,7 +87,7 @@ const ROLE_META: Record<string, { label: string; color: string }> = {
 
         <div class="role-filters">
           <button class="role-chip" [class.active]="roleFilter() === 'all'"
-                  (click)="roleFilter.set('all')">All</button>
+                  (click)="roleFilter.set('all')">{{ 'COMMON.all' | translate }}</button>
           @for (r of roleOptions; track r.value) {
             <button class="role-chip" [class.active]="roleFilter() === r.value"
                     (click)="roleFilter.set(r.value)">{{ r.label }}</button>
@@ -100,8 +100,8 @@ const ROLE_META: Record<string, { label: string; color: string }> = {
       } @else if (filtered().length === 0) {
         <div class="empty-state">
           <mat-icon>group</mat-icon>
-          <h3>No users found</h3>
-          <p>{{ searchQuery() ? 'Try a different search term.' : 'Add your first team member.' }}</p>
+          <h3>{{ 'ADMIN.noUsersFound' | translate }}</h3>
+          <p>{{ searchQuery() ? ('ADMIN.tryDifferentSearch' | translate) : ('ADMIN.addFirstMember' | translate) }}</p>
         </div>
       } @else {
         <div class="table-card">
@@ -109,7 +109,7 @@ const ROLE_META: Record<string, { label: string; color: string }> = {
 
             <!-- Avatar + name -->
             <ng-container matColumnDef="name">
-              <th mat-header-cell *matHeaderCellDef>User</th>
+              <th mat-header-cell *matHeaderCellDef>{{ 'ADMIN.userHeader' | translate }}</th>
               <td mat-cell *matCellDef="let u">
                 <div class="user-cell">
                   <app-avatar [firstName]="u.firstName" [lastName]="u.lastName" [profilePicture]="u.profilePicture || ''" [size]="36" [bgColor]="u.isActive ? '#3A9FD6' : '#d1d5db'" />
@@ -123,7 +123,7 @@ const ROLE_META: Record<string, { label: string; color: string }> = {
 
             <!-- Role -->
             <ng-container matColumnDef="role">
-              <th mat-header-cell *matHeaderCellDef>Role</th>
+              <th mat-header-cell *matHeaderCellDef>{{ 'ADMIN.roleHeader' | translate }}</th>
               <td mat-cell *matCellDef="let u">
                 <span class="role-badge" [style.background]="roleMeta(u.role).color + '22'"
                       [style.color]="roleMeta(u.role).color">
@@ -134,7 +134,7 @@ const ROLE_META: Record<string, { label: string; color: string }> = {
 
             <!-- Coachee flag -->
             <ng-container matColumnDef="coachee">
-              <th mat-header-cell *matHeaderCellDef matTooltip="Receiving coaching">Coachee</th>
+              <th mat-header-cell *matHeaderCellDef [matTooltip]="'ADMIN.receivingCoaching' | translate">{{ 'ADMIN.coacheeHeader' | translate }}</th>
               <td mat-cell *matCellDef="let u">
                 <mat-slide-toggle
                   [checked]="u.isCoachee === true || u.role === 'coachee'"
@@ -148,14 +148,14 @@ const ROLE_META: Record<string, { label: string; color: string }> = {
 
             <!-- Department -->
             <ng-container matColumnDef="department">
-              <th mat-header-cell *matHeaderCellDef>Department</th>
+              <th mat-header-cell *matHeaderCellDef>{{ 'COMMON.department' | translate }}</th>
               <td mat-cell *matCellDef="let u" class="meta-cell">
                 {{ u.department || '—' }}
               </td>
             </ng-container>
 
             <ng-container matColumnDef="sponsor">
-              <th mat-header-cell *matHeaderCellDef>Sponsor</th>
+              <th mat-header-cell *matHeaderCellDef>{{ 'ADMIN.sponsorHeader' | translate }}</th>
               <td mat-cell *matCellDef="let u" class="meta-cell">
                 {{ sponsorName(u) }}
               </td>
@@ -163,12 +163,12 @@ const ROLE_META: Record<string, { label: string; color: string }> = {
 
             <!-- Status -->
             <ng-container matColumnDef="status">
-              <th mat-header-cell *matHeaderCellDef>Status</th>
+              <th mat-header-cell *matHeaderCellDef>{{ 'COMMON.status' | translate }}</th>
               <td mat-cell *matCellDef="let u">
                 <mat-slide-toggle
                   [checked]="u.isActive"
                   (change)="toggleActive(u)"
-                  [matTooltip]="u.isActive ? 'Deactivate' : 'Activate'"
+                  [matTooltip]="u.isActive ? ('ADMIN.deactivateUser' | translate) : ('ADMIN.activateUser' | translate)"
                   color="primary"
                 />
               </td>
@@ -176,7 +176,7 @@ const ROLE_META: Record<string, { label: string; color: string }> = {
 
             <!-- Last login -->
             <ng-container matColumnDef="lastLogin">
-              <th mat-header-cell *matHeaderCellDef>Last Login</th>
+              <th mat-header-cell *matHeaderCellDef>{{ 'ADMIN.lastLogin' | translate }}</th>
               <td mat-cell *matCellDef="let u" class="meta-cell">
                 {{ u.lastLoginAt ? (u.lastLoginAt | date:'MMM d, y') : '—' }}
               </td>
@@ -184,7 +184,7 @@ const ROLE_META: Record<string, { label: string; color: string }> = {
 
             <!-- Created -->
             <ng-container matColumnDef="created">
-              <th mat-header-cell *matHeaderCellDef>Added</th>
+              <th mat-header-cell *matHeaderCellDef>{{ 'ADMIN.addedHeader' | translate }}</th>
               <td mat-cell *matCellDef="let u" class="meta-cell">
                 {{ u.createdAt | date:'MMM d, y' }}
               </td>
@@ -213,15 +213,15 @@ const ROLE_META: Record<string, { label: string; color: string }> = {
     <mat-menu #rowMenu="matMenu">
       <ng-template matMenuContent let-u="user">
         <button mat-menu-item (click)="openEditDialog(u)">
-          <mat-icon>edit</mat-icon> Edit
+          <mat-icon>edit</mat-icon> {{ 'COMMON.edit' | translate }}
         </button>
         <button mat-menu-item (click)="toggleActive(u)">
           <mat-icon>{{ u.isActive ? 'block' : 'check_circle' }}</mat-icon>
-          {{ u.isActive ? 'Deactivate' : 'Activate' }}
+          {{ u.isActive ? ('ADMIN.deactivateUser' | translate) : ('ADMIN.activateUser' | translate) }}
         </button>
         <mat-divider />
         <button mat-menu-item class="danger-item" (click)="deleteUser(u)">
-          <mat-icon>delete</mat-icon> Delete
+          <mat-icon>delete</mat-icon> {{ 'COMMON.delete' | translate }}
         </button>
       </ng-template>
     </mat-menu>
@@ -353,6 +353,7 @@ export class UserManagementComponent implements OnInit {
     private api: ApiService,
     private dialog: MatDialog,
     private snackBar: MatSnackBar,
+    private translate: TranslateService,
   ) {}
 
   ngOnInit(): void { this.loadUsers(); }
@@ -382,12 +383,12 @@ export class UserManagementComponent implements OnInit {
         this.users.update((list) =>
           list.map((u) => u._id === user._id ? { ...u, isActive: !u.isActive } : u)
         );
-        this.snackBar.open(
-          `${user.firstName} ${!user.isActive ? 'activated' : 'deactivated'}`,
-          'Close', { duration: 2500 }
-        );
+        const msg = !user.isActive
+          ? this.translate.instant('ADMIN.userActivated', { name: user.firstName })
+          : this.translate.instant('ADMIN.userDeactivated', { name: user.firstName });
+        this.snackBar.open(msg, this.translate.instant('COMMON.close'), { duration: 2500 });
       },
-      error: () => this.snackBar.open('Update failed', 'Close', { duration: 2500 }),
+      error: () => this.snackBar.open(this.translate.instant('ADMIN.updateFailed'), this.translate.instant('COMMON.close'), { duration: 2500 }),
     });
   }
 
@@ -403,12 +404,12 @@ export class UserManagementComponent implements OnInit {
         this.users.update((list) =>
           list.map((u) => u._id === user._id ? { ...u, isCoachee: checked } : u)
         );
-        this.snackBar.open(
-          `${user.firstName} ${checked ? 'flagged as coachee' : 'no longer flagged as coachee'}`,
-          'Close', { duration: 2500 }
-        );
+        const msg = checked
+          ? this.translate.instant('ADMIN.flaggedAsCoachee', { name: user.firstName })
+          : this.translate.instant('ADMIN.unflaggedAsCoachee', { name: user.firstName });
+        this.snackBar.open(msg, this.translate.instant('COMMON.close'), { duration: 2500 });
       },
-      error: () => this.snackBar.open('Update failed', 'Close', { duration: 2500 }),
+      error: () => this.snackBar.open(this.translate.instant('ADMIN.updateFailed'), this.translate.instant('COMMON.close'), { duration: 2500 }),
     });
   }
 
@@ -416,9 +417,9 @@ export class UserManagementComponent implements OnInit {
     const ref = this.dialog.open(ConfirmDialogComponent, {
       width: '420px',
       data: {
-        title: 'Delete User',
-        message: `Permanently delete ${user.firstName} ${user.lastName}? This cannot be undone.`,
-        confirmLabel: 'Delete',
+        title: this.translate.instant('ADMIN.deleteUserTitle'),
+        message: this.translate.instant('ADMIN.deleteUserConfirm', { name: `${user.firstName} ${user.lastName}` }),
+        confirmLabel: this.translate.instant('COMMON.delete'),
         icon: 'person_remove',
       },
     });
@@ -427,10 +428,10 @@ export class UserManagementComponent implements OnInit {
       this.api.delete(`/users/${user._id}`).subscribe({
         next: () => {
           this.users.update((list) => list.filter((u) => u._id !== user._id));
-          this.snackBar.open('User deleted', 'Close', { duration: 2500 });
+          this.snackBar.open(this.translate.instant('ADMIN.userDeleted'), this.translate.instant('COMMON.close'), { duration: 2500 });
         },
         error: (err) => this.snackBar.open(
-          err.error?.error || 'Delete failed', 'Close', { duration: 3000 }
+          err.error?.error || this.translate.instant('ADMIN.deleteFailed'), this.translate.instant('COMMON.close'), { duration: 3000 }
         ),
       });
     });

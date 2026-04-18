@@ -20,7 +20,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
       <div class="page-header">
         @if (note()) {
           <a [routerLink]="'/journal/engagement/' + note()!.engagementId" class="back-link">
-            <mat-icon>arrow_back</mat-icon> Back to Timeline
+            <mat-icon>arrow_back</mat-icon> {{ 'JOURNAL.backToTimeline' | translate }}
           </a>
         }
       </div>
@@ -42,14 +42,14 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
                 </div>
               </div>
               <a mat-stroked-button [routerLink]="'/journal/note/' + note()!._id + '/edit'">
-                <mat-icon>edit</mat-icon> Edit
+                <mat-icon>edit</mat-icon> {{ 'COMMON.edit' | translate }}
               </a>
             </div>
 
             <!-- Pre-session -->
             @if (note()!.preSession?.agenda || note()!.preSession?.hypotheses || note()!.preSession?.coachIntention) {
               <div class="section">
-                <h3><mat-icon>flag</mat-icon> Before Session</h3>
+                <h3><mat-icon>flag</mat-icon> {{ 'JOURNAL.beforeSession' | translate }}</h3>
                 @if (note()!.preSession?.agenda) {
                   <div class="field-block"><label>Agenda</label><p>{{ note()!.preSession!.agenda }}</p></div>
                 }
@@ -64,7 +64,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
             <!-- In-session -->
             <div class="section">
-              <h3><mat-icon>record_voice_over</mat-icon> During Session</h3>
+              <h3><mat-icon>record_voice_over</mat-icon> {{ 'JOURNAL.duringSession' | translate }}</h3>
               @if (note()!.inSession?.openingState) {
                 <div class="field-block"><label>Opening State</label><p>{{ note()!.inSession!.openingState }}</p></div>
               }
@@ -95,7 +95,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
             <!-- Post-session -->
             <div class="section">
-              <h3><mat-icon>psychology</mat-icon> After Session</h3>
+              <h3><mat-icon>psychology</mat-icon> {{ 'JOURNAL.afterSession' | translate }}</h3>
               @if (note()!.postSession?.coachReflection) {
                 <div class="field-block"><label>Coach Reflection</label><p class="narrative">{{ note()!.postSession!.coachReflection }}</p></div>
               }
@@ -126,7 +126,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
           @if (note()!.aiSummary) {
             <div class="ai-col">
               <div class="ai-panel">
-                <div class="ai-header"><mat-icon>auto_awesome</mat-icon> AI Summary</div>
+                <div class="ai-header"><mat-icon>auto_awesome</mat-icon> {{ 'JOURNAL.aiSummary' | translate }}</div>
                 <p class="ai-body">{{ note()!.aiSummary }}</p>
                 @if (note()!.aiThemes.length) {
                   <div class="ai-themes">
@@ -139,7 +139,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
                   <div class="ai-meta">Generated {{ note()!.aiGeneratedAt | date:'MMM d, y h:mm a' }}</div>
                 }
                 <button mat-stroked-button class="regen-btn" (click)="regenerate()" [disabled]="aiLoading()">
-                  <mat-icon>refresh</mat-icon> Regenerate
+                  <mat-icon>refresh</mat-icon> {{ 'JOURNAL.regenerate' | translate }}
                 </button>
                 @if (aiLoading()) { <mat-spinner diameter="20" /> }
               </div>

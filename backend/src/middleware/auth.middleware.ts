@@ -19,7 +19,7 @@ export function authenticateToken(req: AuthRequest, res: Response, next: NextFun
   const token = authHeader && authHeader.split(' ')[1];
 
   if (!token) {
-    res.status(401).json({ error: 'Access token required' });
+    res.status(401).json({ error: req.t ? req.t('errors.accessTokenRequired') : 'Access token required' });
     return;
   }
 
@@ -28,7 +28,7 @@ export function authenticateToken(req: AuthRequest, res: Response, next: NextFun
     req.user = decoded;
     next();
   } catch {
-    res.status(401).json({ error: 'Invalid or expired token' });
+    res.status(401).json({ error: req.t ? req.t('errors.invalidOrExpiredToken') : 'Invalid or expired token' });
   }
 }
 
@@ -52,7 +52,7 @@ export function optionalAuth(req: AuthRequest, _res: Response, next: NextFunctio
 export function requireRole(...roles: string[]) {
   return (req: AuthRequest, res: Response, next: NextFunction): void => {
     if (!req.user || !roles.includes(req.user.role)) {
-      res.status(403).json({ error: 'Insufficient permissions' });
+      res.status(403).json({ error: req.t ? req.t('errors.insufficientPermissions') : 'Insufficient permissions' });
       return;
     }
     next();
@@ -68,7 +68,7 @@ export function requireRole(...roles: string[]) {
 export function requirePermission(...keys: string[]) {
   return (req: AuthRequest, res: Response, next: NextFunction): void => {
     if (!req.user) {
-      res.status(401).json({ error: 'Not authenticated' });
+      res.status(401).json({ error: req.t ? req.t('errors.notAuthenticated') : 'Not authenticated' });
       return;
     }
     // system_admin bypasses all permission checks

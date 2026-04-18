@@ -108,15 +108,15 @@ interface AvailablePlan {
 
         <!-- Page Header -->
         <div class="page-header">
-          <h1 class="page-title">Billing & Plan</h1>
-          <p class="page-subtitle">Manage your subscription and view payment history.</p>
+          <h1 class="page-title">{{ 'BILLING.title' | translate }}</h1>
+          <p class="page-subtitle">{{ 'BILLING.subtitle' | translate }}</p>
         </div>
 
         <!-- Loading State -->
         @if (loading()) {
           <div class="loading-container">
             <mat-spinner diameter="40"></mat-spinner>
-            <span class="loading-text">Loading billing information…</span>
+            <span class="loading-text">{{ 'COMMON.loading' | translate }}</span>
           </div>
         }
 
@@ -127,7 +127,7 @@ interface AvailablePlan {
             <div class="suspension-banner">
               <mat-icon>block</mat-icon>
               <div class="suspension-content">
-                <strong>Account Suspended</strong>
+                <strong>{{ 'BILLING.accountSuspended' | translate }}</strong>
                 <span>{{ org()?.suspensionReason || 'Your account has been suspended due to outstanding payments.' }}</span>
                 <span class="suspension-date">Suspended {{ org()?.suspendedAt | date:'MMM d, y' }}</span>
               </div>
@@ -143,7 +143,7 @@ interface AvailablePlan {
               @if (org(); as orgData) {
                 <section class="card plan-card">
                   <div class="card-header">
-                    <h2 class="card-title">Current Plan</h2>
+                    <h2 class="card-title">{{ 'BILLING.currentPlan' | translate }}</h2>
                   </div>
                   <div class="plan-body">
                     <div class="plan-left">
@@ -178,7 +178,7 @@ interface AvailablePlan {
                     <div class="plan-right">
                       <div class="usage-section">
                         <div class="usage-header">
-                          <span class="usage-label">Team members</span>
+                          <span class="usage-label">{{ 'BILLING.teamMembers' | translate }}</span>
                           <span class="usage-numbers">
                             {{ orgData.currentUsers ?? 0 }}<span class="usage-sep"> / </span>{{ orgData.maxUsers }}
                           </span>
@@ -198,7 +198,7 @@ interface AvailablePlan {
                     <a href="mailto:sales@headsoft.io?subject=Upgrade%20Plan"
                        mat-stroked-button color="primary" class="upgrade-btn">
                       <mat-icon>arrow_upward</mat-icon>
-                      Contact us to upgrade
+                      {{ 'BILLING.contactToUpgrade' | translate }}
                     </a>
                   </div>
                 </section>
@@ -208,7 +208,7 @@ interface AvailablePlan {
               @if (currentInvoice(); as inv) {
                 <section class="card estimate-card">
                   <div class="card-header">
-                    <h2 class="card-title">Current Month Estimate</h2>
+                    <h2 class="card-title">{{ 'BILLING.currentMonthEstimate' | translate }}</h2>
                     <div class="card-header-actions">
                       <span class="status-badge" [class]="'status-' + inv.status">{{ inv.status | titlecase }}</span>
                       <button mat-icon-button class="pdf-btn" (click)="downloadPdf(inv)"
@@ -220,20 +220,20 @@ interface AvailablePlan {
                   <div class="estimate-body">
                     <div class="estimate-meta">
                       <div class="estimate-meta-item">
-                        <span class="meta-label">Invoice</span>
+                        <span class="meta-label">{{ 'BILLING.invoice' | translate }}</span>
                         <span class="invoice-number">{{ inv.invoiceNumber }}</span>
                       </div>
                       <div class="estimate-meta-item">
-                        <span class="meta-label">Period</span>
+                        <span class="meta-label">{{ 'BILLING.period' | translate }}</span>
                         <span class="meta-value">{{ inv.period.from | date:'MMM d' }} – {{ inv.period.to | date:'MMM d, y' }}</span>
                       </div>
                       <div class="estimate-meta-item">
-                        <span class="meta-label">Due</span>
+                        <span class="meta-label">{{ 'BILLING.due' | translate }}</span>
                         <span class="meta-value" [class.overdue-text]="inv.status === 'overdue'">{{ inv.dueDate | date:'MMM d, y' }}</span>
                       </div>
                     </div>
                     <div class="estimate-amount">
-                      <span class="amount-label">Estimated total</span>
+                      <span class="amount-label">{{ 'BILLING.estimatedTotal' | translate }}</span>
                       <span class="amount-value">{{ formatMoney(inv.total) }}</span>
                     </div>
                   </div>

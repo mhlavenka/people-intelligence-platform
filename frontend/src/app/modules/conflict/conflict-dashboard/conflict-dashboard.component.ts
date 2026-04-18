@@ -77,7 +77,7 @@ interface ConflictAnalysis {
       <div class="page-header">
         <div>
           <h1>{{ "CONFLICT.title" | translate }}</h1>
-          <p>Proactive workplace conflict detection and resolution grounded in Helena's coaching-integrated mediation methodology</p>
+          <p>{{ "CONFLICT.subtitle" | translate }}</p>
         </div>
       </div>
 
@@ -85,14 +85,14 @@ interface ConflictAnalysis {
       <div class="module-banner">
         <div class="banner-insight">
           <mat-icon class="banner-icon">lightbulb</mat-icon>
-          <p><strong>Core Insight:</strong> Most workplace conflict is predictable. Warning signs appear weeks or months before a formal complaint is filed. Conflict Intelligence makes those signals visible — and actionable — for leaders who lack the training to see them.</p>
+          <p [innerHTML]="'CONFLICT.coreInsight' | translate"></p>
         </div>
         <div class="banner-features">
-          <span class="feature-pill"><mat-icon>poll</mat-icon> Confidential Pulse Surveys</span>
-          <span class="feature-pill"><mat-icon>psychology</mat-icon> AI Conflict Risk Mapping</span>
-          <span class="feature-pill"><mat-icon>escalator_warning</mat-icon> Mediation Escalation</span>
-          <span class="feature-pill"><mat-icon>trending_up</mat-icon> Conflict Trend Dashboard</span>
-          <span class="feature-pill"><mat-icon>handshake</mat-icon> Negotiation Toolkit</span>
+          <span class="feature-pill"><mat-icon>poll</mat-icon> {{ 'CONFLICT.pillSurveys' | translate }}</span>
+          <span class="feature-pill"><mat-icon>psychology</mat-icon> {{ 'CONFLICT.pillAIMapping' | translate }}</span>
+          <span class="feature-pill"><mat-icon>escalator_warning</mat-icon> {{ 'CONFLICT.pillEscalation' | translate }}</span>
+          <span class="feature-pill"><mat-icon>trending_up</mat-icon> {{ 'CONFLICT.pillTrend' | translate }}</span>
+          <span class="feature-pill"><mat-icon>handshake</mat-icon> {{ 'CONFLICT.pillNegotiation' | translate }}</span>
         </div>
       </div>
 
@@ -144,13 +144,13 @@ interface ConflictAnalysis {
                     }
                     @if (a.escalationRequested) {
                       <span class="escalated-badge">
-                        <mat-icon>gavel</mat-icon> Escalated
+                        <mat-icon>gavel</mat-icon> {{ 'CONFLICT.escalated' | translate }}
                       </span>
                     }
                   </div>
 
                   <button mat-icon-button class="delete-analysis-btn"
-                          matTooltip="Delete analysis"
+                          [matTooltip]="'CONFLICT.deleteAnalysis' | translate"
                           (click)="deleteAnalysis(a); $event.stopPropagation()">
                     <mat-icon>delete_outline</mat-icon>
                   </button>
@@ -170,7 +170,7 @@ interface ConflictAnalysis {
                   </button>
                   @if (!a.escalationRequested && (a.riskLevel === 'high' || a.riskLevel === 'critical')) {
                     <button mat-stroked-button color="warn" (click)="escalate(a._id)">
-                      <mat-icon>escalator_warning</mat-icon> Escalate
+                      <mat-icon>escalator_warning</mat-icon> {{ 'CONFLICT.escalate' | translate }}
                     </button>
                   }
                 </div>
@@ -192,36 +192,36 @@ interface ConflictAnalysis {
           <div class="section-icon red"><mat-icon>escalator_warning</mat-icon></div>
           <div>
             <h3>{{ "CONFLICT.mediationPathway" | translate }}</h3>
-            <p>When coaching guides are insufficient, escalate directly to Helena's professional mediation services — coaching-integrated, interest-based, and designed to preserve relationships.</p>
+            <p>{{ 'CONFLICT.mediationPathwayDesc' | translate }}</p>
           </div>
         </div>
         <div class="escalation-steps">
           <div class="escalation-step">
             <div class="step-num">1</div>
             <div class="step-content">
-              <strong>Flag for Escalation</strong>
-              <span>Click "Escalate" on any high or critical risk analysis. HR is notified immediately.</span>
+              <strong>{{ 'CONFLICT.step1Title' | translate }}</strong>
+              <span>{{ 'CONFLICT.step1Desc' | translate }}</span>
             </div>
           </div>
           <div class="escalation-step">
             <div class="step-num">2</div>
             <div class="step-content">
-              <strong>Initial Consultation</strong>
-              <span>Helena reviews the AI analysis and conducts a 30-min intake with the HR contact to understand context.</span>
+              <strong>{{ 'CONFLICT.step2Title' | translate }}</strong>
+              <span>{{ 'CONFLICT.step2Desc' | translate }}</span>
             </div>
           </div>
           <div class="escalation-step">
             <div class="step-num">3</div>
             <div class="step-content">
-              <strong>Mediation Process</strong>
-              <span>Interest-based negotiation session facilitated by Helena — focuses on underlying needs, not positions.</span>
+              <strong>{{ 'CONFLICT.step3Title' | translate }}</strong>
+              <span>{{ 'CONFLICT.step3Desc' | translate }}</span>
             </div>
           </div>
           <div class="escalation-step">
             <div class="step-num">4</div>
             <div class="step-content">
-              <strong>Resolution & Follow-up</strong>
-              <span>Agreement documented, follow-up pulse survey scheduled to verify resolution at 30 and 60 days.</span>
+              <strong>{{ 'CONFLICT.step4Title' | translate }}</strong>
+              <span>{{ 'CONFLICT.step4Desc' | translate }}</span>
             </div>
           </div>
         </div>
@@ -237,11 +237,11 @@ interface ConflictAnalysis {
           <div class="section-icon purple"><mat-icon>psychology</mat-icon></div>
           <div>
             <h3>{{ "CONFLICT.skillDevPlans" | translate }}</h3>
-            <p>Generate AI-powered Individual Development Plans (IDPs) based on conflict analysis findings — targeted skill building using the GROW model.</p>
+            <p>{{ 'CONFLICT.skillDevDesc' | translate }}</p>
           </div>
           @if (analyses().length > 0) {
             <button mat-raised-button color="primary" class="section-action-btn" (click)="openConflictIdpDialog()">
-              <mat-icon>add_circle</mat-icon> Generate Conflict IDP
+              <mat-icon>add_circle</mat-icon> {{ 'CONFLICT.generateConflictIDP' | translate }}
             </button>
           }
         </div>
@@ -251,7 +251,7 @@ interface ConflictAnalysis {
         } @else if (conflictIdps().length === 0) {
           <div class="skill-empty">
             <mat-icon>psychology</mat-icon>
-            <p>No conflict-based development plans yet. Run an analysis first, then generate a targeted IDP for team members.</p>
+            <p>{{ 'CONFLICT.noIDPsYet' | translate }}</p>
           </div>
         } @else {
           <div class="idp-grid">
@@ -267,7 +267,7 @@ interface ConflictAnalysis {
                   }
                   <span class="idp-date-label">{{ idp.createdAt | date:'MMM d, y' }}</span>
                   <button class="card-action-btn delete-btn"
-                          matTooltip="Delete IDP"
+                          [matTooltip]="'CONFLICT.deleteIDP' | translate"
                           (click)="deleteConflictIdp(idp)">
                     <mat-icon>delete_outline</mat-icon>
                   </button>
@@ -278,7 +278,7 @@ interface ConflictAnalysis {
                   <mat-expansion-panel class="grow-panel goal-panel">
                     <mat-expansion-panel-header>
                       <mat-panel-title>
-                        <mat-icon>flag</mat-icon> Goal
+                        <mat-icon>flag</mat-icon> {{ 'CONFLICT.goal' | translate }}
                       </mat-panel-title>
                     </mat-expansion-panel-header>
                     <p>{{ idp.goal }}</p>
@@ -287,7 +287,7 @@ interface ConflictAnalysis {
                   <mat-expansion-panel class="grow-panel reality-panel">
                     <mat-expansion-panel-header>
                       <mat-panel-title>
-                        <mat-icon>explore</mat-icon> Reality
+                        <mat-icon>explore</mat-icon> {{ 'CONFLICT.reality' | translate }}
                       </mat-panel-title>
                     </mat-expansion-panel-header>
                     <p>{{ idp.currentReality }}</p>
@@ -296,7 +296,7 @@ interface ConflictAnalysis {
                   <mat-expansion-panel class="grow-panel options-panel">
                     <mat-expansion-panel-header>
                       <mat-panel-title>
-                        <mat-icon>lightbulb</mat-icon> Options ({{ idp.options.length }})
+                        <mat-icon>lightbulb</mat-icon> {{ 'CONFLICT.options' | translate }} ({{ idp.options.length }})
                       </mat-panel-title>
                     </mat-expansion-panel-header>
                     <ul>
@@ -309,7 +309,7 @@ interface ConflictAnalysis {
                   <mat-expansion-panel class="grow-panel will-panel">
                     <mat-expansion-panel-header>
                       <mat-panel-title>
-                        <mat-icon>bolt</mat-icon> Will Do ({{ idp.willDoActions.length }})
+                        <mat-icon>bolt</mat-icon> {{ 'CONFLICT.willDo' | translate }} ({{ idp.willDoActions.length }})
                       </mat-panel-title>
                     </mat-expansion-panel-header>
                     <ul>
@@ -333,7 +333,7 @@ interface ConflictAnalysis {
                         </div>
                         <div class="ms-actions">
                           @if (ms.status !== 'completed') {
-                            <button mat-icon-button [matTooltip]="'Mark complete'"
+                            <button mat-icon-button [matTooltip]="'CONFLICT.markComplete' | translate"
                                     (click)="updateConflictMilestone(idp._id, ms._id, 'completed')">
                               <mat-icon>check_circle_outline</mat-icon>
                             </button>
@@ -349,7 +349,7 @@ interface ConflictAnalysis {
                   <mat-expansion-panel class="grow-panel conflict-areas-panel">
                     <mat-expansion-panel-header>
                       <mat-panel-title>
-                        <mat-icon>warning_amber</mat-icon> Conflict Areas ({{ idp.competencyGaps.length }})
+                        <mat-icon>warning_amber</mat-icon> {{ 'CONFLICT.conflictAreas' | translate }} ({{ idp.competencyGaps.length }})
                       </mat-panel-title>
                     </mat-expansion-panel-header>
                     <ul>

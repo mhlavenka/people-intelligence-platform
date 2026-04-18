@@ -101,10 +101,10 @@ export async function createBooking(
 ): Promise<IBooking> {
   const cfg = await AvailabilityConfig.findOne({ coachSlug, isActive: true })
     .setOptions({ bypassTenantCheck: true });
-  if (!cfg) throw Object.assign(new Error('Booking not available'), { statusCode: 404 });
+  if (!cfg) throw Object.assign(new Error('Booking not available'), { statusCode: 404, i18nKey: 'errors.bookingNotAvailable' });
 
   const coach = await User.findById(cfg.coachId).select('firstName lastName email');
-  if (!coach) throw Object.assign(new Error('Coach not found'), { statusCode: 404 });
+  if (!coach) throw Object.assign(new Error('Coach not found'), { statusCode: 404, i18nKey: 'errors.coachNotFound' });
 
   // Load shared calendar settings
   const shared = await BookingSettings.findOne({ coachId: cfg.coachId })
@@ -214,9 +214,9 @@ export async function cancelBooking(
   reason?: string,
 ): Promise<IBooking> {
   const booking = await Booking.findById(bookingId).setOptions({ bypassTenantCheck: true });
-  if (!booking) throw Object.assign(new Error('Booking not found'), { statusCode: 404 });
+  if (!booking) throw Object.assign(new Error('Booking not found'), { statusCode: 404, i18nKey: 'errors.bookingNotFound' });
   if (booking.status !== 'confirmed') {
-    throw Object.assign(new Error('Booking is not active'), { statusCode: 400 });
+    throw Object.assign(new Error('Booking is not active'), { statusCode: 400, i18nKey: 'errors.bookingNotActive' });
   }
 
   if (!booking.googleEventId) {
@@ -320,15 +320,15 @@ export async function rescheduleBooking(
   note?: string,
 ): Promise<IBooking> {
   const booking = await Booking.findById(bookingId).setOptions({ bypassTenantCheck: true });
-  if (!booking) throw Object.assign(new Error('Booking not found'), { statusCode: 404 });
+  if (!booking) throw Object.assign(new Error('Booking not found'), { statusCode: 404, i18nKey: 'errors.bookingNotFound' });
   if (booking.status !== 'confirmed') {
-    throw Object.assign(new Error('Booking is not active'), { statusCode: 400 });
+    throw Object.assign(new Error('Booking is not active'), { statusCode: 400, i18nKey: 'errors.bookingNotActive' });
   }
   if (newStartTime.getTime() <= Date.now()) {
-    throw Object.assign(new Error('New start time must be in the future'), { statusCode: 400 });
+    throw Object.assign(new Error('New start time must be in the future'), { statusCode: 400, i18nKey: 'errors.newStartTimeFuture' });
   }
   if (newEndTime.getTime() <= newStartTime.getTime()) {
-    throw Object.assign(new Error('End time must be after start time'), { statusCode: 400 });
+    throw Object.assign(new Error('End time must be after start time'), { statusCode: 400, i18nKey: 'errors.endTimeAfterStart' });
   }
 
   if (triggeredBy === 'coachee') {
@@ -336,7 +336,7 @@ export async function rescheduleBooking(
     if (isWithinDeadline(booking.startTime, deadlineHours)) {
       throw Object.assign(
         new Error(`Rescheduling is no longer available — the ${deadlineHours}-hour deadline has passed. You may cancel, but the session will count toward your allotment.`),
-        { statusCode: 403 },
+        { statusCode: 403, i18nKey: 'errors.rescheduleDeadlinePassed', i18nParams: { hours: deadlineHours } },
       );
     }
   }

@@ -104,14 +104,14 @@ router.post(
       };
 
       if (!organizationId || !periodFrom || !periodTo) {
-        res.status(400).json({ error: 'organizationId, periodFrom and periodTo are required' });
+        res.status(400).json({ error: req.t('errors.orgFieldsRequired') });
         return;
       }
 
       // Fetch org
       const org = await Organization.findById(organizationId);
       if (!org) {
-        res.status(404).json({ error: 'Organization not found' });
+        res.status(404).json({ error: req.t('errors.organizationNotFound') });
         return;
       }
 
@@ -268,7 +268,7 @@ router.get(
         .lean();
 
       if (!invoice) {
-        res.status(404).json({ error: 'Invoice not found' });
+        res.status(404).json({ error: req.t('errors.invoiceNotFound') });
         return;
       }
 
@@ -290,7 +290,7 @@ router.put(
         .setOptions({ bypassTenantCheck: true });
 
       if (!invoice) {
-        res.status(404).json({ error: 'Invoice not found' });
+        res.status(404).json({ error: req.t('errors.invoiceNotFound') });
         return;
       }
 
@@ -353,13 +353,13 @@ router.post(
         .setOptions({ bypassTenantCheck: true });
 
       if (!invoice) {
-        res.status(404).json({ error: 'Invoice not found' });
+        res.status(404).json({ error: req.t('errors.invoiceNotFound') });
         return;
       }
 
       const org = await Organization.findById(invoice.organizationId);
       if (!org) {
-        res.status(404).json({ error: 'Organization not found for this invoice' });
+        res.status(404).json({ error: req.t('errors.orgNotFoundForInvoice') });
         return;
       }
 
@@ -561,12 +561,12 @@ router.delete(
         .setOptions({ bypassTenantCheck: true });
 
       if (!invoice) {
-        res.status(404).json({ error: 'Invoice not found' });
+        res.status(404).json({ error: req.t('errors.invoiceNotFound') });
         return;
       }
 
       if (invoice.status === 'paid') {
-        res.status(400).json({ error: 'Cannot void a paid invoice' });
+        res.status(400).json({ error: req.t('errors.cannotVoidPaidInvoice') });
         return;
       }
 
@@ -591,18 +591,18 @@ router.post(
         .setOptions({ bypassTenantCheck: true });
 
       if (!invoice) {
-        res.status(404).json({ error: 'Invoice not found' });
+        res.status(404).json({ error: req.t('errors.invoiceNotFound') });
         return;
       }
 
       if (invoice.status !== 'sent' && invoice.status !== 'overdue') {
-        res.status(400).json({ error: 'Can only send reminders for sent or overdue invoices' });
+        res.status(400).json({ error: req.t('errors.canOnlyRemindSentOverdue') });
         return;
       }
 
       const org = await Organization.findById(invoice.organizationId);
       if (!org) {
-        res.status(404).json({ error: 'Organization not found' });
+        res.status(404).json({ error: req.t('errors.organizationNotFound') });
         return;
       }
 
@@ -801,12 +801,12 @@ router.post(
     try {
       const org = await Organization.findById(req.params['orgId']);
       if (!org) {
-        res.status(404).json({ error: 'Organization not found' });
+        res.status(404).json({ error: req.t('errors.organizationNotFound') });
         return;
       }
 
       if (org.isActive) {
-        res.status(400).json({ error: 'Organization is already active' });
+        res.status(400).json({ error: req.t('errors.orgAlreadyActive') });
         return;
       }
 

@@ -60,7 +60,8 @@ export async function analyzeConflict(
         aggregatedResponses: averages,
         responseCount: responses.length,
       },
-      { name: org.name, industry: org.industry, employeeCount: org.employeeCount }
+      { name: org.name, industry: org.industry, employeeCount: org.employeeCount },
+      req.language
     );
 
     const aiResponse = await callClaude(prompt);
@@ -208,7 +209,7 @@ export async function createSubAnalysis(
       riskScore: parent.riskScore,
       riskLevel: parent.riskLevel,
       aiNarrative: parent.aiNarrative,
-    });
+    }, req.language);
 
     const aiResponse = await callClaude(prompt);
 
@@ -284,7 +285,7 @@ export async function generateRecommendedActions(
       riskLevel: analysis.riskLevel,
       conflictTypes: analysis.conflictTypes,
       aiNarrative: analysis.aiNarrative,
-    });
+    }, req.language);
 
     const aiResponse = await callClaude(prompt);
 

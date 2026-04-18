@@ -58,12 +58,12 @@ export interface RescheduleDialogResult {
 
       <div class="slots-section">
         <div class="slots-label">
-          <mat-icon>schedule</mat-icon> Available times
+          <mat-icon>schedule</mat-icon> {{ 'BOOKING.availableTimes' | translate }}
         </div>
         @if (slotsLoading()) {
           <div class="slots-loading"><mat-spinner diameter="22" /></div>
         } @else if (!slotsForDay().length) {
-          <p class="no-slots">No available times on this day. Try another date.</p>
+          <p class="no-slots">{{ 'BOOKING.noTimesOnDay' | translate }}</p>
         } @else {
           <div class="slot-grid">
             @for (slot of slotsForDay(); track slot.startUtc) {
@@ -92,10 +92,10 @@ export interface RescheduleDialogResult {
       }
     </mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button mat-button (click)="cancel()" [disabled]="saving()">Cancel</button>
+      <button mat-button (click)="cancel()" [disabled]="saving()">{{ 'COMMON.cancel' | translate }}</button>
       <button mat-flat-button color="primary" (click)="save()" [disabled]="saving() || !isValid()">
         @if (saving()) { <mat-spinner diameter="18" /> }
-        Reschedule
+        {{ 'BOOKING.reschedule' | translate }}
       </button>
     </mat-dialog-actions>
   `,
@@ -214,7 +214,7 @@ export class RescheduleDialogComponent implements OnInit {
   save(): void {
     const slot = this.selectedSlot();
     if (!slot) {
-      this.errorMsg.set('Please pick a time slot.');
+      this.errorMsg.set('BOOKING.pickTimeSlot');
       return;
     }
     this.errorMsg.set('');

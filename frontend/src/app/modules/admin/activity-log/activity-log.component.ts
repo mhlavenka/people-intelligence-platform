@@ -62,7 +62,7 @@ const CLASS_MAP: Record<string, string> = {
       <div class="page-header">
         <div>
           <h1>{{ "ADMIN.activityLog" | translate }}</h1>
-          <p>Everything that's happened across your organization's modules.</p>
+          <p>{{ 'ADMIN.activityLogDesc' | translate }}</p>
         </div>
         <mat-form-field appearance="outline" class="type-filter">
           <mat-label>Type</mat-label>
@@ -80,8 +80,8 @@ const CLASS_MAP: Record<string, string> = {
       } @else if (!filtered().length) {
         <div class="empty">
           <mat-icon>history</mat-icon>
-          <h3>No activity yet</h3>
-          <p>Activity from surveys, conflict analyses, coaching, and more will show up here.</p>
+          <h3>{{ 'ADMIN.noActivityTitle' | translate }}</h3>
+          <p>{{ 'ADMIN.noActivityDesc' | translate }}</p>
         </div>
       } @else {
         <div class="activity-list">

@@ -21,7 +21,7 @@ router.post(
     const sig = req.headers['stripe-signature'];
 
     if (!sig) {
-      res.status(400).json({ error: 'Missing stripe-signature header' });
+      res.status(400).json({ error: req.t ? req.t('errors.missingStripeSignature') : 'Missing stripe-signature header' });
       return;
     }
 
@@ -107,7 +107,7 @@ router.get(
       }).lean();
 
       if (!invoice) {
-        res.status(404).json({ error: 'Invoice not found' });
+        res.status(404).json({ error: req.t('errors.invoiceNotFound') });
         return;
       }
 
@@ -131,13 +131,13 @@ router.post(
       });
 
       if (!invoice) {
-        res.status(404).json({ error: 'Invoice not found' });
+        res.status(404).json({ error: req.t('errors.invoiceNotFound') });
         return;
       }
 
       if (invoice.status !== 'sent' && invoice.status !== 'overdue') {
         res.status(400).json({
-          error: `Invoice cannot be paid in its current status: ${invoice.status}`,
+          error: req.t('errors.invoiceCannotBePaid', { status: invoice.status }),
         });
         return;
       }

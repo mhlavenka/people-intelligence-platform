@@ -91,7 +91,7 @@ interface SystemRoleData { permissions: string[]; isOverridden: boolean; }
       <div class="section-header">
         <div class="section-title">
           <mat-icon>manage_accounts</mat-icon>
-          Custom Roles
+          {{ 'ADMIN.customRoles' | translate }}
         </div>
         <button mat-raised-button color="primary" (click)="openCreate()">
           <mat-icon>add</mat-icon> {{ "ADMIN.newRole" | translate }}
@@ -103,7 +103,7 @@ interface SystemRoleData { permissions: string[]; isOverridden: boolean; }
       } @else if (customRoles().length === 0) {
         <div class="empty-custom">
           <mat-icon>manage_accounts</mat-icon>
-          <p>No custom roles yet. Create one to assign fine-grained permissions to users.</p>
+          <p>{{ 'ADMIN.noCustomRolesDesc' | translate }}</p>
         </div>
       } @else {
         <div class="custom-role-grid">
@@ -121,10 +121,10 @@ interface SystemRoleData { permissions: string[]; isOverridden: boolean; }
                   </button>
                   <mat-menu #crMenu="matMenu">
                     <button mat-menu-item (click)="openEdit(cr)">
-                      <mat-icon>edit</mat-icon> Edit
+                      <mat-icon>edit</mat-icon> {{ 'COMMON.edit' | translate }}
                     </button>
                     <button mat-menu-item class="delete-item" (click)="deleteRole(cr)">
-                      <mat-icon>delete</mat-icon> Delete
+                      <mat-icon>delete</mat-icon> {{ 'COMMON.delete' | translate }}
                     </button>
                   </mat-menu>
                 </div>
@@ -152,11 +152,11 @@ interface SystemRoleData { permissions: string[]; isOverridden: boolean; }
       <div class="section-header" style="margin-top: 8px">
         <div class="section-title">
           <mat-icon>table_chart</mat-icon>
-          System Role Permissions
+          {{ 'ADMIN.systemRolePerms' | translate }}
         </div>
         @if (systemRolesDirty()) {
           <button mat-raised-button color="primary" (click)="saveSystemRoles()" [disabled]="savingSystemRoles()">
-            <mat-icon>save</mat-icon> Save Changes
+            <mat-icon>save</mat-icon> {{ 'ADMIN.saveChanges' | translate }}
           </button>
         }
       </div>
@@ -169,9 +169,9 @@ interface SystemRoleData { permissions: string[]; isOverridden: boolean; }
               <mat-icon>{{ role.icon }}</mat-icon>
             </div>
             <div class="role-name">{{ role.label }}</div>
-            <div class="role-count">{{ sysPermCount(role.key) }} permissions</div>
+            <div class="role-count">{{ sysPermCount(role.key) }} {{ 'ADMIN.permissionsCount' | translate }}</div>
             @if (isOverridden(role.key)) {
-              <span class="override-badge">Customized</span>
+              <span class="override-badge">{{ 'ADMIN.customized' | translate }}</span>
             }
           </div>
         }
@@ -189,7 +189,7 @@ interface SystemRoleData { permissions: string[]; isOverridden: boolean; }
             <table class="matrix-table">
               <thead>
                 <tr>
-                  <th class="feature-col">Feature</th>
+                  <th class="feature-col">{{ 'ADMIN.feature' | translate }}</th>
                   @for (role of roles; track role.key) {
                     <th class="role-col">
                       <span [style.color]="role.color">{{ role.label }}</span>
@@ -227,7 +227,7 @@ interface SystemRoleData { permissions: string[]; isOverridden: boolean; }
             </button>
           }
         }
-        <span class="legend-note">Changes apply on next user login.</span>
+        <span class="legend-note">{{ 'ADMIN.changesApplyOnLogin' | translate }}</span>
       </div>
     </div>
   `,

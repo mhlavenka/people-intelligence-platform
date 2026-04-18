@@ -47,7 +47,7 @@ router.put(
       const { permissions } = req.body as { permissions: string[] };
 
       if (!SYSTEM_ROLE_PERMISSIONS[role] || role === 'system_admin') {
-        res.status(400).json({ error: 'Invalid role' });
+        res.status(400).json({ error: req.t('errors.invalidRole') });
         return;
       }
 
@@ -93,7 +93,7 @@ router.get('/:id', async (req: AuthRequest, res: Response, next: NextFunction) =
       _id: req.params['id'],
       organizationId: req.user!.organizationId,
     });
-    if (!role) { res.status(404).json({ error: 'Role not found' }); return; }
+    if (!role) { res.status(404).json({ error: req.t('errors.roleNotFound') }); return; }
     res.json(role);
   } catch (e) {
     next(e);
@@ -129,7 +129,7 @@ router.put(
         req.body,
         { new: true, runValidators: true }
       );
-      if (!role) { res.status(404).json({ error: 'Role not found' }); return; }
+      if (!role) { res.status(404).json({ error: req.t('errors.roleNotFound') }); return; }
       res.json(role);
     } catch (e) {
       next(e);
@@ -147,7 +147,7 @@ router.delete(
         _id: req.params['id'],
         organizationId: req.user!.organizationId,
       });
-      if (!role) { res.status(404).json({ error: 'Role not found' }); return; }
+      if (!role) { res.status(404).json({ error: req.t('errors.roleNotFound') }); return; }
       res.json({ message: 'Role deleted' });
     } catch (e) {
       next(e);

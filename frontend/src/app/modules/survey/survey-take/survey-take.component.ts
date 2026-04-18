@@ -71,9 +71,9 @@ const DEPARTMENTS = [
               <mat-icon>block</mat-icon>
             </div>
             <h2>{{ "SURVEY.surveyNotAvailable" | translate }}</h2>
-            <p>This survey has been closed by your administrator and is no longer accepting responses.</p>
+            <p>{{ 'SURVEY.surveyNotAvailableDesc' | translate }}</p>
             <button mat-raised-button color="primary" (click)="goToDashboard()">
-              Back to Dashboard
+              {{ 'SURVEY.backToDashboard' | translate }}
             </button>
           </div>
         } @else if (alreadySubmitted()) {
@@ -81,10 +81,10 @@ const DEPARTMENTS = [
             <div class="thank-you-icon already">
               <mat-icon>rule</mat-icon>
             </div>
-            <h2>You've already responded</h2>
-            <p>You previously submitted a response for this survey. Each person can only respond once to protect the integrity of the results.</p>
+            <h2>{{ 'SURVEY.alreadySubmitted' | translate }}</h2>
+            <p>{{ 'SURVEY.alreadySubmittedDesc' | translate }}</p>
             <button mat-raised-button color="primary" (click)="goToDashboard()">
-              Back to Dashboard
+              {{ 'SURVEY.backToDashboard' | translate }}
             </button>
           </div>
         } @else if (submitted()) {
@@ -92,11 +92,10 @@ const DEPARTMENTS = [
             <div class="thank-you-icon">
               <mat-icon>check_circle</mat-icon>
             </div>
-            <h2>Thank you for your response!</h2>
-            <p>Your answers have been submitted anonymously and will contribute to
-            your organization's wellbeing insights.</p>
+            <h2>{{ 'SURVEY.thankYou' | translate }}</h2>
+            <p>{{ 'SURVEY.thankYouDesc' | translate }}</p>
             <button mat-raised-button color="primary" (click)="goToDashboard()">
-              Back to Dashboard
+              {{ 'SURVEY.backToDashboard' | translate }}
             </button>
           </div>
         } @else if (template()) {
@@ -122,12 +121,11 @@ const DEPARTMENTS = [
           <!-- Phase: department selector -->
           @if (phase() === 'dept') {
             <div class="dept-step">
-              <h2>Before you begin</h2>
-              <p>Your response is anonymous. We only collect department to provide
-              aggregated insights — never individual data.</p>
+              <h2>{{ 'SURVEY.beforeYouBegin' | translate }}</h2>
+              <p>{{ 'SURVEY.anonymousNotice' | translate }}</p>
 
               <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Your Department</mat-label>
+                <mat-label>{{ 'SURVEY.yourDepartment' | translate }}</mat-label>
                 <mat-select [(value)]="selectedDept">
                   @for (dept of departments; track dept) {
                     <mat-option [value]="dept">{{ dept }}</mat-option>
@@ -137,7 +135,7 @@ const DEPARTMENTS = [
 
               <button mat-raised-button color="primary"
                       (click)="afterDept()" [disabled]="!selectedDept">
-                Start Survey →
+                {{ 'SURVEY.startSurvey' | translate }}
               </button>
             </div>
           }
@@ -145,10 +143,10 @@ const DEPARTMENTS = [
           <!-- Phase: instructions -->
           @if (phase() === 'instructions') {
             <div class="instructions-step">
-              <h2>Instructions</h2>
+              <h2>{{ 'SURVEY.instructions' | translate }}</h2>
               <p class="instructions-text">{{ template()!.instructions }}</p>
               <button mat-raised-button color="primary" (click)="beginQuestions()">
-                Begin <mat-icon>arrow_forward</mat-icon>
+                {{ 'SURVEY.begin' | translate }} <mat-icon>arrow_forward</mat-icon>
               </button>
             </div>
           }
@@ -216,7 +214,7 @@ const DEPARTMENTS = [
                 <!-- Open text -->
                 @if (q.type === 'text') {
                   <mat-form-field appearance="outline" class="full-width">
-                    <mat-label>Your answer</mat-label>
+                    <mat-label>{{ 'SURVEY.yourAnswer' | translate }}</mat-label>
                     <textarea matInput rows="4"
                       [value]="answers()[q.id] || ''"
                       (input)="setAnswer(q.id, $any($event.target).value)"
@@ -249,14 +247,14 @@ const DEPARTMENTS = [
               <!-- Navigation -->
               <div class="nav-row">
                 <button mat-button (click)="prev()">
-                  <mat-icon>arrow_back</mat-icon> Back
+                  <mat-icon>arrow_back</mat-icon> {{ 'COMMON.back' | translate }}
                 </button>
 
                 @if (currentIndex() < template()!.questions.length - 1) {
                   <button mat-raised-button color="primary"
                           (click)="next()"
                           [disabled]="!isAnswered(q)">
-                    Next <mat-icon>arrow_forward</mat-icon>
+                    {{ 'COMMON.next' | translate }} <mat-icon>arrow_forward</mat-icon>
                   </button>
                 } @else {
                   <button mat-raised-button color="primary"
@@ -265,7 +263,7 @@ const DEPARTMENTS = [
                     @if (submitting()) {
                       <mat-spinner diameter="18" />
                     } @else {
-                      <mat-icon>send</mat-icon> Submit
+                      <mat-icon>send</mat-icon> {{ 'SURVEY.submitSurvey' | translate }}
                     }
                   </button>
                 }
@@ -276,8 +274,8 @@ const DEPARTMENTS = [
         } @else {
           <div class="error-state">
             <mat-icon>error_outline</mat-icon>
-            <p>Survey not found.</p>
-            <button mat-button (click)="goToDashboard()">Back to Dashboard</button>
+            <p>{{ 'SURVEY.surveyNotFound' | translate }}</p>
+            <button mat-button (click)="goToDashboard()">{{ 'SURVEY.backToDashboard' | translate }}</button>
           </div>
         }
 

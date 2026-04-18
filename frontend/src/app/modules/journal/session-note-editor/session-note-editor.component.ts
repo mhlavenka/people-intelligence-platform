@@ -32,7 +32,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
     <div class="journal-page">
       <div class="page-header">
         <a [routerLink]="backLink" class="back-link"><mat-icon>arrow_back</mat-icon> Back</a>
-        <h1>{{ isEdit ? 'Edit' : 'New' }} Session Note</h1>
+        <h1>{{ isEdit ? ('JOURNAL.editSessionNote' | translate) : ('JOURNAL.newSessionNoteTitle' | translate) }}</h1>
       </div>
 
       @if (loading()) {
@@ -51,11 +51,11 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
             <input matInput type="number" [(ngModel)]="durationMinutes">
           </mat-form-field>
           <mat-form-field appearance="outline">
-            <mat-label>Format</mat-label>
+            <mat-label>{{ 'JOURNAL.format' | translate }}</mat-label>
             <mat-select [(ngModel)]="format">
-              <mat-option value="video">Video</mat-option>
-              <mat-option value="phone">Phone</mat-option>
-              <mat-option value="in_person">In-Person</mat-option>
+              <mat-option value="video">{{ 'JOURNAL.video' | translate }}</mat-option>
+              <mat-option value="phone">{{ 'JOURNAL.phone' | translate }}</mat-option>
+              <mat-option value="in_person">{{ 'JOURNAL.inPerson' | translate }}</mat-option>
             </mat-select>
           </mat-form-field>
         </div>
@@ -63,10 +63,10 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
         <!-- Tabs -->
         <mat-tab-group animationDuration="0ms">
           <!-- BEFORE — read-only view of what the coachee filled in -->
-          <mat-tab label="Before">
+          <mat-tab [label]="'JOURNAL.before' | translate">
             <div class="tab-content">
               @if (!hasCoacheePre()) {
-                <p class="empty-tab">The coachee hasn't filled in their pre-session input yet.</p>
+                <p class="empty-tab">{{ 'JOURNAL.coacheePreNotFilled' | translate }}</p>
               }
               @if (hasCoacheePre()) {
                 <div class="coachee-panel">
@@ -106,15 +106,15 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
           </mat-tab>
 
           <!-- DURING -->
-          <mat-tab label="During">
+          <mat-tab [label]="'JOURNAL.during' | translate">
             <div class="tab-content">
               <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Opening State</mat-label>
+                <mat-label>{{ 'JOURNAL.openingState' | translate }}</mat-label>
                 <textarea matInput rows="3" [(ngModel)]="inSession.openingState" placeholder="How did the coachee present at the start?"></textarea>
               </mat-form-field>
 
               <!-- Key Themes -->
-              <label class="field-label">Key Themes</label>
+              <label class="field-label">{{ 'JOURNAL.keyThemes' | translate }}</label>
               <div class="chip-row">
                 @for (theme of inSession.keyThemes; track $index) {
                   <span class="editable-chip">
@@ -127,12 +127,12 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
               </div>
 
               <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Observations</mat-label>
+                <mat-label>{{ 'JOURNAL.observations' | translate }}</mat-label>
                 <textarea matInput rows="8" [(ngModel)]="inSession.observations" placeholder="What did you observe during the session?"></textarea>
               </mat-form-field>
 
               <!-- Notable Quotes -->
-              <label class="field-label">Notable Quotes</label>
+              <label class="field-label">{{ 'JOURNAL.notableQuotes' | translate }}</label>
               @for (q of inSession.notableQuotes; track $index) {
                 <div class="repeatable-row">
                   <mat-form-field appearance="outline" class="flex-grow">
@@ -141,24 +141,24 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
                   <button mat-icon-button (click)="removeQuote($index)"><mat-icon>remove_circle_outline</mat-icon></button>
                 </div>
               }
-              <button mat-button (click)="addQuote()"><mat-icon>add</mat-icon> Add Quote</button>
+              <button mat-button (click)="addQuote()"><mat-icon>add</mat-icon> {{ 'JOURNAL.addQuote' | translate }}</button>
 
               <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Coach Interventions</mat-label>
+                <mat-label>{{ 'JOURNAL.coachInterventions' | translate }}</mat-label>
                 <textarea matInput rows="4" [(ngModel)]="inSession.coachInterventions" placeholder="What coaching tools or interventions did you use?"></textarea>
               </mat-form-field>
               <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Energy Shifts</mat-label>
+                <mat-label>{{ 'JOURNAL.energyShifts' | translate }}</mat-label>
                 <textarea matInput rows="3" [(ngModel)]="inSession.energyShifts" placeholder="Were there notable shifts in energy or engagement?"></textarea>
               </mat-form-field>
             </div>
           </mat-tab>
 
           <!-- AFTER — read-only view of what the coachee filled in -->
-          <mat-tab label="After">
+          <mat-tab [label]="'JOURNAL.after' | translate">
             <div class="tab-content">
               @if (!hasCoacheePost()) {
-                <p class="empty-tab">The coachee hasn't filled in their post-session reflection yet.</p>
+                <p class="empty-tab">{{ 'JOURNAL.coacheePostNotFilled' | translate }}</p>
               }
               <!-- What the coachee shared after the session (read-only) -->
               @if (hasCoacheePost()) {
@@ -211,13 +211,13 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
         <!-- Action bar -->
         <div class="action-bar">
           <button mat-flat-button class="draft-btn" (click)="save('draft')" [disabled]="saving()">
-            <mat-icon>save</mat-icon> Save Draft
+            <mat-icon>save</mat-icon> {{ 'JOURNAL.saveDraft' | translate }}
           </button>
           <button mat-flat-button color="primary" (click)="save('complete')" [disabled]="saving()">
-            <mat-icon>check_circle</mat-icon> Mark Complete
+            <mat-icon>check_circle</mat-icon> {{ 'JOURNAL.markComplete' | translate }}
           </button>
           <button mat-stroked-button (click)="generateAi()" [disabled]="saving() || aiLoading() || noteStatus !== 'complete'">
-            <mat-icon>auto_awesome</mat-icon> Generate AI Summary
+            <mat-icon>auto_awesome</mat-icon> {{ 'JOURNAL.generateAiSummary' | translate }}
           </button>
           @if (saving() || aiLoading()) {
             <mat-spinner diameter="20" />
@@ -461,9 +461,9 @@ export class SessionNoteEditorComponent implements OnInit {
         this.noteStatus = note.status;
         this.noteId = note._id;
         this.isEdit = true;
-        this.snack.open(status === 'complete' ? 'Session marked complete' : 'Draft saved', '', { duration: 2000 });
+        this.snack.open(status === 'complete' ? this.translate.instant('JOURNAL.sessionMarkedComplete') : this.translate.instant('JOURNAL.draftSaved'), '', { duration: 2000 });
       },
-      error: () => { this.saving.set(false); this.snack.open('Failed to save', '', { duration: 3000 }); },
+      error: () => { this.saving.set(false); this.snack.open(this.translate.instant('JOURNAL.failedSave'), '', { duration: 3000 }); },
     });
   }
 
@@ -473,10 +473,10 @@ export class SessionNoteEditorComponent implements OnInit {
     this.journal.generateAiSummary(this.noteId).subscribe({
       next: () => {
         this.aiLoading.set(false);
-        this.snack.open('AI summary generated', '', { duration: 2000 });
+        this.snack.open(this.translate.instant('JOURNAL.aiSummaryGenerated'), '', { duration: 2000 });
         this.router.navigate(['/journal/note', this.noteId]);
       },
-      error: () => { this.aiLoading.set(false); this.snack.open('Failed to generate summary', '', { duration: 3000 }); },
+      error: () => { this.aiLoading.set(false); this.snack.open(this.translate.instant('JOURNAL.failedGenerateSummary'), '', { duration: 3000 }); },
     });
   }
 }

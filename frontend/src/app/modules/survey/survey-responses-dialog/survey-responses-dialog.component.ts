@@ -90,14 +90,14 @@ interface DeptBreakdown { dept: string; count: number; pct: number; }
       @if (loading()) {
         <div class="center-state">
           <mat-spinner diameter="40" />
-          <p>Loading responses...</p>
+          <p>{{ 'COMMON.loading' | translate }}</p>
         </div>
       }
 
       @else if (tooFew()) {
         <div class="center-state">
           <div class="lock-circle"><mat-icon>lock</mat-icon></div>
-          <h3>Not enough responses yet</h3>
+          <h3>{{ 'SURVEY.notEnoughResponses' | translate }}</h3>
           <p>A minimum of <strong>{{ minRequired() }} response{{ minRequired() === 1 ? '' : 's' }}</strong> is required before results are shown.</p>
           <div class="count-pill">{{ actualCount() }} / {{ minRequired() }} responses collected</div>
         </div>
@@ -115,26 +115,26 @@ interface DeptBreakdown { dept: string; count: number; pct: number; }
         <div class="overview-row">
           <div class="ov-stat">
             <div class="ov-value">{{ totalCount() }}</div>
-            <div class="ov-label">Responses</div>
+            <div class="ov-label">{{ 'SURVEY.responses' | translate }}</div>
           </div>
           <div class="ov-stat">
             <div class="ov-value">{{ template.questions.length }}</div>
-            <div class="ov-label">Questions</div>
+            <div class="ov-label">{{ 'SURVEY.questions' | translate }}</div>
           </div>
           <div class="ov-stat">
             <div class="ov-value small">{{ dateRange() }}</div>
-            <div class="ov-label">Date Range</div>
+            <div class="ov-label">{{ 'SURVEY.dateRange' | translate }}</div>
           </div>
           <div class="ov-stat">
-            <div class="ov-value privacy"><mat-icon>shield</mat-icon> Anonymous</div>
-            <div class="ov-label">Data is anonymised</div>
+            <div class="ov-value privacy"><mat-icon>shield</mat-icon> {{ 'SURVEY.anonymous' | translate }}</div>
+            <div class="ov-label">{{ 'SURVEY.dataAnonymised' | translate }}</div>
           </div>
         </div>
 
         <!-- Department breakdown -->
         @if (deptBreakdown().length > 1) {
           <div class="section-wrap">
-            <div class="section-label">By Department</div>
+            <div class="section-label">{{ 'ADMIN.byDepartment' | translate }}</div>
             @for (d of deptBreakdown(); track d.dept) {
               <div class="dept-row">
                 <span class="dept-name">{{ d.dept }}</span>
@@ -150,7 +150,7 @@ interface DeptBreakdown { dept: string; count: number; pct: number; }
 
         <!-- Per-question results -->
         <div class="section-wrap">
-          <div class="section-label">Question Results</div>
+          <div class="section-label">{{ 'SURVEY.questionResults' | translate }}</div>
           @for (qs of stats(); track qs.question.id) {
             <div class="q-block">
               <div class="q-meta">
@@ -234,7 +234,7 @@ interface DeptBreakdown { dept: string; count: number; pct: number; }
     </mat-dialog-content>
 
     <mat-dialog-actions align="end">
-      <button mat-button mat-dialog-close>Close</button>
+      <button mat-button mat-dialog-close>{{ 'COMMON.close' | translate }}</button>
     </mat-dialog-actions>
   `,
   styles: [`

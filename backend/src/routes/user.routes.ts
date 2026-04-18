@@ -57,7 +57,7 @@ router.get('/me', async (req: AuthRequest, res: Response, next: NextFunction) =>
       _id: req.user!.userId,
       organizationId: req.user!.organizationId,
     }).select('-passwordHash');
-    if (!user) { res.status(404).json({ error: 'User not found' }); return; }
+    if (!user) { res.status(404).json({ error: req.t('errors.userNotFound') }); return; }
     res.json(user);
   } catch (e) { next(e); }
 });
@@ -75,10 +75,10 @@ router.put('/me', async (req: AuthRequest, res: Response, next: NextFunction) =>
     if (publicSlug !== undefined) {
       const cleaned = String(publicSlug).trim().toLowerCase()
         .replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
-      if (!cleaned) { res.status(400).json({ error: 'Invalid public slug' }); return; }
+      if (!cleaned) { res.status(400).json({ error: req.t('errors.invalidPublicSlug') }); return; }
       const clash = await User.findOne({ publicSlug: cleaned, _id: { $ne: req.user!.userId } })
         .setOptions({ bypassTenantCheck: true });
-      if (clash) { res.status(409).json({ error: 'That slug is taken' }); return; }
+      if (clash) { res.status(409).json({ error: req.t('errors.slugTaken') }); return; }
       update['publicSlug'] = cleaned;
     }
     const user = await User.findOneAndUpdate(
@@ -86,7 +86,7 @@ router.put('/me', async (req: AuthRequest, res: Response, next: NextFunction) =>
       update,
       { new: true, runValidators: true }
     ).select('-passwordHash');
-    if (!user) { res.status(404).json({ error: 'User not found' }); return; }
+    if (!user) { res.status(404).json({ error: req.t('errors.userNotFound') }); return; }
     res.json(user);
   } catch (e) { next(e); }
 });
@@ -95,7 +95,7 @@ router.put('/me', async (req: AuthRequest, res: Response, next: NextFunction) =>
 router.post('/me/public-slug', async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const user = await User.findById(req.user!.userId).select('_id firstName lastName publicSlug');
-    if (!user) { res.status(404).json({ error: 'User not found' }); return; }
+    if (!user) { res.status(404).json({ error: req.t('errors.userNotFound') }); return; }
     const slug = await ensureUserPublicSlug(user);
     res.json({ publicSlug: slug });
   } catch (e) { next(e); }
@@ -107,7 +107,7 @@ router.get('/me/notification-preferences', async (req: AuthRequest, res: Respons
     const user = await User.findOne({
       _id: req.user!.userId, organizationId: req.user!.organizationId,
     }).select('notificationPreferences');
-    if (!user) { res.status(404).json({ error: 'User not found' }); return; }
+    if (!user) { res.status(404).json({ error: req.t('errors.userNotFound') }); return; }
     const defaults = {
       calendarInvites: false,
       sessionScheduled: true, sessionReminders: true, sessionForms: true,
@@ -136,7 +136,7 @@ router.put('/me/notification-preferences', async (req: AuthRequest, res: Respons
       { notificationPreferences: prefs },
       { new: true },
     ).select('notificationPreferences');
-    if (!user) { res.status(404).json({ error: 'User not found' }); return; }
+    if (!user) { res.status(404).json({ error: req.t('errors.userNotFound') }); return; }
     res.json(user.notificationPreferences);
   } catch (e) { next(e); }
 });
@@ -144,14 +144,14 @@ router.put('/me/notification-preferences', async (req: AuthRequest, res: Respons
 /** Upload profile picture (own). */
 router.post('/me/avatar', avatarUpload.single('avatar'), async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    if (!req.file) { res.status(400).json({ error: 'No image file provided' }); return; }
+    if (!req.file) { res.status(400).json({ error: req.t('errors.noImageFileProvided') }); return; }
     const profilePicture = await uploadAvatarToS3(req.file, req.user!.userId.toString());
     const user = await User.findOneAndUpdate(
       { _id: req.user!.userId, organizationId: req.user!.organizationId },
       { profilePicture },
       { new: true },
     ).select('-passwordHash');
-    if (!user) { res.status(404).json({ error: 'User not found' }); return; }
+    if (!user) { res.status(404).json({ error: req.t('errors.userNotFound') }); return; }
     res.json({ profilePicture: user.profilePicture });
   } catch (e) { next(e); }
 });
@@ -163,14 +163,14 @@ router.post(
   avatarUpload.single('avatar'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
-      if (!req.file) { res.status(400).json({ error: 'No image file provided' }); return; }
+      if (!req.file) { res.status(400).json({ error: req.t('errors.noImageFileProvided') }); return; }
       const profilePicture = await uploadAvatarToS3(req.file, req.params['id']);
       const user = await User.findOneAndUpdate(
         { _id: req.params['id'], organizationId: req.user!.organizationId },
         { profilePicture },
         { new: true },
       ).select('-passwordHash');
-      if (!user) { res.status(404).json({ error: 'User not found' }); return; }
+      if (!user) { res.status(404).json({ error: req.t('errors.userNotFound') }); return; }
       res.json({ profilePicture: user.profilePicture });
     } catch (e) { next(e); }
   }
@@ -180,20 +180,20 @@ router.put('/me/password', async (req: AuthRequest, res: Response, next: NextFun
   try {
     const { currentPassword, newPassword } = req.body;
     if (!currentPassword || !newPassword) {
-      res.status(400).json({ error: 'currentPassword and newPassword are required.' });
+      res.status(400).json({ error: req.t('errors.currentAndNewPasswordRequired') });
       return;
     }
     if (newPassword.length < 8) {
-      res.status(400).json({ error: 'New password must be at least 8 characters.' });
+      res.status(400).json({ error: req.t('errors.passwordMinLength') });
       return;
     }
     const user = await User.findOne({
       _id: req.user!.userId,
       organizationId: req.user!.organizationId,
     });
-    if (!user) { res.status(404).json({ error: 'User not found' }); return; }
+    if (!user) { res.status(404).json({ error: req.t('errors.userNotFound') }); return; }
     const match = await bcrypt.compare(currentPassword, user.passwordHash);
-    if (!match) { res.status(400).json({ error: 'Current password is incorrect.' }); return; }
+    if (!match) { res.status(400).json({ error: req.t('errors.currentPasswordIncorrect') }); return; }
     user.passwordHash = await bcrypt.hash(newPassword, 12);
     await user.save();
     res.json({ message: 'Password updated successfully.' });
@@ -209,7 +209,7 @@ router.post('/me/2fa/setup', async (req: AuthRequest, res: Response, next: NextF
     const user = await User.findOne({
       _id: req.user!.userId, organizationId: req.user!.organizationId,
     });
-    if (!user) { res.status(404).json({ error: 'User not found' }); return; }
+    if (!user) { res.status(404).json({ error: req.t('errors.userNotFound') }); return; }
 
     const otpAuthUrl = authenticator.keyuri(user.email, 'ARTES', secret);
     const qrCodeDataUrl = await QRCode.toDataURL(otpAuthUrl);
@@ -230,10 +230,10 @@ router.post('/me/2fa/enable', async (req: AuthRequest, res: Response, next: Next
       _id: req.user!.userId, organizationId: req.user!.organizationId,
     }).select('+twoFactorSecret');
     if (!user || !user.twoFactorSecret) {
-      res.status(400).json({ error: 'Run /me/2fa/setup first.' }); return;
+      res.status(400).json({ error: req.t('errors.run2faSetupFirst') }); return;
     }
     const valid = authenticator.verify({ token: otp?.replace(/\s/g, ''), secret: user.twoFactorSecret });
-    if (!valid) { res.status(400).json({ error: 'Invalid code. Please try again.' }); return; }
+    if (!valid) { res.status(400).json({ error: req.t('errors.invalidCodeTryAgain') }); return; }
 
     user.twoFactorEnabled = true;
     await user.save();
@@ -248,11 +248,11 @@ router.delete('/me/2fa', async (req: AuthRequest, res: Response, next: NextFunct
     const user = await User.findOne({
       _id: req.user!.userId, organizationId: req.user!.organizationId,
     }).select('+twoFactorSecret');
-    if (!user) { res.status(404).json({ error: 'User not found' }); return; }
-    if (!user.twoFactorEnabled) { res.status(400).json({ error: '2FA is not enabled.' }); return; }
+    if (!user) { res.status(404).json({ error: req.t('errors.userNotFound') }); return; }
+    if (!user.twoFactorEnabled) { res.status(400).json({ error: req.t('errors.twoFactorNotEnabled') }); return; }
 
     const valid = authenticator.verify({ token: otp?.replace(/\s/g, ''), secret: user.twoFactorSecret! });
-    if (!valid) { res.status(400).json({ error: 'Invalid code.' }); return; }
+    if (!valid) { res.status(400).json({ error: req.t('errors.invalidCode') }); return; }
 
     user.twoFactorEnabled = false;
     user.twoFactorSecret = undefined;
@@ -266,7 +266,7 @@ router.post('/me/test-email', async (req: AuthRequest, res: Response, next: Next
     const { to } = req.body as { to?: string };
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!to || !emailRegex.test(to)) {
-      res.status(400).json({ error: 'A valid recipient email address is required' });
+      res.status(400).json({ error: req.t('errors.validRecipientEmailRequired') });
       return;
     }
 
@@ -275,7 +275,7 @@ router.post('/me/test-email', async (req: AuthRequest, res: Response, next: Next
       organizationId: req.user!.organizationId,
     }).select('firstName');
 
-    if (!user) { res.status(404).json({ error: 'User not found' }); return; }
+    if (!user) { res.status(404).json({ error: req.t('errors.userNotFound') }); return; }
 
     await sendEmail({
       to,
@@ -415,7 +415,7 @@ router.put(
         { new: true, runValidators: true }
       ).select('-passwordHash');
       if (!user) {
-        res.status(404).json({ error: 'User not found' });
+        res.status(404).json({ error: req.t('errors.userNotFound') });
         return;
       }
       res.json(user);
@@ -431,7 +431,7 @@ router.delete(
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       if (req.params['id'] === req.user!.userId.toString()) {
-        res.status(400).json({ error: 'You cannot delete your own account.' });
+        res.status(400).json({ error: req.t('errors.cannotDeleteOwnAccount') });
         return;
       }
       const user = await User.findOneAndDelete({
@@ -439,7 +439,7 @@ router.delete(
         organizationId: req.user!.organizationId,
       });
       if (!user) {
-        res.status(404).json({ error: 'User not found' });
+        res.status(404).json({ error: req.t('errors.userNotFound') });
         return;
       }
       res.json({ message: 'User deleted' });

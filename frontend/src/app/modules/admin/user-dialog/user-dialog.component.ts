@@ -92,36 +92,36 @@ const ROLES = [
       <form [formGroup]="form" class="dialog-form">
         <div class="name-row">
           <mat-form-field appearance="outline">
-            <mat-label>First Name</mat-label>
+            <mat-label>{{ 'AUTH.firstName' | translate }}</mat-label>
             <input matInput formControlName="firstName" />
           </mat-form-field>
           <mat-form-field appearance="outline">
-            <mat-label>Last Name</mat-label>
+            <mat-label>{{ 'AUTH.lastName' | translate }}</mat-label>
             <input matInput formControlName="lastName" />
           </mat-form-field>
         </div>
 
         <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Email</mat-label>
+          <mat-label>{{ 'COMMON.email' | translate }}</mat-label>
           <input matInput formControlName="email" type="email" />
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="full-width">
-          <mat-label>System Role</mat-label>
+          <mat-label>{{ 'ADMIN.systemRole' | translate }}</mat-label>
           <mat-select formControlName="role">
             @for (r of roles; track r.value) {
               <mat-option [value]="r.value">{{ r.label }}</mat-option>
             }
           </mat-select>
-          <mat-hint>Base access level — determines API route access</mat-hint>
+          <mat-hint>{{ 'ADMIN.systemRoleHint' | translate }}</mat-hint>
         </mat-form-field>
 
         @if (customRolesAvailable().length > 0) {
           <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Custom Role (optional)</mat-label>
+            <mat-label>{{ 'ADMIN.customRoleOptional' | translate }}</mat-label>
             <mat-select formControlName="customRoleId">
               <mat-option [value]="''">
-                <em>None — use system role permissions</em>
+                <em>{{ 'ADMIN.noneUseSystemRole' | translate }}</em>
               </mat-option>
               @for (cr of customRolesAvailable(); track cr._id) {
                 <mat-option [value]="cr._id">
@@ -133,12 +133,12 @@ const ROLES = [
                 </mat-option>
               }
             </mat-select>
-            <mat-hint>Overrides the system role with custom permissions</mat-hint>
+            <mat-hint>{{ 'ADMIN.customRoleHint' | translate }}</mat-hint>
           </mat-form-field>
         }
 
         <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Department (optional)</mat-label>
+          <mat-label>{{ 'ADMIN.departmentOptional' | translate }}</mat-label>
           <mat-select formControlName="department">
             <mat-option value="">— None —</mat-option>
             @for (dept of departments(); track dept) {
@@ -149,7 +149,7 @@ const ROLES = [
 
         @if (form.get('role')?.value === 'coachee') {
           <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Sponsor (optional)</mat-label>
+            <mat-label>{{ 'ADMIN.sponsorOptional' | translate }}</mat-label>
             <mat-select formControlName="sponsorId">
               <mat-option value="">— None —</mat-option>
               @for (s of sponsors(); track s._id) {
@@ -165,9 +165,9 @@ const ROLES = [
           <label class="coachee-toggle">
             <mat-checkbox formControlName="isCoachee" color="primary" />
             <div class="coachee-toggle-text">
-              <div class="coachee-toggle-title">This user is also a coachee</div>
+              <div class="coachee-toggle-title">{{ 'ADMIN.userIsCoachee' | translate }}</div>
               <div class="coachee-toggle-hint">
-                Enable for internal employees who are receiving coaching in addition to their org role.
+                {{ 'ADMIN.userIsCoacheeHint' | translate }}
               </div>
             </div>
           </label>
@@ -175,38 +175,38 @@ const ROLES = [
 
         @if (form.get('role')?.value === 'coachee' || form.get('isCoachee')?.value) {
           <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Can choose their own coach when booking</mat-label>
+            <mat-label>{{ 'ADMIN.canChooseCoachLabel' | translate }}</mat-label>
             <mat-select formControlName="canChooseCoach">
-              <mat-option [value]="null"><em>Inherit org default</em></mat-option>
-              <mat-option [value]="true">Allowed</mat-option>
-              <mat-option [value]="false">Blocked — force their assigned coach</mat-option>
+              <mat-option [value]="null"><em>{{ 'ADMIN.inheritOrgDefault' | translate }}</em></mat-option>
+              <mat-option [value]="true">{{ 'ADMIN.allowed' | translate }}</mat-option>
+              <mat-option [value]="false">{{ 'ADMIN.blockedForceCoach' | translate }}</mat-option>
             </mat-select>
-            <mat-hint>Overrides the org-wide setting for this coachee only.</mat-hint>
+            <mat-hint>{{ 'ADMIN.canChooseCoachHint' | translate }}</mat-hint>
           </mat-form-field>
         }
 
         @if (!isEdit()) {
           <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Password</mat-label>
+            <mat-label>{{ 'AUTH.password' | translate }}</mat-label>
             <input matInput formControlName="password" [type]="showPwd ? 'text' : 'password'" />
             <button mat-icon-button matSuffix type="button" (click)="showPwd = !showPwd">
               <mat-icon>{{ showPwd ? 'visibility_off' : 'visibility' }}</mat-icon>
             </button>
-            <mat-hint>Minimum 8 characters</mat-hint>
+            <mat-hint>{{ 'AUTH.minChars' | translate }}</mat-hint>
           </mat-form-field>
         }
       </form>
     </mat-dialog-content>
 
     <mat-dialog-actions align="end">
-      <button mat-button mat-dialog-close [disabled]="saving()">Cancel</button>
+      <button mat-button mat-dialog-close [disabled]="saving()">{{ 'COMMON.cancel' | translate }}</button>
       <button mat-raised-button color="primary"
               (click)="save()" [disabled]="form.invalid || saving()">
         @if (saving()) {
           <mat-spinner diameter="18" />
         } @else {
           <mat-icon>{{ isEdit() ? 'save' : 'person_add' }}</mat-icon>
-          {{ isEdit() ? 'Save Changes' : 'Add User' }}
+          {{ isEdit() ? ('COMMON.save' | translate) : ('ADMIN.addUser' | translate) }}
         }
       </button>
     </mat-dialog-actions>

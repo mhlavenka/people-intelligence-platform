@@ -20,14 +20,15 @@ router.post(
 
       const coachee = await User.findOne({ _id: coacheeId, organizationId });
       if (!coachee) {
-        res.status(404).json({ error: 'Coachee not found in this organization' });
+        res.status(404).json({ error: req.t('errors.coacheeNotFoundInOrg') });
         return;
       }
 
       const prompt = buildIDPPrompt(
         { firstName: coachee.firstName, role: coachee.role, competencyGaps },
         eqiScores,
-        goals
+        goals,
+        req.language
       );
 
       const aiResponse = await callClaude(prompt, undefined, 4096);
@@ -101,13 +102,13 @@ router.post(
 
       const coachee = await User.findOne({ _id: coacheeId, organizationId });
       if (!coachee) {
-        res.status(404).json({ error: 'User not found in this organization' });
+        res.status(404).json({ error: req.t('errors.userNotFoundInOrg') });
         return;
       }
 
       const analysis = await ConflictAnalysis.findOne({ _id: analysisId, organizationId });
       if (!analysis) {
-        res.status(404).json({ error: 'Conflict analysis not found' });
+        res.status(404).json({ error: req.t('errors.conflictAnalysisNotFound') });
         return;
       }
 
@@ -119,7 +120,8 @@ router.post(
           conflictTypes: analysis.conflictTypes,
           aiNarrative: analysis.aiNarrative,
         },
-        goals
+        goals,
+        req.language
       );
 
       const aiResponse = await callClaude(prompt, undefined, 4096);
@@ -223,13 +225,13 @@ router.post(
 
       const existing = await DevelopmentPlan.findOne({ _id: req.params['id'], organizationId });
       if (!existing) {
-        res.status(404).json({ error: 'IDP not found' });
+        res.status(404).json({ error: req.t('errors.idpNotFound') });
         return;
       }
 
       const coachee = await User.findOne({ _id: existing.coacheeId, organizationId });
       if (!coachee) {
-        res.status(404).json({ error: 'Coachee not found' });
+        res.status(404).json({ error: req.t('errors.coacheeNotFoundShort') });
         return;
       }
 
@@ -240,7 +242,8 @@ router.post(
       const prompt = buildIDPPrompt(
         { firstName: coachee.firstName, role: coachee.role, competencyGaps: existing.competencyGaps },
         eqiScores,
-        existing.goal
+        existing.goal,
+        req.language
       );
 
       const aiResponse = await callClaude(prompt, undefined, 4096);
@@ -256,7 +259,7 @@ router.post(
         parsed = JSON.parse(extractJson(aiResponse));
       } catch {
         console.error('[IDP Regenerate] JSON parse failed. Raw AI response:', aiResponse);
-        res.status(500).json({ error: 'AI returned invalid response. Please try again.' });
+        res.status(500).json({ error: req.t('errors.aiInvalidResponse') });
         return;
       }
 
@@ -295,13 +298,13 @@ router.put('/idps/:id/milestone', async (req: AuthRequest, res: Response, next: 
 
     const idp = await DevelopmentPlan.findOne({ _id: req.params['id'], organizationId });
     if (!idp) {
-      res.status(404).json({ error: 'IDP not found' });
+      res.status(404).json({ error: req.t('errors.idpNotFound') });
       return;
     }
 
     const milestone = idp.milestones.find((m) => m._id?.toString() === milestoneId);
     if (!milestone) {
-      res.status(404).json({ error: 'Milestone not found' });
+      res.status(404).json({ error: req.t('errors.milestoneNotFound') });
       return;
     }
 
@@ -323,11 +326,11 @@ router.put(
     try {
       const { status } = req.body;
       if (!['draft', 'active', 'completed'].includes(status)) {
-        res.status(400).json({ error: 'Invalid status' });
+        res.status(400).json({ error: req.t('errors.invalidStatus') });
         return;
       }
       const idp = await DevelopmentPlan.findOne({ _id: req.params['id'], organizationId: req.user!.organizationId });
-      if (!idp) { res.status(404).json({ error: 'IDP not found' }); return; }
+      if (!idp) { res.status(404).json({ error: req.t('errors.idpNotFound') }); return; }
       idp.status = status;
       await idp.save();
       res.json(idp);
@@ -343,11 +346,11 @@ router.delete(
     try {
       const idp = await DevelopmentPlan.findOne({ _id: req.params['id'], organizationId: req.user!.organizationId });
       if (!idp) {
-        res.status(404).json({ error: 'IDP not found' });
+        res.status(404).json({ error: req.t('errors.idpNotFound') });
         return;
       }
       if (idp.status !== 'draft') {
-        res.status(400).json({ error: 'Only draft IDPs can be deleted. Deactivate active IDPs instead.' });
+        res.status(400).json({ error: req.t('errors.onlyDraftIdpCanBeDeleted') });
         return;
       }
       await idp.deleteOne();
@@ -384,7 +387,7 @@ router.post('/journal', async (req: AuthRequest, res: Response, next: NextFuncti
   try {
     const { content, prompt, mood, tags, idpId } = req.body;
     if (!content?.trim()) {
-      res.status(400).json({ error: 'Content is required' });
+      res.status(400).json({ error: req.t('errors.contentRequired') });
       return;
     }
     const entry = await JournalEntry.create({
@@ -411,7 +414,7 @@ router.delete('/journal/:id', async (req: AuthRequest, res: Response, next: Next
       filter['userId'] = req.user!.userId;
     }
     const entry = await JournalEntry.findOneAndDelete(filter);
-    if (!entry) { res.status(404).json({ error: 'Entry not found' }); return; }
+    if (!entry) { res.status(404).json({ error: req.t('errors.entryNotFound') }); return; }
     res.json({ message: 'Entry deleted' });
   } catch (e) { next(e); }
 });

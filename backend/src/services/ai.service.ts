@@ -13,6 +13,11 @@ const SYSTEM_PROMPT =
 
 const client = new Anthropic({ apiKey: config.anthropic.apiKey });
 
+function languageInstruction(language: string): string {
+  const langName = language === 'fr' ? 'French (use formal "vous" register)' : 'English';
+  return `\n\nIMPORTANT: All string values in your JSON response must be written in ${langName}. Do not translate the JSON keys — they must stay exactly as specified above.`;
+}
+
 async function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -68,7 +73,8 @@ export function buildConflictAnalysisPrompt(
     aggregatedResponses: Record<string, number | string>;
     responseCount: number;
   },
-  orgContext: { name: string; industry?: string; employeeCount?: number }
+  orgContext: { name: string; industry?: string; employeeCount?: number },
+  language: string = 'en'
 ): string {
   return `Analyze the following workplace survey data for conflict risk assessment.
 
@@ -87,7 +93,7 @@ Please provide:
 4. **AI Narrative** (2-3 paragraphs): Professional analysis of team dynamics and conflict indicators
 5. **Manager Script**: Practical talking points for the manager to address the situation (use interest-based negotiation principles)
 
-Format your response as JSON with keys: riskScore, riskLevel, conflictTypes, aiNarrative, managerScript`;
+Format your response as JSON with keys: riskScore, riskLevel, conflictTypes, aiNarrative, managerScript` + languageInstruction(language);
 }
 
 export function buildConflictSubAnalysisPrompt(
@@ -98,7 +104,8 @@ export function buildConflictSubAnalysisPrompt(
     riskScore: number;
     riskLevel: string;
     aiNarrative: string;
-  }
+  },
+  language: string = 'en'
 ): string {
   return `You are an expert workplace conflict analyst using Helena's coaching-integrated, interest-based mediation methodology.
 
@@ -120,7 +127,7 @@ Return ONLY valid JSON with these keys:
     "keyQuestions": ["<interest-based question 1>", "<question 2>", "<question 3>"],
     "resolution": "<specific resolution approach and next steps for this conflict type>"
   }
-}`;
+}` + languageInstruction(language);
 }
 
 export function buildConflictRecommendedActionsPrompt(
@@ -131,7 +138,8 @@ export function buildConflictRecommendedActionsPrompt(
     riskLevel: string;
     conflictTypes: string[];
     aiNarrative: string;
-  }
+  },
+  language: string = 'en'
 ): string {
   return `You are an expert workplace conflict resolution strategist using Helena's coaching-integrated, interest-based methodology.
 
@@ -167,7 +175,7 @@ Rules:
 - shortTermActions: 3-5 items for the next 2-4 weeks
 - longTermActions: 2-3 items for 1-3 months
 - preventiveMeasures: 2-4 plain-text strings
-- Match urgency to the risk level: ${analysis.riskLevel} risk means ${analysis.riskLevel === 'critical' ? 'act NOW' : analysis.riskLevel === 'high' ? 'move quickly' : 'address systematically'}`;
+- Match urgency to the risk level: ${analysis.riskLevel} risk means ${analysis.riskLevel === 'critical' ? 'act NOW' : analysis.riskLevel === 'high' ? 'move quickly' : 'address systematically'}` + languageInstruction(language);
 }
 
 export function buildPostSessionReflectionPrompt(
@@ -178,7 +186,8 @@ export function buildPostSessionReflectionPrompt(
     coachNotes?: string;
     summary?: string;
     growFocus?: string[];
-  }
+  },
+  language: string = 'en'
 ): string {
   const topicList = context.topics.length
     ? `Topics discussed: ${context.topics.join(', ')}`
@@ -228,7 +237,7 @@ Rules:
 - All questions must be type "text" (open-ended)
 - Categories: Insights (2-3), Action Steps (2), Support Needed (1), Reflection (1-2)
 - Warm, encouraging tone — this is a growth conversation, not an exam
-- Do NOT reference the coach's private notes in the question text`;
+- Do NOT reference the coach's private notes in the question text` + languageInstruction(language);
 }
 
 export function buildNeuroinclustionGapPrompt(
@@ -237,7 +246,8 @@ export function buildNeuroinclustionGapPrompt(
     dimensions: Array<{ name: string; score: number }>;
     overallMaturityScore: number;
   },
-  orgContext: { name: string; industry?: string }
+  orgContext: { name: string; industry?: string },
+  language: string = 'en'
 ): string {
   return `Analyze the following neuroinclusion maturity assessment results.
 
@@ -269,7 +279,7 @@ Rules:
 - actionRoadmap: exactly 5–7 plain-text strings, each self-contained (include the timeline in the sentence)
 - quickWins: exactly 2–3 plain-text strings
 - longTermInitiatives: exactly 2–3 plain-text strings
-- NO objects, NO nested arrays, NO extra fields`;
+- NO objects, NO nested arrays, NO extra fields` + languageInstruction(language);
 }
 
 export function buildConflictIDPPrompt(
@@ -280,7 +290,8 @@ export function buildConflictIDPPrompt(
     conflictTypes: string[];
     aiNarrative: string;
   },
-  goals: string
+  goals: string,
+  language: string = 'en'
 ): string {
   return `Generate a professional Individual Development Plan (IDP) focused on conflict resolution and interpersonal skill development using the GROW model.
 
@@ -313,7 +324,7 @@ Please create a comprehensive IDP with:
 3. **Resources**: Recommended tools, training, or support for conflict skill building
 
 Respond with ONLY valid JSON — no explanation, no markdown, no code fences. Start your response with { and end with }.
-Required JSON shape: { "goal": string, "currentReality": string, "options": string[], "willDoActions": string[], "milestones": [{"title":string,"weeksFromNow":number,"successCriteria":string}], "resources": string[], "competencyGaps": string[] }`;
+Required JSON shape: { "goal": string, "currentReality": string, "options": string[], "willDoActions": string[], "milestones": [{"title":string,"weeksFromNow":number,"successCriteria":string}], "resources": string[], "competencyGaps": string[] }` + languageInstruction(language);
 }
 
 export function buildIDPPrompt(
@@ -323,7 +334,8 @@ export function buildIDPPrompt(
     competencyGaps: string[];
   },
   eqiScores: Record<string, number>,
-  goals: string
+  goals: string,
+  language: string = 'en'
 ): string {
   return `Generate a professional Individual Development Plan (IDP) using the GROW model.
 
@@ -350,7 +362,7 @@ Please create a comprehensive IDP with:
 3. **Resources**: Recommended tools, training, or support
 
 Respond with ONLY valid JSON — no explanation, no markdown, no code fences. Start your response with { and end with }.
-Required JSON shape: { "goal": string, "currentReality": string, "options": string[], "willDoActions": string[], "milestones": [{"title":string,"weeksFromNow":number,"successCriteria":string}], "resources": string[] }`;
+Required JSON shape: { "goal": string, "currentReality": string, "options": string[], "willDoActions": string[], "milestones": [{"title":string,"weeksFromNow":number,"successCriteria":string}], "resources": string[] }` + languageInstruction(language);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -361,7 +373,7 @@ export function buildSessionSummaryPrompt(note: {
   preSession?: { agenda?: string; hypotheses?: string; coachIntention?: string };
   inSession?: { openingState?: string; keyThemes?: string[]; observations?: string; notableQuotes?: string[]; coachInterventions?: string; energyShifts?: string };
   postSession?: { coachReflection?: string; whatWorked?: string; whatToExplore?: string; clientGrowthEdge?: string };
-}): string {
+}, language: string = 'en'): string {
   return `You are an expert coaching supervisor analyzing a coaching session note. Use ICF core competencies (active listening, evoking awareness, facilitating growth) as your analytical lens.
 
 SESSION NOTE DATA:
@@ -391,7 +403,7 @@ Please synthesize this session into:
 3. The single most significant growth edge moment or insight from this session
 
 Respond with ONLY valid JSON — no markdown, no code fences.
-Required JSON shape: { "summary": string, "themes": string[], "growthEdgeMoment": string }`;
+Required JSON shape: { "summary": string, "themes": string[], "growthEdgeMoment": string }` + languageInstruction(language);
 }
 
 export function buildEngagementInsightPrompt(
@@ -403,7 +415,8 @@ export function buildEngagementInsightPrompt(
     postSession?: { coachReflection?: string; whatToExplore?: string; clientGrowthEdge?: string };
     aiSummary?: string;
     aiThemes?: string[];
-  }>
+  }>,
+  language: string = 'en'
 ): string {
   const sessionsText = sessionNotes
     .map((n) => `Session #${n.sessionNumber} (${n.sessionDate}):
@@ -428,12 +441,13 @@ Provide a cross-session insight report with:
 5. **Suggested Next Focus**: Recommended focus for upcoming sessions based on the trajectory
 
 Respond with ONLY valid JSON — no markdown, no code fences.
-Required JSON shape: { "recurringThemes": string[], "growthArc": string, "coachObservations": string, "openThreads": string[], "suggestedNextFocus": string }`;
+Required JSON shape: { "recurringThemes": string[], "growthArc": string, "coachObservations": string, "openThreads": string[], "suggestedNextFocus": string }` + languageInstruction(language);
 }
 
 export function buildSupervisionDigestPrompt(
   reflectiveEntries: Array<{ title: string; body: string; mood: string; entryDate: string; tags?: string[] }>,
-  sessionNotes: Array<{ sessionNumber: number; sessionDate: string; postSession?: { coachReflection?: string }; aiThemes?: string[] }>
+  sessionNotes: Array<{ sessionNumber: number; sessionDate: string; postSession?: { coachReflection?: string }; aiThemes?: string[] }>,
+  language: string = 'en'
 ): string {
   const reflectionsText = reflectiveEntries
     .map((e) => `[${e.entryDate}] "${e.title}" (Mood: ${e.mood})${e.tags?.length ? ` Tags: ${e.tags.join(', ')}` : ''}
@@ -462,5 +476,5 @@ Provide a supervision preparation digest with:
 4. **Development Areas**: Specific ICF competency areas for the coach's own growth
 
 Respond with ONLY valid JSON — no markdown, no code fences.
-Required JSON shape: { "coachThemes": string[], "crossEngagementPatterns": string, "questionsForSupervisor": string[], "developmentAreas": string[] }`;
+Required JSON shape: { "coachThemes": string[], "crossEngagementPatterns": string, "questionsForSupervisor": string[], "developmentAreas": string[] }` + languageInstruction(language);
 }

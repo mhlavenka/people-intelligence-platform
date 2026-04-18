@@ -44,15 +44,15 @@ const DAY_SHORTS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
           <mat-icon>arrow_back</mat-icon>
         </a>
         <div class="header-text">
-          <h1>{{ eventTypeName || (eventTypeId === 'new' ? 'New Event Type' : 'Edit Event Type') }}</h1>
-          <p>Configure this booking page's settings, schedule, and appearance.</p>
+          <h1>{{ eventTypeName || (eventTypeId === 'new' ? ('BOOKING.newEventTypeTitle' | translate) : ('BOOKING.editEventType' | translate)) }}</h1>
+          <p>{{ 'BOOKING.configureSettings' | translate }}</p>
         </div>
         @if (!loading()) {
           <div class="header-actions">
-            <a mat-stroked-button routerLink="/booking/settings">Cancel</a>
+            <a mat-stroked-button routerLink="/booking/settings">{{ 'BOOKING.cancel' | translate }}</a>
             <button mat-flat-button color="primary" (click)="save()" [disabled]="saving()">
               @if (saving()) { <mat-spinner diameter="20" /> }
-              Save Changes
+              {{ 'BOOKING.saveChanges' | translate }}
             </button>
           </div>
         }
@@ -70,7 +70,7 @@ const DAY_SHORTS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
               <mat-icon>label</mat-icon>
               <div>
                 <h2>{{ 'BOOKING.eventTypeSection' | translate }}</h2>
-                <p>Name and visual identity for this booking page</p>
+                <p>{{ 'BOOKING.nameAndIdentity' | translate }}</p>
               </div>
             </div>
             <mat-divider />
@@ -82,7 +82,7 @@ const DAY_SHORTS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
                        placeholder="e.g. 60-Minute Coaching, Quick Check-in" />
               </mat-form-field>
               <div class="color-picker">
-                <span class="color-label">Color</span>
+                <span class="color-label">{{ 'BOOKING.color' | translate }}</span>
                 <div class="color-swatches">
                   @for (c of colors; track c) {
                     <button class="swatch" [style.background]="c"
@@ -92,8 +92,8 @@ const DAY_SHORTS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
                 </div>
               </div>
               <div class="toggle-row">
-                <mat-slide-toggle [(ngModel)]="isActive">Active</mat-slide-toggle>
-                <span class="toggle-hint">Inactive event types won't accept new bookings</span>
+                <mat-slide-toggle [(ngModel)]="isActive">{{ 'BOOKING.active' | translate }}</mat-slide-toggle>
+                <span class="toggle-hint">{{ 'BOOKING.inactiveHint' | translate }}</span>
               </div>
             </div>
           </section>
@@ -104,13 +104,13 @@ const DAY_SHORTS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
               <mat-icon>tune</mat-icon>
               <div>
                 <h2>{{ 'BOOKING.sessionSettings' | translate }}</h2>
-                <p>Configure duration, buffer, and booking limits</p>
+                <p>{{ 'BOOKING.configureDurationBuffer' | translate }}</p>
               </div>
             </div>
             <mat-divider />
             <div class="card-body settings-grid">
               <mat-form-field appearance="outline">
-                <mat-label>Session duration (minutes)</mat-label>
+                <mat-label>{{ 'BOOKING.sessionDuration' | translate }}</mat-label>
                 <mat-select [(ngModel)]="appointmentDuration">
                   @for (d of durationOptions; track d) {
                     <mat-option [value]="d">{{ d }} min</mat-option>
@@ -118,24 +118,24 @@ const DAY_SHORTS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
                 </mat-select>
               </mat-form-field>
               <mat-form-field appearance="outline">
-                <mat-label>Buffer between sessions (min)</mat-label>
+                <mat-label>{{ 'BOOKING.bufferBetweenSessions' | translate }}</mat-label>
                 <input matInput type="number" [(ngModel)]="bufferTime" min="0" max="120" />
               </mat-form-field>
               <mat-form-field appearance="outline">
-                <mat-label>Max bookings per day (0 = unlimited)</mat-label>
+                <mat-label>{{ 'BOOKING.maxBookingsPerDay' | translate }}</mat-label>
                 <input matInput type="number" [(ngModel)]="maxBookingsPerDay" min="0" />
               </mat-form-field>
               <mat-form-field appearance="outline">
-                <mat-label>Minimum notice (hours)</mat-label>
+                <mat-label>{{ 'BOOKING.minimumNotice' | translate }}</mat-label>
                 <input matInput type="number" [(ngModel)]="minNoticeHours" min="0" />
               </mat-form-field>
               <mat-form-field appearance="outline">
-                <mat-label>Max advance booking (days)</mat-label>
+                <mat-label>{{ 'BOOKING.maxAdvanceBooking' | translate }}</mat-label>
                 <input matInput type="number" [(ngModel)]="maxAdvanceDays" min="1" max="365" />
               </mat-form-field>
               <div class="toggle-row">
                 <mat-slide-toggle [(ngModel)]="googleMeetEnabled">
-                  Auto-create Google Meet link
+                  {{ 'BOOKING.autoCreateGoogleMeet' | translate }}
                 </mat-slide-toggle>
               </div>
             </div>
@@ -147,13 +147,13 @@ const DAY_SHORTS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
               <mat-icon>article</mat-icon>
               <div>
                 <h2>{{ 'BOOKING.bookingPage' | translate }}</h2>
-                <p>Customize what clients see when they visit this booking link</p>
+                <p>{{ 'BOOKING.customizeClientView' | translate }}</p>
               </div>
             </div>
             <mat-divider />
             <div class="card-body">
               <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Page title</mat-label>
+                <mat-label>{{ 'BOOKING.pageTitle' | translate }}</mat-label>
                 <input matInput [(ngModel)]="bookingPageTitle"
                        placeholder="e.g. Book a Coaching Session" />
               </mat-form-field>
@@ -173,14 +173,14 @@ const DAY_SHORTS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
               <mat-icon>schedule</mat-icon>
               <div>
                 <h2>{{ 'BOOKING.availability' | translate }}</h2>
-                <p>Shared with all event types, or override here</p>
+                <p>{{ 'BOOKING.sharedWithAllEventTypes' | translate }}</p>
               </div>
             </div>
             <mat-divider />
             <div class="card-body">
               <div class="toggle-row">
                 <mat-slide-toggle [(ngModel)]="useCustomSchedule" (change)="onScheduleModeChange()">
-                  Override default schedule
+                  {{ 'BOOKING.overrideDefaultSchedule' | translate }}
                 </mat-slide-toggle>
               </div>
 
@@ -204,7 +204,7 @@ const DAY_SHORTS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
                           </mat-form-field>
                         </div>
                       } @else {
-                        <span class="unavailable-label">Unavailable</span>
+                        <span class="unavailable-label">{{ 'BOOKING.unavailable' | translate }}</span>
                       }
                     </div>
                   }
@@ -212,7 +212,7 @@ const DAY_SHORTS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
               } @else {
                 <div class="shared-schedule">
                   <div class="shared-label">
-                    Using shared schedule
+                    {{ 'BOOKING.usingSharedSchedule' | translate }}
                     <a routerLink="/booking/global-settings" class="edit-link">Edit</a>
                   </div>
                   @if (sharedSchedule().length) {
@@ -223,13 +223,13 @@ const DAY_SHORTS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
                           @if (slot.enabled) {
                             <span class="shared-time">{{ slot.startTime }} – {{ slot.endTime }}</span>
                           } @else {
-                            <span class="shared-off">Unavailable</span>
+                            <span class="shared-off">{{ 'BOOKING.unavailable' | translate }}</span>
                           }
                         </li>
                       }
                     </ul>
                   } @else {
-                    <p class="shared-empty">No shared schedule set yet.</p>
+                    <p class="shared-empty">{{ 'BOOKING.noSharedSchedule' | translate }}</p>
                   }
                 </div>
               }
@@ -241,8 +241,8 @@ const DAY_SHORTS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
             <div class="card-header">
               <mat-icon>link</mat-icon>
               <div>
-                <h2>Booking Link</h2>
-                <p>Generated from the event type name</p>
+                <h2>{{ 'BOOKING.bookingLink' | translate }}</h2>
+                <p>{{ 'BOOKING.generatedFromName' | translate }}</p>
               </div>
             </div>
             <mat-divider />
@@ -259,9 +259,9 @@ const DAY_SHORTS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
                   <div class="slug-change-warn">
                     <mat-icon>swap_horiz</mat-icon>
                     <div>
-                      <div class="swn-title">Link will change on save</div>
+                      <div class="swn-title">{{ 'BOOKING.linkWillChange' | translate }}</div>
                       <code class="swn-new">{{ previewBookingUrl() }}</code>
-                      <div class="swn-hint">The previous link will stop working.</div>
+                      <div class="swn-hint">{{ 'BOOKING.previousLinkStop' | translate }}</div>
                     </div>
                   </div>
                 }
@@ -269,14 +269,14 @@ const DAY_SHORTS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
                 <div class="link-row">
                   <code class="booking-url">{{ previewBookingUrl() }}</code>
                 </div>
-                <p class="link-hint">Link is created when you save.</p>
+                <p class="link-hint">{{ 'BOOKING.linkCreatedOnSave' | translate }}</p>
               }
             </div>
           </section>
 
           <div class="inherited-note">
             <mat-icon>info_outline</mat-icon>
-            <span>Calendar connection and timezone are shared across all event types.</span>
+            <span>{{ 'BOOKING.calendarSharedNote' | translate }}</span>
             <a routerLink="/booking/global-settings">Edit</a>
           </div>
         </aside>
@@ -629,7 +629,7 @@ export class EventTypeEditorComponent implements OnInit {
       },
       error: () => {
         this.loading.set(false);
-        this.snackBar.open('Event type not found', 'OK', { duration: 3000 });
+        this.snackBar.open(this.translate.instant('BOOKING.eventTypeNotFound'), this.translate.instant('COMMON.ok'), { duration: 3000 });
         this.router.navigate(['/booking/settings']);
       },
     });
@@ -637,12 +637,12 @@ export class EventTypeEditorComponent implements OnInit {
 
   copyLink(): void {
     this.clipboard.copy(this.bookingUrl());
-    this.snackBar.open('Link copied!', 'OK', { duration: 2000 });
+    this.snackBar.open(this.translate.instant('BOOKING.linkCopied'), this.translate.instant('COMMON.ok'), { duration: 2000 });
   }
 
   save(): void {
     if (!this.eventTypeName.trim()) {
-      this.snackBar.open('Event type name is required', 'OK', { duration: 3000 });
+      this.snackBar.open(this.translate.instant('BOOKING.eventTypeNameRequired'), this.translate.instant('COMMON.ok'), { duration: 3000 });
       return;
     }
 
@@ -678,12 +678,12 @@ export class EventTypeEditorComponent implements OnInit {
     request$.subscribe({
       next: () => {
         this.saving.set(false);
-        this.snackBar.open(isNew ? 'Event type created' : 'Event type saved', 'OK', { duration: 3000 });
+        this.snackBar.open(isNew ? this.translate.instant('BOOKING.eventTypeCreated') : this.translate.instant('BOOKING.eventTypeSaved'), this.translate.instant('COMMON.ok'), { duration: 3000 });
         this.router.navigate(['/booking/settings']);
       },
       error: () => {
         this.saving.set(false);
-        this.snackBar.open(isNew ? 'Failed to create' : 'Failed to save', 'OK', { duration: 3000 });
+        this.snackBar.open(isNew ? this.translate.instant('BOOKING.failedToCreate') : this.translate.instant('BOOKING.failedToSave'), this.translate.instant('COMMON.ok'), { duration: 3000 });
       },
     });
   }

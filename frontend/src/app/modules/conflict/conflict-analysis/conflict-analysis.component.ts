@@ -41,14 +41,14 @@ interface ConflictAnalysis {
     <div class="module-banner">
       <div class="banner-insight">
         <mat-icon class="banner-icon">lightbulb</mat-icon>
-        <p><strong>Core Insight:</strong> Most workplace conflict is predictable. Warning signs appear weeks or months before a formal complaint is filed. Conflict Intelligence makes those signals visible — and actionable — for leaders who lack the training to see them.</p>
+        <p [innerHTML]="'CONFLICT.coreInsight' | translate"></p>
       </div>
       <div class="banner-features">
-        <span class="feature-pill"><mat-icon>poll</mat-icon> Confidential Pulse Surveys</span>
-        <span class="feature-pill"><mat-icon>psychology</mat-icon> AI Conflict Risk Mapping</span>
-        <span class="feature-pill"><mat-icon>escalator_warning</mat-icon> Mediation Escalation</span>
-        <span class="feature-pill"><mat-icon>trending_up</mat-icon> Conflict Trend Dashboard</span>
-        <span class="feature-pill"><mat-icon>handshake</mat-icon> Negotiation Toolkit</span>
+        <span class="feature-pill"><mat-icon>poll</mat-icon> {{ 'CONFLICT.pillSurveys' | translate }}</span>
+        <span class="feature-pill"><mat-icon>psychology</mat-icon> {{ 'CONFLICT.pillAIMapping' | translate }}</span>
+        <span class="feature-pill"><mat-icon>escalator_warning</mat-icon> {{ 'CONFLICT.pillEscalation' | translate }}</span>
+        <span class="feature-pill"><mat-icon>trending_up</mat-icon> {{ 'CONFLICT.pillTrend' | translate }}</span>
+        <span class="feature-pill"><mat-icon>handshake</mat-icon> {{ 'CONFLICT.pillNegotiation' | translate }}</span>
       </div>
     </div>
 
@@ -118,7 +118,7 @@ interface ConflictAnalysis {
               @if (!a.escalationRequested && (a.riskLevel === 'high' || a.riskLevel === 'critical')) {
                 <div class="analysis-card-actions">
                   <button mat-stroked-button color="warn" (click)="escalate(a._id); $event.stopPropagation()">
-                    <mat-icon>escalator_warning</mat-icon> Escalate
+                    <mat-icon>escalator_warning</mat-icon> {{ 'CONFLICT.escalate' | translate }}
                   </button>
                 </div>
               }

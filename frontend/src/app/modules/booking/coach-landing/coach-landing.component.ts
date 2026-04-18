@@ -57,7 +57,7 @@ import { TranslateModule } from '@ngx-translate/core';
         <div class="error-state">
           <mat-icon>error_outline</mat-icon>
           <h2>{{ 'BOOKING.coachPageNotFound' | translate }}</h2>
-          <p>The link you followed may be broken or the coach page is no longer available.</p>
+          <p>{{ 'BOOKING.linkBroken' | translate }}</p>
         </div>
       } @else if (data()) {
         <div class="container">
@@ -78,7 +78,7 @@ import { TranslateModule } from '@ngx-translate/core';
           <section class="events">
             <h2 class="events-label">{{ 'BOOKING.bookASession' | translate }}</h2>
             @if (!data()!.eventTypes.length) {
-              <p class="empty">No booking types are currently available.</p>
+              <p class="empty">{{ 'BOOKING.noBookingTypesAvailable' | translate }}</p>
             } @else {
               <ul class="event-list">
                 @for (et of data()!.eventTypes; track et._id) {
@@ -102,7 +102,7 @@ import { TranslateModule } from '@ngx-translate/core';
                     <button mat-flat-button color="primary"
                             (click)="selectEventType(et)"
                             class="book-btn">
-                      Select
+                      {{ 'BOOKING.select' | translate }}
                       <mat-icon>arrow_forward</mat-icon>
                     </button>
                   </li>

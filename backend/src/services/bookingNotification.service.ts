@@ -151,6 +151,7 @@ export async function sendBookingConfirmation(
   coachName: string,
   coachEmail: string,
   cancelUrl: string,
+  language = 'en',
 ): Promise<void> {
   const clientDt = DateTime.fromJSDate(booking.startTime).setZone(booking.clientTimezone);
   const coachDt = DateTime.fromJSDate(booking.startTime).setZone(booking.coachTimezone);
@@ -244,6 +245,7 @@ export async function sendCancellationEmail(
   coachName: string,
   coachEmail: string,
   cancelledBy: 'client' | 'coach',
+  language = 'en',
 ): Promise<void> {
   const clientDt = DateTime.fromJSDate(booking.startTime).setZone(booking.clientTimezone);
   const coachDt = DateTime.fromJSDate(booking.startTime).setZone(booking.coachTimezone);
@@ -299,6 +301,7 @@ export async function sendRescheduleConfirmation(
   cancelUrl: string,
   triggeredBy: 'coach_gcal' | 'admin' | 'coach' | 'coachee',
   note?: string,
+  language = 'en',
 ): Promise<void> {
   const oldClientDt = DateTime.fromJSDate(oldStartTime).setZone(booking.clientTimezone);
   const newClientDt = DateTime.fromJSDate(booking.startTime).setZone(booking.clientTimezone);
@@ -397,6 +400,7 @@ export async function sendReminder(
   booking: IBooking,
   coachName: string,
   type: '24h' | '1h',
+  language = 'en',
 ): Promise<void> {
   const clientDt = DateTime.fromJSDate(booking.startTime).setZone(booking.clientTimezone);
   const duration = Math.round(

@@ -16,24 +16,24 @@ import { TranslateModule } from '@ngx-translate/core';
   template: `
     <div class="journal-page">
       <div class="page-header">
-        <a routerLink="/journal" class="back-link"><mat-icon>arrow_back</mat-icon> Journal Dashboard</a>
-        <h1><mat-icon>supervisor_account</mat-icon> Supervision Digest</h1>
-        <p class="page-desc">AI-generated preparation material for your next supervision session, drawn from your reflective entries and session reflections.</p>
+        <a routerLink="/journal" class="back-link"><mat-icon>arrow_back</mat-icon> {{ 'JOURNAL.journalDashboard' | translate }}</a>
+        <h1><mat-icon>supervisor_account</mat-icon> {{ 'JOURNAL.supervisionDigest' | translate }}</h1>
+        <p class="page-desc">{{ 'JOURNAL.supervisionDigestDesc' | translate }}</p>
       </div>
 
       @if (!data() && !loading() && !error()) {
         <div class="generate-prompt">
           <mat-icon>psychology</mat-icon>
           <h3>{{ 'JOURNAL.generateSupervisionDigest' | translate }}</h3>
-          <p>This will analyze your supervision-ready reflective entries and session reflections to prepare discussion material.</p>
-          <button mat-flat-button color="primary" (click)="generate()"><mat-icon>auto_awesome</mat-icon> Generate Digest</button>
+          <p>{{ 'JOURNAL.supervisionAnalyzeDesc' | translate }}</p>
+          <button mat-flat-button color="primary" (click)="generate()"><mat-icon>auto_awesome</mat-icon> {{ 'JOURNAL.generateDigest' | translate }}</button>
         </div>
       }
 
       @if (loading()) {
         <div class="loading-center">
           <mat-spinner diameter="36" />
-          <span>Preparing supervision material...</span>
+          <span>{{ 'JOURNAL.preparingMaterial' | translate }}</span>
         </div>
       }
 
@@ -65,7 +65,7 @@ import { TranslateModule } from '@ngx-translate/core';
 
           @if (data()!.questionsForSupervisor.length) {
             <div class="report-section highlight">
-              <h3><mat-icon>help_outline</mat-icon> Questions for Supervisor</h3>
+              <h3><mat-icon>help_outline</mat-icon> {{ 'JOURNAL.questionsForSupervisor' | translate }}</h3>
               <ol>@for (q of data()!.questionsForSupervisor; track q) { <li>{{ q }}</li> }</ol>
             </div>
           }

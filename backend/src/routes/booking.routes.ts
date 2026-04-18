@@ -67,7 +67,7 @@ export const publicBookingRouter = Router();
 const publicLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 30,
-  message: { error: 'Too many requests, please try again later' },
+  message: { error: 'Too many requests, please try again later' }, // static — rate limiter config, not req-scoped
 });
 
 publicBookingRouter.use(publicLimiter);
@@ -76,7 +76,7 @@ publicBookingRouter.use(publicLimiter);
 publicBookingRouter.get('/:coachSlug', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const info = await getPublicCoachInfo(req.params['coachSlug']);
-    if (!info) { res.status(404).json({ error: 'Booking page not found' }); return; }
+    if (!info) { res.status(404).json({ error: req.t('errors.bookingPageNotFound') }); return; }
     res.json(info);
   } catch (e) { next(e); }
 });
@@ -90,7 +90,7 @@ publicBookingRouter.get('/:coachSlug/slots', async (req: Request, res: Response,
     const tz = req.query['tz'] as string || 'UTC';
 
     if (!from || !to) {
-      res.status(400).json({ error: 'from and to query params required' });
+      res.status(400).json({ error: req.t('errors.fromToRequired') });
       return;
     }
 
@@ -111,7 +111,7 @@ publicBookingRouter.post(
       const { startTime, endTime, clientName, clientEmail, clientPhone, topic, clientTimezone } = req.body;
 
       if (!startTime || !endTime || !clientName || !clientEmail) {
-        res.status(400).json({ error: 'startTime, endTime, clientName, and clientEmail are required' });
+        res.status(400).json({ error: req.t('errors.bookingFieldsRequired') });
         return;
       }
 
@@ -121,7 +121,7 @@ publicBookingRouter.post(
       if (req.user && req.user.role === 'coachee') {
         const quota = await precheckBookingQuota(coachSlug, req.user.userId);
         if (!quota.allowed) {
-          res.status(409).json({ error: quota.reason ?? 'Booking quota exhausted' });
+          res.status(409).json({ error: quota.reason ?? req.t('errors.bookingQuotaExhausted') });
           return;
         }
       }
@@ -159,7 +159,7 @@ publicBookingRouter.get('/:coachSlug/confirmation/:bookingId', async (req: Reque
   try {
     const booking = await Booking.findById(req.params['bookingId'])
       .setOptions({ bypassTenantCheck: true });
-    if (!booking) { res.status(404).json({ error: 'Booking not found' }); return; }
+    if (!booking) { res.status(404).json({ error: req.t('errors.bookingNotFound') }); return; }
 
     const cfg = await AvailabilityConfig.findOne({ coachSlug: req.params['coachSlug'], coachId: booking.coachId })
       .setOptions({ bypassTenantCheck: true });
@@ -225,7 +225,7 @@ publicCoachRouter.get('/:slug', async (req: Request, res: Response, next: NextFu
     const coach = await User.findOne({ publicSlug: slug, isActive: true })
       .setOptions({ bypassTenantCheck: true })
       .select('_id firstName lastName profilePicture bio publicSlug');
-    if (!coach) { res.status(404).json({ error: 'Coach page not found' }); return; }
+    if (!coach) { res.status(404).json({ error: req.t('errors.coachPageNotFound') }); return; }
 
     const eventTypes = await AvailabilityConfig.find({ coachId: coach._id, isActive: true })
       .setOptions({ bypassTenantCheck: true })
@@ -371,7 +371,7 @@ router.get(
       }
       if (!country) {
         res.status(400).json({
-          error: 'No country available — set the organization billing country, or pass ?country=XX (ISO-3166 alpha-2).',
+          error: req.t('errors.noCountryAvailable'),
         });
         return;
       }
@@ -420,7 +420,7 @@ router.get(
         coachId: req.user!.userId,
         organizationId: req.user!.organizationId,
       });
-      if (!cfg) { res.status(404).json({ error: 'Event type not found' }); return; }
+      if (!cfg) { res.status(404).json({ error: req.t('errors.eventTypeNotFound') }); return; }
       res.json(cfg);
     } catch (e) { next(e); }
   },
@@ -467,7 +467,7 @@ router.put(
         coachId: req.user!.userId,
         organizationId: req.user!.organizationId,
       });
-      if (!cfg) { res.status(404).json({ error: 'Event type not found' }); return; }
+      if (!cfg) { res.status(404).json({ error: req.t('errors.eventTypeNotFound') }); return; }
 
       // Slug is managed server-side (derived from name). Strip client-supplied
       // values so a stale UI can't force a conflicting slug.
@@ -511,7 +511,7 @@ router.delete(
         coachId: req.user!.userId,
         organizationId: req.user!.organizationId,
       });
-      if (!cfg) { res.status(404).json({ error: 'Event type not found' }); return; }
+      if (!cfg) { res.status(404).json({ error: req.t('errors.eventTypeNotFound') }); return; }
 
       // Check if there are future confirmed bookings
       const futureBookings = await Booking.countDocuments({
@@ -522,7 +522,7 @@ router.delete(
       });
       if (futureBookings > 0) {
         res.status(400).json({
-          error: `Cannot delete: ${futureBookings} upcoming booking(s) exist. Cancel them first.`,
+          error: req.t('errors.cannotDeleteEventType', { count: futureBookings }),
         });
         return;
       }
@@ -593,7 +593,7 @@ router.get(
         _id: req.params['id'],
         organizationId: req.user!.organizationId,
       });
-      if (!booking) { res.status(404).json({ error: 'Booking not found' }); return; }
+      if (!booking) { res.status(404).json({ error: req.t('errors.bookingNotFound') }); return; }
       res.json(booking);
     } catch (e) { next(e); }
   },
@@ -611,11 +611,11 @@ router.get(
         _id: req.params['id'],
         organizationId: req.user!.organizationId,
       });
-      if (!booking) { res.status(404).json({ error: 'Booking not found' }); return; }
+      if (!booking) { res.status(404).json({ error: req.t('errors.bookingNotFound') }); return; }
 
       if (req.user!.role === 'coachee') {
         if (!booking.coacheeId || String(booking.coacheeId) !== String(req.user!.userId)) {
-          res.status(403).json({ error: 'Not your booking.' });
+          res.status(403).json({ error: req.t('errors.notYourBooking') });
           return;
         }
       }
@@ -634,12 +634,12 @@ router.get(
           isActive: true,
         }).setOptions({ bypassTenantCheck: true });
       }
-      if (!cfg) { res.status(404).json({ error: 'No availability found for this coach.' }); return; }
+      if (!cfg) { res.status(404).json({ error: req.t('errors.noAvailabilityFound') }); return; }
 
       const from = req.query['from'] as string;
       const to   = req.query['to']   as string;
       const tz   = (req.query['tz'] as string) || 'UTC';
-      if (!from || !to) { res.status(400).json({ error: 'from and to query params required' }); return; }
+      if (!from || !to) { res.status(400).json({ error: req.t('errors.fromToRequired') }); return; }
 
       const slots = await getAvailableSlots(cfg.coachSlug, from, to, tz);
       res.json(slots);
@@ -658,11 +658,11 @@ router.delete(
         _id: req.params['id'],
         organizationId: req.user!.organizationId,
       });
-      if (!booking) { res.status(404).json({ error: 'Booking not found' }); return; }
+      if (!booking) { res.status(404).json({ error: req.t('errors.bookingNotFound') }); return; }
 
       if (req.user!.role === 'coachee') {
         if (!booking.coacheeId || String(booking.coacheeId) !== String(req.user!.userId)) {
-          res.status(403).json({ error: 'You can only cancel your own bookings.' });
+          res.status(403).json({ error: req.t('errors.canOnlyCancelOwnBookings') });
           return;
         }
       }
@@ -690,22 +690,22 @@ router.patch(
     try {
       const { newStartTime, note } = req.body as { newStartTime?: string; note?: string };
       if (!newStartTime) {
-        res.status(400).json({ error: 'newStartTime is required' }); return;
+        res.status(400).json({ error: req.t('errors.newStartTimeRequired') }); return;
       }
       const newStart = new Date(newStartTime);
       if (isNaN(newStart.getTime())) {
-        res.status(400).json({ error: 'newStartTime is not a valid date' }); return;
+        res.status(400).json({ error: req.t('errors.newStartTimeInvalid') }); return;
       }
 
       const booking = await Booking.findOne({
         _id: req.params['id'],
         organizationId: req.user!.organizationId,
       });
-      if (!booking) { res.status(404).json({ error: 'Booking not found' }); return; }
+      if (!booking) { res.status(404).json({ error: req.t('errors.bookingNotFound') }); return; }
 
       if (req.user!.role === 'coachee') {
         if (!booking.coacheeId || String(booking.coacheeId) !== String(req.user!.userId)) {
-          res.status(403).json({ error: 'You can only reschedule your own bookings.' });
+          res.status(403).json({ error: req.t('errors.canOnlyRescheduleOwnBookings') });
           return;
         }
       }

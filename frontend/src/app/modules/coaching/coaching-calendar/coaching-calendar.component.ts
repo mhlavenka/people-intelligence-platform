@@ -35,7 +35,7 @@ interface CalendarDay {
   template: `
     <div class="calendar-page">
       <div class="page-header">
-        <a routerLink="/coaching" class="back-link"><mat-icon>arrow_back</mat-icon> Coaching</a>
+        <a routerLink="/coaching" class="back-link"><mat-icon>arrow_back</mat-icon> {{ 'COACHING.coaching' | translate }}</a>
         <div class="month-nav">
           <button mat-icon-button (click)="prevMonth()"><mat-icon>chevron_left</mat-icon></button>
           <h2>{{ monthLabel() }}</h2>
@@ -49,9 +49,9 @@ interface CalendarDay {
       } @else {
         <!-- Legend -->
         <div class="legend">
-          <span class="legend-item"><span class="dot completed"></span> Completed</span>
-          <span class="legend-item"><span class="dot scheduled"></span> Scheduled</span>
-          <span class="legend-item"><span class="dot cancelled"></span> Cancelled</span>
+          <span class="legend-item"><span class="dot completed"></span> {{ 'COACHING.completed_legend' | translate }}</span>
+          <span class="legend-item"><span class="dot scheduled"></span> {{ 'COACHING.scheduled_legend' | translate }}</span>
+          <span class="legend-item"><span class="dot cancelled"></span> {{ 'COACHING.cancelled_legend' | translate }}</span>
         </div>
 
         <div class="calendar-grid">

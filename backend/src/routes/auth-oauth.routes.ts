@@ -49,12 +49,12 @@ async function googleExchange(code: string): Promise<GoogleUserInfo> {
 router.post('/google', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { code } = req.body;
-    if (!code) { res.status(400).json({ error: 'Authorization code required' }); return; }
-    if (!config.oauth.google.clientId) { res.status(501).json({ error: 'Google OAuth not configured' }); return; }
+    if (!code) { res.status(400).json({ error: req.t('errors.authorizationCodeRequired') }); return; }
+    if (!config.oauth.google.clientId) { res.status(501).json({ error: req.t('errors.googleOAuthNotConfigured') }); return; }
 
     const profile = await googleExchange(code);
     if (!profile.email_verified) {
-      res.status(400).json({ error: 'Google email is not verified' });
+      res.status(400).json({ error: req.t('errors.googleEmailNotVerified') });
       return;
     }
 
@@ -69,7 +69,7 @@ router.post('/google', async (req: Request, res: Response, next: NextFunction) =
     }
 
     if (!user || !user.isActive) {
-      res.status(401).json({ error: 'No account found for this Google email. Contact your administrator.' });
+      res.status(401).json({ error: req.t('errors.noGoogleAccount') });
       return;
     }
 
@@ -149,8 +149,8 @@ async function microsoftExchange(code: string): Promise<MicrosoftProfile> {
 router.post('/microsoft', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { code } = req.body;
-    if (!code) { res.status(400).json({ error: 'Authorization code required' }); return; }
-    if (!config.oauth.microsoft.clientId) { res.status(501).json({ error: 'Microsoft OAuth not configured' }); return; }
+    if (!code) { res.status(400).json({ error: req.t('errors.authorizationCodeRequired') }); return; }
+    if (!config.oauth.microsoft.clientId) { res.status(501).json({ error: req.t('errors.microsoftOAuthNotConfigured') }); return; }
 
     const profile = await microsoftExchange(code);
     const email = (profile.mail || profile.userPrincipalName).toLowerCase();
@@ -165,7 +165,7 @@ router.post('/microsoft', async (req: Request, res: Response, next: NextFunction
     }
 
     if (!user || !user.isActive) {
-      res.status(401).json({ error: 'No account found for this Microsoft email. Contact your administrator.' });
+      res.status(401).json({ error: req.t('errors.noMicrosoftAccount') });
       return;
     }
 

@@ -15,7 +15,7 @@ import { TranslateModule } from '@ngx-translate/core';
       <div class="page-header">
         <div>
           <h1>{{ "CONFLICT.title" | translate }}</h1>
-          <p>Proactive workplace conflict detection and resolution grounded in Helena's coaching-integrated mediation methodology</p>
+          <p>{{ "CONFLICT.subtitle" | translate }}</p>
         </div>
       </div>
 

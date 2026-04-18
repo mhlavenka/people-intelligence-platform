@@ -75,14 +75,14 @@ interface RecommendedActions {
         <mat-icon>error_outline</mat-icon>
         <h2>{{ "CONFLICT.analysisNotFound" | translate }}</h2>
         <a mat-stroked-button routerLink="/conflict/analysis">
-          <mat-icon>arrow_back</mat-icon> Back to analyses
+          <mat-icon>arrow_back</mat-icon> {{ 'CONFLICT.backToAnalyses' | translate }}
         </a>
       </div>
     } @else {
       <div class="detail-page">
         <!-- Header -->
         <div class="page-header">
-          <a mat-icon-button routerLink="/conflict/analysis" matTooltip="Back to analyses">
+          <a mat-icon-button routerLink="/conflict/analysis" [matTooltip]="'CONFLICT.backToAnalyses' | translate">
             <mat-icon>arrow_back</mat-icon>
           </a>
           <div class="header-content">
@@ -428,7 +428,7 @@ interface RecommendedActions {
         <div class="actions-bar">
           @if (!analysis()!.escalationRequested && analysis()!.riskLevel !== 'low') {
             <button mat-stroked-button color="warn" (click)="escalate()">
-              <mat-icon>escalator_warning</mat-icon> Escalate to HR
+              <mat-icon>escalator_warning</mat-icon> {{ 'CONFLICT.escalateToHR' | translate }}
             </button>
           }
         </div>

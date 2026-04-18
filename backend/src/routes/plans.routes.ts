@@ -36,7 +36,7 @@ router.post('/', async (req: AuthRequest, res: Response, next: NextFunction): Pr
     const { key, name, description, priceMonthly, overagePriceCents, maxUsers, modules, limits, features, isActive, sortOrder } = req.body;
 
     if (!key || !name || priceMonthly === undefined || !maxUsers) {
-      res.status(400).json({ error: 'key, name, priceMonthly, and maxUsers are required' });
+      res.status(400).json({ error: req.t('errors.planFieldsRequired') });
       return;
     }
 
@@ -57,7 +57,7 @@ router.post('/', async (req: AuthRequest, res: Response, next: NextFunction): Pr
     res.status(201).json(plan);
   } catch (e: unknown) {
     if ((e as { code?: number }).code === 11000) {
-      res.status(409).json({ error: 'A plan with that key already exists' });
+      res.status(409).json({ error: req.t('errors.planKeyExists') });
       return;
     }
     next(e);
@@ -69,7 +69,7 @@ router.put('/:id', async (req: AuthRequest, res: Response, next: NextFunction): 
   try {
     const plan = await Plan.findById(req.params['id']);
     if (!plan) {
-      res.status(404).json({ error: 'Plan not found' });
+      res.status(404).json({ error: req.t('errors.planNotFound') });
       return;
     }
 
@@ -91,7 +91,7 @@ router.put('/:id', async (req: AuthRequest, res: Response, next: NextFunction): 
     res.json(plan);
   } catch (e: unknown) {
     if ((e as { code?: number }).code === 11000) {
-      res.status(409).json({ error: 'A plan with that key already exists' });
+      res.status(409).json({ error: req.t('errors.planKeyExists') });
       return;
     }
     next(e);
@@ -103,7 +103,7 @@ router.delete('/:id', async (req: AuthRequest, res: Response, next: NextFunction
   try {
     const plan = await Plan.findByIdAndDelete(req.params['id']);
     if (!plan) {
-      res.status(404).json({ error: 'Plan not found' });
+      res.status(404).json({ error: req.t('errors.planNotFound') });
       return;
     }
     res.json({ message: 'Plan deleted' });

@@ -2,6 +2,7 @@ import { Injectable, NgZone, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, tap } from 'rxjs';
+import { TranslateService } from '@ngx-translate/core';
 import { environment } from '../../environments/environment';
 import { ThemeService } from './theme.service';
 
@@ -20,6 +21,7 @@ export interface User {
   profilePicture?: string;
   isCoachee?: boolean;
   canChooseCoach?: boolean;
+  preferredLanguage?: string;
 }
 
 export interface AuthResponse {
@@ -69,6 +71,7 @@ export class AuthService {
     private http: HttpClient,
     private router: Router,
     private themeService: ThemeService,
+    private translateService: TranslateService,
     private ngZone: NgZone,
   ) {}
 
@@ -253,6 +256,11 @@ export class AuthService {
     localStorage.setItem(this.USER_KEY, JSON.stringify(res.user));
     this.currentUser.set(res.user);
     this.scheduleTokenRefresh();
+
+    if (res.user.preferredLanguage) {
+      localStorage.setItem('artes_language', res.user.preferredLanguage);
+      this.translateService.use(res.user.preferredLanguage);
+    }
   }
 
   /** Handle response from OAuth callback — stores tokens and user. */

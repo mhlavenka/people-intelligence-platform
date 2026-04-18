@@ -45,11 +45,11 @@ interface EngagementInfo {
           </div>
           <div class="header-actions">
             <a mat-flat-button color="primary" [routerLink]="'/journal/note/new/' + engagementId">
-              <mat-icon>add</mat-icon> New Session Note
+              <mat-icon>add</mat-icon> {{ 'JOURNAL.newSessionNote' | translate }}
             </a>
             @if (notes().length >= 2) {
               <button mat-stroked-button (click)="generateInsights()" [disabled]="insightsLoading()">
-                <mat-icon>auto_awesome</mat-icon> {{ insights() ? 'Regenerate' : 'Generate' }} Insights
+                <mat-icon>auto_awesome</mat-icon> {{ insights() ? ('JOURNAL.regenerateInsights' | translate) : ('JOURNAL.generateInsightsLabel' | translate) }} {{ 'JOURNAL.insights' | translate }}
               </button>
             }
           </div>
@@ -60,7 +60,7 @@ interface EngagementInfo {
           <div class="empty-state">
             <mat-icon>description</mat-icon>
             <h3>{{ 'JOURNAL.noSessionNotes' | translate }}</h3>
-            <p>Capture your first session when you're ready.</p>
+            <p>{{ 'JOURNAL.captureFirstSession' | translate }}</p>
           </div>
         } @else {
           <div class="timeline">
@@ -93,13 +93,13 @@ interface EngagementInfo {
 
         <!-- AI Insights -->
         @if (insightsLoading()) {
-          <div class="ai-loading"><mat-spinner diameter="24" /> <span>Generating insights...</span></div>
+          <div class="ai-loading"><mat-spinner diameter="24" /> <span>{{ 'JOURNAL.generatingInsights' | translate }}</span></div>
         }
         @if (insights()) {
           <div class="ai-panel">
-            <div class="ai-header"><mat-icon>auto_awesome</mat-icon> Engagement Insights</div>
+            <div class="ai-header"><mat-icon>auto_awesome</mat-icon> {{ 'JOURNAL.engagementInsights' | translate }}</div>
             <div class="ai-section">
-              <h4>Recurring Themes</h4>
+              <h4>{{ 'JOURNAL.recurringThemes' | translate }}</h4>
               <div class="theme-list">
                 @for (t of insights()!.recurringThemes; track t) {
                   <span class="theme-chip">{{ t }}</span>
@@ -107,21 +107,21 @@ interface EngagementInfo {
               </div>
             </div>
             <div class="ai-section">
-              <h4>Growth Arc</h4>
+              <h4>{{ 'JOURNAL.growthArc' | translate }}</h4>
               <p>{{ insights()!.growthArc }}</p>
             </div>
             <div class="ai-section">
-              <h4>Coach Observations</h4>
+              <h4>{{ 'JOURNAL.coachObservations' | translate }}</h4>
               <p>{{ insights()!.coachObservations }}</p>
             </div>
             @if (insights()!.openThreads.length) {
               <div class="ai-section">
-                <h4>Open Threads</h4>
+                <h4>{{ 'JOURNAL.openThreads' | translate }}</h4>
                 <ul>@for (t of insights()!.openThreads; track t) { <li>{{ t }}</li> }</ul>
               </div>
             }
             <div class="ai-section">
-              <h4>Suggested Next Focus</h4>
+              <h4>{{ 'JOURNAL.suggestedNextFocus' | translate }}</h4>
               <p>{{ insights()!.suggestedNextFocus }}</p>
             </div>
           </div>
@@ -130,7 +130,7 @@ interface EngagementInfo {
         <!-- Accountability tracker -->
         @if (openItems().length > 0) {
           <mat-divider style="margin: 24px 0" />
-          <h2 class="section-title"><mat-icon>checklist</mat-icon> Open Accountability Items</h2>
+          <h2 class="section-title"><mat-icon>checklist</mat-icon> {{ 'JOURNAL.openAccountabilityItems' | translate }}</h2>
           @for (group of accountabilityGroups(); track group.noteId) {
             <div class="acc-group">
               <div class="acc-session">Session #{{ group.sessionNumber }}</div>

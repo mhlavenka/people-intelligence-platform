@@ -175,8 +175,8 @@ const RADIUS_OPTIONS = [
     <div class="org-page">
       <div class="page-header">
         <div>
-          <h1>Organization Settings</h1>
-          <p>Manage your organization profile, modules, and visual brand</p>
+          <h1>{{ 'ADMIN.orgSettings' | translate }}</h1>
+          <p>{{ 'ADMIN.orgSettingsDesc' | translate }}</p>
         </div>
       </div>
 
@@ -190,7 +190,7 @@ const RADIUS_OPTIONS = [
           <div class="card">
             <div class="card-header">
               <mat-icon>business</mat-icon>
-              <h2>Organization Profile</h2>
+              <h2>{{ 'ADMIN.orgProfile' | translate }}</h2>
             </div>
             <mat-divider />
 
@@ -204,19 +204,19 @@ const RADIUS_OPTIONS = [
                 }
               </div>
               <div class="logo-actions">
-                <span class="logo-label">Organization Logo</span>
+                <span class="logo-label">{{ 'ADMIN.orgLogo' | translate }}</span>
                 <span class="logo-hint">PNG, JPG or SVG · max 2 MB · displayed in the platform header</span>
                 <div class="logo-btns">
                   <label class="logo-upload-btn" [class.saving]="savingLogo()">
                     <input type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp"
                            (change)="onLogoSelect($event)" style="display:none" />
                     <mat-icon>upload</mat-icon>
-                    {{ savingLogo() ? 'Saving…' : 'Upload Logo' }}
+                    {{ savingLogo() ? ('COMMON.loading' | translate) : ('ADMIN.uploadLogo' | translate) }}
                   </label>
                   @if (logoPreview()) {
                     <button type="button" class="logo-remove-btn" (click)="removeLogo()"
                             [disabled]="savingLogo()">
-                      <mat-icon>delete_outline</mat-icon> Remove
+                      <mat-icon>delete_outline</mat-icon> {{ 'COMMON.remove' | translate }}
                     </button>
                   }
                 </div>
@@ -227,13 +227,13 @@ const RADIUS_OPTIONS = [
 
             <form [formGroup]="form" class="card-body">
               <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Organization Name</mat-label>
+                <mat-label>{{ 'ADMIN.orgName' | translate }}</mat-label>
                 <input matInput formControlName="name" />
               </mat-form-field>
 
               <div class="field-row">
                 <mat-form-field appearance="outline">
-                  <mat-label>Industry</mat-label>
+                  <mat-label>{{ 'ADMIN.industry' | translate }}</mat-label>
                   <mat-select formControlName="industry">
                     @for (ind of industries; track ind) {
                       <mat-option [value]="ind">{{ ind }}</mat-option>
@@ -242,30 +242,30 @@ const RADIUS_OPTIONS = [
                 </mat-form-field>
 
                 <mat-form-field appearance="outline">
-                  <mat-label>Employee Count</mat-label>
+                  <mat-label>{{ 'ADMIN.employeeCount' | translate }}</mat-label>
                   <input matInput formControlName="employeeCount" type="number" min="1" />
                 </mat-form-field>
               </div>
 
               <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Billing Email</mat-label>
+                <mat-label>{{ 'ADMIN.billingEmail' | translate }}</mat-label>
                 <input matInput formControlName="billingEmail" type="email" />
               </mat-form-field>
 
               <div class="readonly-row">
                 <div class="readonly-field">
-                  <span class="readonly-label">Slug</span>
+                  <span class="readonly-label">{{ 'ADMIN.orgSlug' | translate }}</span>
                   <span class="readonly-value mono">{{ org()!.slug }}</span>
                 </div>
                 <div class="readonly-field">
-                  <span class="readonly-label">Plan</span>
+                  <span class="readonly-label">{{ 'ADMIN.plan' | translate }}</span>
                   <span class="plan-badge" [style.background]="planMeta(org()!.plan).color + '22'"
                         [style.color]="planMeta(org()!.plan).color">
                     {{ planMeta(org()!.plan).label }}
                   </span>
                 </div>
                 <div class="readonly-field">
-                  <span class="readonly-label">Member Since</span>
+                  <span class="readonly-label">{{ 'ADMIN.memberSince' | translate }}</span>
                   <span class="readonly-value">{{ org()!.createdAt | date:'MMM d, y' }}</span>
                 </div>
               </div>
@@ -274,7 +274,7 @@ const RADIUS_OPTIONS = [
                 <button mat-raised-button color="primary"
                         (click)="saveProfile()" [disabled]="form.invalid || savingProfile()">
                   @if (savingProfile()) { <mat-spinner diameter="18" /> }
-                  @else { <mat-icon>save</mat-icon> Save Changes }
+                  @else { <mat-icon>save</mat-icon> {{ 'ADMIN.saveChanges' | translate }} }
                 </button>
               </div>
             </form>
@@ -287,7 +287,7 @@ const RADIUS_OPTIONS = [
                 <mat-icon>corporate_fare</mat-icon>
               </div>
               <div>
-                <h2>Departments</h2>
+                <h2>{{ 'ADMIN.departments' | translate }}</h2>
                 <p style="font-size:13px;color:#5a6a7e;margin:2px 0 0">Define the departments in your organization. Used in Conflict Intelligence analysis and the Org Chart.</p>
               </div>
             </div>
@@ -306,14 +306,14 @@ const RADIUS_OPTIONS = [
                   </div>
                 }
                 @if (departments().length === 0) {
-                  <span class="dept-empty">No departments defined yet.</span>
+                  <span class="dept-empty">{{ 'ADMIN.noDepartments' | translate }}</span>
                 }
               </div>
 
               <!-- add new department -->
               <div class="dept-add-row">
                 <mat-form-field appearance="outline" class="dept-input">
-                  <mat-label>New department name</mat-label>
+                  <mat-label>{{ 'ADMIN.newDeptName' | translate }}</mat-label>
                   <input matInput #deptInput2
                          [disabled]="savingDepts()"
                          (keydown.enter)="addDepartmentFromInput(deptInput2); $event.preventDefault()"
@@ -333,13 +333,13 @@ const RADIUS_OPTIONS = [
             <div class="card">
               <div class="card-header">
                 <mat-icon>palette</mat-icon>
-                <h2>Brand &amp; Theme</h2>
+                <h2>{{ 'ADMIN.brandTheme' | translate }}</h2>
               </div>
               <mat-divider />
               <div class="card-body">
 
                 <!-- Presets -->
-                <div class="section-label">Quick Presets</div>
+                <div class="section-label">{{ 'ADMIN.themePresets' | translate }}</div>
                 <div class="presets-grid">
                   @for (preset of presets; track preset.name) {
                     <button type="button" class="preset-btn"
@@ -361,7 +361,7 @@ const RADIUS_OPTIONS = [
                 <mat-divider />
 
                 <!-- Colors -->
-                <div class="section-label" style="margin-top:4px">Colors</div>
+                <div class="section-label" style="margin-top:4px">{{ 'ADMIN.colors' | translate }}</div>
                 <form [formGroup]="themeForm" class="colors-grid">
                   @for (field of colorFields; track field.key) {
                     <div class="color-row">
@@ -385,10 +385,10 @@ const RADIUS_OPTIONS = [
                 <mat-divider />
 
                 <!-- Typography -->
-                <div class="section-label" style="margin-top:4px">Typography</div>
+                <div class="section-label" style="margin-top:4px">{{ 'ADMIN.typography' | translate }}</div>
                 <form [formGroup]="themeForm" class="font-grid">
                   <mat-form-field appearance="outline">
-                    <mat-label>Heading Font</mat-label>
+                    <mat-label>{{ 'ADMIN.headingFont' | translate }}</mat-label>
                     <mat-select formControlName="headingFont">
                       @for (f of fonts; track f) {
                         <mat-option [value]="f">
@@ -399,7 +399,7 @@ const RADIUS_OPTIONS = [
                   </mat-form-field>
 
                   <mat-form-field appearance="outline">
-                    <mat-label>Body Font</mat-label>
+                    <mat-label>{{ 'ADMIN.bodyFont' | translate }}</mat-label>
                     <mat-select formControlName="bodyFont">
                       @for (f of fonts; track f) {
                         <mat-option [value]="f">
@@ -411,7 +411,7 @@ const RADIUS_OPTIONS = [
                 </form>
 
                 <!-- Corner radius -->
-                <div class="section-label">Corner Style</div>
+                <div class="section-label">{{ 'ADMIN.cornerStyle' | translate }}</div>
                 <div class="radius-group">
                   @for (r of radiusOptions; track r.value) {
                     <button type="button" class="radius-btn"
@@ -426,7 +426,7 @@ const RADIUS_OPTIONS = [
                 <mat-divider />
 
                 <!-- Live preview -->
-                <div class="section-label" style="margin-top:4px">Preview</div>
+                <div class="section-label" style="margin-top:4px">{{ 'ADMIN.preview' | translate }}</div>
                 <div class="theme-preview"
                      [style.background]="themeForm.get('backgroundColor')!.value"
                      [style.fontFamily]="themeForm.get('bodyFont')!.value + ', sans-serif'">
@@ -482,7 +482,7 @@ const RADIUS_OPTIONS = [
                   <button mat-raised-button color="primary"
                           (click)="saveTheme()" [disabled]="savingTheme()">
                     @if (savingTheme()) { <mat-spinner diameter="18" /> }
-                    @else { <mat-icon>save</mat-icon> Save Theme }
+                    @else { <mat-icon>save</mat-icon> {{ 'ADMIN.saveTheme' | translate }} }
                   </button>
                 </div>
 
@@ -496,35 +496,35 @@ const RADIUS_OPTIONS = [
           <div class="card" style="min-height: 650px;">
             <div class="card-header">
               <mat-icon>receipt_long</mat-icon>
-              <h2>Billing Details</h2>
+              <h2>{{ 'ADMIN.billingDetails' | translate }}</h2>
             </div>
             <mat-divider />
             <form [formGroup]="billingForm" class="card-body">
               <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Address Line 1</mat-label>
+                <mat-label>{{ 'ADMIN.addressLine1' | translate }}</mat-label>
                 <input matInput formControlName="billingLine1" placeholder="Street address" />
               </mat-form-field>
               <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Address Line 2</mat-label>
+                <mat-label>{{ 'ADMIN.addressLine2' | translate }}</mat-label>
                 <input matInput formControlName="billingLine2" placeholder="Suite, floor, etc. (optional)" />
               </mat-form-field>
               <div class="field-row">
                 <mat-form-field appearance="outline">
-                  <mat-label>City</mat-label>
+                  <mat-label>{{ 'ADMIN.city' | translate }}</mat-label>
                   <input matInput formControlName="billingCity" />
                 </mat-form-field>
                 <mat-form-field appearance="outline">
-                  <mat-label>Province / State</mat-label>
+                  <mat-label>{{ 'ADMIN.stateProvince' | translate }}</mat-label>
                   <input matInput formControlName="billingState" />
                 </mat-form-field>
               </div>
               <div class="field-row">
                 <mat-form-field appearance="outline">
-                  <mat-label>Postal Code</mat-label>
+                  <mat-label>{{ 'ADMIN.postalCode' | translate }}</mat-label>
                   <input matInput formControlName="billingPostalCode" />
                 </mat-form-field>
                 <mat-form-field appearance="outline">
-                  <mat-label>Country</mat-label>
+                  <mat-label>{{ 'ADMIN.country' | translate }}</mat-label>
                   <mat-select formControlName="billingCountry">
                     @for (c of countries; track c.code) {
                       <mat-option [value]="c.code">{{ c.name }}</mat-option>
@@ -533,7 +533,7 @@ const RADIUS_OPTIONS = [
                 </mat-form-field>
               </div>
               <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Tax ID (VAT / EIN)</mat-label>
+                <mat-label>{{ 'ADMIN.taxId' | translate }}</mat-label>
                 <input matInput formControlName="taxId" placeholder="e.g. DE123456789" />
                 <mat-hint>Used on invoices for tax compliance</mat-hint>
               </mat-form-field>
@@ -541,7 +541,7 @@ const RADIUS_OPTIONS = [
                 <button mat-raised-button color="primary"
                         (click)="saveBilling()" [disabled]="savingBilling()">
                   @if (savingBilling()) { <mat-spinner diameter="18" /> }
-                  @else { <mat-icon>save</mat-icon> Save Billing Details }
+                  @else { <mat-icon>save</mat-icon> {{ 'ADMIN.saveBillingDetails' | translate }} }
                 </button>
               </div>
             </form>
@@ -551,11 +551,11 @@ const RADIUS_OPTIONS = [
           <div class="card">
             <div class="card-header">
               <mat-icon>extension</mat-icon>
-              <h2>Enabled Modules</h2>
+              <h2>{{ 'ADMIN.enabledModules' | translate }}</h2>
             </div>
             <mat-divider />
             <div class="card-body">
-              <p class="modules-hint">Toggle which modules are active for your organization.</p>
+              <p class="modules-hint">{{ 'ADMIN.modulesHint' | translate }}</p>
               <div class="modules-list">
                 @for (mod of allModules(); track mod.key) {
                   <div class="module-block">
@@ -566,13 +566,13 @@ const RADIUS_OPTIONS = [
                       </div>
                       <div class="module-info">
                         <span class="module-name">{{ mod.label }}</span>
-                        <span class="module-status">{{ isModuleEnabled(mod.key) ? 'Active' : 'Inactive' }}</span>
+                        <span class="module-status">{{ isModuleEnabled(mod.key) ? ('COMMON.active' | translate) : ('COMMON.inactive' | translate) }}</span>
                       </div>
                       <button mat-stroked-button
                               [color]="isModuleEnabled(mod.key) ? 'warn' : 'primary'"
                               (click)="toggleModule(mod.key)"
                               [disabled]="savingModules()">
-                        {{ isModuleEnabled(mod.key) ? 'Disable' : 'Enable' }}
+                        {{ isModuleEnabled(mod.key) ? ('ADMIN.disable' | translate) : ('ADMIN.enable' | translate) }}
                       </button>
                     </div>
 
@@ -583,8 +583,8 @@ const RADIUS_OPTIONS = [
                             <mat-icon>receipt_long</mat-icon>
                           </div>
                           <div class="module-info">
-                            <span class="module-name">Rebill Coachees</span>
-                            <span class="module-status">{{ org()?.coachingRebill ? 'Coachees will be billed for sessions' : 'Coachee billing is off' }}</span>
+                            <span class="module-name">{{ 'ADMIN.rebillCoachees' | translate }}</span>
+                            <span class="module-status">{{ org()?.coachingRebill ? ('ADMIN.coacheeBillingOn' | translate) : ('ADMIN.coacheeBillingOff' | translate) }}</span>
                           </div>
                           <mat-slide-toggle color="primary"
                             [checked]="org()?.coachingRebill ?? false"
@@ -594,7 +594,7 @@ const RADIUS_OPTIONS = [
                         @if (org()?.coachingRebill) {
                           <div class="default-rate-row">
                             <mat-form-field appearance="outline" class="rate-field">
-                              <mat-label>Default Hourly Rate ($)</mat-label>
+                              <mat-label>{{ 'ADMIN.defaultHourlyRate' | translate }}</mat-label>
                               <input matInput type="number" min="0" step="0.01"
                                      [ngModel]="org()?.defaultCoachRate ?? ''"
                                      (ngModelChange)="pendingRate = $event" />
@@ -602,7 +602,7 @@ const RADIUS_OPTIONS = [
                             </mat-form-field>
                             <button mat-stroked-button color="primary"
                                     (click)="saveDefaultRate()" [disabled]="savingModules()">
-                              Save Rate
+                              {{ 'ADMIN.saveRate' | translate }}
                             </button>
                           </div>
                         }
@@ -612,11 +612,11 @@ const RADIUS_OPTIONS = [
                             <mat-icon>person_search</mat-icon>
                           </div>
                           <div class="module-info">
-                            <span class="module-name">Coachees can choose their own coach</span>
+                            <span class="module-name">{{ 'ADMIN.coacheesChooseCoach' | translate }}</span>
                             <span class="module-status">
                               {{ (org()?.coacheeCanChooseCoach !== false)
-                                  ? 'Coachees see a picker when booking'
-                                  : 'Booking is locked to the assigned coach' }}
+                                  ? ('ADMIN.coacheePickerOn' | translate)
+                                  : ('ADMIN.coacheePickerOff' | translate) }}
                             </span>
                           </div>
                           <mat-slide-toggle color="primary"

@@ -76,6 +76,7 @@ export async function sendEmail(params: {
   subject: string;
   html: string;
   text?: string;
+  language?: string;
 }): Promise<void> {
   const recipients = Array.isArray(params.to) ? params.to : [params.to];
   const isAlreadyWrapped = params.html.trimStart().startsWith('<!DOCTYPE')
@@ -108,7 +109,7 @@ export async function sendEmail(params: {
 
 // ─── Transactional templates ──────────────────────────────────────────────────
 
-export async function sendPasswordResetEmail(email: string, token: string): Promise<void> {
+export async function sendPasswordResetEmail(email: string, token: string, language = 'en'): Promise<void> {
   const resetUrl = `${config.frontendUrl}/auth/reset-password?token=${token}`;
   await sendEmail({
     to: email,
@@ -140,6 +141,7 @@ export async function sendWelcomeEmail(params: {
   firstName: string;
   orgName: string;
   tempPassword?: string;
+  language?: string;
 }): Promise<void> {
   const loginUrl = `${config.frontendUrl}/auth/login`;
   const passwordLine = params.tempPassword
@@ -180,6 +182,7 @@ export async function sendIDPReadyEmail(params: {
   email: string;
   firstName: string;
   orgName: string;
+  language?: string;
 }): Promise<void> {
   const url = `${config.frontendUrl}/succession`;
   await sendEmail({
@@ -212,6 +215,7 @@ export async function sendPaymentReminderEmail(params: {
   dueDateFormatted: string;
   daysOverdue: number;
   isOverdue: boolean;
+  language?: string;
 }): Promise<void> {
   const billingUrl = `${config.frontendUrl}/billing`;
   const urgency = params.isOverdue
@@ -261,6 +265,7 @@ export async function sendSuspensionEmail(params: {
   orgName: string;
   reason: string;
   invoiceNumber?: string;
+  language?: string;
 }): Promise<void> {
   const billingUrl = `${config.frontendUrl}/billing`;
   await sendEmail({
@@ -305,6 +310,7 @@ export async function sendMessageNotificationEmail(params: {
   firstName: string;
   fromName: string;
   preview: string;
+  language?: string;
 }): Promise<void> {
   const url = `${config.frontendUrl}/dashboard`;
   await sendEmail({

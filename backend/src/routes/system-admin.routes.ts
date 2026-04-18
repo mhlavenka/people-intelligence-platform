@@ -36,7 +36,7 @@ router.post('/organizations/:id/users', async (req: AuthRequest, res: Response, 
   try {
     const { firstName, lastName, email, password, role } = req.body;
     if (!firstName || !lastName || !email || !password) {
-      res.status(400).json({ error: 'firstName, lastName, email, and password are required' });
+      res.status(400).json({ error: req.t('errors.fieldsRequired', { fields: 'firstName, lastName, email, password' }) });
       return;
     }
     const passwordHash = await bcrypt.hash(password, 12);
@@ -56,7 +56,7 @@ router.post('/organizations/:id/users', async (req: AuthRequest, res: Response, 
       role: user.role,
     });
   } catch (e: any) {
-    if (e.code === 11000) { res.status(409).json({ error: 'A user with that email already exists in this organization' }); return; }
+    if (e.code === 11000) { res.status(409).json({ error: req.t('errors.userEmailExists') }); return; }
     next(e);
   }
 });

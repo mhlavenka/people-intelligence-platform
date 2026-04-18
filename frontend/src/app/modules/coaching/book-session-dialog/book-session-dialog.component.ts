@@ -27,11 +27,11 @@ export interface BookSessionData {
   template: `
     <h2 mat-dialog-title>
       <mat-icon>calendar_month</mat-icon>
-      Book a Session
+      {{ 'COACHING.bookASession' | translate }}
     </h2>
     <mat-dialog-content>
       @if (!submitted()) {
-        <p class="subtitle">Schedule a coaching session with <strong>{{ data.coachName }}</strong></p>
+        <p class="subtitle">{{ 'COACHING.scheduleWithCoach' | translate }} <strong>{{ data.coachName }}</strong></p>
 
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>{{ 'COACHING.preferredDate' | translate }}</mat-label>
@@ -51,11 +51,11 @@ export interface BookSessionData {
           </mat-form-field>
 
           <mat-form-field appearance="outline">
-            <mat-label>Format</mat-label>
+            <mat-label>{{ 'COACHING.formatLabel' | translate }}</mat-label>
             <mat-select [(ngModel)]="format">
-              <mat-option value="video">Video</mat-option>
-              <mat-option value="phone">Phone</mat-option>
-              <mat-option value="in_person">In Person</mat-option>
+              <mat-option value="video">{{ 'COACHING.video' | translate }}</mat-option>
+              <mat-option value="phone">{{ 'COACHING.phone' | translate }}</mat-option>
+              <mat-option value="in_person">{{ 'COACHING.inPerson' | translate }}</mat-option>
             </mat-select>
           </mat-form-field>
         </div>
@@ -74,12 +74,12 @@ export interface BookSessionData {
     </mat-dialog-content>
     <mat-dialog-actions align="end">
       @if (!submitted()) {
-        <button mat-button mat-dialog-close>Cancel</button>
+        <button mat-button mat-dialog-close>{{ 'COMMON.cancel' | translate }}</button>
         <button mat-raised-button color="primary" [disabled]="!preferredDate || !preferredTime" (click)="submit()">
-          <mat-icon>send</mat-icon> Send Request
+          <mat-icon>send</mat-icon> {{ 'COACHING.sendRequest' | translate }}
         </button>
       } @else {
-        <button mat-raised-button color="primary" mat-dialog-close>Done</button>
+        <button mat-raised-button color="primary" mat-dialog-close>{{ 'BOOKING.done' | translate }}</button>
       }
     </mat-dialog-actions>
   `,

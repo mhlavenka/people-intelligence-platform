@@ -62,7 +62,7 @@ const COMMON_TIMEZONES = [
         </a>
         <div>
           <h1>{{ 'BOOKING.bookingSettingsTitle' | translate }}</h1>
-          <p>These settings apply to all your event types.</p>
+          <p>{{ 'BOOKING.settingsApplyToAll' | translate }}</p>
         </div>
       </div>
 
@@ -76,7 +76,7 @@ const COMMON_TIMEZONES = [
           <mat-icon>cloud_sync</mat-icon>
           <div>
             <h2>{{ 'BOOKING.calendarConnection' | translate }}</h2>
-            <p>Connect your calendar to sync bookings and check availability</p>
+            <p>{{ 'BOOKING.connectCalDesc' | translate }}</p>
           </div>
         </div>
         <mat-divider />
@@ -84,15 +84,15 @@ const COMMON_TIMEZONES = [
           @if (calendarStatus()?.connected) {
             <div class="status-row connected">
               <mat-icon class="status-icon green">check_circle</mat-icon>
-              <span>{{ calendarStatus()?.provider === 'microsoft' ? 'Microsoft 365' : 'Google Calendar' }}: Connected</span>
+              <span>{{ calendarStatus()?.provider === 'microsoft' ? ('BOOKING.microsoft365' | translate) : ('BOOKING.googleCalendar' | translate) }}: {{ 'BOOKING.connected' | translate }}</span>
               <button mat-stroked-button color="warn" (click)="disconnectCalendar()">
-                <mat-icon>link_off</mat-icon> Disconnect
+                <mat-icon>link_off</mat-icon> {{ 'BOOKING.disconnect' | translate }}
               </button>
             </div>
           } @else {
             <div class="status-row provider-picker">
               <mat-icon class="status-icon gray">cloud_off</mat-icon>
-              <span>Not connected</span>
+              <span>{{ 'BOOKING.notConnected' | translate }}</span>
               <div class="provider-buttons">
                 <button mat-flat-button class="provider-btn google" (click)="connectCalendar('google')">
                   <mat-icon>event</mat-icon> Google Calendar
@@ -113,13 +113,13 @@ const COMMON_TIMEZONES = [
           <mat-icon>event_note</mat-icon>
           <div>
             <h2>{{ 'BOOKING.calendarSelection' | translate }}</h2>
-            <p>Choose which calendars to use for all booking types</p>
+            <p>{{ 'BOOKING.connectCalDesc' | translate }}</p>
           </div>
         </div>
         <mat-divider />
         <div class="card-body">
           <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Create appointments in</mat-label>
+            <mat-label>{{ 'BOOKING.createAppointmentsIn' | translate }}</mat-label>
             <mat-select [(ngModel)]="targetCalendarId" (ngModelChange)="scheduleSave()">
               @for (cal of calendars(); track cal.id) {
                 <mat-option [value]="cal.id">{{ cal.summary }}</mat-option>
@@ -127,7 +127,7 @@ const COMMON_TIMEZONES = [
             </mat-select>
           </mat-form-field>
           <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Check these calendars for conflicts</mat-label>
+            <mat-label>{{ 'BOOKING.checkConflicts' | translate }}</mat-label>
             <mat-select [(ngModel)]="conflictCalendarIds" (ngModelChange)="scheduleSave()" multiple>
               @for (cal of calendars(); track cal.id) {
                 <mat-option [value]="cal.id">{{ cal.summary }}</mat-option>
@@ -144,11 +144,11 @@ const COMMON_TIMEZONES = [
           <mat-icon>schedule</mat-icon>
           <div>
             <h2>{{ 'BOOKING.availabilitySchedule' | translate }}</h2>
-            <p>Set your weekly working hours — shared across all event types</p>
+            <p>{{ 'BOOKING.setWeeklyHours' | translate }}</p>
           </div>
           <button mat-stroked-button class="copy-btn" (click)="copyToAll()"
                   matTooltip="Copy first enabled day's hours to all days">
-            <mat-icon>content_copy</mat-icon> Copy to all
+            <mat-icon>content_copy</mat-icon> {{ 'BOOKING.copyToAll' | translate }}
           </button>
         </div>
         <mat-divider />
@@ -185,12 +185,12 @@ const COMMON_TIMEZONES = [
                     </mat-form-field>
                     @if (!isTimeRangeValid(slot)) {
                       <span class="time-error" role="alert">
-                        <mat-icon>error_outline</mat-icon> End must be after start
+                        <mat-icon>error_outline</mat-icon> {{ 'BOOKING.endAfterStart' | translate }}
                       </span>
                     }
                   </div>
                 } @else {
-                  <span class="unavailable-label">Unavailable</span>
+                  <span class="unavailable-label">{{ 'BOOKING.unavailable' | translate }}</span>
                 }
               </div>
             }
@@ -203,19 +203,19 @@ const COMMON_TIMEZONES = [
         <div class="card-header">
           <mat-icon>policy</mat-icon>
           <div>
-            <h2>Cancellation &amp; Reschedule Policy</h2>
+            <h2>{{ 'BOOKING.cancellationPolicy' | translate }}</h2>
             <p>Set the minimum notice period for coachees to reschedule. Late cancellations count as used sessions.</p>
           </div>
         </div>
         <mat-divider />
         <div class="card-body">
           <mat-form-field appearance="outline" class="deadline-field">
-            <mat-label>Reschedule deadline</mat-label>
+            <mat-label>{{ 'BOOKING.rescheduleDeadline' | translate }}</mat-label>
             <mat-select [(ngModel)]="rescheduleDeadlineHours" (ngModelChange)="scheduleSave()">
-              <mat-option [value]="12">12 hours before</mat-option>
-              <mat-option [value]="24">24 hours before</mat-option>
-              <mat-option [value]="48">48 hours before</mat-option>
-              <mat-option [value]="72">72 hours before</mat-option>
+              <mat-option [value]="12">{{ 'BOOKING.hoursBefore12' | translate }}</mat-option>
+              <mat-option [value]="24">{{ 'BOOKING.hoursBefore24' | translate }}</mat-option>
+              <mat-option [value]="48">{{ 'BOOKING.hoursBefore48' | translate }}</mat-option>
+              <mat-option [value]="72">{{ 'BOOKING.hoursBefore72' | translate }}</mat-option>
             </mat-select>
             <mat-hint>
               Coachees can reschedule freely before this deadline. After the deadline,
@@ -230,7 +230,7 @@ const COMMON_TIMEZONES = [
         <div class="card-header">
           <mat-icon>event_busy</mat-icon>
           <div>
-            <h2>Date Exclusions</h2>
+            <h2>{{ 'BOOKING.dateExclusions' | translate }}</h2>
             <p>Block off specific dates (holidays, PTO, single days off) — applies to all event types.</p>
           </div>
         </div>
@@ -253,7 +253,7 @@ const COMMON_TIMEZONES = [
             <div class="exclusions-side">
               <div class="holiday-row">
                 <mat-form-field appearance="outline" class="country-field">
-                  <mat-label>Country</mat-label>
+                  <mat-label>{{ 'BOOKING.country' | translate }}</mat-label>
                   <mat-select [(ngModel)]="selectedHolidayCountry">
                     @for (c of countries(); track c.code) {
                       <mat-option [value]="c.code">
@@ -263,7 +263,7 @@ const COMMON_TIMEZONES = [
                   </mat-select>
                 </mat-form-field>
                 <mat-form-field appearance="outline" class="year-field">
-                  <mat-label>Year</mat-label>
+                  <mat-label>{{ 'BOOKING.year' | translate }}</mat-label>
                   <mat-select [(ngModel)]="holidayYear">
                     @for (y of holidayYears; track y) {
                       <mat-option [value]="y">{{ y }}</mat-option>
@@ -278,7 +278,7 @@ const COMMON_TIMEZONES = [
                   } @else {
                     <mat-icon>flag</mat-icon>
                   }
-                  Add holidays
+                  {{ 'BOOKING.addHolidays' | translate }}
                 </button>
               </div>
               @if (orgCountry() && selectedHolidayCountry === orgCountry()) {
@@ -299,7 +299,7 @@ const COMMON_TIMEZONES = [
                 @if (sortedExclusions().length === 0) {
                   <div class="excl-empty">
                     <mat-icon>event_available</mat-icon>
-                    <span>No date exclusions yet. Click dates on the calendar to add them.</span>
+                    <span>{{ 'BOOKING.noDateExclusions' | translate }}</span>
                   </div>
                 } @else {
                   @for (ex of sortedExclusions(); track ex.date) {
@@ -318,7 +318,7 @@ const COMMON_TIMEZONES = [
                     </div>
                   }
                   <button mat-button color="warn" class="clear-btn" (click)="clearAll()">
-                    <mat-icon>delete_sweep</mat-icon> Clear all
+                    <mat-icon>delete_sweep</mat-icon> {{ 'BOOKING.clearAll' | translate }}
                   </button>
                 }
               </div>
@@ -331,17 +331,17 @@ const COMMON_TIMEZONES = [
       <div class="autosave-bar" [attr.data-state]="saveState()">
         @switch (saveState()) {
           @case ('saving') {
-            <mat-spinner diameter="14" /> <span>Saving…</span>
+            <mat-spinner diameter="14" /> <span>{{ 'BOOKING.saving' | translate }}</span>
           }
           @case ('saved') {
-            <mat-icon>check_circle</mat-icon> <span>All changes saved</span>
+            <mat-icon>check_circle</mat-icon> <span>{{ 'BOOKING.allChangesSaved' | translate }}</span>
           }
           @case ('error') {
             <mat-icon>error_outline</mat-icon>
-            <span>Couldn't save — your last change may not have been stored.</span>
+            <span>{{ 'BOOKING.couldNotSave' | translate }}</span>
           }
           @default {
-            <span class="muted">Changes are saved automatically.</span>
+            <span class="muted">{{ 'BOOKING.changesAutoSaved' | translate }}</span>
           }
         }
       </div>

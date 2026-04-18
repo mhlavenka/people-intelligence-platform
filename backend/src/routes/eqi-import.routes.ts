@@ -25,12 +25,12 @@ const upload = multer({
 /** Parse a single PDF for preview — no database write. */
 router.post('/parse', upload.single('pdf'), async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    if (!req.file) { res.status(400).json({ error: 'PDF file required' }); return; }
+    if (!req.file) { res.status(400).json({ error: req.t('errors.pdfFileRequired') }); return; }
 
     // Validate PDF magic bytes
     const buf = req.file.buffer;
     if (buf.length < 4 || buf.slice(0, 4).toString() !== '%PDF') {
-      res.status(400).json({ error: 'Invalid PDF file' });
+      res.status(400).json({ error: req.t('errors.invalidPdfFile') });
       return;
     }
 
@@ -42,11 +42,11 @@ router.post('/parse', upload.single('pdf'), async (req: AuthRequest, res: Respon
 /** Import a single PDF with privacy options. */
 router.post('/single', upload.single('pdf'), async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    if (!req.file) { res.status(400).json({ error: 'PDF file required' }); return; }
+    if (!req.file) { res.status(400).json({ error: req.t('errors.pdfFileRequired') }); return; }
 
     const buf = req.file.buffer;
     if (buf.length < 4 || buf.slice(0, 4).toString() !== '%PDF') {
-      res.status(400).json({ error: 'Invalid PDF file' });
+      res.status(400).json({ error: req.t('errors.invalidPdfFile') });
       return;
     }
 
@@ -54,7 +54,7 @@ router.post('/single', upload.single('pdf'), async (req: AuthRequest, res: Respo
     try {
       options = JSON.parse(req.body.options || '{}');
     } catch {
-      res.status(400).json({ error: 'Invalid options JSON' });
+      res.status(400).json({ error: req.t('errors.invalidOptionsJson') });
       return;
     }
 
@@ -70,7 +70,7 @@ router.post('/single', upload.single('pdf'), async (req: AuthRequest, res: Respo
 router.post('/batch', upload.array('pdfs', 20), async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const files = req.files as Express.Multer.File[];
-    if (!files || files.length === 0) { res.status(400).json({ error: 'At least one PDF required' }); return; }
+    if (!files || files.length === 0) { res.status(400).json({ error: req.t('errors.atLeastOnePdfRequired') }); return; }
 
     let batchOptions: { stopOnError: boolean; maxConcurrent: number };
     let sharedOptions: Omit<ImportOptions, 'organizationId' | 'coachId'>;
@@ -78,7 +78,7 @@ router.post('/batch', upload.array('pdfs', 20), async (req: AuthRequest, res: Re
       batchOptions = JSON.parse(req.body.batchOptions || '{"stopOnError":false,"maxConcurrent":1}');
       sharedOptions = JSON.parse(req.body.options || '{}');
     } catch {
-      res.status(400).json({ error: 'Invalid options JSON' });
+      res.status(400).json({ error: req.t('errors.invalidOptionsJson') });
       return;
     }
 
@@ -127,7 +127,7 @@ router.get('/status/:importId', async (req: AuthRequest, res: Response, next: Ne
       importId: req.params['importId'],
       organizationId: req.user!.organizationId,
     });
-    if (!audit) { res.status(404).json({ error: 'Import not found' }); return; }
+    if (!audit) { res.status(404).json({ error: req.t('errors.importNotFound') }); return; }
     res.json(audit);
   } catch (e) { next(e); }
 });
@@ -153,7 +153,7 @@ router.get('/records/:id', async (req: AuthRequest, res: Response, next: NextFun
       _id: req.params['id'],
       organizationId: req.user!.organizationId,
     }).lean();
-    if (!record) { res.status(404).json({ error: 'Record not found' }); return; }
+    if (!record) { res.status(404).json({ error: req.t('errors.recordNotFound') }); return; }
     res.json(record);
   } catch (e) { next(e); }
 });
@@ -165,10 +165,10 @@ router.delete('/record/:scoreId', async (req: AuthRequest, res: Response, next: 
       _id: req.params['scoreId'],
       organizationId: req.user!.organizationId,
     });
-    if (!scoreRecord) { res.status(404).json({ error: 'Record not found' }); return; }
+    if (!scoreRecord) { res.status(404).json({ error: req.t('errors.recordNotFound') }); return; }
 
     if (scoreRecord.privacyMode === 'ANONYMIZED') {
-      res.status(400).json({ error: 'Anonymized records cannot be individually erased (no identity linkage)' });
+      res.status(400).json({ error: req.t('errors.anonymizedCannotBeErased') });
       return;
     }
 

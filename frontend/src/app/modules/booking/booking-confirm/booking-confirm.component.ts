@@ -15,7 +15,7 @@ import { TranslateModule } from '@ngx-translate/core';
     <div class="confirm-page">
       @if (loading()) {
         <div class="confirm-card">
-          <p class="loading-text">Loading confirmation...</p>
+          <p class="loading-text">{{ 'BOOKING.loadingConfirmation' | translate }}</p>
         </div>
       } @else if (booking()) {
         <div class="confirm-card">
@@ -45,19 +45,19 @@ import { TranslateModule } from '@ngx-translate/core';
             </div>
             <div class="detail-row">
               <span class="material-icons detail-icon">timer</span>
-              <span class="detail-text">{{ duration() }} minutes</span>
+              <span class="detail-text">{{ duration() }} {{ 'BOOKING.minutes' | translate }}</span>
             </div>
           </div>
 
           @if (booking()!.meetingLink || booking()!.googleMeetLink) {
             <a class="meet-btn" [href]="booking()!.meetingLink || booking()!.googleMeetLink" target="_blank">
               <span class="material-icons">videocam</span>
-              <span>{{ booking()!.calendarProvider === 'microsoft' ? 'Join Teams Meeting' : 'Join Google Meet' }}</span>
+              <span>{{ booking()!.calendarProvider === 'microsoft' ? ('BOOKING.joinTeamsMeeting' | translate) : ('BOOKING.joinGoogleMeet' | translate) }}</span>
             </a>
           }
 
           <div class="calendar-links">
-            <p class="cal-label">Add to your calendar:</p>
+            <p class="cal-label">{{ 'BOOKING.addToCalendar' | translate }}</p>
             <div class="cal-buttons">
               <a class="cal-btn" [href]="googleCalendarUrl()" target="_blank">
                 <span class="material-icons">event</span>
@@ -65,23 +65,23 @@ import { TranslateModule } from '@ngx-translate/core';
               </a>
               <a class="cal-btn" [href]="icsUrl()" download="coaching-session.ics">
                 <span class="material-icons">file_download</span>
-                <span>Outlook / Apple (.ics)</span>
+                <span>{{ 'BOOKING.outlookApple' | translate }}</span>
               </a>
             </div>
           </div>
 
           <div class="email-notice">
             <span class="material-icons email-icon">email</span>
-            <p>A confirmation email has been sent to <strong>{{ clientEmail() }}</strong></p>
+            <p>{{ 'BOOKING.confirmEmailSent' | translate }} <strong>{{ clientEmail() }}</strong></p>
           </div>
 
           <p class="cancel-notice">
-            Need to cancel? Use the link in your confirmation email.
+            {{ 'BOOKING.cancelNotice' | translate }}
           </p>
 
           @if (dialogMode) {
             <button mat-flat-button color="primary" class="done-btn" (click)="done.emit()">
-              Done
+              {{ 'BOOKING.done' | translate }}
             </button>
           }
         </div>
@@ -91,9 +91,9 @@ import { TranslateModule } from '@ngx-translate/core';
             <span class="material-icons">info</span>
           </div>
           <h2>{{ 'BOOKING.noBookingInfo' | translate }}</h2>
-          <p class="fallback-text">Please book a session first.</p>
+          <p class="fallback-text">{{ 'BOOKING.pleaseBookFirst' | translate }}</p>
           <button mat-flat-button color="primary" (click)="goBack()">
-            Go to Booking Page
+            {{ 'BOOKING.goToBookingPage' | translate }}
           </button>
         </div>
       }

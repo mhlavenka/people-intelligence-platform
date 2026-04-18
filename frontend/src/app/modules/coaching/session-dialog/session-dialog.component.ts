@@ -60,15 +60,15 @@ const FRAMEWORKS = [
 
         <div class="form-row">
           <mat-form-field appearance="outline">
-            <mat-label>Format</mat-label>
+            <mat-label>{{ 'COACHING.formatLabel' | translate }}</mat-label>
             <mat-select [(ngModel)]="form.format">
-              <mat-option value="video">Video</mat-option>
-              <mat-option value="phone">Phone</mat-option>
-              <mat-option value="in_person">In Person</mat-option>
+              <mat-option value="video">{{ 'COACHING.video' | translate }}</mat-option>
+              <mat-option value="phone">{{ 'COACHING.phone' | translate }}</mat-option>
+              <mat-option value="in_person">{{ 'COACHING.inPerson' | translate }}</mat-option>
             </mat-select>
           </mat-form-field>
           <mat-form-field appearance="outline">
-            <mat-label>Status</mat-label>
+            <mat-label>{{ 'COACHING.statusLabel' | translate }}</mat-label>
             <mat-select [(ngModel)]="form.status">
               <mat-option value="scheduled">{{ 'COACHING.scheduled' | translate }}</mat-option>
               <mat-option value="completed">{{ 'COACHING.completed' | translate }}</mat-option>

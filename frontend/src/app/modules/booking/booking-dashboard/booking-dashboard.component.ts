@@ -52,14 +52,14 @@ type DayBuckets = {
       <div class="page-header">
         <div>
           <h1>{{ 'BOOKING.dashboardTitle' | translate }}</h1>
-          <p>Manage client bookings across all your event types</p>
+          <p>{{ 'BOOKING.manageClientBookings' | translate }}</p>
         </div>
         <div class="header-actions">
           <a mat-stroked-button routerLink="/booking/global-settings">
-            <mat-icon>settings</mat-icon> Settings
+            <mat-icon>settings</mat-icon> {{ 'BOOKING.settings' | translate }}
           </a>
           <a mat-flat-button color="primary" routerLink="/booking/settings">
-            <mat-icon>event_note</mat-icon> Event Types
+            <mat-icon>event_note</mat-icon> {{ 'BOOKING.eventTypes' | translate }}
           </a>
         </div>
       </div>
@@ -70,7 +70,7 @@ type DayBuckets = {
           <mat-form-field appearance="outline" class="filter-field">
             <mat-label>{{ 'BOOKING.filterByEventType' | translate }}</mat-label>
             <mat-select [(ngModel)]="selectedEventTypeId" (selectionChange)="onFilterChange()">
-              <mat-option value="">All event types</mat-option>
+              <mat-option value="">{{ 'BOOKING.allEventTypes' | translate }}</mat-option>
               @for (et of eventTypes(); track et._id) {
                 <mat-option [value]="et._id">
                   <span class="et-dot" [style.background]="et.color"></span>
@@ -85,17 +85,17 @@ type DayBuckets = {
       <div class="dashboard-grid">
         <div class="main-column">
           <mat-tab-group #tabGroup (selectedTabChange)="onTabChange($event.index)" animationDuration="200ms">
-            <mat-tab label="Upcoming">
+            <mat-tab [label]="'BOOKING.upcoming' | translate">
               <ng-template matTabContent>
                 <ng-container *ngTemplateOutlet="bookingList" />
               </ng-template>
             </mat-tab>
-            <mat-tab label="Past">
+            <mat-tab [label]="'BOOKING.past' | translate">
               <ng-template matTabContent>
                 <ng-container *ngTemplateOutlet="bookingList" />
               </ng-template>
             </mat-tab>
-            <mat-tab label="Cancelled">
+            <mat-tab [label]="'BOOKING.cancelled' | translate">
               <ng-template matTabContent>
                 <ng-container *ngTemplateOutlet="bookingList" />
               </ng-template>
@@ -104,7 +104,7 @@ type DayBuckets = {
               <ng-template mat-tab-label>
                 <span class="import-tab-label">
                   <mat-icon>cloud_download</mat-icon>
-                  Import from Calendar
+                  {{ 'BOOKING.importFromCalendar' | translate }}
                   @if (!hasImported()) { <span class="import-badge"></span> }
                 </span>
               </ng-template>
@@ -125,9 +125,9 @@ type DayBuckets = {
               [dateClass]="dateClass">
             </mat-calendar>
             <div class="calendar-legend">
-              <span class="legend-item"><span class="legend-dot dot-upcoming"></span> Upcoming</span>
-              <span class="legend-item"><span class="legend-dot dot-past"></span> Past</span>
-              <span class="legend-item"><span class="legend-dot dot-cancelled"></span> Cancelled</span>
+              <span class="legend-item"><span class="legend-dot dot-upcoming"></span> {{ 'BOOKING.upcoming' | translate }}</span>
+              <span class="legend-item"><span class="legend-dot dot-past"></span> {{ 'BOOKING.past' | translate }}</span>
+              <span class="legend-item"><span class="legend-dot dot-cancelled"></span> {{ 'BOOKING.cancelled' | translate }}</span>
             </div>
           </div>
 
@@ -159,7 +159,7 @@ type DayBuckets = {
                     </div>
                     @if (b.meetingLink || b.googleMeetLink) {
                       <a mat-icon-button [href]="b.meetingLink || b.googleMeetLink" target="_blank"
-                         [matTooltip]="b.calendarProvider === 'microsoft' ? 'Join Teams Meeting' : 'Join Google Meet'">
+                         [matTooltip]="b.calendarProvider === 'microsoft' ? ('BOOKING.joinTeamsMeeting' | translate) : ('BOOKING.joinGoogleMeet' | translate)">
                         <mat-icon>videocam</mat-icon>
                       </a>
                     }
@@ -183,11 +183,11 @@ type DayBuckets = {
         } @else {
           <div class="booking-table">
             <div class="table-header">
-              <span class="col-date">Date & Time</span>
-              <span class="col-type">Event Type</span>
-              <span class="col-client">Client</span>
-              <span class="col-topic">Topic</span>
-              <span class="col-status">Status</span>
+              <span class="col-date">{{ 'BOOKING.dateTime' | translate }}</span>
+              <span class="col-type">{{ 'BOOKING.eventType' | translate }}</span>
+              <span class="col-client">{{ 'BOOKING.client' | translate }}</span>
+              <span class="col-topic">{{ 'BOOKING.topic' | translate }}</span>
+              <span class="col-status">{{ 'BOOKING.status' | translate }}</span>
               <span class="col-actions"></span>
             </div>
             @for (b of bookings(); track b._id) {
@@ -214,19 +214,19 @@ type DayBuckets = {
                 <span class="col-actions">
                   @if (b.meetingLink || b.googleMeetLink) {
                     <a mat-icon-button [href]="b.meetingLink || b.googleMeetLink" target="_blank"
-                       [matTooltip]="b.calendarProvider === 'microsoft' ? 'Join Teams Meeting' : 'Join Google Meet'">
+                       [matTooltip]="b.calendarProvider === 'microsoft' ? ('BOOKING.joinTeamsMeeting' | translate) : ('BOOKING.joinGoogleMeet' | translate)">
                       <mat-icon>videocam</mat-icon>
                     </a>
                   }
                   @if (b.status === 'confirmed' && activeTab() === 'upcoming') {
                     <button mat-icon-button (click)="openReschedule(b)"
-                            matTooltip="Reschedule booking">
+                            [matTooltip]="'BOOKING.rescheduleBooking' | translate">
                       <mat-icon>event_repeat</mat-icon>
                     </button>
                   }
                   @if (b.status === 'confirmed') {
                     <button mat-icon-button color="warn" (click)="confirmCancel(b)"
-                            matTooltip="Cancel booking">
+                            [matTooltip]="'BOOKING.cancelBooking' | translate">
                       <mat-icon>cancel</mat-icon>
                     </button>
                   }
@@ -240,7 +240,7 @@ type DayBuckets = {
               <button mat-icon-button (click)="prevPage()" [disabled]="currentPage() <= 1">
                 <mat-icon>chevron_left</mat-icon>
               </button>
-              <span>Page {{ currentPage() }} of {{ totalPages() }}</span>
+              <span>{{ 'BOOKING.page' | translate }} {{ currentPage() }} {{ 'BOOKING.of' | translate }} {{ totalPages() }}</span>
               <button mat-icon-button (click)="nextPage()" [disabled]="currentPage() >= totalPages()">
                 <mat-icon>chevron_right</mat-icon>
               </button>
@@ -664,7 +664,7 @@ export class BookingDashboardComponent implements OnInit, AfterViewInit, OnDestr
       },
       error: () => {
         this.loading.set(false);
-        this.snackBar.open('Failed to load bookings', 'OK', { duration: 3000 });
+        this.snackBar.open(this.translate.instant('BOOKING.failedLoadBookings'), this.translate.instant('COMMON.ok'), { duration: 3000 });
       },
     });
   }
@@ -678,13 +678,13 @@ export class BookingDashboardComponent implements OnInit, AfterViewInit, OnDestr
       if (!result) return;
       this.bookingSvc.rescheduleBooking(booking._id, result.newStartTime, result.note).subscribe({
         next: () => {
-          this.snackBar.open('Booking rescheduled', 'OK', { duration: 3000 });
+          this.snackBar.open(this.translate.instant('BOOKING.bookingRescheduled'), this.translate.instant('COMMON.ok'), { duration: 3000 });
           this.load();
           this.loadCalendarData();
         },
         error: (err) => {
-          const msg = err?.error?.error || 'Failed to reschedule';
-          this.snackBar.open(msg, 'OK', { duration: 4000 });
+          const msg = err?.error?.error || this.translate.instant('BOOKING.failedToReschedule');
+          this.snackBar.open(msg, this.translate.instant('COMMON.ok'), { duration: 4000 });
         },
       });
     });
@@ -693,9 +693,9 @@ export class BookingDashboardComponent implements OnInit, AfterViewInit, OnDestr
   confirmCancel(booking: BookingRecord): void {
     const ref = this.dialog.open(ConfirmDialogComponent, {
       data: {
-        title: 'Cancel Booking',
-        message: `Cancel the session with ${booking.clientName}? They will be notified.`,
-        confirmLabel: 'Cancel Booking',
+        title: this.translate.instant('BOOKING.cancelBookingTitle'),
+        message: this.translate.instant('BOOKING.cancelBookingMessage', { name: booking.clientName }),
+        confirmLabel: this.translate.instant('BOOKING.cancelBookingLabel'),
         confirmColor: 'warn',
       },
     });
@@ -703,11 +703,11 @@ export class BookingDashboardComponent implements OnInit, AfterViewInit, OnDestr
       if (confirmed) {
         this.bookingSvc.cancelBooking(booking._id).subscribe({
           next: () => {
-            this.snackBar.open('Booking cancelled', 'OK', { duration: 3000 });
+            this.snackBar.open(this.translate.instant('BOOKING.bookingCancelled'), this.translate.instant('COMMON.ok'), { duration: 3000 });
             this.load();
             this.loadCalendarData();
           },
-          error: () => this.snackBar.open('Failed to cancel', 'OK', { duration: 3000 }),
+          error: () => this.snackBar.open(this.translate.instant('BOOKING.failedToCancel'), this.translate.instant('COMMON.ok'), { duration: 3000 }),
         });
       }
     });

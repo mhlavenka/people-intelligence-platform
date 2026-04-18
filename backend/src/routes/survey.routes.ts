@@ -96,11 +96,11 @@ router.get(
         ],
       }).setOptions({ bypassTenantCheck: true });
       if (!template) {
-        res.status(404).json({ error: 'Intake template not found' });
+        res.status(404).json({ error: req.t('errors.intakeTemplateNotFound') });
         return;
       }
       if (!template.isActive) {
-        res.status(410).json({ error: 'This intake is no longer active.' });
+        res.status(410).json({ error: req.t('errors.intakeNoLongerActive') });
         return;
       }
       res.json(template);
@@ -121,7 +121,7 @@ router.put(
         { new: true, runValidators: true }
       ).setOptions({ bypassTenantCheck: true });
       if (!template) {
-        res.status(404).json({ error: 'Intake template not found' });
+        res.status(404).json({ error: req.t('errors.intakeTemplateNotFound') });
         return;
       }
       res.json(template);
@@ -141,7 +141,7 @@ router.delete(
         $or: [{ organizationId: req.user!.organizationId }, { isGlobal: true }],
       }).setOptions({ bypassTenantCheck: true });
       if (!template) {
-        res.status(404).json({ error: 'Intake template not found' });
+        res.status(404).json({ error: req.t('errors.intakeTemplateNotFound') });
         return;
       }
       res.json({ message: 'Template deleted' });
@@ -199,7 +199,7 @@ router.post('/respond', async (req: AuthRequest, res: Response, next: NextFuncti
     // Duplicate check — DB unique index is the safety net, but give a friendly error here
     const existing = await SurveyResponse.findOne({ submissionToken }).setOptions({ bypassTenantCheck: true });
     if (existing) {
-      res.status(409).json({ error: 'A response for this coachee and template has already been submitted.' });
+      res.status(409).json({ error: req.t('errors.responseAlreadySubmitted') });
       return;
     }
 
@@ -288,7 +288,7 @@ router.get(
 
       if (count < minRequired) {
         res.status(403).json({
-          error: `Minimum ${minRequired} response${minRequired > 1 ? 's' : ''} required before viewing results. Current: ${count}`,
+          error: req.t('errors.minimumResponsesRequired', { min: minRequired, count }),
         });
         return;
       }

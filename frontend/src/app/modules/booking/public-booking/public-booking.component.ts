@@ -45,7 +45,7 @@ import {
         <div class="booking-header">
           <div class="brand-bar"></div>
           <h1>{{ coachInfo()!.title }}</h1>
-          <p class="coach-name">with {{ coachInfo()!.coachName }}</p>
+          <p class="coach-name">{{ 'BOOKING.withCoach' | translate }} {{ coachInfo()!.coachName }}</p>
           @if (coachInfo()!.description) {
             <p class="description">{{ coachInfo()!.description }}</p>
           }
@@ -118,7 +118,7 @@ import {
                     </button>
                   }
                   @if (!slotsForSelectedDate().length) {
-                    <p class="no-slots">No available times on this date.</p>
+                    <p class="no-slots">{{ 'BOOKING.noAvailableTimes' | translate }}</p>
                   }
                 </div>
               } @else {
@@ -151,20 +151,20 @@ import {
                     <input matInput type="tel" [(ngModel)]="phone" name="phone" />
                   </mat-form-field>
                   <mat-form-field appearance="outline" class="full-width">
-                    <mat-label>What would you like to discuss? (optional)</mat-label>
+                    <mat-label>{{ 'BOOKING.whatToDiscuss' | translate }}</mat-label>
                     <textarea matInput [(ngModel)]="topic" name="topic" rows="3"></textarea>
                   </mat-form-field>
                   <button mat-flat-button color="primary" type="submit" class="submit-btn"
                           [disabled]="submitting() || !firstName || !lastName || !email">
                     @if (submitting()) { <mat-spinner diameter="20" /> }
-                    Confirm Booking
+                    {{ 'BOOKING.confirmBooking' | translate }}
                   </button>
                 </form>
               }
             } @else {
               <div class="select-prompt">
                 <mat-icon>touch_app</mat-icon>
-                <p>Select a date to see available times</p>
+                <p>{{ 'BOOKING.selectDateToSee' | translate }}</p>
               </div>
             }
           </div>
@@ -430,7 +430,7 @@ export class PublicBookingComponent implements OnInit {
         this.loadSlots();
       },
       error: () => {
-        this.errorMsg.set('This booking page is not available.');
+        this.errorMsg.set(this.translate.instant('BOOKING.pageNotAvailable'));
         this.loadingInfo.set(false);
       },
     });
@@ -517,14 +517,14 @@ export class PublicBookingComponent implements OnInit {
           // message is meaningful for the latter; fall back to the slot
           // copy when no explicit reason was returned.
           const serverMsg = err.error?.error as string | undefined;
-          const msg = serverMsg || 'That time was just booked — please choose another.';
-          this.snackBar.open(msg, 'OK', { duration: 6000 });
+          const msg = serverMsg || this.translate.instant('BOOKING.slotJustBooked');
+          this.snackBar.open(msg, this.translate.instant('COMMON.ok'), { duration: 6000 });
           if (!serverMsg) {
             this.selectedSlot.set(null);
             this.loadSlots();
           }
         } else {
-          this.snackBar.open('Something went wrong. Please try again.', 'Retry', { duration: 5000 });
+          this.snackBar.open(this.translate.instant('BOOKING.somethingWentWrong'), this.translate.instant('COMMON.ok'), { duration: 5000 });
         }
       },
     });

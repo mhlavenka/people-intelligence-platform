@@ -116,7 +116,7 @@ const PRESET_COLORS = [
   template: `
     <h2 mat-dialog-title>
       <mat-icon [style.color]="form.get('color')?.value || '#3A9FD6'">manage_accounts</mat-icon>
-      {{ isEdit ? 'Edit Custom Role' : 'New Custom Role' }}
+      {{ isEdit ? ('ADMIN.editCustomRole' | translate) : ('ADMIN.newCustomRole' | translate) }}
     </h2>
 
     <mat-dialog-content>
@@ -127,13 +127,13 @@ const PRESET_COLORS = [
         <!-- Name + color -->
         <div class="form-row">
           <mat-form-field appearance="outline" class="grow">
-            <mat-label>Role Name</mat-label>
-            <input matInput formControlName="name" placeholder="e.g. Department Head, Senior Analyst" />
+            <mat-label>{{ 'ADMIN.roleName' | translate }}</mat-label>
+            <input matInput formControlName="name" [placeholder]="'ADMIN.roleNamePlaceholder' | translate" />
           </mat-form-field>
         </div>
 
         <div class="color-row">
-          <span class="color-label">Colour</span>
+          <span class="color-label">{{ 'ADMIN.colour' | translate }}</span>
           @for (c of presetColors; track c) {
             <button type="button" class="color-swatch"
                     [style.background]="c"
@@ -147,13 +147,13 @@ const PRESET_COLORS = [
         </div>
 
         <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Description (optional)</mat-label>
+          <mat-label>{{ 'ADMIN.descriptionOptional' | translate }}</mat-label>
           <textarea matInput formControlName="description" rows="2"
-            placeholder="What is this role for?"></textarea>
+            [placeholder]="'ADMIN.roleDescPlaceholder' | translate"></textarea>
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Base System Role</mat-label>
+          <mat-label>{{ 'ADMIN.baseSystemRole' | translate }}</mat-label>
           <mat-select formControlName="baseRole">
             @for (r of baseRoles; track r.value) {
               <mat-option [value]="r.value">
@@ -161,18 +161,18 @@ const PRESET_COLORS = [
               </mat-option>
             }
           </mat-select>
-          <mat-hint>Determines which API routes this role can access. Use as a starting baseline.</mat-hint>
+          <mat-hint>{{ 'ADMIN.baseRoleHint' | translate }}</mat-hint>
         </mat-form-field>
 
         <mat-divider style="margin: 12px 0 16px"></mat-divider>
 
         <!-- Permission matrix -->
         <div class="perm-header">
-          <span>Permissions</span>
-          <span class="perm-count">{{ selectedCount() }} selected</span>
+          <span>{{ 'ADMIN.permissions' | translate }}</span>
+          <span class="perm-count">{{ selectedCount() }} {{ 'ADMIN.selected' | translate }}</span>
           <div class="perm-actions">
-            <button type="button" mat-button (click)="selectAll()">Select all</button>
-            <button type="button" mat-button (click)="clearAll()">Clear all</button>
+            <button type="button" mat-button (click)="selectAll()">{{ 'ADMIN.selectAll' | translate }}</button>
+            <button type="button" mat-button (click)="clearAll()">{{ 'ADMIN.clearAll' | translate }}</button>
           </div>
         </div>
 
@@ -204,13 +204,13 @@ const PRESET_COLORS = [
     </mat-dialog-content>
 
     <mat-dialog-actions align="end">
-      <button mat-button mat-dialog-close [disabled]="saving()">Cancel</button>
+      <button mat-button mat-dialog-close [disabled]="saving()">{{ 'COMMON.cancel' | translate }}</button>
       <button mat-raised-button color="primary"
               (click)="save()" [disabled]="form.invalid || saving()">
         @if (saving()) { <mat-spinner diameter="18" /> }
         @else {
           <mat-icon>{{ isEdit ? 'save' : 'add_circle' }}</mat-icon>
-          {{ isEdit ? 'Save Changes' : 'Create Role' }}
+          {{ isEdit ? ('COMMON.save' | translate) : ('ADMIN.createRole' | translate) }}
         }
       </button>
     </mat-dialog-actions>

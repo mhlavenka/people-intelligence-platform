@@ -35,7 +35,7 @@ router.patch(
         { completedActions },
         { new: true },
       );
-      if (!analysis) { res.status(404).json({ error: 'Analysis not found' }); return; }
+      if (!analysis) { res.status(404).json({ error: req.t('errors.analysisNotFound') }); return; }
       res.json({ completedActions: analysis.completedActions });
     } catch (e) { next(e); }
   }
@@ -50,7 +50,7 @@ router.delete(
         _id: req.params['id'],
         organizationId: req.user!.organizationId,
       });
-      if (!analysis) { res.status(404).json({ error: 'Analysis not found' }); return; }
+      if (!analysis) { res.status(404).json({ error: req.t('errors.analysisNotFound') }); return; }
       // Also delete sub-analyses
       await ConflictAnalysis.deleteMany({
         parentId: req.params['id'],

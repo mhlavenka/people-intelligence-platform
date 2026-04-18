@@ -92,7 +92,7 @@ interface SurveyTemplate {
           (change)="onShowInactiveChange($event.checked)"
           color="primary"
         >
-          Show inactive
+          {{ 'SURVEY.showInactive' | translate }}
         </mat-slide-toggle>
       </div>
 
@@ -115,10 +115,10 @@ interface SurveyTemplate {
       } @else if (filteredTemplates().length === 0) {
         <div class="empty-state">
           <mat-icon>assignment</mat-icon>
-          <h3>No intake templates yet</h3>
-          <p>Create your first intake template to start collecting responses.</p>
+          <h3>{{ 'SURVEY.noTemplates' | translate }}</h3>
+          <p>{{ 'SURVEY.createFirstTemplate' | translate }}</p>
           <button mat-raised-button color="primary" (click)="openCreateDialog()">
-            <mat-icon>add</mat-icon> Create Intake
+            <mat-icon>add</mat-icon> {{ 'SURVEY.newIntake' | translate }}
           </button>
         </div>
       } @else {
@@ -136,7 +136,7 @@ interface SurveyTemplate {
                   @if (t.instrumentVersion) {
                     <span class="instrument-version">v{{ t.instrumentVersion }}</span>
                   }
-                  <span class="validated-label">Validated Instrument</span>
+                  <span class="validated-label">{{ 'SURVEY.validatedInstrument' | translate }}</span>
                 </div>
               }
 
@@ -163,25 +163,25 @@ interface SurveyTemplate {
                   </button>
                   <mat-menu #cardMenu="matMenu">
                     <button mat-menu-item (click)="openEditDialog(t)">
-                      <mat-icon>edit</mat-icon> Edit
+                      <mat-icon>edit</mat-icon> {{ 'COMMON.edit' | translate }}
                     </button>
                     <button mat-menu-item (click)="copyTemplate(t)">
-                      <mat-icon>content_copy</mat-icon> Copy
+                      <mat-icon>content_copy</mat-icon> {{ 'SURVEY.copy' | translate }}
                     </button>
                     <button mat-menu-item (click)="copySurveyLink(t)">
-                      <mat-icon>link</mat-icon> Copy Link
+                      <mat-icon>link</mat-icon> {{ 'SURVEY.copyLink' | translate }}
                     </button>
                     <button mat-menu-item (click)="viewResponses(t)">
-                      <mat-icon>bar_chart</mat-icon> View Responses
+                      <mat-icon>bar_chart</mat-icon> {{ 'SURVEY.viewResponses' | translate }}
                     </button>
                     <mat-divider></mat-divider>
                     <button mat-menu-item
                             (click)="clearResponses(t)"
                             [disabled]="(t.responseCount ?? 0) === 0">
-                      <mat-icon>cleaning_services</mat-icon> Clear Responses
+                      <mat-icon>cleaning_services</mat-icon> {{ 'SURVEY.clearResponses' | translate }}
                     </button>
                     <button mat-menu-item class="danger-item" (click)="deleteTemplate(t)">
-                      <mat-icon>delete</mat-icon> Delete
+                      <mat-icon>delete</mat-icon> {{ 'COMMON.delete' | translate }}
                     </button>
                   </mat-menu>
                 </div>
@@ -214,17 +214,17 @@ interface SurveyTemplate {
                 }
                 @if (t.questions.length > 3) {
                   <div class="question-chip more">
-                    +{{ t.questions.length - 3 }} more questions
+                    +{{ t.questions.length - 3 }} {{ 'SURVEY.moreQuestions' | translate }}
                   </div>
                 }
               </div>
 
               <div class="card-footer">
                 <button mat-stroked-button (click)="copySurveyLink(t)" [disabled]="!t.isActive">
-                  <mat-icon>link</mat-icon> Copy Link
+                  <mat-icon>link</mat-icon> {{ 'SURVEY.copyLink' | translate }}
                 </button>
                 <button mat-stroked-button (click)="openEditDialog(t)">
-                  <mat-icon>edit</mat-icon> Edit
+                  <mat-icon>edit</mat-icon> {{ 'COMMON.edit' | translate }}
                 </button>
                 <button mat-raised-button color="primary" (click)="viewResponses(t)"
                         [matTooltip]="(t.responseCount ?? 0) === 0 ? 'No responses yet' : ''">

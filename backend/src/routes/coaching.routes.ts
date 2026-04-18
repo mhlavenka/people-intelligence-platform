@@ -22,6 +22,7 @@ async function generateAndSendPostSessionForm(
   session: InstanceType<typeof CoachingSession>,
   organizationId: string,
   coachUserId: string,
+  language: string = 'en',
 ): Promise<void> {
   const coachee = await User.findById(session.coacheeId).select('firstName lastName email');
   if (!coachee?.email) return;
@@ -32,7 +33,7 @@ async function generateAndSendPostSessionForm(
     sharedNotes: session.sharedNotes || undefined,
     coachNotes: session.coachNotes || undefined,
     growFocus: session.growFocus,
-  });
+  }, language);
 
   const aiResponse = await callClaude(prompt);
   let questions: Array<{ id: string; text: string; type: string; category: string }>;
@@ -229,7 +230,7 @@ router.get('/engagements/:id', async (req: AuthRequest, res: Response, next: Nex
       .populate('coacheeId', 'firstName lastName email department profilePicture')
       .populate('coachId', 'firstName lastName email profilePicture')
       .populate('sponsorId', 'name email organization');
-    if (!engagement) { res.status(404).json({ error: 'Engagement not found' }); return; }
+    if (!engagement) { res.status(404).json({ error: req.t('errors.engagementNotFound') }); return; }
 
     const coachSettings = await BookingSettings.findOne({ coachId: engagement.coachId })
       .select('rescheduleDeadlineHours')
@@ -312,7 +313,7 @@ router.put(
         .populate('coacheeId', 'firstName lastName email department profilePicture')
         .populate('coachId', 'firstName lastName email profilePicture')
       .populate('sponsorId', 'name email organization');
-      if (!engagement) { res.status(404).json({ error: 'Engagement not found' }); return; }
+      if (!engagement) { res.status(404).json({ error: req.t('errors.engagementNotFound') }); return; }
       res.json(engagement);
     } catch (e) { next(e); }
   }
@@ -332,7 +333,7 @@ router.delete(
       if (req.user!.role === 'coach') filter['coachId'] = req.user!.userId;
 
       const engagement = await CoachingEngagement.findOneAndDelete(filter);
-      if (!engagement) { res.status(404).json({ error: 'Engagement not found' }); return; }
+      if (!engagement) { res.status(404).json({ error: req.t('errors.engagementNotFound') }); return; }
 
       // Cascade: delete every session under this engagement and cancel the
       // paired Booking + GCal event for each one. cancelBooking handles
@@ -430,7 +431,7 @@ router.get('/sessions/:id', async (req: AuthRequest, res: Response, next: NextFu
       .populate('coacheeId', 'firstName lastName profilePicture')
       .populate('coachId', 'firstName lastName email profilePicture')
       .populate('preSessionIntakeTemplateId', 'title moduleType intakeType questions description instructions');
-    if (!session) { res.status(404).json({ error: 'Session not found' }); return; }
+    if (!session) { res.status(404).json({ error: req.t('errors.sessionNotFound') }); return; }
 
     // Attach the coachee's pre-session intake response (if any) so the coach
     // sees completion status and the coachee sees "already submitted".
@@ -553,7 +554,7 @@ router.put(
         _id: req.params['id'],
         organizationId: req.user!.organizationId,
       });
-      if (!existing) { res.status(404).json({ error: 'Session not found' }); return; }
+      if (!existing) { res.status(404).json({ error: req.t('errors.sessionNotFound') }); return; }
 
       if (
         req.body.preSessionIntakeTemplateId
@@ -587,7 +588,7 @@ router.put(
             || (existing.sharedNotes ?? '').trim()
             || (existing.coachNotes ?? '').trim();
           if (hasCtx) {
-            generateAndSendPostSessionForm(existing, req.user!.organizationId, req.user!.userId)
+            generateAndSendPostSessionForm(existing, req.user!.organizationId, req.user!.userId, req.language)
               .catch((err) => console.error('[PostSession] Auto-generate failed:', err));
           }
         }
@@ -630,16 +631,16 @@ router.post(
         _id: req.params['id'],
         organizationId: req.user!.organizationId,
       });
-      if (!session) { res.status(404).json({ error: 'Session not found' }); return; }
+      if (!session) { res.status(404).json({ error: req.t('errors.sessionNotFound') }); return; }
 
       if (session.postSessionIntakeTemplateId) {
-        res.status(409).json({ error: 'Post-session form already generated for this session.' });
+        res.status(409).json({ error: req.t('errors.postSessionFormAlreadyGenerated') });
         return;
       }
 
       const coachee = await User.findById(session.coacheeId).select('firstName lastName email');
       if (!coachee?.email) {
-        res.status(400).json({ error: 'Coachee not found or has no email.' });
+        res.status(400).json({ error: req.t('errors.coacheeNotFoundOrNoEmail') });
         return;
       }
 
@@ -651,7 +652,7 @@ router.post(
 
       if (!hasContext) {
         res.status(400).json({
-          error: 'No session context available. Please provide a summary of the topics discussed.',
+          error: req.t('errors.noSessionContext'),
         });
         return;
       }
@@ -663,7 +664,7 @@ router.post(
         coachNotes: session.coachNotes || undefined,
         summary: summary || undefined,
         growFocus: session.growFocus,
-      });
+      }, req.language);
 
       const aiResponse = await callClaude(prompt);
 
@@ -675,7 +676,7 @@ router.post(
         if (arrStart !== -1 && arrEnd > arrStart) clean = clean.slice(arrStart, arrEnd + 1);
         questions = JSON.parse(clean);
       } catch {
-        res.status(500).json({ error: 'AI returned invalid question format. Please try again.' });
+        res.status(500).json({ error: req.t('errors.aiInvalidQuestionFormat') });
         return;
       }
 
@@ -741,7 +742,7 @@ router.delete(
         _id: req.params['id'],
         organizationId: req.user!.organizationId,
       });
-      if (!session) { res.status(404).json({ error: 'Session not found' }); return; }
+      if (!session) { res.status(404).json({ error: req.t('errors.sessionNotFound') }); return; }
 
       // If the session has a paired Booking, cancel through cancelBooking()
       // so GCal delete + cancellation email + cache invalidation all run.

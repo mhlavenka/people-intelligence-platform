@@ -61,7 +61,7 @@ interface AssessmentResult {
     <div class="assessment-page" [class.results-mode]="completed()">
       <div class="page-header">
         <h1>{{ "NEURO.title" | translate }}</h1>
-        <p>Assess, build, and sustain neuroinclusive cultures — organizational diagnostic across 8 evidence-based dimensions</p>
+        <p>{{ "NEURO.subtitle" | translate }}</p>
       </div>
 
       <!-- Module description banner -->
@@ -69,15 +69,15 @@ interface AssessmentResult {
         <div class="module-banner">
           <div class="banner-insight">
             <mat-icon class="banner-icon">psychology</mat-icon>
-            <p><strong>Market Timing:</strong> Neurodiversity-affirming workplace practices are transitioning from a values statement to a legal requirement across Canada and the US. The Neuro-Inclusion Compass provides the most differentiated tool for mid-market organizations — evidence-based, action-oriented, and grounded in Helena's signature methodology.</p>
+            <p [innerHTML]="'NEURO.marketTiming' | translate"></p>
           </div>
           <div class="banner-features">
-            <span class="feature-pill"><mat-icon>assessment</mat-icon> 8-Dimension Maturity Assessment</span>
-            <span class="feature-pill"><mat-icon>auto_fix_high</mat-icon> AI Gap Analysis & Roadmap</span>
-            <span class="feature-pill"><mat-icon>school</mat-icon> Manager Training Modules</span>
-            <span class="feature-pill"><mat-icon>assignment_turned_in</mat-icon> Accommodation Workflow</span>
-            <span class="feature-pill"><mat-icon>trending_up</mat-icon> Progress Tracking</span>
-            <span class="feature-pill"><mat-icon>groups</mat-icon> Peer Learning Community</span>
+            <span class="feature-pill"><mat-icon>assessment</mat-icon> {{ 'NEURO.pill8Dim' | translate }}</span>
+            <span class="feature-pill"><mat-icon>auto_fix_high</mat-icon> {{ 'NEURO.pillAIGap' | translate }}</span>
+            <span class="feature-pill"><mat-icon>school</mat-icon> {{ 'NEURO.pillTraining' | translate }}</span>
+            <span class="feature-pill"><mat-icon>assignment_turned_in</mat-icon> {{ 'NEURO.pillAccommodation' | translate }}</span>
+            <span class="feature-pill"><mat-icon>trending_up</mat-icon> {{ 'NEURO.pillProgress' | translate }}</span>
+            <span class="feature-pill"><mat-icon>groups</mat-icon> {{ 'NEURO.pillPeerLearning' | translate }}</span>
           </div>
         </div>
       }
@@ -106,7 +106,7 @@ interface AssessmentResult {
             </div>
             <div class="results-summary">
               <h2>{{ "NEURO.assessmentComplete" | translate }}</h2>
-              <p class="maturity-level">Maturity Level: <strong>{{ maturityLabel() }}</strong></p>
+              <p class="maturity-level">{{ 'NEURO.maturityLevel' | translate }} <strong>{{ maturityLabel() }}</strong></p>
               @if (completedAt()) {
                 <p class="completed-date">Completed {{ completedAt() | date:'MMM d, y' }}</p>
               }
@@ -166,7 +166,7 @@ interface AssessmentResult {
                     <div class="report-section quick-wins">
                       <div class="section-heading">
                         <div class="section-icon green"><mat-icon>bolt</mat-icon></div>
-                        <h3>Quick Wins <span class="timeframe">within 30 days</span></h3>
+                        <h3>{{ 'NEURO.quickWins' | translate }} <span class="timeframe">{{ 'NEURO.within30Days' | translate }}</span></h3>
                       </div>
                       <ul class="bullet-list">
                         @for (win of quickWins(); track $index) {
@@ -180,7 +180,7 @@ interface AssessmentResult {
                     <div class="report-section long-term">
                       <div class="section-heading">
                         <div class="section-icon orange"><mat-icon>flag</mat-icon></div>
-                        <h3>Long-term Initiatives <span class="timeframe">6–12 months</span></h3>
+                        <h3>{{ 'NEURO.longTermInitiatives' | translate }} <span class="timeframe">{{ 'NEURO.sixToTwelveMonths' | translate }}</span></h3>
                       </div>
                       <ul class="bullet-list">
                         @for (item of longTermInitiatives(); track $index) {
@@ -197,7 +197,7 @@ interface AssessmentResult {
 
           <div class="results-actions">
             <button mat-raised-button color="primary" (click)="startNew()">
-              <mat-icon>refresh</mat-icon> Start New Assessment
+              <mat-icon>refresh</mat-icon> {{ 'NEURO.retakeAssessment' | translate }}
             </button>
           </div>
         </div>

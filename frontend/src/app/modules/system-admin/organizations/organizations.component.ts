@@ -66,19 +66,19 @@ interface Stats {
         <div class="stats-bar">
           <div class="stat">
             <span class="stat-value">{{ stats()!.totalOrgs }}</span>
-            <span class="stat-label">Total Orgs</span>
+            <span class="stat-label">{{ 'SYSADMIN.totalOrgs' | translate }}</span>
           </div>
           <div class="stat">
             <span class="stat-value active">{{ stats()!.activeOrgs }}</span>
-            <span class="stat-label">Active</span>
+            <span class="stat-label">{{ 'SYSADMIN.activeOrgs' | translate }}</span>
           </div>
           <div class="stat">
             <span class="stat-value trial">{{ stats()!.trialOrgs }}</span>
-            <span class="stat-label">On Trial</span>
+            <span class="stat-label">{{ 'SYSADMIN.trialOrgs' | translate }}</span>
           </div>
           <div class="stat">
             <span class="stat-value">{{ stats()!.totalUsers }}</span>
-            <span class="stat-label">Total Users</span>
+            <span class="stat-label">{{ 'SYSADMIN.totalUsers' | translate }}</span>
           </div>
           <div class="stat">
             <span class="stat-value">{{ stats()!.plans['starter'] ?? 0 }}</span>
@@ -131,7 +131,7 @@ interface Stats {
           <table mat-table [dataSource]="filtered()" class="orgs-table">
 
             <ng-container matColumnDef="name">
-              <th mat-header-cell *matHeaderCellDef>Organization</th>
+              <th mat-header-cell *matHeaderCellDef>{{ 'SYSADMIN.organizations' | translate }}</th>
               <td mat-cell *matCellDef="let o">
                 <div class="org-name-cell">
                   <span class="org-name">{{ o.name }}</span>
@@ -141,27 +141,27 @@ interface Stats {
             </ng-container>
 
             <ng-container matColumnDef="plan">
-              <th mat-header-cell *matHeaderCellDef>Plan</th>
+              <th mat-header-cell *matHeaderCellDef>{{ 'ADMIN.plan' | translate }}</th>
               <td mat-cell *matCellDef="let o">
                 <span class="plan-badge" [class]="o.plan">{{ o.plan }}</span>
               </td>
             </ng-container>
 
             <ng-container matColumnDef="status">
-              <th mat-header-cell *matHeaderCellDef>Status</th>
+              <th mat-header-cell *matHeaderCellDef>{{ 'COMMON.status' | translate }}</th>
               <td mat-cell *matCellDef="let o">
                 @if (!o.isActive) {
-                  <span class="status-badge suspended">Suspended</span>
+                  <span class="status-badge suspended">{{ 'BILLING.suspended' | translate }}</span>
                 } @else if (isOnTrial(o)) {
                   <span class="status-badge trial">Trial → {{ o.trialEndsAt | date:'MMM d' }}</span>
                 } @else {
-                  <span class="status-badge active">Active</span>
+                  <span class="status-badge active">{{ 'COMMON.active' | translate }}</span>
                 }
               </td>
             </ng-container>
 
             <ng-container matColumnDef="users">
-              <th mat-header-cell *matHeaderCellDef>Users</th>
+              <th mat-header-cell *matHeaderCellDef>{{ 'NAV.users' | translate }}</th>
               <td mat-cell *matCellDef="let o">
                 <span class="users-count" [class.near-limit]="nearLimit(o)">
                   {{ o.userCount ?? 0 }} / {{ o.maxUsers }}
@@ -170,7 +170,7 @@ interface Stats {
             </ng-container>
 
             <ng-container matColumnDef="modules">
-              <th mat-header-cell *matHeaderCellDef>Modules</th>
+              <th mat-header-cell *matHeaderCellDef>{{ 'ADMIN.modules' | translate }}</th>
               <td mat-cell *matCellDef="let o">
                 <div class="module-icons">
                   @for (m of o.modules; track m) {
@@ -181,12 +181,12 @@ interface Stats {
             </ng-container>
 
             <ng-container matColumnDef="billingEmail">
-              <th mat-header-cell *matHeaderCellDef>Billing</th>
+              <th mat-header-cell *matHeaderCellDef>{{ 'NAV.billing' | translate }}</th>
               <td mat-cell *matCellDef="let o" class="email-cell">{{ o.billingEmail }}</td>
             </ng-container>
 
             <ng-container matColumnDef="createdAt">
-              <th mat-header-cell *matHeaderCellDef>Created</th>
+              <th mat-header-cell *matHeaderCellDef>{{ 'COMMON.created' | translate }}</th>
               <td mat-cell *matCellDef="let o">{{ o.createdAt | date:'MMM d, y' }}</td>
             </ng-container>
 

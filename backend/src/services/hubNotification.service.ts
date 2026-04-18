@@ -219,6 +219,7 @@ function coacheeLink(engagementId?: string | mongoose.Types.ObjectId): string {
   return engagementId ? `/coaching/${engagementId}` : '/coaching';
 }
 
-function fmtDate(d: Date): string {
-  return d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+function fmtDate(d: Date, language = 'en'): string {
+  const locale = language === 'fr' ? 'fr-FR' : 'en-GB';
+  return d.toLocaleDateString(locale, { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 }

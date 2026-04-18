@@ -27,10 +27,10 @@ interface FeedItem {
   template: `
     <div class="journal-page">
       <div class="page-header">
-        <h1><mat-icon>auto_stories</mat-icon> My Journal</h1>
+        <h1><mat-icon>auto_stories</mat-icon> {{ 'JOURNAL.myJournal' | translate }}</h1>
         <div class="header-actions">
-          <a mat-stroked-button routerLink="/journal/reflective"><mat-icon>edit_note</mat-icon> Reflective Journal</a>
-          <a mat-stroked-button routerLink="/journal/supervision"><mat-icon>supervisor_account</mat-icon> Supervision Digest</a>
+          <a mat-stroked-button routerLink="/journal/reflective"><mat-icon>edit_note</mat-icon> {{ 'JOURNAL.reflectiveJournal' | translate }}</a>
+          <a mat-stroked-button routerLink="/journal/supervision"><mat-icon>supervisor_account</mat-icon> {{ 'JOURNAL.supervisionDigest' | translate }}</a>
         </div>
       </div>
 
@@ -70,9 +70,9 @@ interface FeedItem {
           <div class="empty-state">
             <mat-icon>auto_stories</mat-icon>
             <h3>{{ 'JOURNAL.emptyJournal' | translate }}</h3>
-            <p>Start capturing session notes from an engagement or write a reflective entry.</p>
+            <p>{{ 'JOURNAL.emptyJournalDesc' | translate }}</p>
             <a mat-flat-button routerLink="/journal/reflective/new" color="primary">
-              <mat-icon>add</mat-icon> New Reflective Entry
+              <mat-icon>add</mat-icon> {{ 'JOURNAL.newReflectiveEntry' | translate }}
             </a>
           </div>
         }

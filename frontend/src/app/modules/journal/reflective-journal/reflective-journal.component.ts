@@ -32,11 +32,11 @@ const MOOD_CONFIG: Record<JournalMood, { icon: string; color: string }> = {
     <div class="journal-page">
       <div class="page-header">
         <div>
-          <a routerLink="/journal" class="back-link"><mat-icon>arrow_back</mat-icon> Journal Dashboard</a>
-          <h1><mat-icon>edit_note</mat-icon> Reflective Journal</h1>
+          <a routerLink="/journal" class="back-link"><mat-icon>arrow_back</mat-icon> {{ 'JOURNAL.journalDashboard' | translate }}</a>
+          <h1><mat-icon>edit_note</mat-icon> {{ 'JOURNAL.reflectiveJournal' | translate }}</h1>
         </div>
         <a mat-fab extended routerLink="/journal/reflective/new" color="primary" class="fab-btn">
-          <mat-icon>add</mat-icon> New Entry
+          <mat-icon>add</mat-icon> {{ 'JOURNAL.newReflectiveEntry' | translate }}
         </a>
       </div>
 
@@ -51,7 +51,7 @@ const MOOD_CONFIG: Record<JournalMood, { icon: string; color: string }> = {
             }
           </mat-select>
         </mat-form-field>
-        <mat-slide-toggle [(ngModel)]="supervisionFilter" (change)="applyFilters()">Supervision Ready</mat-slide-toggle>
+        <mat-slide-toggle [(ngModel)]="supervisionFilter" (change)="applyFilters()">{{ 'JOURNAL.supervisionReady' | translate }}</mat-slide-toggle>
       </div>
 
       @if (loading()) {
@@ -60,7 +60,7 @@ const MOOD_CONFIG: Record<JournalMood, { icon: string; color: string }> = {
         <div class="empty-state">
           <mat-icon>edit_note</mat-icon>
           <h3>{{ 'JOURNAL.noReflectiveEntries' | translate }}</h3>
-          <p>Capture your coaching reflections, professional insights, and supervision preparation notes.</p>
+          <p>{{ 'JOURNAL.captureReflections' | translate }}</p>
         </div>
       } @else {
         <div class="entry-feed">

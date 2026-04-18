@@ -39,7 +39,7 @@ import {
       <div class="page-header">
         <div>
           <h1>{{ 'BOOKING.eventTypesTitle' | translate }}</h1>
-          <p>Create booking pages for different session types — each with its own link, duration, and schedule.</p>
+          <p>{{ 'BOOKING.createEventTypeDesc' | translate }}</p>
         </div>
       </div>
 
@@ -48,13 +48,13 @@ import {
         <div class="public-page-card">
           <mat-icon>storefront</mat-icon>
           <div class="ppc-body">
-            <div class="ppc-label">Your public booking page</div>
+            <div class="ppc-label">{{ 'BOOKING.yourPublicBookingPage' | translate }}</div>
             <code class="ppc-url">{{ publicCoachUrl() }}</code>
           </div>
-          <button mat-icon-button (click)="copyPublicCoachUrl()" matTooltip="Copy link">
+          <button mat-icon-button (click)="copyPublicCoachUrl()" [matTooltip]="'BOOKING.copyLink' | translate">
             <mat-icon>content_copy</mat-icon>
           </button>
-          <a mat-icon-button [href]="publicCoachUrl()" target="_blank" matTooltip="Open">
+          <a mat-icon-button [href]="publicCoachUrl()" target="_blank" [matTooltip]="'BOOKING.open' | translate">
             <mat-icon>open_in_new</mat-icon>
           </a>
         </div>
@@ -64,20 +64,20 @@ import {
       @if (calendarStatus()?.connected) {
         <div class="cal-status-bar connected">
           <mat-icon>cloud_done</mat-icon>
-          <span>{{ calendarStatus()?.provider === 'microsoft' ? 'Microsoft 365' : 'Google Calendar' }}: Connected</span>
+          <span>{{ calendarStatus()?.provider === 'microsoft' ? ('BOOKING.microsoft365' | translate) : ('BOOKING.googleCalendar' | translate) }}: {{ 'BOOKING.connected' | translate }}</span>
           @if (calendarStatus()?.calendarName) {
             <span class="cal-name">({{ calendarStatus()?.calendarName }})</span>
           }
         </div>
       } @else {
         <div class="cal-provider-picker">
-          <span class="picker-label">Connect your calendar</span>
+          <span class="picker-label">{{ 'BOOKING.connectYourCalendar' | translate }}</span>
           <div class="picker-buttons">
             <button mat-stroked-button class="provider-btn google" (click)="connectCalendar('google')">
-              <mat-icon>event</mat-icon> Google Calendar
+              <mat-icon>event</mat-icon> {{ 'BOOKING.googleCalendar' | translate }}
             </button>
             <button mat-stroked-button class="provider-btn microsoft" (click)="connectCalendar('microsoft')">
-              <mat-icon>calendar_month</mat-icon> Microsoft 365
+              <mat-icon>calendar_month</mat-icon> {{ 'BOOKING.microsoft365' | translate }}
             </button>
           </div>
         </div>
@@ -89,9 +89,9 @@ import {
         <div class="empty-state">
           <mat-icon>event_note</mat-icon>
           <h3>{{ 'BOOKING.noEventTypes' | translate }}</h3>
-          <p>Create your first event type to start accepting bookings.</p>
+          <p>{{ 'BOOKING.createFirstEventType' | translate }}</p>
           <button mat-flat-button color="primary" (click)="createEventType()">
-            <mat-icon>add</mat-icon> Create Event Type
+            <mat-icon>add</mat-icon> {{ 'BOOKING.createEventType' | translate }}
           </button>
         </div>
       } @else {
@@ -113,14 +113,14 @@ import {
                   </button>
                   <mat-menu #menu="matMenu">
                     <a mat-menu-item [routerLink]="'/booking/event-types/' + et._id">
-                      <mat-icon>edit</mat-icon> Edit
+                      <mat-icon>edit</mat-icon> {{ 'COMMON.edit' | translate }}
                     </a>
                     <button mat-menu-item (click)="toggleActive(et)">
                       <mat-icon>{{ et.isActive ? 'visibility_off' : 'visibility' }}</mat-icon>
-                      {{ et.isActive ? 'Deactivate' : 'Activate' }}
+                      {{ et.isActive ? ('BOOKING.deactivate' | translate) : ('BOOKING.activate' | translate) }}
                     </button>
                     <button mat-menu-item (click)="deleteEventType(et)" class="delete-item">
-                      <mat-icon>delete</mat-icon> Delete
+                      <mat-icon>delete</mat-icon> {{ 'COMMON.delete' | translate }}
                     </button>
                   </mat-menu>
                 </div>
@@ -130,7 +130,7 @@ import {
                 }
 
                 @if (!et.isActive) {
-                  <span class="inactive-badge">Inactive</span>
+                  <span class="inactive-badge">{{ 'BOOKING.inactive' | translate }}</span>
                 }
 
                 <div class="card-footer">
@@ -141,7 +141,7 @@ import {
                     </button>
                   </div>
                   <a mat-stroked-button [routerLink]="'/booking/event-types/' + et._id" class="edit-btn">
-                    <mat-icon>settings</mat-icon> Configure
+                    <mat-icon>settings</mat-icon> {{ 'BOOKING.configure' | translate }}
                   </a>
                 </div>
               </div>
@@ -149,7 +149,7 @@ import {
           }
           <button type="button" class="event-type-card new-card" (click)="createEventType()">
             <mat-icon>add</mat-icon>
-            <span>New event type</span>
+            <span>{{ 'BOOKING.newEventType' | translate }}</span>
           </button>
         </div>
       }
@@ -342,13 +342,13 @@ export class BookingSettingsComponent implements OnInit {
     const url = this.publicCoachUrl();
     if (!url) return;
     this.clipboard.copy(url);
-    this.snackBar.open('Public page link copied!', 'OK', { duration: 2000 });
+    this.snackBar.open(this.translate.instant('BOOKING.publicPageLinkCopied'), this.translate.instant('COMMON.ok'), { duration: 2000 });
   }
 
   connectCalendar(provider: CalendarProviderType = 'google'): void {
     this.calendarSvc.getAuthUrl(provider).subscribe({
       next: ({ url }) => window.location.href = url,
-      error: () => this.snackBar.open('Failed to start calendar auth', 'OK', { duration: 3000 }),
+      error: () => this.snackBar.open(this.translate.instant('BOOKING.failedCalendarAuth'), this.translate.instant('COMMON.ok'), { duration: 3000 }),
     });
   }
 
@@ -361,19 +361,19 @@ export class BookingSettingsComponent implements OnInit {
   toggleActive(et: AvailabilityConfig): void {
     this.bookingSvc.updateEventType(et._id!, { isActive: !et.isActive }).subscribe({
       next: () => {
-        this.snackBar.open(et.isActive ? 'Deactivated' : 'Activated', 'OK', { duration: 2000 });
+        this.snackBar.open(et.isActive ? this.translate.instant('BOOKING.deactivated') : this.translate.instant('BOOKING.activated'), this.translate.instant('COMMON.ok'), { duration: 2000 });
         this.loadAll();
       },
-      error: () => this.snackBar.open('Failed to update', 'OK', { duration: 3000 }),
+      error: () => this.snackBar.open(this.translate.instant('BOOKING.failedToUpdate'), this.translate.instant('COMMON.ok'), { duration: 3000 }),
     });
   }
 
   deleteEventType(et: AvailabilityConfig): void {
     const ref = this.dialog.open(ConfirmDialogComponent, {
       data: {
-        title: 'Delete Event Type',
-        message: `Delete "${et.name}"? This cannot be undone.`,
-        confirmLabel: 'Delete',
+        title: this.translate.instant('BOOKING.deleteEventType'),
+        message: this.translate.instant('BOOKING.deleteEventTypeMessage', { name: et.name }),
+        confirmLabel: this.translate.instant('COMMON.delete'),
         confirmColor: 'warn',
       },
     });
@@ -381,11 +381,11 @@ export class BookingSettingsComponent implements OnInit {
       if (confirmed) {
         this.bookingSvc.deleteEventType(et._id!).subscribe({
           next: () => {
-            this.snackBar.open('Event type deleted', 'OK', { duration: 3000 });
+            this.snackBar.open(this.translate.instant('BOOKING.eventTypeDeleted'), this.translate.instant('COMMON.ok'), { duration: 3000 });
             this.loadAll();
           },
           error: (err: { error?: { error?: string } }) => {
-            this.snackBar.open(err.error?.error || 'Failed to delete', 'OK', { duration: 4000 });
+            this.snackBar.open(err.error?.error || this.translate.instant('BOOKING.failedToDelete'), this.translate.instant('COMMON.ok'), { duration: 4000 });
           },
         });
       }
@@ -394,6 +394,6 @@ export class BookingSettingsComponent implements OnInit {
 
   copyLink(et: AvailabilityConfig): void {
     this.clipboard.copy(`${window.location.origin}/book/${et.coachSlug}`);
-    this.snackBar.open('Link copied!', 'OK', { duration: 2000 });
+    this.snackBar.open(this.translate.instant('BOOKING.linkCopied'), this.translate.instant('COMMON.ok'), { duration: 2000 });
   }
 }
