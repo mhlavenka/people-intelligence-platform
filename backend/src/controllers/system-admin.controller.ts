@@ -1,3 +1,5 @@
+import i18next from 'i18next';
+function t(req: import('express').Request, key: string, opts?: Record<string, unknown>): string { if (typeof req.t === 'function') return String(req.t(key, opts ?? {})); return String(i18next.t(key, opts ?? {})); }
 import { Response, NextFunction } from 'express';
 import mongoose from 'mongoose';
 import { AuthRequest } from '../middleware/auth.middleware';
@@ -60,7 +62,7 @@ export async function listOrganizations(req: AuthRequest, res: Response, next: N
 export async function getOrganization(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
   try {
     const org = await Organization.findById(req.params['id']).lean().setOptions(bypass);
-    if (!org) { res.status(404).json({ error: req.t('errors.organizationNotFound') }); return; }
+    if (!org) { res.status(404).json({ error: t(req, 'errors.organizationNotFound') }); return; }
 
     const users = await User.find({ organizationId: org._id, role: { $ne: 'system_admin' } })
       .select('-passwordHash -twoFactorSecret')
@@ -76,7 +78,7 @@ export async function getOrganization(req: AuthRequest, res: Response, next: Nex
 export async function createOrganization(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
   try {
     const existing = await Organization.findOne({ slug: req.body.slug }).setOptions(bypass);
-    if (existing) { res.status(409).json({ error: req.t('errors.slugTaken') }); return; }
+    if (existing) { res.status(409).json({ error: t(req, 'errors.slugTaken') }); return; }
 
     const org = await Organization.create(req.body);
     res.status(201).json(org);
@@ -96,7 +98,7 @@ export async function updateOrganization(req: AuthRequest, res: Response, next: 
       { new: true, runValidators: true }
     ).setOptions(bypass);
 
-    if (!org) { res.status(404).json({ error: req.t('errors.organizationNotFound') }); return; }
+    if (!org) { res.status(404).json({ error: t(req, 'errors.organizationNotFound') }); return; }
     res.json(org);
   } catch (e) { next(e); }
 }
@@ -116,14 +118,14 @@ export async function startOrgTrial(req: AuthRequest, res: Response, next: NextF
       maxUsers?: number;
       endsAt?: string;
     };
-    if (!endsAt) { res.status(400).json({ error: req.t('errors.endsAtRequired') }); return; }
+    if (!endsAt) { res.status(400).json({ error: t(req, 'errors.endsAtRequired') }); return; }
     const end = new Date(endsAt);
     if (isNaN(end.getTime()) || end.getTime() <= Date.now()) {
-      res.status(400).json({ error: req.t('errors.endsAtMustBeFuture') }); return;
+      res.status(400).json({ error: t(req, 'errors.endsAtMustBeFuture') }); return;
     }
 
     const org = await Organization.findById(req.params['id']).setOptions(bypass);
-    if (!org) { res.status(404).json({ error: req.t('errors.organizationNotFound') }); return; }
+    if (!org) { res.status(404).json({ error: t(req, 'errors.organizationNotFound') }); return; }
 
     // If a trial is already active, keep the existing snapshot — we don't
     // want to overwrite pre-trial state with the current trial's values.
@@ -153,9 +155,9 @@ export async function startOrgTrial(req: AuthRequest, res: Response, next: NextF
 export async function endOrgTrial(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
   try {
     const org = await Organization.findById(req.params['id']).setOptions(bypass);
-    if (!org) { res.status(404).json({ error: req.t('errors.organizationNotFound') }); return; }
+    if (!org) { res.status(404).json({ error: t(req, 'errors.organizationNotFound') }); return; }
     if (!org.trialEndsAt && !org.previousPlan) {
-      res.status(400).json({ error: req.t('errors.noActiveTrialToRevert') }); return;
+      res.status(400).json({ error: t(req, 'errors.noActiveTrialToRevert') }); return;
     }
     if (org.previousPlan !== undefined)    org.plan = org.previousPlan;
     if (org.previousModules !== undefined) org.modules = [...org.previousModules];
@@ -177,7 +179,7 @@ export async function suspendOrganization(req: AuthRequest, res: Response, next:
       { isActive: false },
       { new: true }
     ).setOptions(bypass);
-    if (!org) { res.status(404).json({ error: req.t('errors.organizationNotFound') }); return; }
+    if (!org) { res.status(404).json({ error: t(req, 'errors.organizationNotFound') }); return; }
     res.json(org);
   } catch (e) { next(e); }
 }
@@ -205,7 +207,7 @@ export async function updateOrgUser(req: AuthRequest, res: Response, next: NextF
       { isActive: req.body.isActive },
       { new: true }
     ).setOptions(bypass);
-    if (!user) { res.status(404).json({ error: req.t('errors.userNotFound') }); return; }
+    if (!user) { res.status(404).json({ error: t(req, 'errors.userNotFound') }); return; }
     res.json(user);
   } catch (e) { next(e); }
 }

@@ -1,3 +1,5 @@
+import i18next from 'i18next';
+function t(req: import('express').Request, key: string, opts?: Record<string, unknown>): string { if (typeof req.t === 'function') return String(req.t(key, opts ?? {})); return String(i18next.t(key, opts ?? {})); }
 import { Response, NextFunction } from 'express';
 import { AuthRequest } from '../middleware/auth.middleware';
 import { SurveyResponse } from '../models/SurveyResponse.model';
@@ -27,7 +29,7 @@ export async function analyzeConflict(
     const minRequired = template?.minResponsesForAnalysis ?? (isSurvey ? MIN_GROUP_SIZE : 1);
     if (responses.length < minRequired) {
       res.status(400).json({
-        error: req.t('errors.minimumResponsesRequired', { min: minRequired, count: responses.length }),
+        error: t(req, 'errors.minimumResponsesRequired', { min: minRequired, count: responses.length }),
       });
       return;
     }
@@ -49,7 +51,7 @@ export async function analyzeConflict(
 
     const org = await Organization.findById(organizationId);
     if (!org) {
-      res.status(404).json({ error: req.t('errors.organizationNotFound') });
+      res.status(404).json({ error: t(req, 'errors.organizationNotFound') });
       return;
     }
 
@@ -147,7 +149,7 @@ export async function getAnalysis(
       organizationId,
     }).populate('intakeTemplateId', 'title');
     if (!analysis) {
-      res.status(404).json({ error: req.t('errors.analysisNotFound') });
+      res.status(404).json({ error: t(req, 'errors.analysisNotFound') });
       return;
     }
     res.json(analysis);
@@ -183,13 +185,13 @@ export async function createSubAnalysis(
     const { focusConflictType } = req.body as { focusConflictType: string };
 
     if (!focusConflictType) {
-      res.status(400).json({ error: req.t('errors.focusConflictTypeRequired') });
+      res.status(400).json({ error: t(req, 'errors.focusConflictTypeRequired') });
       return;
     }
 
     const parent = await ConflictAnalysis.findOne({ _id: req.params['id'], organizationId });
     if (!parent) {
-      res.status(404).json({ error: req.t('errors.parentAnalysisNotFound') });
+      res.status(404).json({ error: t(req, 'errors.parentAnalysisNotFound') });
       return;
     }
 
@@ -274,7 +276,7 @@ export async function generateRecommendedActions(
       organizationId,
     });
     if (!analysis) {
-      res.status(404).json({ error: req.t('errors.analysisNotFound') });
+      res.status(404).json({ error: t(req, 'errors.analysisNotFound') });
       return;
     }
 
@@ -322,7 +324,7 @@ export async function escalateConflict(
       { new: true }
     );
     if (!analysis) {
-      res.status(404).json({ error: req.t('errors.analysisNotFound') });
+      res.status(404).json({ error: t(req, 'errors.analysisNotFound') });
       return;
     }
     res.json(analysis);

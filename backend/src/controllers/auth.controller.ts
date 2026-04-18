@@ -1,6 +1,12 @@
 import { Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import i18next from 'i18next';
+
+function t(req: Request, key: string): string {
+  if (typeof req.t === 'function') return req.t(key);
+  return i18next.t(key) as string;
+}
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { authenticator } = require('otplib') as typeof import('otplib');
 import { Organization } from '../models/Organization.model';
@@ -81,7 +87,7 @@ export async function register(req: Request, res: Response, next: NextFunction):
 
     const existingOrg = await Organization.findOne({ slug: orgSlug }).setOptions({ bypassTenantCheck: true });
     if (existingOrg) {
-      res.status(409).json({ error: req.t('errors.orgSlugTaken') });
+      res.status(409).json({ error: t(req, 'errors.orgSlugTaken') });
       return;
     }
 
@@ -135,13 +141,13 @@ export async function login(req: Request, res: Response, next: NextFunction): Pr
 
     const user = await User.findOne({ email: email.toLowerCase() }).setOptions({ bypassTenantCheck: true });
     if (!user || !user.isActive) {
-      res.status(401).json({ error: req.t('errors.invalidCredentials') });
+      res.status(401).json({ error: t(req, 'errors.invalidCredentials') });
       return;
     }
 
     const valid = await bcrypt.compare(password, user.passwordHash);
     if (!valid) {
-      res.status(401).json({ error: req.t('errors.invalidCredentials') });
+      res.status(401).json({ error: t(req, 'errors.invalidCredentials') });
       return;
     }
 
@@ -189,7 +195,7 @@ export async function refresh(req: Request, res: Response, next: NextFunction): 
   try {
     const { refreshToken } = req.body;
     if (!refreshToken) {
-      res.status(401).json({ error: req.t('errors.refreshTokenRequired') });
+      res.status(401).json({ error: t(req, 'errors.refreshTokenRequired') });
       return;
     }
 
@@ -197,7 +203,7 @@ export async function refresh(req: Request, res: Response, next: NextFunction): 
     const tokens = generateTokens(decoded);
     res.json(tokens);
   } catch {
-    res.status(401).json({ error: req.t('errors.invalidRefreshToken') });
+    res.status(401).json({ error: t(req, 'errors.invalidRefreshToken') });
     next;
   }
 }
@@ -206,7 +212,7 @@ export async function verify2fa(req: Request, res: Response, next: NextFunction)
   try {
     const { tempToken, otp } = req.body;
     if (!tempToken || !otp) {
-      res.status(400).json({ error: req.t('errors.tempTokenAndOtpRequired') });
+      res.status(400).json({ error: t(req, 'errors.tempTokenAndOtpRequired') });
       return;
     }
 
@@ -214,12 +220,12 @@ export async function verify2fa(req: Request, res: Response, next: NextFunction)
     try {
       pending = jwt.verify(tempToken, config.jwt.secret) as typeof pending;
     } catch {
-      res.status(401).json({ error: req.t('errors.invalidOrExpiredTokenLogin') });
+      res.status(401).json({ error: t(req, 'errors.invalidOrExpiredTokenLogin') });
       return;
     }
 
     if (!pending.pending2fa) {
-      res.status(400).json({ error: req.t('errors.invalidTokenType') });
+      res.status(400).json({ error: t(req, 'errors.invalidTokenType') });
       return;
     }
 
@@ -229,13 +235,13 @@ export async function verify2fa(req: Request, res: Response, next: NextFunction)
       .setOptions({ bypassTenantCheck: true });
 
     if (!user || !user.twoFactorEnabled || !user.twoFactorSecret) {
-      res.status(401).json({ error: req.t('errors.invalidCredentialsDot') });
+      res.status(401).json({ error: t(req, 'errors.invalidCredentialsDot') });
       return;
     }
 
     const valid = authenticator.verify({ token: otp.replace(/\s/g, ''), secret: user.twoFactorSecret });
     if (!valid) {
-      res.status(401).json({ error: req.t('errors.invalidAuthenticatorCode') });
+      res.status(401).json({ error: t(req, 'errors.invalidAuthenticatorCode') });
       return;
     }
 

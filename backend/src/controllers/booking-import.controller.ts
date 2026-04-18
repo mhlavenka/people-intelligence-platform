@@ -1,3 +1,5 @@
+import i18next from 'i18next';
+function t(req: import('express').Request, key: string, opts?: Record<string, unknown>): string { if (typeof req.t === 'function') return String(req.t(key, opts ?? {})); return String(i18next.t(key, opts ?? {})); }
 import { Response, NextFunction } from 'express';
 import { calendar as calendarApi, calendar_v3 } from '@googleapis/calendar';
 import { AuthRequest } from '../middleware/auth.middleware';
@@ -194,7 +196,7 @@ export async function preview(req: AuthRequest, res: Response, next: NextFunctio
     }
     if (!calendarId) {
       res.status(400).json({
-        error: req.t('errors.noBookingCalendarSelected'),
+        error: t(req, 'errors.noBookingCalendarSelected'),
       });
       return;
     }
@@ -203,7 +205,7 @@ export async function preview(req: AuthRequest, res: Response, next: NextFunctio
     try {
       auth = await getAuthenticatedClient(coachId);
     } catch {
-      res.status(401).json({ error: req.t('errors.googleCalendarNotConnected') });
+      res.status(401).json({ error: t(req, 'errors.googleCalendarNotConnected') });
       return;
     }
 
@@ -326,7 +328,7 @@ export async function execute(req: AuthRequest, res: Response, next: NextFunctio
     const { approvedEventIds, overrides, suggestions, calendarId: bodyCalendarId } = req.body as ExecuteBody;
 
     if (!Array.isArray(approvedEventIds) || approvedEventIds.length === 0) {
-      res.status(400).json({ error: req.t('errors.approvedEventIdsRequired') });
+      res.status(400).json({ error: t(req, 'errors.approvedEventIdsRequired') });
       return;
     }
 
@@ -335,7 +337,7 @@ export async function execute(req: AuthRequest, res: Response, next: NextFunctio
     const fallbackTz = resolved.fallbackTz;
     if (!calendarId) {
       res.status(400).json({
-        error: req.t('errors.noBookingCalendarSelected'),
+        error: t(req, 'errors.noBookingCalendarSelected'),
       });
       return;
     }
@@ -344,7 +346,7 @@ export async function execute(req: AuthRequest, res: Response, next: NextFunctio
     try {
       auth = await getAuthenticatedClient(coachId);
     } catch {
-      res.status(401).json({ error: req.t('errors.googleCalendarNotConnected') });
+      res.status(401).json({ error: t(req, 'errors.googleCalendarNotConnected') });
       return;
     }
     const calendar = calendarApi({ version: 'v3', auth });
