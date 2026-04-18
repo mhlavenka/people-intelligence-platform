@@ -1,0 +1,9 @@
+{
+  "errors": {
+    "notFound": "Introuvable",
+    "unauthorized": "Non autoris\u00e9",
+    "forbidden": "Acc\u00e8s interdit",
+    "invalidRequest": "Requ\u00eate invalide",
+    "serverError": "Erreur interne du serveur"
+  }
+}

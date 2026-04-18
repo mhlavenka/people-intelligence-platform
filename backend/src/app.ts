@@ -6,6 +6,7 @@ import { config } from './config/env';
 import { connectDatabase } from './config/database';
 import { errorHandler, notFound } from './middleware/error.middleware';
 import { generalLimiter } from './middleware/rateLimiter.middleware';
+import { initI18n, i18nMiddleware } from './middleware/i18n.middleware';
 
 // Routes
 import authRoutes from './routes/auth.routes';
@@ -64,6 +65,9 @@ app.use('/api/billing/webhook', express.raw({ type: 'application/json' }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
+// i18n
+app.use(i18nMiddleware);
+
 // Rate limiting
 app.use('/api', generalLimiter);
 
@@ -108,6 +112,7 @@ app.use(errorHandler);
 
 // Start server
 async function bootstrap(): Promise<void> {
+  await initI18n();
   await connectDatabase();
   startReminderJob();
   startWebhookRenewalJob();

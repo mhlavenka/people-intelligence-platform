@@ -1,0 +1,9 @@
+{
+  "errors": {
+    "notFound": "Not found",
+    "unauthorized": "Unauthorized",
+    "forbidden": "Forbidden",
+    "invalidRequest": "Invalid request",
+    "serverError": "Internal server error"
+  }
+}

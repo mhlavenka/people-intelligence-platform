@@ -47,6 +47,8 @@ export interface IOrganization extends Document {
   coachingRebill: boolean;
   defaultCoachRate?: number;
   coacheeCanChooseCoach: boolean;   // org default: may a coachee pick their own coach when booking? per-user override on User.canChooseCoach
+  defaultLanguage: string;
+  supportedLanguages: string[];
   suspendedAt?: Date;
   suspensionReason?: string;
   createdAt: Date;
@@ -88,6 +90,8 @@ const OrganizationSchema = new Schema<IOrganization>(
     coachingRebill:   { type: Boolean, default: false },
     defaultCoachRate: { type: Number, min: 0 },
     coacheeCanChooseCoach: { type: Boolean, default: true },
+    defaultLanguage:    { type: String, default: 'en' },
+    supportedLanguages: { type: [String], default: ['en'] },
     suspendedAt:      { type: Date },
     suspensionReason: { type: String, trim: true },
     logoUrl:     { type: String },

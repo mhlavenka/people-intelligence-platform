@@ -64,8 +64,13 @@ router.get('/me', async (req: AuthRequest, res: Response, next: NextFunction) =>
 
 router.put('/me', async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const { firstName, lastName, bio, publicSlug } = req.body;
+    const { firstName, lastName, bio, publicSlug, preferredLanguage } = req.body;
     const update: Record<string, unknown> = { firstName, lastName };
+    if (preferredLanguage !== undefined) {
+      if (['en', 'fr'].includes(preferredLanguage)) {
+        update['preferredLanguage'] = preferredLanguage;
+      }
+    }
     if (bio !== undefined) update['bio'] = String(bio).trim().slice(0, 2000);
     if (publicSlug !== undefined) {
       const cleaned = String(publicSlug).trim().toLowerCase()

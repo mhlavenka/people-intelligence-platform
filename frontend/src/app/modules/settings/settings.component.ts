@@ -10,6 +10,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ApiService } from '../../core/api.service';
 import { AuthService } from '../../core/auth.service';
 
@@ -64,6 +65,7 @@ const DEFAULT_SETTINGS: Settings = {
     MatProgressSpinnerModule,
     MatSnackBarModule,
     ReactiveFormsModule,
+    TranslateModule,
   ],
   template: `
     <div class="settings-page">
@@ -187,11 +189,9 @@ const DEFAULT_SETTINGS: Settings = {
               <mat-form-field appearance="outline">
                 <mat-label>Language</mat-label>
                 <mat-select [ngModel]="settings().language"
-                            (ngModelChange)="updateSetting('language', $event)">
+                            (ngModelChange)="changeLanguage($event)">
                   <mat-option value="en">English</mat-option>
-                  <mat-option value="cs">Czech</mat-option>
-                  <mat-option value="sk">Slovak</mat-option>
-                  <mat-option value="de">German</mat-option>
+                  <mat-option value="fr">Fran\u00e7ais</mat-option>
                 </mat-select>
               </mat-form-field>
 
@@ -382,7 +382,12 @@ export class SettingsComponent implements OnInit {
     { value: 'UTC',                label: 'UTC' },
   ];
 
-  constructor(private snackBar: MatSnackBar, private api: ApiService, private auth: AuthService) {}
+  constructor(
+    private snackBar: MatSnackBar,
+    private api: ApiService,
+    private auth: AuthService,
+    private translate: TranslateService,
+  ) {}
 
   isCoach(): boolean {
     return this.auth.currentUser()?.role === 'coach';
@@ -473,6 +478,17 @@ export class SettingsComponent implements OnInit {
       next: () => this.snackBar.open('Notification preference saved', undefined, { duration: 1500 }),
       error: () => this.snackBar.open('Failed to save preference', 'Dismiss', { duration: 3000 }),
     });
+  }
+
+  changeLanguage(lang: string): void {
+    this.settings.update((s) => ({ ...s, language: lang }));
+    this.translate.use(lang);
+    localStorage.setItem('artes_language', lang);
+    this.api.put('/users/me', { preferredLanguage: lang }).subscribe({
+      next: () => this.snackBar.open('Language updated', undefined, { duration: 1500 }),
+      error: () => this.snackBar.open('Failed to save language preference', 'Dismiss', { duration: 3000 }),
+    });
+    this.persist();
   }
 
   updateSetting(key: keyof Settings, value: unknown): void {

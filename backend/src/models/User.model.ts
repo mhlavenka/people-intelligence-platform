@@ -54,6 +54,7 @@ export interface IUser extends Document {
   googleCalendar?: IGoogleCalendar;
   microsoftCalendar?: IGoogleCalendar;
   notificationPreferences?: INotificationPreferences;
+  preferredLanguage?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -135,6 +136,10 @@ const UserSchema = new Schema<IUser>(
       accessToken:  { type: String, select: false },
       refreshToken: { type: String, select: false },
       tokenExpiry:  { type: Date },
+    },
+    preferredLanguage: {
+      type: String,
+      enum: ['en', 'fr'],
     },
     notificationPreferences: {
       sessionScheduled:   { type: Boolean, default: true },

@@ -10,9 +10,12 @@ export const authInterceptor: HttpInterceptorFn = (
   const authService = inject(AuthService);
   const token = authService.getToken();
 
-  const authReq = token
-    ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } })
-    : req;
+  const lang = localStorage.getItem('artes_language') || 'en';
+  const headers: Record<string, string> = { 'Accept-Language': lang };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  const authReq = req.clone({ setHeaders: headers });
 
   return next(authReq).pipe(
     catchError((error: HttpErrorResponse) => {
