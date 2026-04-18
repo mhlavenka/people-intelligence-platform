@@ -58,7 +58,7 @@ interface Session {
     <div class="detail-page">
       <div class="page-header">
         @if (canManage()) {
-          <a routerLink="/coaching" class="back-link"><mat-icon>arrow_back</mat-icon> Coaching</a>
+          <a routerLink="/coaching" class="back-link"><mat-icon>arrow_back</mat-icon> {{ 'COACHING.coaching' | translate }}</a>
         }
       </div>
 
@@ -83,12 +83,12 @@ interface Session {
             </div>
             <mat-divider />
             <div class="info-list">
-              <div class="info-item"><span class="info-label">Sessions</span><span>{{ engagement()!.sessionsUsed }} / {{ engagement()!.sessionsPurchased }}</span></div>
-              @if (engagement()!.cadence) { <div class="info-item"><span class="info-label">Cadence</span><span>{{ engagement()!.cadence }}</span></div> }
-              @if (engagement()!.startDate) { <div class="info-item"><span class="info-label">Started</span><span>{{ engagement()!.startDate | date:'MMM d, y' }}</span></div> }
+              <div class="info-item"><span class="info-label">{{ 'COACHING.sessions' | translate }}</span><span>{{ engagement()!.sessionsUsed }} / {{ engagement()!.sessionsPurchased }}</span></div>
+              @if (engagement()!.cadence) { <div class="info-item"><span class="info-label">{{ 'COACHING.cadence' | translate }}</span><span>{{ engagement()!.cadence }}</span></div> }
+              @if (engagement()!.startDate) { <div class="info-item"><span class="info-label">{{ 'COACHING.started' | translate }}</span><span>{{ engagement()!.startDate | date:'MMM d, y' }}</span></div> }
               @if (engagement()!.sponsorId?.name) {
                 <div class="info-item">
-                  <span class="info-label">Sponsor</span>
+                  <span class="info-label">{{ 'COACHING.sponsor' | translate }}</span>
                   <span>{{ engagement()!.sponsorId.name }}</span>
                 </div>
               }
@@ -96,7 +96,7 @@ interface Session {
             @if (engagement()!.goals?.length) {
               <mat-divider />
               <div class="goals-block">
-                <span class="info-label">Goals</span>
+                <span class="info-label">{{ 'COACHING.goals' | translate }}</span>
                 @for (g of engagement()!.goals; track g) {
                   <span class="goal-chip">{{ g }}</span>
                 }
@@ -105,28 +105,28 @@ interface Session {
             @if (engagement()!.notes && canManage()) {
               <mat-divider />
               <div class="notes-block">
-                <span class="info-label">Private Notes</span>
+                <span class="info-label">{{ 'COACHING.privatNotes' | translate }}</span>
                 <p>{{ engagement()!.notes }}</p>
               </div>
             }
             @if (canManage()) {
               <mat-divider />
               <div class="billing-block">
-                <span class="info-label">Billing</span>
+                <span class="info-label">{{ 'COACHING.billing' | translate }}</span>
                 <div class="billing-row">
                   <mat-icon>receipt_long</mat-icon>
                   @if (engagement()!.billingMode === 'sponsor' && engagement()!.sponsorId?._id) {
-                    <span>Sponsor pays</span>
+                    <span>{{ 'COACHING.sponsorPays' | translate }}</span>
                   } @else {
-                    <span>Covered by subscription</span>
+                    <span>{{ 'COACHING.coveredBySubscription' | translate }}</span>
                   }
                 </div>
                 @if (engagement()!.billingMode === 'sponsor' && engagementHourlyRate()) {
-                  <div class="billing-rate">{{ engagementHourlyRate() | currency:'CAD':'symbol':'1.2-2' }} / hr</div>
+                  <div class="billing-rate">{{ engagementHourlyRate() | currency:'CAD':'symbol':'1.2-2' }} {{ 'COACHING.perHour' | translate }}</div>
                 }
                 @if (engagement()!.billingMode === 'sponsor' && engagement()!.sponsorId?._id) {
                   <a class="billing-link" [routerLink]="['/billing/sponsors', engagement()!.sponsorId._id]">
-                    <mat-icon>open_in_new</mat-icon> Sponsor billing
+                    <mat-icon>open_in_new</mat-icon> {{ 'COACHING.sponsorBilling' | translate }}
                   </a>
                 }
               </div>
@@ -135,14 +135,14 @@ interface Session {
               <mat-divider />
               <div class="journal-block">
                 <a class="journal-link" [routerLink]="'/journal/engagement/' + engagement()!._id">
-                  <mat-icon>auto_stories</mat-icon> Session Journal
+                  <mat-icon>auto_stories</mat-icon> {{ 'COACHING.sessionJournal' | translate }}
                 </a>
               </div>
             }
             @if (!canManage() && engagement()!.coachId) {
               <mat-divider />
               <div class="info-list">
-                <div class="info-item"><span class="info-label">Coach</span><span>{{ coachFullName() }}</span></div>
+                <div class="info-item"><span class="info-label">{{ 'COACHING.coach' | translate }}</span><span>{{ coachFullName() }}</span></div>
               </div>
             }
           </div>
@@ -169,7 +169,7 @@ interface Session {
                 </div>
                 @if (upcomingSessions().length > 0) {
                   <div class="cal-upcoming">
-                    <h4>Upcoming</h4>
+                    <h4>{{ 'COACHING.upcoming' | translate }}</h4>
                     @for (s of upcomingSessions(); track s._id) {
                       <div class="upcoming-row">
                         <span class="upcoming-date">{{ s.date | date:'MMM d' }}</span>
@@ -187,10 +187,10 @@ interface Session {
           <!-- Sessions timeline -->
           <div class="sessions-col">
             <h3>
-              Sessions
+              {{ 'COACHING.sessions' | translate }}
               <span class="session-count">{{ filteredSessions().length }}</span>
               @if (filteredSessions().length !== sessions().length) {
-                <span class="session-count-muted">of {{ sessions().length }}</span>
+                <span class="session-count-muted">{{ 'COACHING.ofTotal' | translate }} {{ sessions().length }}</span>
               }
             </h3>
 
@@ -207,7 +207,7 @@ interface Session {
                 }
                 @if (hasFilterChanges()) {
                   <button type="button" class="pill pill-reset" (click)="resetStatusFilter()">
-                    <mat-icon>close</mat-icon> Reset
+                    <mat-icon>close</mat-icon> {{ 'COACHING.reset' | translate }}
                   </button>
                 }
               </div>
@@ -216,12 +216,12 @@ interface Session {
             @if (sessions().length === 0) {
               <div class="empty-sessions">
                 <mat-icon>event_note</mat-icon>
-                <p>No sessions recorded yet.</p>
+                <p>{{ 'COACHING.noSessionsRecorded' | translate }}</p>
               </div>
             } @else if (filteredSessions().length === 0) {
               <div class="empty-sessions">
                 <mat-icon>filter_alt_off</mat-icon>
-                <p>No sessions match the selected filters.</p>
+                <p>{{ 'COACHING.noSessionsMatchFilter' | translate }}</p>
               </div>
             }
 
@@ -235,38 +235,38 @@ interface Session {
                         <mat-icon>event</mat-icon>
                         <strong>{{ s.date | date:'MMM d, y — h:mm a' }}</strong>
                       </div>
-                      <span class="session-duration">{{ s.duration }} min · {{ s.format }}</span>
+                      <span class="session-duration">{{ s.duration }} {{ 'COACHING.min' | translate }} · {{ s.format }}</span>
                       <span class="session-status" [class]="s.status">{{ s.status }}</span>
                       @if (s.createdVia === 'coachee_booking') {
                         <span class="source-chip booked"
-                              matTooltip="Created when the coachee booked via the public link">
-                          <mat-icon>person</mat-icon> Coachee booked
+                              [matTooltip]="'COACHING.coacheeBookedTooltip' | translate">
+                          <mat-icon>person</mat-icon> {{ 'COACHING.coacheeBooked' | translate }}
                         </span>
                       } @else {
                         <span class="source-chip scheduled"
-                              matTooltip="Scheduled by the coach">
-                          <mat-icon>edit_calendar</mat-icon> Coach scheduled
+                              [matTooltip]="'COACHING.coachScheduledTooltip' | translate">
+                          <mat-icon>edit_calendar</mat-icon> {{ 'COACHING.coachScheduled' | translate }}
                         </span>
                       }
                       @if (canManage()) {
-                        <button mat-icon-button matTooltip="Edit" (click)="editSession(s)"><mat-icon>edit</mat-icon></button>
+                        <button mat-icon-button [matTooltip]="'COACHING.editTooltip' | translate" (click)="editSession(s)"><mat-icon>edit</mat-icon></button>
                         @if (s.status === 'scheduled' && s.bookingId) {
-                          <button mat-icon-button matTooltip="Cancel session" class="del-btn"
+                          <button mat-icon-button [matTooltip]="'COACHING.cancelSession' | translate" class="del-btn"
                                   (click)="coachCancelSession(s)">
                             <mat-icon>event_busy</mat-icon>
                           </button>
                         }
-                        <button mat-icon-button matTooltip="Delete" class="del-btn" (click)="deleteSession(s)"><mat-icon>delete_outline</mat-icon></button>
+                        <button mat-icon-button [matTooltip]="'COACHING.deleteTooltip' | translate" class="del-btn" (click)="deleteSession(s)"><mat-icon>delete_outline</mat-icon></button>
                       }
                       @if (canCoacheeManage(s)) {
                         @if (canCoacheeReschedule(s)) {
-                          <button mat-icon-button matTooltip="Reschedule"
+                          <button mat-icon-button [matTooltip]="'COACHING.rescheduleTooltip' | translate"
                                   (click)="coacheeReschedule(s)">
                             <mat-icon>event_repeat</mat-icon>
                           </button>
                         }
                         <button mat-icon-button
-                                [matTooltip]="isLateCancellation(s) ? 'Cancel (counts as used session)' : 'Cancel'"
+                                [matTooltip]="isLateCancellation(s) ? ('COACHING.cancelCountsAsUsed' | translate) : ('COACHING.cancel' | translate)"
                                 class="del-btn"
                                 (click)="coacheeCancel(s)">
                           <mat-icon>event_busy</mat-icon>
@@ -276,7 +276,7 @@ interface Session {
 
                     @if (s.googleMeetLink) {
                       <a class="meet-link" [href]="s.googleMeetLink" target="_blank" rel="noopener">
-                        <mat-icon>videocam</mat-icon> Join Google Meet
+                        <mat-icon>videocam</mat-icon> {{ 'COACHING.joinGoogleMeet' | translate }}
                       </a>
                     }
 
@@ -296,7 +296,7 @@ interface Session {
 
                     @if (s.sharedNotes) {
                       <div class="notes-section shared">
-                        <span class="notes-label"><mat-icon>visibility</mat-icon> Shared Notes</span>
+                        <span class="notes-label"><mat-icon>visibility</mat-icon> {{ 'COACHING.sharedNotesLabel' | translate }}</span>
                         <p>{{ s.sharedNotes }}</p>
                       </div>
                     }
@@ -309,7 +309,7 @@ interface Session {
                              [queryParams]="{ sessionId: s._id }">
                             <mat-icon>assignment</mat-icon>
                             <div class="intake-body">
-                              <div class="intake-title">Complete your pre-session reflection</div>
+                              <div class="intake-title">{{ 'COACHING.completePreReflection' | translate }}</div>
                               <div class="intake-sub">{{ intakeTitle }}</div>
                             </div>
                             <mat-icon class="chev">chevron_right</mat-icon>
@@ -318,8 +318,8 @@ interface Session {
                           <div class="intake-card locked">
                             <mat-icon>lock_clock</mat-icon>
                             <div class="intake-body">
-                              <div class="intake-title">Pre-session form</div>
-                              <div class="intake-sub">Available 24 hours before your session</div>
+                              <div class="intake-title">{{ 'COACHING.preSessionForm' | translate }}</div>
+                              <div class="intake-sub">{{ 'COACHING.preSessionFormLocked' | translate }}</div>
                             </div>
                           </div>
                         }
@@ -330,15 +330,15 @@ interface Session {
                           <div class="intake-body">
                             <div class="intake-title">
                               {{ s.preSessionIntakeCompleted
-                                ? 'Pre-session intake completed'
-                                : 'Pre-session intake pending' }}
+                                ? ('COACHING.preSessionIntakeCompleted' | translate)
+                                : ('COACHING.preSessionIntakePending' | translate) }}
                             </div>
                             <div class="intake-sub">{{ intakeTitle }}</div>
                           </div>
                           @if (s.preSessionIntakeCompleted && canManage()) {
                             <button mat-stroked-button class="intake-view-btn"
                                     (click)="viewIntakeResponse(s)">
-                              <mat-icon>visibility</mat-icon> View results
+                              <mat-icon>visibility</mat-icon> {{ 'COACHING.viewResults' | translate }}
                             </button>
                           }
                         </div>
@@ -354,8 +354,8 @@ interface Session {
                              [queryParams]="{ sessionId: s._id }">
                             <mat-icon>rate_review</mat-icon>
                             <div class="intake-body">
-                              <div class="intake-title">Complete your post-session reflection</div>
-                              <div class="intake-sub">A few minutes to capture your insights</div>
+                              <div class="intake-title">{{ 'COACHING.completePostReflection' | translate }}</div>
+                              <div class="intake-sub">{{ 'COACHING.postReflectionCapture' | translate }}</div>
                             </div>
                             <mat-icon class="chev">chevron_right</mat-icon>
                           </a>
@@ -366,15 +366,15 @@ interface Session {
                             <div class="intake-body">
                               <div class="intake-title">
                                 {{ s.postSessionIntakeCompleted
-                                    ? 'Post-session reflection completed'
-                                    : 'Post-session reflection sent' }}
+                                    ? ('COACHING.postReflectionCompleted' | translate)
+                                    : ('COACHING.postReflectionSent' | translate) }}
                               </div>
                               <div class="intake-sub">{{ s.postSessionIntakeSentAt | date:'MMM d, y' }}</div>
                             </div>
                             @if (s.postSessionIntakeCompleted && canManage()) {
                               <button mat-stroked-button class="intake-view-btn"
                                       (click)="viewPostIntakeResponse(s)">
-                                <mat-icon>visibility</mat-icon> View results
+                                <mat-icon>visibility</mat-icon> {{ 'COACHING.viewResults' | translate }}
                               </button>
                             }
                           </div>
@@ -383,11 +383,11 @@ interface Session {
                         <div class="intake-card generate-post" (click)="generatePostSessionForm(s)">
                           <mat-icon>auto_awesome</mat-icon>
                           <div class="intake-body">
-                            <div class="intake-title">Send post-session reflection</div>
+                            <div class="intake-title">{{ 'COACHING.sendPostReflection' | translate }}</div>
                             <div class="intake-sub">
                               {{ (s.topics.length || s.sharedNotes || s.coachNotes)
-                                  ? 'Generate questions from session notes'
-                                  : 'Provide a topic summary to generate questions' }}
+                                  ? ('COACHING.generateFromNotes' | translate)
+                                  : ('COACHING.provideTopicSummary' | translate) }}
                             </div>
                           </div>
                           @if (generatingPostFor() === s._id) {
@@ -401,7 +401,7 @@ interface Session {
 
                     @if (s.coachNotes && canManage()) {
                       <div class="notes-section private">
-                        <span class="notes-label"><mat-icon>lock</mat-icon> Private Notes</span>
+                        <span class="notes-label"><mat-icon>lock</mat-icon> {{ 'COACHING.privateNotesLabel' | translate }}</span>
                         <p>{{ s.coachNotes }}</p>
                       </div>
                     }
@@ -409,7 +409,7 @@ interface Session {
                     <div class="session-footer">
                       @if (s.preSessionRating) {
                         <span class="rating">
-                          <span class="rating-label">Mood</span>
+                          <span class="rating-label">{{ 'COACHING.mood' | translate }}</span>
                           @for (i of [1,2,3,4,5,6,7,8,9,10]; track i) {
                             <mat-icon class="star-sm" [class.filled]="i <= s.preSessionRating!">{{ i <= s.preSessionRating! ? 'star' : 'star_border' }}</mat-icon>
                           }
@@ -417,7 +417,7 @@ interface Session {
                       }
                       @if (s.postSessionRating) {
                         <span class="rating">
-                          <span class="rating-label">Rating</span>
+                          <span class="rating-label">{{ 'COACHING.rating' | translate }}</span>
                           @for (i of [1,2,3,4,5]; track i) {
                             <mat-icon class="star-sm" [class.filled]="i <= s.postSessionRating!">{{ i <= s.postSessionRating! ? 'star' : 'star_border' }}</mat-icon>
                           }

@@ -297,9 +297,9 @@ const MODULE_SLIDES: ModuleSlide[] = [
       <!-- Right: Login Card -->
       <div class="auth-card">
         <div class="lang-switcher">
-          <button class="lang-btn" [class.active]="translate.currentLang === 'en'" (click)="switchLang('en')">EN</button>
-          <button class="lang-btn" [class.active]="translate.currentLang === 'fr'" (click)="switchLang('fr')">FR</button>
-          <button class="lang-btn" [class.active]="translate.currentLang === 'es'" (click)="switchLang('es')">ES</button>
+          <button class="lang-btn" [class.active]="translate.currentLang === 'en'" (click)="switchLang('en')" title="English"><svg width="20" height="14" viewBox="0 0 20 14"><rect width="20" height="14" fill="#012169"/><path d="M0,0L20,14M20,0L0,14" stroke="#fff" stroke-width="2.4"/><path d="M0,0L20,14M20,0L0,14" stroke="#C8102E" stroke-width="1.2"/><path d="M10,0V14M0,7H20" stroke="#fff" stroke-width="4"/><path d="M10,0V14M0,7H20" stroke="#C8102E" stroke-width="2.4"/></svg></button>
+          <button class="lang-btn" [class.active]="translate.currentLang === 'fr'" (click)="switchLang('fr')" title="Français"><svg width="20" height="14" viewBox="0 0 20 14"><rect width="6.67" height="14" fill="#002395"/><rect x="6.67" width="6.67" height="14" fill="#fff"/><rect x="13.33" width="6.67" height="14" fill="#ED2939"/></svg></button>
+          <button class="lang-btn" [class.active]="translate.currentLang === 'es'" (click)="switchLang('es')" title="Español"><svg width="20" height="14" viewBox="0 0 20 14"><rect width="20" height="14" fill="#AA151B"/><rect y="3.5" width="20" height="7" fill="#F1BF00"/></svg></button>
         </div>
         @if (!twoFactorStep()) {
           <!-- Step 1: email + password -->
@@ -615,10 +615,11 @@ const MODULE_SLIDES: ModuleSlide[] = [
     }
     .lang-btn {
       background: none; border: 1px solid #d4dfe9; border-radius: 4px;
-      padding: 4px 10px; font-size: 12px; font-weight: 600;
-      color: #6b7c93; cursor: pointer; transition: all 0.15s;
-      &:hover { border-color: var(--artes-accent); color: var(--artes-accent); }
-      &.active { background: var(--artes-primary); color: #fff; border-color: var(--artes-primary); }
+      padding: 4px 6px; cursor: pointer; transition: all 0.15s;
+      display: flex; align-items: center;
+      opacity: 0.6;
+      &:hover { border-color: var(--artes-accent); opacity: 1; }
+      &.active { border-color: var(--artes-primary); opacity: 1; box-shadow: 0 0 0 1px var(--artes-primary); }
     }
 
     .auth-brand {
