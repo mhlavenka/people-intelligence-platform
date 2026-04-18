@@ -54,7 +54,7 @@ interface ConflictAnalysis {
       <div class="section-icon purple"><mat-icon>psychology</mat-icon></div>
       <div>
         <h3>{{ "CONFLICT.skillDevPlans" | translate }}</h3>
-        <p>Generate AI-powered Individual Development Plans (IDPs) based on conflict analysis findings — targeted skill building using the GROW model.</p>
+        <p>{{ "CONFLICT.skillDevDesc" | translate }}</p>
       </div>
       <button mat-raised-button color="primary" class="section-action-btn" (click)="openDialog()">
         <mat-icon>add_circle</mat-icon> {{ "CONFLICT.generateConflictIDP" | translate }}
@@ -66,14 +66,14 @@ interface ConflictAnalysis {
     } @else if (idps().length === 0) {
       <div class="empty-state">
         <mat-icon>psychology</mat-icon>
-        <p>No conflict-based development plans yet. Run an analysis first, then generate a targeted IDP for team members.</p>
+        <p>{{ "CONFLICT.noIDPsYet" | translate }}</p>
       </div>
     } @else {
       <div class="idp-grid">
         @for (idp of idps(); track idp._id) {
           <div class="idp-card" [class]="'status-' + idp.status">
             <div class="idp-card-header">
-              <div class="idp-status-badge" [class]="idp.status">{{ idp.status }}</div>
+              <div class="idp-status-badge" [class]="idp.status">{{ "COMMON.status_" + idp.status | translate }}</div>
               @if (isPopulated(idp.coacheeId)) {
                 <span class="idp-coachee-name">
                   <mat-icon class="coachee-icon">person</mat-icon>
@@ -81,26 +81,26 @@ interface ConflictAnalysis {
                 </span>
               }
               <span class="idp-date-label">{{ idp.createdAt | date:'MMM d, y' }}</span>
-              <button class="card-action-btn delete-btn" matTooltip="Delete IDP" (click)="deleteIdp(idp)">
+              <button class="card-action-btn delete-btn" [matTooltip]="'CONFLICT.deleteIDP' | translate" (click)="deleteIdp(idp)">
                 <mat-icon>delete_outline</mat-icon>
               </button>
             </div>
 
             <mat-accordion class="grow-accordion">
               <mat-expansion-panel class="grow-panel goal-panel">
-                <mat-expansion-panel-header><mat-panel-title><mat-icon>flag</mat-icon> Goal</mat-panel-title></mat-expansion-panel-header>
+                <mat-expansion-panel-header><mat-panel-title><mat-icon>flag</mat-icon> {{ "CONFLICT.goal" | translate }}</mat-panel-title></mat-expansion-panel-header>
                 <p>{{ idp.goal }}</p>
               </mat-expansion-panel>
               <mat-expansion-panel class="grow-panel reality-panel">
-                <mat-expansion-panel-header><mat-panel-title><mat-icon>explore</mat-icon> Reality</mat-panel-title></mat-expansion-panel-header>
+                <mat-expansion-panel-header><mat-panel-title><mat-icon>explore</mat-icon> {{ "CONFLICT.reality" | translate }}</mat-panel-title></mat-expansion-panel-header>
                 <p>{{ idp.currentReality }}</p>
               </mat-expansion-panel>
               <mat-expansion-panel class="grow-panel options-panel">
-                <mat-expansion-panel-header><mat-panel-title><mat-icon>lightbulb</mat-icon> Options ({{ idp.options.length }})</mat-panel-title></mat-expansion-panel-header>
+                <mat-expansion-panel-header><mat-panel-title><mat-icon>lightbulb</mat-icon> {{ "CONFLICT.options" | translate }} ({{ idp.options.length }})</mat-panel-title></mat-expansion-panel-header>
                 <ul>@for (opt of idp.options; track opt) { <li>{{ opt }}</li> }</ul>
               </mat-expansion-panel>
               <mat-expansion-panel class="grow-panel will-panel">
-                <mat-expansion-panel-header><mat-panel-title><mat-icon>bolt</mat-icon> Will Do ({{ idp.willDoActions.length }})</mat-panel-title></mat-expansion-panel-header>
+                <mat-expansion-panel-header><mat-panel-title><mat-icon>bolt</mat-icon> {{ "CONFLICT.willDo" | translate }} ({{ idp.willDoActions.length }})</mat-panel-title></mat-expansion-panel-header>
                 <ul>@for (a of idp.willDoActions; track a) { <li>{{ a }}</li> }</ul>
               </mat-expansion-panel>
             </mat-accordion>
@@ -117,7 +117,7 @@ interface ConflictAnalysis {
                     </div>
                     <div class="ms-actions">
                       @if (ms.status !== 'completed') {
-                        <button mat-icon-button [matTooltip]="'Mark complete'" (click)="completeMilestone(idp._id, ms._id)">
+                        <button mat-icon-button [matTooltip]="'CONFLICT.markComplete' | translate" (click)="completeMilestone(idp._id, ms._id)">
                           <mat-icon>check_circle_outline</mat-icon>
                         </button>
                       }
@@ -129,7 +129,7 @@ interface ConflictAnalysis {
 
             @if (idp.competencyGaps.length) {
               <mat-expansion-panel class="grow-panel conflict-areas-panel">
-                <mat-expansion-panel-header><mat-panel-title><mat-icon>warning_amber</mat-icon> Conflict Areas ({{ idp.competencyGaps.length }})</mat-panel-title></mat-expansion-panel-header>
+                <mat-expansion-panel-header><mat-panel-title><mat-icon>warning_amber</mat-icon> {{ "CONFLICT.conflictAreas" | translate }} ({{ idp.competencyGaps.length }})</mat-panel-title></mat-expansion-panel-header>
                 <ul>@for (gap of idp.competencyGaps; track gap) { <li>{{ gap }}</li> }</ul>
               </mat-expansion-panel>
             }
@@ -148,7 +148,7 @@ export class ConflictSkillDevComponent implements OnInit {
   analyses = signal<ConflictAnalysis[]>([]);
   loading = signal(true);
 
-  constructor(private api: ApiService, private dialog: MatDialog, private snackBar: MatSnackBar) {}
+  constructor(private api: ApiService, private dialog: MatDialog, private snackBar: MatSnackBar, private translate: TranslateService) {}
 
   ngOnInit(): void {
     this.api.get<ConflictIDP[]>('/succession/idps?module=conflict').subscribe({
@@ -165,7 +165,7 @@ export class ConflictSkillDevComponent implements OnInit {
   }
 
   coacheeName(idp: ConflictIDP): string {
-    return this.isPopulated(idp.coacheeId) ? `${idp.coacheeId.firstName} ${idp.coacheeId.lastName}` : 'Unknown';
+    return this.isPopulated(idp.coacheeId) ? `${idp.coacheeId.firstName} ${idp.coacheeId.lastName}` : this.translate.instant('COMMON.unknown');
   }
 
   completeMilestone(idpId: string, milestoneId: string): void {
@@ -175,9 +175,10 @@ export class ConflictSkillDevComponent implements OnInit {
   }
 
   deleteIdp(idp: ConflictIDP): void {
-    if (!confirm(`Delete development plan for ${this.coacheeName(idp)}?`)) return;
+    const msg = this.translate.instant('CONFLICT.confirmDeletePlan', { name: this.coacheeName(idp) });
+    if (!confirm(msg)) return;
     this.api.delete(`/succession/idps/${idp._id}`).subscribe({
-      next: () => { this.idps.update((l) => l.filter((i) => i._id !== idp._id)); this.snackBar.open('Plan deleted', 'OK', { duration: 3000 }); },
+      next: () => { this.idps.update((l) => l.filter((i) => i._id !== idp._id)); this.snackBar.open(this.translate.instant('CONFLICT.planDeleted'), this.translate.instant('COMMON.ok'), { duration: 3000 }); },
     });
   }
 

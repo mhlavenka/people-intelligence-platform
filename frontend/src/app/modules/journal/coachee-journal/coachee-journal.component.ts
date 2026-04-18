@@ -43,10 +43,10 @@ interface CoachingSession {
     <div class="page">
       <div class="header">
         <a mat-icon-button [routerLink]="['/coaching', engagementId]"><mat-icon>arrow_back</mat-icon></a>
-        <h1>{{ focusSessionId ? "This session's journal" : 'My session journal' }}</h1>
+        <h1>{{ (focusSessionId ? 'JOURNAL.coacheeThisSessionJournal' : 'JOURNAL.coacheeMySessionJournal') | translate }}</h1>
         @if (focusSessionId) {
           <a class="show-all-link" [routerLink]="['/my-journal/engagement', engagementId]">
-            Show all sessions
+            {{ 'JOURNAL.coacheeShowAllSessions' | translate }}
           </a>
         }
       </div>
@@ -56,175 +56,175 @@ interface CoachingSession {
       } @else if (sessions().length === 0) {
         <div class="empty">
           <mat-icon>menu_book</mat-icon>
-          <p>No sessions yet. Once your coach schedules a session you can capture pre- and post-session notes here.</p>
+          <p>{{ 'JOURNAL.coacheeEmptyState' | translate }}</p>
         </div>
       } @else {
         <div class="note-list">
           @for (s of sessions(); track s._id; let idx = $index) {
             <section class="note-card">
               <header class="note-head">
-                <strong>Session #{{ sessions().length - idx }}</strong>
+                <strong>{{ 'JOURNAL.coacheeSessionNumber' | translate }} #{{ sessions().length - idx }}</strong>
                 <span class="muted">{{ s.date | date:'mediumDate' }} · {{ s.date | date:'shortTime' }}</span>
                 <span class="muted-status" [class]="'st-' + s.status">{{ s.status }}</span>
               </header>
 
               <mat-tab-group animationDuration="0ms">
-                <mat-tab label="Pre">
+                <mat-tab [label]="'JOURNAL.coacheeTabPre' | translate">
                   <div class="tab-body">
-                    <p class="hint">Filled by you. Your coach can read this.</p>
+                    <p class="hint">{{ 'JOURNAL.coacheePreHint' | translate }}</p>
 
-                    <p class="section-label"><span class="pip-accent"></span>Current state</p>
+                    <p class="section-label"><span class="pip-accent"></span>{{ 'JOURNAL.coacheeCurrentState' | translate }}</p>
 
                     <div class="field">
-                      <label>How would you describe your energy and mood right now?</label>
-                      <div class="stars" role="radiogroup" aria-label="Mood rating">
+                      <label>{{ 'JOURNAL.coacheeMoodQuestion' | translate }}</label>
+                      <div class="stars" role="radiogroup" [attr.aria-label]="'JOURNAL.coacheeMoodRatingAria' | translate">
                         @for (i of [1,2,3,4,5]; track i) {
                           <button type="button" class="star-btn"
                                   [class.filled]="(forms[s._id].pre.moodRating || 0) >= i"
                                   (click)="forms[s._id].pre.moodRating = i"
-                                  [attr.aria-label]="i + ' stars'">
+                                  [attr.aria-label]="i + ' ' + ('JOURNAL.coacheeStars' | translate)">
                             <mat-icon>{{ (forms[s._id].pre.moodRating || 0) >= i ? 'star' : 'star_border' }}</mat-icon>
                           </button>
                         }
                         @if (forms[s._id].pre.moodRating) {
                           <button type="button" class="clear-btn"
-                                  (click)="forms[s._id].pre.moodRating = undefined">Clear</button>
+                                  (click)="forms[s._id].pre.moodRating = undefined">{{ 'JOURNAL.coacheeClear' | translate }}</button>
                         }
                       </div>
-                      <div class="scale-labels"><span>1 — very low</span><span>5 — very high</span></div>
+                      <div class="scale-labels"><span>{{ 'JOURNAL.coacheeMoodScaleLow' | translate }}</span><span>{{ 'JOURNAL.coacheeMoodScaleHigh' | translate }}</span></div>
                     </div>
 
                     <mat-form-field appearance="outline" class="full">
-                      <mat-label>What feels most present or top of mind for you today?</mat-label>
+                      <mat-label>{{ 'JOURNAL.coacheeTopOfMindLabel' | translate }}</mat-label>
                       <textarea matInput rows="3" [(ngModel)]="forms[s._id].pre.topOfMind"
-                                placeholder="Share what's occupying your thoughts or attention right now…"></textarea>
+                                [placeholder]="'JOURNAL.coacheeTopOfMindPlaceholder' | translate"></textarea>
                     </mat-form-field>
 
-                    <p class="section-label"><span class="pip-accent"></span>Session intent</p>
+                    <p class="section-label"><span class="pip-accent"></span>{{ 'JOURNAL.coacheeSessionIntent' | translate }}</p>
 
                     <mat-form-field appearance="outline" class="full">
-                      <mat-label>What is the main topic or challenge you want to explore in this session?</mat-label>
+                      <mat-label>{{ 'JOURNAL.coacheeMainTopicLabel' | translate }}</mat-label>
                       <textarea matInput rows="3" [(ngModel)]="forms[s._id].pre.mainTopic"
-                                placeholder="Be as specific as possible — the clearer the focus, the more useful the session…"></textarea>
+                                [placeholder]="'JOURNAL.coacheeMainTopicPlaceholder' | translate"></textarea>
                     </mat-form-field>
 
                     <mat-form-field appearance="outline" class="full">
-                      <mat-label>What would make this session feel truly valuable to you?</mat-label>
+                      <mat-label>{{ 'JOURNAL.coacheeValueDefinitionLabel' | translate }}</mat-label>
                       <textarea matInput rows="3" [(ngModel)]="forms[s._id].pre.valueDefinition"
-                                placeholder="What outcome, insight, or clarity would feel like success?"></textarea>
+                                [placeholder]="'JOURNAL.coacheeValueDefinitionPlaceholder' | translate"></textarea>
                     </mat-form-field>
 
                     <mat-form-field appearance="outline" class="full">
-                      <mat-label>What has shifted or happened since your last session? (if applicable)</mat-label>
+                      <mat-label>{{ 'JOURNAL.coacheeRecentShiftsLabel' | translate }}</mat-label>
                       <textarea matInput rows="3" [(ngModel)]="forms[s._id].pre.recentShifts"
-                                placeholder="Progress, setbacks, new developments…"></textarea>
+                                [placeholder]="'JOURNAL.coacheeRecentShiftsPlaceholder' | translate"></textarea>
                     </mat-form-field>
 
-                    <p class="section-label"><span class="pip-accent"></span>Anything else</p>
+                    <p class="section-label"><span class="pip-accent"></span>{{ 'JOURNAL.coacheeAnythingElse' | translate }}</p>
 
                     <mat-form-field appearance="outline" class="full">
-                      <mat-label>Is there anything you'd like your coach to know before you begin?</mat-label>
+                      <mat-label>{{ 'JOURNAL.coacheeContextForCoachLabel' | translate }}</mat-label>
                       <textarea matInput rows="3" [(ngModel)]="forms[s._id].pre.contextForCoach"
-                                placeholder="Context, boundaries, or anything on your mind…"></textarea>
+                                [placeholder]="'JOURNAL.coacheeContextForCoachPlaceholder' | translate"></textarea>
                     </mat-form-field>
 
                     <button mat-flat-button color="primary"
                             (click)="save(s, 'pre')" [disabled]="forms[s._id].saving">
                       @if (forms[s._id].saving) { <mat-spinner diameter="16" /> }
-                      Save pre-session
+                      {{ 'JOURNAL.savePreSession' | translate }}
                     </button>
                   </div>
                 </mat-tab>
 
-                <mat-tab label="During">
+                <mat-tab [label]="'JOURNAL.coacheeTabDuring' | translate">
                   <div class="tab-body">
-                    <p class="hint">Read-only. Notes your coach made during the session.</p>
+                    <p class="hint">{{ 'JOURNAL.coacheeDuringHint' | translate }}</p>
                     @if (noteForSession(s._id); as note) {
                       @if (note.inSession?.observations) {
-                        <div class="ro-field"><label>Observations</label><p>{{ note.inSession!.observations }}</p></div>
+                        <div class="ro-field"><label>{{ 'JOURNAL.observations' | translate }}</label><p>{{ note.inSession!.observations }}</p></div>
                       }
                       @if (note.inSession?.openingState) {
-                        <div class="ro-field"><label>Opening state</label><p>{{ note.inSession!.openingState }}</p></div>
+                        <div class="ro-field"><label>{{ 'JOURNAL.openingState' | translate }}</label><p>{{ note.inSession!.openingState }}</p></div>
                       }
                       @if (note.inSession?.keyThemes?.length) {
-                        <div class="ro-field"><label>Key themes</label>
+                        <div class="ro-field"><label>{{ 'JOURNAL.keyThemes' | translate }}</label>
                           <div class="chips">
                             @for (t of note.inSession!.keyThemes; track t) { <span class="chip">{{ t }}</span> }
                           </div>
                         </div>
                       }
                       @if (!note.inSession?.observations && !note.inSession?.openingState && !note.inSession?.keyThemes?.length) {
-                        <p class="muted">No notes added by your coach yet.</p>
+                        <p class="muted">{{ 'JOURNAL.noNotesYetCoach' | translate }}</p>
                       }
                     } @else {
-                      <p class="muted">No notes added by your coach yet.</p>
+                      <p class="muted">{{ 'JOURNAL.noNotesYetCoach' | translate }}</p>
                     }
                   </div>
                 </mat-tab>
 
-                <mat-tab label="Post">
+                <mat-tab [label]="'JOURNAL.coacheeTabPost' | translate">
                   <div class="tab-body">
                     @if (s.status !== 'completed') {
                       <div class="locked-state">
                         <mat-icon>lock</mat-icon>
-                        <p>Available after the session is completed.</p>
+                        <p>{{ 'JOURNAL.availableAfterCompletion' | translate }}</p>
                       </div>
                     } @else {
-                      <p class="hint">Filled by you after the session. Your coach can read this.</p>
+                      <p class="hint">{{ 'JOURNAL.coacheePostHint' | translate }}</p>
 
-                      <p class="section-label"><span class="pip-accent"></span>Reflections</p>
+                      <p class="section-label"><span class="pip-accent"></span>{{ 'JOURNAL.coacheeReflections' | translate }}</p>
                       <div class="field">
-                        <label>What was your biggest insight or "aha" moment from this session?</label>
+                        <label>{{ 'JOURNAL.coacheeBiggestInsightLabel' | translate }}</label>
                         <mat-form-field appearance="outline" class="full">
                           <textarea matInput rows="3"
-                                    placeholder="What landed most powerfully for you?"
+                                    [placeholder]="'JOURNAL.coacheeBiggestInsightPlaceholder' | translate"
                                     [(ngModel)]="forms[s._id].post.biggestInsight"></textarea>
                         </mat-form-field>
                       </div>
                       <div class="field">
-                        <label>What feels different, clearer, or shifted after today's conversation?</label>
+                        <label>{{ 'JOURNAL.coacheeWhatShiftedLabel' | translate }}</label>
                         <mat-form-field appearance="outline" class="full">
                           <textarea matInput rows="3"
-                                    placeholder="A new perspective, a decision made, something released…"
+                                    [placeholder]="'JOURNAL.coacheeWhatShiftedPlaceholder' | translate"
                                     [(ngModel)]="forms[s._id].post.whatShifted"></textarea>
                         </mat-form-field>
                       </div>
 
-                      <p class="section-label"><span class="pip-accent"></span>Commitments &amp; next steps</p>
+                      <p class="section-label"><span class="pip-accent"></span>{{ 'JOURNAL.coacheeCommitmentsNextSteps' | translate }}</p>
                       <div class="action-grid">
                         <div class="action-item">
                           <div class="action-num">1</div>
                           <input type="text" class="action-input"
-                                 placeholder="Action or commitment…"
+                                 [placeholder]="'JOURNAL.coacheeActionPlaceholder' | translate"
                                  [(ngModel)]="forms[s._id].post.commitment1" />
                         </div>
                         <div class="action-item">
                           <div class="action-num">2</div>
                           <input type="text" class="action-input"
-                                 placeholder="Action or commitment…"
+                                 [placeholder]="'JOURNAL.coacheeActionPlaceholder' | translate"
                                  [(ngModel)]="forms[s._id].post.commitment2" />
                         </div>
                         <div class="action-item">
                           <div class="action-num">3</div>
                           <input type="text" class="action-input"
-                                 placeholder="Action or commitment…"
+                                 [placeholder]="'JOURNAL.coacheeActionPlaceholder' | translate"
                                  [(ngModel)]="forms[s._id].post.commitment3" />
                         </div>
                       </div>
 
                       <div class="field" style="margin-top: 1rem">
-                        <label>How confident are you that you will follow through on these commitments?</label>
+                        <label>{{ 'JOURNAL.coacheeConfidenceLabel' | translate }}</label>
                         <div class="slider-row">
                           <input type="range" min="1" max="10"
                                  [(ngModel)]="forms[s._id].post.followThroughConfidence" />
                           <span class="slider-val">{{ forms[s._id].post.followThroughConfidence || 1 }}</span>
                         </div>
-                        <div class="scale-labels"><span>1 — not confident</span><span>10 — fully committed</span></div>
+                        <div class="scale-labels"><span>{{ 'JOURNAL.coacheeConfidenceScaleLow' | translate }}</span><span>{{ 'JOURNAL.coacheeConfidenceScaleHigh' | translate }}</span></div>
                       </div>
 
-                      <p class="section-label"><span class="pip-accent"></span>Session feedback</p>
+                      <p class="section-label"><span class="pip-accent"></span>{{ 'JOURNAL.coacheeSessionFeedback' | translate }}</p>
                       <div class="field">
-                        <label>How would you rate the overall value of this session?</label>
+                        <label>{{ 'JOURNAL.coacheeSessionRatingLabel' | translate }}</label>
                         <div class="stars">
                           @for (i of [1,2,3,4,5]; track i) {
                             <button type="button" class="star-btn"
@@ -235,25 +235,25 @@ interface CoachingSession {
                           }
                           @if (forms[s._id].post.sessionRating) {
                             <button type="button" class="clear-btn"
-                                    (click)="forms[s._id].post.sessionRating = undefined">Clear</button>
+                                    (click)="forms[s._id].post.sessionRating = undefined">{{ 'JOURNAL.coacheeClear' | translate }}</button>
                           }
                         </div>
                       </div>
 
                       <div class="field">
-                        <label>Is there anything you'd like to explore further in your next session?</label>
+                        <label>{{ 'JOURNAL.coacheeExploreNextLabel' | translate }}</label>
                         <mat-form-field appearance="outline" class="full">
                           <textarea matInput rows="3"
-                                    placeholder="Themes to continue, questions that came up, topics to deepen…"
+                                    [placeholder]="'JOURNAL.coacheeExploreNextPlaceholder' | translate"
                                     [(ngModel)]="forms[s._id].post.exploreNext"></textarea>
                         </mat-form-field>
                       </div>
 
                       <div class="field">
-                        <label>Any other feedback or reflections for your coach?</label>
+                        <label>{{ 'JOURNAL.coacheeFeedbackForCoachLabel' | translate }}</label>
                         <mat-form-field appearance="outline" class="full">
                           <textarea matInput rows="3"
-                                    placeholder="What worked well? What could be different?"
+                                    [placeholder]="'JOURNAL.coacheeFeedbackForCoachPlaceholder' | translate"
                                     [(ngModel)]="forms[s._id].post.feedbackForCoach"></textarea>
                         </mat-form-field>
                       </div>
@@ -261,7 +261,7 @@ interface CoachingSession {
                       <button mat-flat-button color="primary"
                               (click)="save(s, 'post')" [disabled]="forms[s._id].saving">
                         @if (forms[s._id].saving) { <mat-spinner diameter="16" /> }
-                        Save post-session
+                        {{ 'JOURNAL.savePostSession' | translate }}
                       </button>
                     }
                   </div>
@@ -525,11 +525,11 @@ export class CoacheeJournalComponent implements OnInit {
       next: (note) => {
         f.saving = false;
         this.notesBySession.set(s._id, note);
-        this.snack.open('Saved', 'OK', { duration: 2000 });
+        this.snack.open(this.translate.instant('JOURNAL.coacheeSaved'), this.translate.instant('JOURNAL.coacheeOk'), { duration: 2000 });
       },
       error: () => {
         f.saving = false;
-        this.snack.open('Failed to save', 'OK', { duration: 3000 });
+        this.snack.open(this.translate.instant('JOURNAL.failedSave'), this.translate.instant('JOURNAL.coacheeOk'), { duration: 3000 });
       },
     });
   }
