@@ -24,8 +24,8 @@ import {
 } from '../booking.service';
 
 const DURATION_OPTIONS = [30, 45, 60, 90, 120];
-const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-const DAY_SHORTS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const DAY_KEYS = ['COMMON.sunday', 'COMMON.monday', 'COMMON.tuesday', 'COMMON.wednesday', 'COMMON.thursday', 'COMMON.friday', 'COMMON.saturday'];
+const DAY_SHORT_KEYS = ['COMMON.sundayShort', 'COMMON.mondayShort', 'COMMON.tuesdayShort', 'COMMON.wednesdayShort', 'COMMON.thursdayShort', 'COMMON.fridayShort', 'COMMON.saturdayShort'];
 
 @Component({
   selector: 'app-event-type-editor',
@@ -40,7 +40,7 @@ const DAY_SHORTS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   template: `
     <div class="editor-container">
       <div class="page-header">
-        <a mat-icon-button routerLink="/booking/settings" matTooltip="Back to event types">
+        <a mat-icon-button routerLink="/booking/settings" [matTooltip]="'BOOKING.backToEventTypes' | translate">
           <mat-icon>arrow_back</mat-icon>
         </a>
         <div class="header-text">
@@ -194,12 +194,12 @@ const DAY_SHORTS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
                       @if (slot.enabled) {
                         <div class="time-inputs">
                           <mat-form-field appearance="outline" class="time-field">
-                            <mat-label>From</mat-label>
+                            <mat-label>{{ 'BOOKING.from' | translate }}</mat-label>
                             <input matInput type="time" [(ngModel)]="slot.startTime" />
                           </mat-form-field>
                           <span class="time-sep">&ndash;</span>
                           <mat-form-field appearance="outline" class="time-field">
-                            <mat-label>To</mat-label>
+                            <mat-label>{{ 'BOOKING.to' | translate }}</mat-label>
                             <input matInput type="time" [(ngModel)]="slot.endTime" />
                           </mat-form-field>
                         </div>
@@ -213,7 +213,7 @@ const DAY_SHORTS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
                 <div class="shared-schedule">
                   <div class="shared-label">
                     {{ 'BOOKING.usingSharedSchedule' | translate }}
-                    <a routerLink="/booking/global-settings" class="edit-link">Edit</a>
+                    <a routerLink="/booking/global-settings" class="edit-link">{{ 'BOOKING.editLink' | translate }}</a>
                   </div>
                   @if (sharedSchedule().length) {
                     <ul class="shared-list">
@@ -250,7 +250,7 @@ const DAY_SHORTS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
               @if (coachSlug) {
                 <div class="link-row">
                   <code class="booking-url">{{ bookingUrl() }}</code>
-                  <button mat-icon-button (click)="copyLink()" matTooltip="Copy link">
+                  <button mat-icon-button (click)="copyLink()" [matTooltip]="'BOOKING.copyLinkTooltip' | translate">
                     <mat-icon>content_copy</mat-icon>
                   </button>
                 </div>
@@ -277,7 +277,7 @@ const DAY_SHORTS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
           <div class="inherited-note">
             <mat-icon>info_outline</mat-icon>
             <span>{{ 'BOOKING.calendarSharedNote' | translate }}</span>
-            <a routerLink="/booking/global-settings">Edit</a>
+            <a routerLink="/booking/global-settings">{{ 'BOOKING.editLink' | translate }}</a>
           </div>
         </aside>
       </div>
@@ -469,8 +469,8 @@ export class EventTypeEditorComponent implements OnInit {
   readonly colors = EVENT_TYPE_COLORS;
   readonly durationOptions = DURATION_OPTIONS;
 
-  dayName(i: number): string { return DAY_NAMES[i]; }
-  dayShort(i: number): string { return DAY_SHORTS[i]; }
+  dayName(i: number): string { return this.translate.instant(DAY_KEYS[i]); }
+  dayShort(i: number): string { return this.translate.instant(DAY_SHORT_KEYS[i]); }
 
   private defaultSchedule(): WeeklySlot[] {
     return Array.from({ length: 7 }, (_, i) => ({

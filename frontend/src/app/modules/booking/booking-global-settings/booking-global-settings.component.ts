@@ -33,7 +33,7 @@ import {
 
 type SaveState = 'idle' | 'saving' | 'saved' | 'error';
 
-const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const DAY_KEYS = ['COMMON.sunday', 'COMMON.monday', 'COMMON.tuesday', 'COMMON.wednesday', 'COMMON.thursday', 'COMMON.friday', 'COMMON.saturday'];
 
 const COMMON_TIMEZONES = [
   'America/Toronto', 'America/New_York', 'America/Chicago', 'America/Denver',
@@ -57,7 +57,7 @@ const COMMON_TIMEZONES = [
   template: `
     <div class="settings-container">
       <div class="page-header">
-        <a mat-icon-button routerLink="/booking" matTooltip="Back to bookings">
+        <a mat-icon-button routerLink="/booking" [matTooltip]="'BOOKING.backToBookings' | translate">
           <mat-icon>arrow_back</mat-icon>
         </a>
         <div>
@@ -173,13 +173,13 @@ const COMMON_TIMEZONES = [
                 @if (slot.enabled) {
                   <div class="time-inputs" [class.invalid]="!isTimeRangeValid(slot)">
                     <mat-form-field appearance="outline" class="time-field" subscriptSizing="dynamic">
-                      <mat-label>From</mat-label>
+                      <mat-label>{{ 'BOOKING.from' | translate }}</mat-label>
                       <input matInput type="time" [(ngModel)]="slot.startTime"
                              (ngModelChange)="onTimeChange(slot)" />
                     </mat-form-field>
                     <span class="time-sep">&ndash;</span>
                     <mat-form-field appearance="outline" class="time-field" subscriptSizing="dynamic">
-                      <mat-label>To</mat-label>
+                      <mat-label>{{ 'BOOKING.to' | translate }}</mat-label>
                       <input matInput type="time" [(ngModel)]="slot.endTime"
                              (ngModelChange)="onTimeChange(slot)" />
                     </mat-form-field>
@@ -204,7 +204,7 @@ const COMMON_TIMEZONES = [
           <mat-icon>policy</mat-icon>
           <div>
             <h2>{{ 'BOOKING.cancellationPolicy' | translate }}</h2>
-            <p>Set the minimum notice period for coachees to reschedule. Late cancellations count as used sessions.</p>
+            <p>{{ 'BOOKING.cancellationPolicyDesc' | translate }}</p>
           </div>
         </div>
         <mat-divider />
@@ -217,10 +217,7 @@ const COMMON_TIMEZONES = [
               <mat-option [value]="48">{{ 'BOOKING.hoursBefore48' | translate }}</mat-option>
               <mat-option [value]="72">{{ 'BOOKING.hoursBefore72' | translate }}</mat-option>
             </mat-select>
-            <mat-hint>
-              Coachees can reschedule freely before this deadline. After the deadline,
-              they can still cancel but the session counts toward their allotment.
-            </mat-hint>
+            <mat-hint>{{ 'BOOKING.rescheduleDeadlineHint' | translate }}</mat-hint>
           </mat-form-field>
         </div>
       </section>
@@ -231,7 +228,7 @@ const COMMON_TIMEZONES = [
           <mat-icon>event_busy</mat-icon>
           <div>
             <h2>{{ 'BOOKING.dateExclusions' | translate }}</h2>
-            <p>Block off specific dates (holidays, PTO, single days off) — applies to all event types.</p>
+            <p>{{ 'BOOKING.dateExclusionsDesc' | translate }}</p>
           </div>
         </div>
         <mat-divider />
@@ -245,7 +242,7 @@ const COMMON_TIMEZONES = [
                 (selectedChange)="toggleDate($event)"
               />
               <p class="cal-hint">
-                Click any date to mark it unavailable. Click again to re-enable.
+                {{ 'BOOKING.clickDateToMark' | translate }}
               </p>
             </div>
 
@@ -282,16 +279,14 @@ const COMMON_TIMEZONES = [
                 </button>
               </div>
               @if (orgCountry() && selectedHolidayCountry === orgCountry()) {
-                <p class="country-hint">
-                  Defaulted to <strong>{{ orgCountry() }}</strong> from your organization billing address — change above to add another country.
+                <p class="country-hint" [innerHTML]="'BOOKING.defaultedToCountry' | translate:{ country: orgCountry() }">
                 </p>
               } @else if (!orgCountry()) {
                 <p class="country-hint warn">
-                  No billing country on your organization — pick one above, or set a default under Admin → Organization Settings.
+                  {{ 'BOOKING.noBillingCountry' | translate }}
                 </p>
               } @else {
-                <p class="country-hint">
-                  Adding holidays for a country other than your billing default (<strong>{{ orgCountry() }}</strong>).
+                <p class="country-hint" [innerHTML]="'BOOKING.addingHolidaysOtherCountry' | translate:{ country: orgCountry() }">
                 </p>
               }
 
@@ -660,7 +655,7 @@ export class BookingGlobalSettingsComponent implements OnInit, OnDestroy {
   connectCalendar(provider: CalendarProviderType = 'google'): void {
     this.calendarSvc.getAuthUrl(provider).subscribe({
       next: ({ url }) => window.location.href = url,
-      error: () => this.snackBar.open('Failed to start calendar auth', 'OK', { duration: 3000 }),
+      error: () => this.snackBar.open(this.translate.instant('BOOKING.failedCalendarAuthGlobal'), this.translate.instant('COMMON.ok'), { duration: 3000 }),
     });
   }
 
@@ -669,14 +664,14 @@ export class BookingGlobalSettingsComponent implements OnInit, OnDestroy {
       next: () => {
         this.calendarStatus.set({ connected: false, provider: null, calendarId: null, calendarName: null });
         this.calendars.set([]);
-        this.snackBar.open('Calendar disconnected', 'OK', { duration: 3000 });
+        this.snackBar.open(this.translate.instant('BOOKING.calendarDisconnected'), this.translate.instant('COMMON.ok'), { duration: 3000 });
       },
-      error: () => this.snackBar.open('Failed to disconnect', 'OK', { duration: 3000 }),
+      error: () => this.snackBar.open(this.translate.instant('BOOKING.failedToDisconnect'), this.translate.instant('COMMON.ok'), { duration: 3000 }),
     });
   }
 
   dayName(dow: number): string {
-    return DAY_NAMES[dow];
+    return this.translate.instant(DAY_KEYS[dow]);
   }
 
   copyToAll(): void {
@@ -686,7 +681,7 @@ export class BookingGlobalSettingsComponent implements OnInit, OnDestroy {
       slot.startTime = source.startTime;
       slot.endTime = source.endTime;
     }
-    this.snackBar.open('Hours copied to all days', 'OK', { duration: 2000 });
+    this.snackBar.open(this.translate.instant('BOOKING.hoursCopied'), this.translate.instant('COMMON.ok'), { duration: 2000 });
     this.scheduleSave();
   }
 
@@ -829,15 +824,16 @@ export class BookingGlobalSettingsComponent implements OnInit, OnDestroy {
         if (added > 0) this.scheduleSave();
         const skipped = res.holidays.length - added;
         const msg = added === 0
-          ? `All ${res.holidays.length} ${res.country} holidays were already in your list.`
-          : `Added ${added} holiday${added === 1 ? '' : 's'} for ${res.country} ${res.year}` +
-            (skipped > 0 ? ` (${skipped} already excluded).` : '.');
-        this.snackBar.open(msg, 'OK', { duration: 4000 });
+          ? this.translate.instant('BOOKING.allHolidaysAlready', { count: res.holidays.length, country: res.country })
+          : skipped > 0
+            ? this.translate.instant('BOOKING.addedHolidaysSkipped', { count: added, country: res.country, year: res.year, skipped })
+            : this.translate.instant('BOOKING.addedHolidays', { count: added, country: res.country, year: res.year });
+        this.snackBar.open(msg, this.translate.instant('COMMON.ok'), { duration: 4000 });
       },
       error: (err) => {
         this.loadingHolidays.set(false);
-        const msg = err?.error?.error || 'Failed to load holidays.';
-        this.snackBar.open(msg, 'OK', { duration: 4000 });
+        const msg = err?.error?.error || this.translate.instant('BOOKING.failedLoadHolidays');
+        this.snackBar.open(msg, this.translate.instant('COMMON.ok'), { duration: 4000 });
       },
     });
   }

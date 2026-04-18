@@ -175,10 +175,10 @@ type DayBuckets = {
         @if (loading()) {
           <div class="loading"><mat-spinner diameter="36" /></div>
         } @else if (!bookings().length) {
-          <app-empty-state icon="event_busy" title="No {{ activeTab() }} bookings"
-            [message]="activeTab() === 'upcoming' ? 'When clients book sessions, they will appear here.'
-                      : activeTab() === 'past' ? 'Completed sessions will appear here.'
-                      : 'Cancelled sessions will appear here.'">
+          <app-empty-state icon="event_busy" [title]="'BOOKING.noTabBookings' | translate:{ tab: ('BOOKING.' + activeTab() | translate) }"
+            [message]="activeTab() === 'upcoming' ? ('BOOKING.emptyUpcoming' | translate)
+                      : activeTab() === 'past' ? ('BOOKING.emptyPast' | translate)
+                      : ('BOOKING.emptyCancelled' | translate)">
           </app-empty-state>
         } @else {
           <div class="booking-table">
