@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { MatIconModule } from '@angular/material/icon';
@@ -207,7 +208,7 @@ function isGroup(entry: NavEntry): entry is NavGroup {
                   @for (l of languages; track l.code) {
                     @if (l.code !== translateService.currentLang) {
                       <button class="flag-option" (click)="switchLang(l.code); $event.stopPropagation()">
-                        <span [innerHTML]="l.svg"></span> {{ l.label }}
+                        <span [innerHTML]="safeSvg(l.svg)"></span> {{ l.label }}
                       </button>
                     }
                   }
@@ -741,6 +742,7 @@ export class AppShellComponent implements OnInit, OnDestroy {
     private api: ApiService,
     private themeService: ThemeService,
     public translateService: TranslateService,
+    private sanitizer: DomSanitizer,
     private dialog: MatDialog,
     private orgCtx: OrgContextService,
   ) {}
@@ -803,8 +805,13 @@ export class AppShellComponent implements OnInit, OnDestroy {
   ];
   langOpen = signal(false);
 
-  langFlag(code: string): string {
-    return this.languages.find(l => l.code === code)?.svg || '';
+  langFlag(code: string): SafeHtml {
+    const svg = this.languages.find(l => l.code === code)?.svg || '';
+    return this.sanitizer.bypassSecurityTrustHtml(svg);
+  }
+
+  safeSvg(svg: string): SafeHtml {
+    return this.sanitizer.bypassSecurityTrustHtml(svg);
   }
 
   switchLang(lang: string): void {
