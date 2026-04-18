@@ -15,6 +15,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatCalendar, MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { ApiService } from '../../../core/api.service';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import {
   CalendarIntegrationService,
   CalendarStatus,
@@ -51,6 +52,7 @@ const COMMON_TIMEZONES = [
     MatSelectModule, MatSlideToggleModule, MatDividerModule,
     MatProgressSpinnerModule, MatSnackBarModule, MatTooltipModule,
     MatDatepickerModule, MatNativeDateModule,
+    TranslateModule,
   ],
   template: `
     <div class="settings-container">
@@ -59,7 +61,7 @@ const COMMON_TIMEZONES = [
           <mat-icon>arrow_back</mat-icon>
         </a>
         <div>
-          <h1>Booking Settings</h1>
+          <h1>{{ 'BOOKING.bookingSettingsTitle' | translate }}</h1>
           <p>These settings apply to all your event types.</p>
         </div>
       </div>
@@ -73,7 +75,7 @@ const COMMON_TIMEZONES = [
         <div class="card-header">
           <mat-icon>cloud_sync</mat-icon>
           <div>
-            <h2>Calendar Connection</h2>
+            <h2>{{ 'BOOKING.calendarConnection' | translate }}</h2>
             <p>Connect your calendar to sync bookings and check availability</p>
           </div>
         </div>
@@ -110,7 +112,7 @@ const COMMON_TIMEZONES = [
         <div class="card-header">
           <mat-icon>event_note</mat-icon>
           <div>
-            <h2>Calendar Selection</h2>
+            <h2>{{ 'BOOKING.calendarSelection' | translate }}</h2>
             <p>Choose which calendars to use for all booking types</p>
           </div>
         </div>
@@ -141,7 +143,7 @@ const COMMON_TIMEZONES = [
         <div class="card-header">
           <mat-icon>schedule</mat-icon>
           <div>
-            <h2>Availability Schedule</h2>
+            <h2>{{ 'BOOKING.availabilitySchedule' | translate }}</h2>
             <p>Set your weekly working hours — shared across all event types</p>
           </div>
           <button mat-stroked-button class="copy-btn" (click)="copyToAll()"
@@ -152,7 +154,7 @@ const COMMON_TIMEZONES = [
         <mat-divider />
         <div class="card-body">
           <mat-form-field appearance="outline" class="tz-field">
-            <mat-label>Timezone</mat-label>
+            <mat-label>{{ 'BOOKING.timezone' | translate }}</mat-label>
             <mat-select [(ngModel)]="timezone" (ngModelChange)="scheduleSave()">
               @for (tz of timezones; track tz) {
                 <mat-option [value]="tz">{{ tz }}</mat-option>
@@ -569,6 +571,7 @@ export class BookingGlobalSettingsComponent implements OnInit, OnDestroy {
     private calendarSvc: CalendarIntegrationService,
     private api: ApiService,
     private snackBar: MatSnackBar,
+    private translate: TranslateService,
   ) {}
 
   ngOnInit(): void {

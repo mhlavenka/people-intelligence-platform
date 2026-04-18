@@ -13,6 +13,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { ApiService } from '../../../core/api.service';
 import { ThemeService, OrgTheme } from '../../../core/theme.service';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 interface BillingAddress {
   line1?: string;
@@ -168,6 +169,7 @@ const RADIUS_OPTIONS = [
     MatDividerModule,
     MatChipsModule,
     MatSlideToggleModule,
+    TranslateModule,
   ],
   template: `
     <div class="org-page">

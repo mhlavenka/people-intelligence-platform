@@ -9,6 +9,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ApiService } from '../../../core/api.service';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-create-user-dialog',
@@ -16,6 +17,7 @@ import { ApiService } from '../../../core/api.service';
   imports: [
     CommonModule, FormsModule, MatDialogModule, MatFormFieldModule, MatInputModule,
     MatSelectModule, MatButtonModule, MatIconModule, MatProgressSpinnerModule,
+    TranslateModule,
   ],
   template: `
     <h2 mat-dialog-title><mat-icon>person_add</mat-icon> Create User — {{ data.orgName }}</h2>
@@ -32,7 +34,7 @@ import { ApiService } from '../../../core/api.service';
           <input matInput [(ngModel)]="email" type="email" required /></mat-form-field>
         <mat-form-field appearance="outline" class="full-width"><mat-label>Password</mat-label>
           <input matInput [(ngModel)]="password" type="password" required />
-          <mat-hint>Minimum 8 characters</mat-hint>
+          <mat-hint>{{ "PROFILE.minChars" | translate }}</mat-hint>
         </mat-form-field>
         <mat-form-field appearance="outline" class="full-width"><mat-label>Role</mat-label>
           <mat-select [(ngModel)]="role">

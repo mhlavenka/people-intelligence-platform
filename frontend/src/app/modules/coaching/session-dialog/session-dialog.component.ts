@@ -13,6 +13,7 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { ApiService } from '../../../core/api.service';
 
+import { TranslateModule } from '@ngx-translate/core';
 const GROW_PHASES = [
   { key: 'goal',    label: 'Goal',    icon: 'flag' },
   { key: 'reality', label: 'Reality', icon: 'explore' },
@@ -32,26 +33,27 @@ const FRAMEWORKS = [
     CommonModule, FormsModule, MatDialogModule, MatFormFieldModule, MatInputModule,
     MatSelectModule, MatButtonModule, MatIconModule, MatProgressSpinnerModule,
     MatDatepickerModule, MatNativeDateModule, MatCheckboxModule,
+    TranslateModule,
   ],
   template: `
     <h2 mat-dialog-title>
       <mat-icon>event_note</mat-icon>
-      {{ isEdit ? 'Edit Session' : 'New Session' }}
+      {{ isEdit ? ('COACHING.editSession' | translate) : ('COACHING.newSession' | translate) }}
     </h2>
     <mat-dialog-content>
       <div class="form-section">
         <div class="form-row">
           <mat-form-field appearance="outline">
-            <mat-label>Date</mat-label>
+            <mat-label>{{ 'COACHING.date' | translate }}</mat-label>
             <input matInput [matDatepicker]="dp" [(ngModel)]="form.date" />
             <mat-datepicker-toggle matIconSuffix [for]="dp" /><mat-datepicker #dp />
           </mat-form-field>
           <mat-form-field appearance="outline" class="time-field">
-            <mat-label>Start Time</mat-label>
+            <mat-label>{{ 'COACHING.startTime' | translate }}</mat-label>
             <input matInput type="time" [(ngModel)]="startTime" />
           </mat-form-field>
           <mat-form-field appearance="outline" class="dur-field">
-            <mat-label>Duration (min)</mat-label>
+            <mat-label>{{ 'COACHING.durationMin' | translate }}</mat-label>
             <input matInput type="number" [(ngModel)]="form.duration" min="15" max="180" />
           </mat-form-field>
         </div>
@@ -68,21 +70,21 @@ const FRAMEWORKS = [
           <mat-form-field appearance="outline">
             <mat-label>Status</mat-label>
             <mat-select [(ngModel)]="form.status">
-              <mat-option value="scheduled">Scheduled</mat-option>
-              <mat-option value="completed">Completed</mat-option>
-              <mat-option value="cancelled">Cancelled</mat-option>
-              <mat-option value="no_show">No Show</mat-option>
+              <mat-option value="scheduled">{{ 'COACHING.scheduled' | translate }}</mat-option>
+              <mat-option value="completed">{{ 'COACHING.completed' | translate }}</mat-option>
+              <mat-option value="cancelled">{{ 'COACHING.cancelled' | translate }}</mat-option>
+              <mat-option value="no_show">{{ 'COACHING.noShow' | translate }}</mat-option>
             </mat-select>
           </mat-form-field>
         </div>
 
         <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Topics discussed</mat-label>
+          <mat-label>{{ 'COACHING.topicsDiscussed' | translate }}</mat-label>
           <input matInput [(ngModel)]="topicsRaw" placeholder="e.g. Leadership style, Team dynamics" />
-          <mat-hint>Comma separated</mat-hint>
+          <mat-hint>{{ 'COACHING.commaSeparated' | translate }}</mat-hint>
         </mat-form-field>
 
-        <div class="section-label">GROW Focus</div>
+        <div class="section-label">{{ 'COACHING.growFocus' | translate }}</div>
         <div class="grow-checks">
           @for (g of growPhases; track g.key) {
             <label class="grow-check" [class.checked]="isGrowChecked(g.key)">
@@ -92,13 +94,13 @@ const FRAMEWORKS = [
           }
         </div>
 
-        <div class="section-label">Pre-Session Intake</div>
+        <div class="section-label">{{ 'COACHING.preSessionIntake' | translate }}</div>
         <div class="intake-hint">
           <mat-icon>assignment_turned_in</mat-icon>
           <span>Attach an assessment for the coachee to complete before the session.</span>
         </div>
         <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Pre-Session Assessment (optional)</mat-label>
+          <mat-label>{{ 'COACHING.preSessionAssessment' | translate }}</mat-label>
           <mat-select [(ngModel)]="form.preSessionIntakeTemplateId"
                       [disabled]="intakeStatus() === 'completed'">
             <mat-option [value]="null">— None —</mat-option>
@@ -124,13 +126,13 @@ const FRAMEWORKS = [
           </div>
         }
 
-        <div class="section-label">Notes</div>
+        <div class="section-label">{{ 'COACHING.notes' | translate }}</div>
         <div class="notes-warning">
           <mat-icon>visibility</mat-icon>
           <span><strong>Shared Notes</strong> are visible to the coachee.</span>
         </div>
         <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Shared Notes</mat-label>
+          <mat-label>{{ 'COACHING.sharedNotes' | translate }}</mat-label>
           <textarea matInput [(ngModel)]="form.sharedNotes" rows="3"
                     placeholder="Key takeaways to share with the coachee..."></textarea>
         </mat-form-field>
@@ -140,7 +142,7 @@ const FRAMEWORKS = [
           <span><strong>Private Notes</strong> stay with you.</span>
         </div>
         <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Private Coach Notes</mat-label>
+          <mat-label>{{ 'COACHING.privateCoachNotes' | translate }}</mat-label>
           <textarea matInput [(ngModel)]="form.coachNotes" rows="3"
                     placeholder="Your observations and patterns noticed..."></textarea>
         </mat-form-field>
@@ -152,7 +154,7 @@ const FRAMEWORKS = [
       <button mat-raised-button color="primary" (click)="save()" [disabled]="saving()">
         @if (saving()) { <mat-spinner diameter="18" /> }
         @else { <mat-icon>{{ isEdit ? 'save' : 'add' }}</mat-icon> }
-        {{ isEdit ? 'Save' : 'Create Session' }}
+        {{ isEdit ? ('COMMON.save' | translate) : ('COACHING.createSession' | translate) }}
       </button>
     </mat-dialog-actions>
   `,

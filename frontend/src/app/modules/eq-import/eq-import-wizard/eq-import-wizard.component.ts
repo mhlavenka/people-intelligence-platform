@@ -16,6 +16,7 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ApiService } from '../../../core/api.service';
+import { TranslateModule } from '@ngx-translate/core';
 
 interface ParseResult {
   success: boolean;
@@ -82,6 +83,7 @@ const SUBSCALE_LABELS: Record<string, string> = {
     MatSelectModule, MatButtonModule, MatIconModule, MatCheckboxModule, MatProgressBarModule,
     MatProgressSpinnerModule, MatDividerModule, MatChipsModule, MatDatepickerModule,
     MatNativeDateModule, MatSnackBarModule,
+    TranslateModule,
   ],
   template: `
     <div class="import-page">

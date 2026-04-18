@@ -3,26 +3,27 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatIconModule } from '@angular/material/icon';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AuthService } from '../../../core/auth.service';
 import { ApiService } from '../../../core/api.service';
 
 @Component({
   selector: 'app-oauth-callback',
   standalone: true,
-  imports: [CommonModule, MatProgressSpinnerModule, MatIconModule],
+  imports: [CommonModule, MatProgressSpinnerModule, MatIconModule, TranslateModule],
   template: `
     <div class="callback-page">
       @if (error()) {
         <div class="callback-card error-card">
           <mat-icon>error_outline</mat-icon>
-          <h2>Authentication Failed</h2>
+          <h2>{{ 'AUTH.authenticationFailed' | translate }}</h2>
           <p>{{ error() }}</p>
-          <a href="/auth/login">Back to login</a>
+          <a href="/auth/login">{{ 'AUTH.backToLogin' | translate }}</a>
         </div>
       } @else {
         <div class="callback-card">
           <mat-spinner diameter="36" />
-          <p>Completing sign-in...</p>
+          <p>{{ 'AUTH.completingSignIn' | translate }}</p>
         </div>
       }
     </div>
@@ -53,6 +54,7 @@ export class OAuthCallbackComponent implements OnInit {
     private router: Router,
     private authService: AuthService,
     private api: ApiService,
+    private translate: TranslateService,
   ) {}
 
   ngOnInit(): void {
@@ -62,12 +64,12 @@ export class OAuthCallbackComponent implements OnInit {
     const errorParam = params['error'];
 
     if (errorParam) {
-      this.error.set(params['error_description'] || 'OAuth authentication was cancelled or failed.');
+      this.error.set(params['error_description'] || this.translate.instant('AUTH.oauthCancelledOrFailed'));
       return;
     }
 
     if (!code || !state) {
-      this.error.set('Missing authorization code. Please try again.');
+      this.error.set(this.translate.instant('AUTH.missingAuthCode'));
       return;
     }
 
@@ -77,7 +79,7 @@ export class OAuthCallbackComponent implements OnInit {
         this.router.navigate(['/dashboard']);
       },
       error: (err) => {
-        this.error.set(err.error?.error || 'Authentication failed. Please try again.');
+        this.error.set(err.error?.error || this.translate.instant('AUTH.authFailed'));
       },
     });
   }

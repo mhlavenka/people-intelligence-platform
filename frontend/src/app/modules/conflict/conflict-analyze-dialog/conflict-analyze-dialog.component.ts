@@ -9,6 +9,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ApiService } from '../../../core/api.service';
+import { TranslateModule } from '@ngx-translate/core';
 
 interface SurveyTemplate {
   _id: string;
@@ -36,11 +37,12 @@ interface OrgResponse {
     MatSelectModule,
     MatIconModule,
     MatProgressSpinnerModule,
+    TranslateModule,
   ],
   template: `
     <h2 mat-dialog-title>
       <mat-icon>analytics</mat-icon>
-      New Conflict Analysis
+      {{ "CONFLICT.newConflictAnalysis" | translate }}
     </h2>
 
     <mat-dialog-content>
@@ -57,14 +59,14 @@ interface OrgResponse {
       } @else {
         <form [formGroup]="form" class="dialog-form">
           <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Analysis Title</mat-label>
+            <mat-label>{{ "CONFLICT.analysisTitle" | translate }}</mat-label>
             <input matInput formControlName="name"
               placeholder="e.g. Q1 2026 Team Health, March Pulse" />
-            <mat-hint>Give this analysis a name for easy reference</mat-hint>
+            <mat-hint>{{ "CONFLICT.analysisTitleHint" | translate }}</mat-hint>
           </mat-form-field>
 
           <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Intake Template</mat-label>
+            <mat-label>{{ "CONFLICT.intakeTemplate" | translate }}</mat-label>
             <mat-select formControlName="templateId" (selectionChange)="selectedTemplateId.set($event.value)">
               @for (t of templates(); track t._id) {
                 <mat-option [value]="t._id">
@@ -73,14 +75,14 @@ interface OrgResponse {
               }
             </mat-select>
             @if (loadingTemplates()) {
-              <mat-hint>Loading templates...</mat-hint>
+              <mat-hint>{{ "CONFLICT.loadingTemplates" | translate }}</mat-hint>
             }
           </mat-form-field>
 
           <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Department (optional)</mat-label>
+            <mat-label>{{ "CONFLICT.departmentOptional" | translate }}</mat-label>
             <mat-select formControlName="departmentId">
-              <mat-option value="">All Departments</mat-option>
+              <mat-option value="">{{ "COMMON.allDepartments" | translate }}</mat-option>
               @for (dept of departments(); track dept) {
                 <mat-option [value]="dept">{{ dept }}</mat-option>
               }
@@ -105,9 +107,9 @@ interface OrgResponse {
                 (click)="analyze()" [disabled]="form.invalid || analyzing()">
           @if (analyzing()) {
             <mat-spinner diameter="18" />
-            &nbsp; Analyzing...
+            &nbsp; {{ "COMMON.analyzing" | translate }}
           } @else {
-            <mat-icon>auto_awesome</mat-icon> Run AI Analysis
+            <mat-icon>auto_awesome</mat-icon> {{ "CONFLICT.runAIAnalysis" | translate }}
           }
         </button>
       }

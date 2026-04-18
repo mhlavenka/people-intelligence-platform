@@ -7,6 +7,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { forkJoin } from 'rxjs';
 import { JournalService, SessionNote, ReflectiveEntry } from '../journal.service';
 
+import { TranslateModule } from '@ngx-translate/core';
 interface FeedItem {
   type: 'note' | 'reflective';
   id: string;
@@ -20,7 +21,9 @@ interface FeedItem {
 @Component({
   selector: 'app-journal-dashboard',
   standalone: true,
-  imports: [CommonModule, DatePipe, RouterLink, MatIconModule, MatButtonModule, MatProgressSpinnerModule],
+  imports: [CommonModule, DatePipe, RouterLink, MatIconModule, MatButtonModule, MatProgressSpinnerModule,
+    TranslateModule,
+  ],
   template: `
     <div class="journal-page">
       <div class="page-header">
@@ -39,34 +42,34 @@ interface FeedItem {
           <div class="summary-card">
             <mat-icon>psychology_alt</mat-icon>
             <div class="sum-num">{{ stats().engagementsWithNotes }}</div>
-            <div class="sum-label">Engagements with Notes</div>
+            <div class="sum-label">{{ 'JOURNAL.engagementsWithNotes' | translate }}</div>
           </div>
           <div class="summary-card">
             <mat-icon>description</mat-icon>
             <div class="sum-num">{{ stats().totalNotes }}</div>
-            <div class="sum-label">Session Notes</div>
+            <div class="sum-label">{{ 'JOURNAL.sessionNotes' | translate }}</div>
           </div>
           <div class="summary-card">
             <mat-icon>checklist</mat-icon>
             <div class="sum-num">{{ stats().openAccountability }}</div>
-            <div class="sum-label">Open Accountability Items</div>
+            <div class="sum-label">{{ 'JOURNAL.openAccountability' | translate }}</div>
           </div>
           <div class="summary-card">
             <mat-icon>auto_awesome</mat-icon>
             <div class="sum-num">{{ stats().awaitingAi }}</div>
-            <div class="sum-label">Awaiting AI Summary</div>
+            <div class="sum-label">{{ 'JOURNAL.awaitingAi' | translate }}</div>
           </div>
         </div>
 
         <!-- Recent Activity -->
         <div class="section-header">
-          <h2>Recent Activity</h2>
+          <h2>{{ 'JOURNAL.recentActivity' | translate }}</h2>
         </div>
 
         @if (feed().length === 0) {
           <div class="empty-state">
             <mat-icon>auto_stories</mat-icon>
-            <h3>Your journal is empty</h3>
+            <h3>{{ 'JOURNAL.emptyJournal' | translate }}</h3>
             <p>Start capturing session notes from an engagement or write a reflective entry.</p>
             <a mat-flat-button routerLink="/journal/reflective/new" color="primary">
               <mat-icon>add</mat-icon> New Reflective Entry

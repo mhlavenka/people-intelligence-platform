@@ -9,6 +9,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { ApiService } from '../../../core/api.service';
 import { EmptyStateComponent } from '../../../shared/empty-state/empty-state.component';
 
+import { TranslateModule } from '@ngx-translate/core';
 interface BillingSession {
   _id: string;
   date: string;
@@ -45,6 +46,7 @@ interface BillingData {
     CommonModule, DatePipe, CurrencyPipe, RouterLink, MatIconModule,
     MatButtonModule, MatProgressSpinnerModule, MatDividerModule, MatTooltipModule,
     EmptyStateComponent,
+    TranslateModule,
   ],
   template: `
     <div class="billing-page">
@@ -136,10 +138,10 @@ interface BillingData {
               <table class="sessions-table">
                 <thead>
                   <tr>
-                    <th>Date</th>
-                    <th>Duration</th>
-                    <th>Format</th>
-                    <th>Status</th>
+                    <th>{{ 'COACHING.date' | translate }}</th>
+                    <th>{{ 'COACHING.duration' | translate }}</th>
+                    <th>{{ 'COACHING.format' | translate }}</th>
+                    <th>{{ 'COACHING.status' | translate }}</th>
                   </tr>
                 </thead>
                 <tbody>

@@ -1,16 +1,17 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-placeholder',
   standalone: true,
-  imports: [MatIconModule],
+  imports: [MatIconModule, TranslateModule],
   template: `
     <div class="placeholder-page">
       <mat-icon>{{ icon() }}</mat-icon>
       <h2>{{ title() }}</h2>
-      <p>This page is coming soon.</p>
+      <p>{{ 'COMMON.comingSoon' | translate }}</p>
     </div>
   `,
   styles: [`

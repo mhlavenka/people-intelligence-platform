@@ -12,6 +12,7 @@ import { ApiService } from '../../../core/api.service';
 import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog.component';
 import { MatDialog } from '@angular/material/dialog';
 import { EmptyStateComponent } from '../../../shared/empty-state/empty-state.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 interface AuditEntry {
   _id: string;
@@ -35,12 +36,13 @@ interface AuditEntry {
     CommonModule, DatePipe, MatIconModule, MatButtonModule, MatProgressSpinnerModule,
     MatSelectModule, MatFormFieldModule, MatTooltipModule, MatSnackBarModule, FormsModule,
     EmptyStateComponent,
+    TranslateModule,
   ],
   template: `
     <div class="audit-page">
       <div class="page-header">
         <div>
-          <h1>Import Audit Log</h1>
+          <h1>{{ "EQ.auditLog" | translate }}</h1>
           <p>Complete record of all EQi assessment imports — PIPEDA/Law 25 compliant</p>
         </div>
       </div>

@@ -18,6 +18,7 @@ import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-d
 import { ApiService } from '../../../core/api.service';
 import { AuthService } from '../../../core/auth.service';
 import { IdpGenerateDialogComponent } from '../idp-generate-dialog/idp-generate-dialog.component';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 interface JournalEntry {
   _id: string;
@@ -70,17 +71,18 @@ interface IDP {
     MatInputModule,
     MatSelectModule,
     MatSnackBarModule,
+    TranslateModule,
   ],
   template: `
     <div class="idp-page">
       <div class="page-header">
         <div>
-          <h1>Leadership & Succession Hub™</h1>
+          <h1>{{ "SUCCESSION.title" | translate }}</h1>
           <p>Scalable succession planning and leadership coaching — from founders and family businesses to growing organizations</p>
         </div>
         @if (canManage()) {
           <button mat-raised-button color="primary" (click)="generateNew()">
-            <mat-icon>auto_awesome</mat-icon> Generate IDP
+            <mat-icon>auto_awesome</mat-icon> {{ "SUCCESSION.generateIDP" | translate }}
           </button>
         }
       </div>
@@ -107,7 +109,7 @@ interface IDP {
           <div class="section-header-left">
             <div class="section-icon blue"><mat-icon>leaderboard</mat-icon></div>
             <div>
-              <h3>Succession Readiness Scorecard</h3>
+              <h3>{{ "SUCCESSION.successionScorecard" | translate }}</h3>
               <p>Board-ready reporting on next-generation leadership bench strength. Share with executives and board members to demonstrate succession health at a glance.</p>
             </div>
           </div>
@@ -130,7 +132,7 @@ interface IDP {
       } @else if (idps().length === 0) {
         <div class="empty-state">
           <mat-icon>psychology_alt</mat-icon>
-          <h3>No Development Plans Yet</h3>
+          <h3>{{ "SUCCESSION.noIDPsTitle" | translate }}</h3>
           @if (canManage()) {
             <p>Generate your first AI-powered IDP using the GROW model.</p>
             <button mat-raised-button color="primary" (click)="generateNew()">

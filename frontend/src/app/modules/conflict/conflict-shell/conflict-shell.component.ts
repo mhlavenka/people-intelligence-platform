@@ -2,16 +2,19 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-conflict-shell',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, MatIconModule],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, MatIconModule,
+    TranslateModule,
+  ],
   template: `
     <div class="conflict-shell">
       <div class="page-header">
         <div>
-          <h1>Conflict Intelligence™</h1>
+          <h1>{{ "CONFLICT.title" | translate }}</h1>
           <p>Proactive workplace conflict detection and resolution grounded in Helena's coaching-integrated mediation methodology</p>
         </div>
       </div>

@@ -13,6 +13,7 @@ import { ApiService } from '../../../core/api.service';
 import { AuthService } from '../../../core/auth.service';
 import { environment } from '../../../../environments/environment';
 import { Sponsor, SponsorService } from '../../sponsor/sponsor.service';
+import { TranslateModule } from '@ngx-translate/core';
 
 export interface OrgUser {
   _id: string;
@@ -60,11 +61,12 @@ const ROLES = [
     MatIconModule,
     MatProgressSpinnerModule,
     MatCheckboxModule,
+    TranslateModule,
   ],
   template: `
     <h2 mat-dialog-title>
       <mat-icon>{{ isEdit() ? 'edit' : 'person_add' }}</mat-icon>
-      {{ isEdit() ? 'Edit User' : 'Add User' }}
+      {{ isEdit() ? ("ADMIN.editUser" | translate) : ("ADMIN.addUser" | translate) }}
     </h2>
 
     <mat-dialog-content>
@@ -83,7 +85,7 @@ const ROLES = [
             <div class="avatar-edit-overlay"><mat-icon>photo_camera</mat-icon></div>
             <input #avatarInput type="file" accept="image/jpeg,image/png,image/webp" hidden (change)="uploadAvatar($event)" />
           </div>
-          <span class="avatar-hint">Click to change profile picture</span>
+          <span class="avatar-hint">{{ "ADMIN.clickToChangePhoto" | translate }}</span>
         </div>
       }
 

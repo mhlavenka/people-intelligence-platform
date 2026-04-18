@@ -8,6 +8,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
+import { TranslateModule } from '@ngx-translate/core';
 export interface CancelDialogData {
   /** What's being cancelled — shown in the confirmation copy. */
   title?: string;
@@ -34,6 +35,7 @@ export interface CancelDialogResult {
     CommonModule, DatePipe, FormsModule,
     MatDialogModule, MatFormFieldModule, MatInputModule,
     MatButtonModule, MatIconModule, MatProgressSpinnerModule,
+    TranslateModule,
   ],
   template: `
     <h2 mat-dialog-title>{{ data.title || 'Cancel session' }}</h2>
@@ -63,7 +65,7 @@ export interface CancelDialogResult {
       </mat-form-field>
     </mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button mat-button (click)="cancel()" [disabled]="saving()">Keep session</button>
+      <button mat-button (click)="cancel()" [disabled]="saving()">{{ 'BOOKING.keepSession' | translate }}</button>
       <button mat-flat-button color="warn" (click)="confirm()" [disabled]="saving()">
         @if (saving()) { <mat-spinner diameter="18" /> }
         {{ data.confirmLabel || 'Cancel session' }}

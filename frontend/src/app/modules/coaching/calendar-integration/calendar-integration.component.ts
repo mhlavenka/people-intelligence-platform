@@ -10,6 +10,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
 import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog.component';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import {
   CalendarIntegrationService,
   CalendarStatus,
@@ -24,14 +25,15 @@ import {
     CommonModule, FormsModule,
     MatButtonModule, MatIconModule, MatSelectModule, MatFormFieldModule,
     MatProgressSpinnerModule, MatDividerModule, MatSnackBarModule,
+    TranslateModule,
   ],
   template: `
     <div class="card">
       <div class="card-header">
         <mat-icon>calendar_month</mat-icon>
         <div>
-          <h2>Calendar Sync</h2>
-          <p>Automatically sync coaching sessions to your calendar</p>
+          <h2>{{ 'COACHING.calendarSync' | translate }}</h2>
+          <p>{{ 'COACHING.calendarSyncDesc' | translate }}</p>
         </div>
       </div>
       <mat-divider />
@@ -247,6 +249,7 @@ export class CalendarIntegrationComponent implements OnInit {
     private calService: CalendarIntegrationService,
     private snack: MatSnackBar,
     private dialog: MatDialog,
+    private translate: TranslateService,
   ) {}
 
   ngOnInit(): void {
@@ -281,7 +284,7 @@ export class CalendarIntegrationComponent implements OnInit {
       },
       error: () => {
         this.connecting.set(false);
-        this.snack.open('Failed to start calendar connection', 'Dismiss', { duration: 4000 });
+        this.snack.open(this.translate.instant('COACHING.failedStartConnection'), this.translate.instant('COMMON.dismiss'), { duration: 4000 });
       },
     });
   }
@@ -295,7 +298,7 @@ export class CalendarIntegrationComponent implements OnInit {
       },
       error: () => {
         this.calendarsLoading.set(false);
-        this.snack.open('Failed to load calendars', 'Dismiss', { duration: 4000 });
+        this.snack.open(this.translate.instant('COACHING.failedLoadCalendars'), this.translate.instant('COMMON.dismiss'), { duration: 4000 });
       },
     });
   }
@@ -312,12 +315,12 @@ export class CalendarIntegrationComponent implements OnInit {
       next: () => {
         this.saving.set(false);
         this.changingCalendar.set(false);
-        this.snack.open('Calendar saved', undefined, { duration: 2000 });
+        this.snack.open(this.translate.instant('COACHING.calendarSaved'), undefined, { duration: 2000 });
         this.loadStatus();
       },
       error: () => {
         this.saving.set(false);
-        this.snack.open('Failed to save calendar', 'Dismiss', { duration: 4000 });
+        this.snack.open(this.translate.instant('COACHING.failedSaveCalendar'), this.translate.instant('COMMON.dismiss'), { duration: 4000 });
       },
     });
   }
@@ -342,11 +345,11 @@ export class CalendarIntegrationComponent implements OnInit {
       if (!confirmed) return;
       this.calService.disconnect().subscribe({
         next: () => {
-          this.snack.open('Calendar disconnected', undefined, { duration: 2000 });
+          this.snack.open(this.translate.instant('COACHING.calendarDisconnected'), undefined, { duration: 2000 });
           this.changingCalendar.set(false);
           this.loadStatus();
         },
-        error: () => this.snack.open('Failed to disconnect', 'Dismiss', { duration: 4000 }),
+        error: () => this.snack.open(this.translate.instant('COACHING.failedDisconnect'), this.translate.instant('COMMON.dismiss'), { duration: 4000 }),
       });
     });
   }

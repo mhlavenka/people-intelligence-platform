@@ -14,6 +14,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { Clipboard } from '@angular/cdk/clipboard';
 import { AuthService } from '../../../core/auth.service';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import {
   BookingService,
   AvailabilityConfig,
@@ -34,6 +35,7 @@ const DAY_SHORTS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     MatButtonModule, MatIconModule, MatFormFieldModule, MatInputModule,
     MatSelectModule, MatSlideToggleModule, MatDividerModule,
     MatProgressSpinnerModule, MatSnackBarModule, MatTooltipModule,
+    TranslateModule,
   ],
   template: `
     <div class="editor-container">
@@ -67,14 +69,14 @@ const DAY_SHORTS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
             <div class="card-header">
               <mat-icon>label</mat-icon>
               <div>
-                <h2>Event Type</h2>
+                <h2>{{ 'BOOKING.eventTypeSection' | translate }}</h2>
                 <p>Name and visual identity for this booking page</p>
               </div>
             </div>
             <mat-divider />
             <div class="card-body">
               <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Name</mat-label>
+                <mat-label>{{ 'BOOKING.nameLabel' | translate }}</mat-label>
                 <input matInput [(ngModel)]="eventTypeName"
                        (ngModelChange)="onNameChange($event)"
                        placeholder="e.g. 60-Minute Coaching, Quick Check-in" />
@@ -101,7 +103,7 @@ const DAY_SHORTS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
             <div class="card-header">
               <mat-icon>tune</mat-icon>
               <div>
-                <h2>Session Settings</h2>
+                <h2>{{ 'BOOKING.sessionSettings' | translate }}</h2>
                 <p>Configure duration, buffer, and booking limits</p>
               </div>
             </div>
@@ -144,7 +146,7 @@ const DAY_SHORTS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
             <div class="card-header">
               <mat-icon>article</mat-icon>
               <div>
-                <h2>Booking Page</h2>
+                <h2>{{ 'BOOKING.bookingPage' | translate }}</h2>
                 <p>Customize what clients see when they visit this booking link</p>
               </div>
             </div>
@@ -156,7 +158,7 @@ const DAY_SHORTS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
                        placeholder="e.g. Book a Coaching Session" />
               </mat-form-field>
               <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Description</mat-label>
+                <mat-label>{{ 'BOOKING.description' | translate }}</mat-label>
                 <textarea matInput [(ngModel)]="bookingPageDesc" rows="3"
                           placeholder="Brief description shown on your booking page..."></textarea>
               </mat-form-field>
@@ -170,7 +172,7 @@ const DAY_SHORTS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
             <div class="card-header">
               <mat-icon>schedule</mat-icon>
               <div>
-                <h2>Availability</h2>
+                <h2>{{ 'BOOKING.availability' | translate }}</h2>
                 <p>Shared with all event types, or override here</p>
               </div>
             </div>
@@ -546,6 +548,7 @@ export class EventTypeEditorComponent implements OnInit {
     private snackBar: MatSnackBar,
     private clipboard: Clipboard,
     private auth: AuthService,
+    private translate: TranslateService,
   ) {}
 
   ngOnInit(): void {

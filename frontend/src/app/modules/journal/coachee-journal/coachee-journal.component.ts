@@ -12,6 +12,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { JournalService, SessionNote } from '../journal.service';
 import { ApiService } from '../../../core/api.service';
 
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 interface CoachingSession {
   _id: string;
   date: string;
@@ -36,6 +37,7 @@ interface CoachingSession {
     CommonModule, DatePipe, FormsModule, RouterLink,
     MatTabsModule, MatFormFieldModule, MatInputModule,
     MatButtonModule, MatIconModule, MatProgressSpinnerModule,
+    TranslateModule,
   ],
   template: `
     <div class="page">
@@ -424,6 +426,7 @@ export class CoacheeJournalComponent implements OnInit {
     private journal: JournalService,
     private api: ApiService,
     private snack: MatSnackBar,
+    private translate: TranslateService,
   ) {}
 
   ngOnInit(): void {

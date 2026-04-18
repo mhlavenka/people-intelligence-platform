@@ -8,10 +8,13 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { JournalService, SessionNote } from '../journal.service';
 
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 @Component({
   selector: 'app-session-note-view',
   standalone: true,
-  imports: [CommonModule, DatePipe, RouterLink, MatIconModule, MatButtonModule, MatProgressSpinnerModule, MatDividerModule, MatSnackBarModule],
+  imports: [CommonModule, DatePipe, RouterLink, MatIconModule, MatButtonModule, MatProgressSpinnerModule, MatDividerModule, MatSnackBarModule,
+    TranslateModule,
+  ],
   template: `
     <div class="journal-page">
       <div class="page-header">
@@ -234,6 +237,7 @@ export class SessionNoteViewComponent implements OnInit {
     private route: ActivatedRoute,
     private journal: JournalService,
     private snack: MatSnackBar,
+    private translate: TranslateService,
   ) {}
 
   ngOnInit(): void {
@@ -252,9 +256,9 @@ export class SessionNoteViewComponent implements OnInit {
       next: (result) => {
         this.note.update((prev) => prev ? { ...prev, aiSummary: result.aiSummary, aiThemes: result.aiThemes, aiGeneratedAt: result.aiGeneratedAt } : prev);
         this.aiLoading.set(false);
-        this.snack.open('AI summary regenerated', '', { duration: 2000 });
+        this.snack.open(this.translate.instant('JOURNAL.aiRegenerated'), '', { duration: 2000 });
       },
-      error: () => { this.aiLoading.set(false); this.snack.open('Failed to regenerate', '', { duration: 3000 }); },
+      error: () => { this.aiLoading.set(false); this.snack.open(this.translate.instant('JOURNAL.aiRegenerateFailed'), '', { duration: 3000 }); },
     });
   }
 }

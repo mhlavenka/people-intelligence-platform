@@ -7,6 +7,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ApiService } from '../../../core/api.service';
 
+import { TranslateModule } from '@ngx-translate/core';
 interface Session {
   _id: string;
   engagementId: string;
@@ -28,7 +29,9 @@ interface CalendarDay {
 @Component({
   selector: 'app-coaching-calendar',
   standalone: true,
-  imports: [CommonModule, DatePipe, RouterLink, MatIconModule, MatButtonModule, MatProgressSpinnerModule, MatTooltipModule],
+  imports: [CommonModule, DatePipe, RouterLink, MatIconModule, MatButtonModule, MatProgressSpinnerModule, MatTooltipModule,
+    TranslateModule,
+  ],
   template: `
     <div class="calendar-page">
       <div class="page-header">
@@ -37,7 +40,7 @@ interface CalendarDay {
           <button mat-icon-button (click)="prevMonth()"><mat-icon>chevron_left</mat-icon></button>
           <h2>{{ monthLabel() }}</h2>
           <button mat-icon-button (click)="nextMonth()"><mat-icon>chevron_right</mat-icon></button>
-          <button mat-stroked-button class="today-btn" (click)="goToday()">Today</button>
+          <button mat-stroked-button class="today-btn" (click)="goToday()">{{ 'COACHING.today' | translate }}</button>
         </div>
       </div>
 

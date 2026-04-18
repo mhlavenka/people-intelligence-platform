@@ -6,10 +6,13 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { JournalService, SupervisionDigest } from '../journal.service';
 
+import { TranslateModule } from '@ngx-translate/core';
 @Component({
   selector: 'app-supervision-digest',
   standalone: true,
-  imports: [CommonModule, RouterLink, MatIconModule, MatButtonModule, MatProgressSpinnerModule],
+  imports: [CommonModule, RouterLink, MatIconModule, MatButtonModule, MatProgressSpinnerModule,
+    TranslateModule,
+  ],
   template: `
     <div class="journal-page">
       <div class="page-header">
@@ -21,7 +24,7 @@ import { JournalService, SupervisionDigest } from '../journal.service';
       @if (!data() && !loading() && !error()) {
         <div class="generate-prompt">
           <mat-icon>psychology</mat-icon>
-          <h3>Generate Supervision Digest</h3>
+          <h3>{{ 'JOURNAL.generateSupervisionDigest' | translate }}</h3>
           <p>This will analyze your supervision-ready reflective entries and session reflections to prepare discussion material.</p>
           <button mat-flat-button color="primary" (click)="generate()"><mat-icon>auto_awesome</mat-icon> Generate Digest</button>
         </div>
@@ -48,7 +51,7 @@ import { JournalService, SupervisionDigest } from '../journal.service';
 
           @if (data()!.coachThemes.length) {
             <div class="report-section">
-              <h3>Coach Themes</h3>
+              <h3>{{ 'JOURNAL.coachThemes' | translate }}</h3>
               <div class="theme-list">
                 @for (t of data()!.coachThemes; track t) { <span class="theme-chip">{{ t }}</span> }
               </div>
@@ -56,7 +59,7 @@ import { JournalService, SupervisionDigest } from '../journal.service';
           }
 
           <div class="report-section">
-            <h3>Cross-Engagement Patterns</h3>
+            <h3>{{ 'JOURNAL.crossEngagementPatterns' | translate }}</h3>
             <p>{{ data()!.crossEngagementPatterns }}</p>
           </div>
 
@@ -69,7 +72,7 @@ import { JournalService, SupervisionDigest } from '../journal.service';
 
           @if (data()!.developmentAreas.length) {
             <div class="report-section">
-              <h3>Development Areas</h3>
+              <h3>{{ 'JOURNAL.developmentAreas' | translate }}</h3>
               <ul>@for (a of data()!.developmentAreas; track a) { <li>{{ a }}</li> }</ul>
             </div>
           }

@@ -26,6 +26,7 @@ import { BookingImportComponent } from '../booking-import/booking-import.compone
 import { AuthService } from '../../../core/auth.service';
 import { EmptyStateComponent } from '../../../shared/empty-state/empty-state.component';
 
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 type DayBuckets = {
   upcoming: BookingRecord[];
   past: BookingRecord[];
@@ -44,12 +45,13 @@ type DayBuckets = {
     MatDatepickerModule, MatNativeDateModule,
     BookingImportComponent,
     EmptyStateComponent,
+    TranslateModule,
   ],
   template: `
     <div class="dashboard-container">
       <div class="page-header">
         <div>
-          <h1>Bookings</h1>
+          <h1>{{ 'BOOKING.dashboardTitle' | translate }}</h1>
           <p>Manage client bookings across all your event types</p>
         </div>
         <div class="header-actions">
@@ -66,7 +68,7 @@ type DayBuckets = {
       @if (eventTypes().length > 1) {
         <div class="filter-bar">
           <mat-form-field appearance="outline" class="filter-field">
-            <mat-label>Filter by event type</mat-label>
+            <mat-label>{{ 'BOOKING.filterByEventType' | translate }}</mat-label>
             <mat-select [(ngModel)]="selectedEventTypeId" (selectionChange)="onFilterChange()">
               <mat-option value="">All event types</mat-option>
               @for (et of eventTypes(); track et._id) {
@@ -132,12 +134,12 @@ type DayBuckets = {
           <div class="upcoming-card">
             <div class="upcoming-header">
               <mat-icon>event</mat-icon>
-              <h3>Upcoming events</h3>
+              <h3>{{ 'BOOKING.upcomingEvents' | translate }}</h3>
             </div>
             @if (upcomingLoading()) {
               <div class="upcoming-loading"><mat-spinner diameter="24" /></div>
             } @else if (!upcomingEvents().length) {
-              <p class="upcoming-empty">No upcoming sessions.</p>
+              <p class="upcoming-empty">{{ 'BOOKING.noUpcomingSessions' | translate }}</p>
             } @else {
               <ul class="upcoming-list">
                 @for (b of upcomingEvents(); track b._id) {
@@ -483,6 +485,7 @@ export class BookingDashboardComponent implements OnInit, AfterViewInit, OnDestr
     private snackBar: MatSnackBar,
     private dialog: MatDialog,
     private auth: AuthService,
+    private translate: TranslateService,
   ) {}
 
   /** localStorage key scoped per coach so the badge state isn't shared. */

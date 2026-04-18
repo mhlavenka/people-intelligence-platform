@@ -18,6 +18,7 @@ import { ApiService } from '../../../core/api.service';
 import { UserDialogComponent, OrgUser } from '../user-dialog/user-dialog.component';
 import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog.component';
 import { AvatarComponent } from '../../../shared/avatar/avatar.component';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 const ROLE_META: Record<string, { label: string; color: string }> = {
   admin:      { label: 'Admin',      color: '#1B2A47' },
@@ -47,16 +48,17 @@ const ROLE_META: Record<string, { label: string; color: string }> = {
     MatFormFieldModule,
     MatDividerModule,
     AvatarComponent,
+    TranslateModule,
   ],
   template: `
     <div class="users-page">
       <div class="page-header">
         <div>
-          <h1>User Management</h1>
-          <p>Manage team members and their access roles</p>
+          <h1>{{ "ADMIN.userMgmt" | translate }}</h1>
+          <p>{{ "ADMIN.userMgmtDesc" | translate }}</p>
         </div>
         <button mat-raised-button color="primary" (click)="openAddDialog()">
-          <mat-icon>person_add</mat-icon> Add User
+          <mat-icon>person_add</mat-icon> {{ "ADMIN.addUser" | translate }}
         </button>
       </div>
 
@@ -73,7 +75,7 @@ const ROLE_META: Record<string, { label: string; color: string }> = {
       <!-- Search + filter -->
       <div class="toolbar">
         <mat-form-field appearance="outline" class="search-field">
-          <mat-label>Search users</mat-label>
+          <mat-label>{{ "ADMIN.searchUsers" | translate }}</mat-label>
           <mat-icon matPrefix>search</mat-icon>
           <input matInput [ngModel]="searchQuery()" (ngModelChange)="searchQuery.set($event)" placeholder="Name or email…" />
           @if (searchQuery()) {

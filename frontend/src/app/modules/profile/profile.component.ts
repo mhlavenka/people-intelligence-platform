@@ -10,6 +10,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog } from '@angular/material/dialog';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ApiService } from '../../core/api.service';
 import { AuthService } from '../../core/auth.service';
 import { ConfirmDialogComponent } from '../../shared/confirm-dialog/confirm-dialog.component';
@@ -71,12 +72,13 @@ function passwordMatchValidator(control: AbstractControl): ValidationErrors | nu
     MatSnackBarModule,
     MatTooltipModule,
     DatePipe,
+    TranslateModule,
   ],
   template: `
     <div class="profile-page">
       <div class="page-header">
-        <h1>My Profile</h1>
-        <p>Manage your personal information and account security</p>
+        <h1>{{ 'PROFILE.title' | translate }}</h1>
+        <p>{{ 'PROFILE.subtitle' | translate }}</p>
       </div>
 
       @if (loading()) {
@@ -107,14 +109,14 @@ function passwordMatchValidator(control: AbstractControl): ValidationErrors | nu
               <div class="meta-item">
                 <mat-icon>calendar_today</mat-icon>
                 <div>
-                  <div class="meta-label">Member since</div>
+                  <div class="meta-label">{{ 'PROFILE.memberSince' | translate }}</div>
                   <div class="meta-value">{{ profile()!.createdAt | date:'MMM d, y' }}</div>
                 </div>
               </div>
               <div class="meta-item">
                 <mat-icon>login</mat-icon>
                 <div>
-                  <div class="meta-label">Last login</div>
+                  <div class="meta-label">{{ 'PROFILE.lastLogin' | translate }}</div>
                   <div class="meta-value">
                     {{ profile()!.lastLoginAt ? (profile()!.lastLoginAt | date:'MMM d, y, h:mm a') : 'N/A' }}
                   </div>
@@ -123,9 +125,9 @@ function passwordMatchValidator(control: AbstractControl): ValidationErrors | nu
               <div class="meta-item">
                 <mat-icon>{{ profile()!.isActive ? 'check_circle' : 'cancel' }}</mat-icon>
                 <div>
-                  <div class="meta-label">Account status</div>
+                  <div class="meta-label">{{ 'PROFILE.accountStatus' | translate }}</div>
                   <div class="meta-value" [class.active-text]="profile()!.isActive">
-                    {{ profile()!.isActive ? 'Active' : 'Inactive' }}
+                    {{ profile()!.isActive ? ('PROFILE.active' | translate) : ('PROFILE.inactive' | translate) }}
                   </div>
                 </div>
               </div>
@@ -139,28 +141,28 @@ function passwordMatchValidator(control: AbstractControl): ValidationErrors | nu
             <div class="card">
               <div class="card-header">
                 <mat-icon>person</mat-icon>
-                <h2>Personal Information</h2>
+                <h2>{{ 'PROFILE.personalInfo' | translate }}</h2>
               </div>
               <mat-divider />
               <div class="card-body">
                 <form [formGroup]="profileForm" class="form-grid">
                   <mat-form-field appearance="outline">
-                    <mat-label>First Name</mat-label>
+                    <mat-label>{{ 'PROFILE.firstName' | translate }}</mat-label>
                     <input matInput formControlName="firstName" />
                   </mat-form-field>
                   <mat-form-field appearance="outline">
-                    <mat-label>Last Name</mat-label>
+                    <mat-label>{{ 'PROFILE.lastName' | translate }}</mat-label>
                     <input matInput formControlName="lastName" />
                   </mat-form-field>
                   <mat-form-field appearance="outline" class="span-2">
-                    <mat-label>Email address</mat-label>
+                    <mat-label>{{ 'PROFILE.emailAddress' | translate }}</mat-label>
                     <input matInput [value]="profile()!.email" readonly />
-                    <mat-hint>Email cannot be changed. Contact your administrator.</mat-hint>
+                    <mat-hint>{{ 'PROFILE.emailReadonly' | translate }}</mat-hint>
                   </mat-form-field>
                   <mat-form-field appearance="outline" class="span-2">
-                    <mat-label>Role</mat-label>
+                    <mat-label>{{ 'PROFILE.role' | translate }}</mat-label>
                     <input matInput [value]="roleLabel()" readonly />
-                    <mat-hint>Role is assigned by your administrator.</mat-hint>
+                    <mat-hint>{{ 'PROFILE.roleReadonly' | translate }}</mat-hint>
                   </mat-form-field>
                 </form>
                 <div class="form-actions">
@@ -168,7 +170,7 @@ function passwordMatchValidator(control: AbstractControl): ValidationErrors | nu
                           (click)="saveProfile()"
                           [disabled]="profileForm.invalid || savingProfile()">
                     @if (savingProfile()) { <mat-spinner diameter="18" /> }
-                    @else { <mat-icon>save</mat-icon> Save Changes }
+                    @else { <mat-icon>save</mat-icon> {{ 'PROFILE.saveChanges' | translate }} }
                   </button>
                 </div>
               </div>
@@ -178,7 +180,7 @@ function passwordMatchValidator(control: AbstractControl): ValidationErrors | nu
             <div class="card">
               <div class="card-header">
                 <mat-icon>lock</mat-icon>
-                <h2>Change Password</h2>
+                <h2>{{ 'PROFILE.changePassword' | translate }}</h2>
               </div>
               <mat-divider />
               <div class="card-body">
@@ -187,7 +189,7 @@ function passwordMatchValidator(control: AbstractControl): ValidationErrors | nu
                 }
                 <form [formGroup]="passwordForm" class="form-col">
                   <mat-form-field appearance="outline" class="full-width">
-                    <mat-label>Current Password</mat-label>
+                    <mat-label>{{ 'PROFILE.currentPassword' | translate }}</mat-label>
                     <input matInput formControlName="currentPassword"
                            [type]="showCurrent ? 'text' : 'password'" />
                     <button mat-icon-button matSuffix type="button"
@@ -196,17 +198,17 @@ function passwordMatchValidator(control: AbstractControl): ValidationErrors | nu
                     </button>
                   </mat-form-field>
                   <mat-form-field appearance="outline" class="full-width">
-                    <mat-label>New Password</mat-label>
+                    <mat-label>{{ 'PROFILE.newPassword' | translate }}</mat-label>
                     <input matInput formControlName="newPassword"
                            [type]="showNew ? 'text' : 'password'" />
                     <button mat-icon-button matSuffix type="button"
                             (click)="showNew = !showNew">
                       <mat-icon>{{ showNew ? 'visibility_off' : 'visibility' }}</mat-icon>
                     </button>
-                    <mat-hint>Minimum 8 characters</mat-hint>
+                    <mat-hint>{{ 'PROFILE.minChars' | translate }}</mat-hint>
                   </mat-form-field>
                   <mat-form-field appearance="outline" class="full-width">
-                    <mat-label>Confirm New Password</mat-label>
+                    <mat-label>{{ 'PROFILE.confirmNewPassword' | translate }}</mat-label>
                     <input matInput formControlName="confirmPassword"
                            [type]="showConfirm ? 'text' : 'password'" />
                     <button mat-icon-button matSuffix type="button"
@@ -214,7 +216,7 @@ function passwordMatchValidator(control: AbstractControl): ValidationErrors | nu
                       <mat-icon>{{ showConfirm ? 'visibility_off' : 'visibility' }}</mat-icon>
                     </button>
                     @if (passwordForm.hasError('mismatch') && passwordForm.get('confirmPassword')?.touched) {
-                      <mat-error>Passwords do not match</mat-error>
+                      <mat-error>{{ 'PROFILE.passwordsMismatch' | translate }}</mat-error>
                     }
                   </mat-form-field>
                 </form>
@@ -223,7 +225,7 @@ function passwordMatchValidator(control: AbstractControl): ValidationErrors | nu
                           (click)="changePassword()"
                           [disabled]="passwordForm.invalid || savingPassword()">
                     @if (savingPassword()) { <mat-spinner diameter="18" /> }
-                    @else { <mat-icon>lock_reset</mat-icon> Update Password }
+                    @else { <mat-icon>lock_reset</mat-icon> {{ 'PROFILE.updatePassword' | translate }} }
                   </button>
                 </div>
               </div>
@@ -233,27 +235,27 @@ function passwordMatchValidator(control: AbstractControl): ValidationErrors | nu
             <div class="card">
               <div class="card-header">
                 <mat-icon>fingerprint</mat-icon>
-                <h2>Sign-in Methods</h2>
+                <h2>{{ 'PROFILE.signinMethods' | translate }}</h2>
               </div>
               <mat-divider />
               <div class="card-body">
-                <p class="section-desc">Manage passkeys and linked accounts for faster, more secure sign-in.</p>
+                <p class="section-desc">{{ 'PROFILE.signinMethodsDesc' | translate }}</p>
 
                 <!-- Passkeys -->
                 <div class="signin-section">
                   <div class="signin-section-header">
                     <mat-icon>key</mat-icon>
-                    <span>Passkeys</span>
+                    <span>{{ 'PROFILE.passkeys' | translate }}</span>
                     <button mat-stroked-button class="add-passkey-btn" (click)="registerPasskey()"
                             [disabled]="registeringPasskey()">
                       @if (registeringPasskey()) { <mat-spinner diameter="16" /> }
                       @else { <mat-icon>add</mat-icon> }
-                      Add Passkey
+                      {{ 'PROFILE.addPasskey' | translate }}
                     </button>
                   </div>
                   @if (passkeys().length === 0) {
                     <div class="signin-empty">
-                      No passkeys registered. Add one to sign in with Touch ID, Face ID, or a security key.
+                      {{ 'PROFILE.noPasskeys' | translate }}
                     </div>
                   } @else {
                     <div class="signin-list">
@@ -264,7 +266,7 @@ function passwordMatchValidator(control: AbstractControl): ValidationErrors | nu
                             <strong>{{ pk.label || 'Passkey' }}</strong>
                             <span>{{ pk.deviceType === 'multiDevice' ? 'Synced passkey' : 'Device-bound' }} · Added {{ pk.createdAt | date:'MMM d, y' }}</span>
                           </div>
-                          <button mat-icon-button class="signin-remove" matTooltip="Remove" (click)="removePasskey(pk)">
+                          <button mat-icon-button class="signin-remove" [matTooltip]="'COMMON.remove' | translate" (click)="removePasskey(pk)">
                             <mat-icon>delete_outline</mat-icon>
                           </button>
                         </div>
@@ -279,11 +281,11 @@ function passwordMatchValidator(control: AbstractControl): ValidationErrors | nu
                 <div class="signin-section">
                   <div class="signin-section-header">
                     <mat-icon>link</mat-icon>
-                    <span>Linked Accounts</span>
+                    <span>{{ 'PROFILE.linkedAccounts' | translate }}</span>
                   </div>
                   @if (oauthAccounts().length === 0) {
                     <div class="signin-empty">
-                      No linked accounts. Sign in with Google or Microsoft once to link automatically.
+                      {{ 'PROFILE.noLinkedAccounts' | translate }}
                     </div>
                   } @else {
                     <div class="signin-list">
@@ -308,7 +310,7 @@ function passwordMatchValidator(control: AbstractControl): ValidationErrors | nu
             <div class="card">
               <div class="card-header">
                 <mat-icon>security</mat-icon>
-                <h2>Security</h2>
+                <h2>{{ 'PROFILE.security' | translate }}</h2>
               </div>
               <mat-divider />
               <div class="card-body">
@@ -318,11 +320,11 @@ function passwordMatchValidator(control: AbstractControl): ValidationErrors | nu
                   <div class="security-row">
                     <div class="security-icon"><mat-icon>phonelink_lock</mat-icon></div>
                     <div class="toggle-info">
-                      <div class="toggle-label">Two-factor authentication</div>
-                      <div class="toggle-desc">Protect your account with Google Authenticator or any TOTP app</div>
+                      <div class="toggle-label">{{ 'PROFILE.twoFactorAuth' | translate }}</div>
+                      <div class="toggle-desc">{{ 'PROFILE.twoFactorAuthDesc' | translate }}</div>
                     </div>
                     <button mat-raised-button color="primary" (click)="setup2fa()" [disabled]="twoFactorLoading()">
-                      @if (twoFactorLoading()) { <mat-spinner diameter="18" /> } @else { Enable 2FA }
+                      @if (twoFactorLoading()) { <mat-spinner diameter="18" /> } @else { {{ 'PROFILE.enable2FA' | translate }} }
                     </button>
                   </div>
                 }
@@ -332,45 +334,45 @@ function passwordMatchValidator(control: AbstractControl): ValidationErrors | nu
                   <div class="twofa-setup">
                     @if (twoFactorSetupStep() === 'scan') {
                       <div class="setup-step">
-                        <h3><span class="step-num">1</span> Scan with Google Authenticator</h3>
-                        <p>Open <strong>Google Authenticator</strong> (or any TOTP app), tap <strong>+</strong> &rarr; <em>Scan a QR code</em>.</p>
+                        <h3><span class="step-num">1</span> {{ 'PROFILE.scanQR' | translate }}</h3>
+                        <p [innerHTML]="'PROFILE.scanQRDesc' | translate"></p>
                         @if (qrCodeDataUrl()) {
                           <div class="qr-block">
                             <img [src]="qrCodeDataUrl()" alt="2FA QR Code" class="qr-img" />
                           </div>
                         }
                         <details class="manual-key">
-                          <summary>Can't scan? Enter key manually</summary>
+                          <summary>{{ 'PROFILE.cantScanManualKey' | translate }}</summary>
                           <code>{{ manualSecret() }}</code>
                         </details>
                         <button mat-raised-button color="primary" (click)="twoFactorSetupStep.set('verify')">
-                          Next <mat-icon>arrow_forward</mat-icon>
+                          {{ 'COMMON.next' | translate }} <mat-icon>arrow_forward</mat-icon>
                         </button>
-                        <button mat-button (click)="cancelSetup()">Cancel</button>
+                        <button mat-button (click)="cancelSetup()">{{ 'COMMON.cancel' | translate }}</button>
                       </div>
                     }
 
                     @if (twoFactorSetupStep() === 'verify') {
                       <div class="setup-step">
-                        <h3><span class="step-num">2</span> Enter the 6-digit code</h3>
-                        <p>Type the current code shown in your authenticator app to confirm setup.</p>
+                        <h3><span class="step-num">2</span> {{ 'PROFILE.enterCode' | translate }}</h3>
+                        <p>{{ 'PROFILE.enterCodeDesc' | translate }}</p>
                         @if (twoFactorError()) {
                           <div class="error-banner">{{ twoFactorError() }}</div>
                         }
                         <mat-form-field appearance="outline" class="otp-field">
-                          <mat-label>Authenticator code</mat-label>
+                          <mat-label>{{ 'PROFILE.authenticatorCode' | translate }}</mat-label>
                           <input matInput [formControl]="otpControl" inputmode="numeric"
                                  maxlength="6" placeholder="000000" />
                           <mat-icon matPrefix>pin</mat-icon>
                         </mat-form-field>
                         <div class="step-actions">
                           <button mat-button (click)="twoFactorSetupStep.set('scan')">
-                            <mat-icon>arrow_back</mat-icon> Back
+                            <mat-icon>arrow_back</mat-icon> {{ 'COMMON.back' | translate }}
                           </button>
                           <button mat-raised-button color="primary"
                                   (click)="enable2fa()" [disabled]="otpControl.invalid || twoFactorLoading()">
                             @if (twoFactorLoading()) { <mat-spinner diameter="18" /> }
-                            @else { <mat-icon>verified</mat-icon> Confirm & Enable }
+                            @else { <mat-icon>verified</mat-icon> {{ 'PROFILE.confirmEnable' | translate }} }
                           </button>
                         </div>
                       </div>
@@ -384,13 +386,13 @@ function passwordMatchValidator(control: AbstractControl): ValidationErrors | nu
                     <div class="security-row enabled-row">
                       <div class="security-icon green"><mat-icon>verified_user</mat-icon></div>
                       <div class="toggle-info">
-                        <div class="toggle-label">Two-factor authentication
-                          <span class="enabled-badge">Enabled</span>
+                        <div class="toggle-label">{{ 'PROFILE.twoFactorAuth' | translate }}
+                          <span class="enabled-badge">{{ 'PROFILE.enabled' | translate }}</span>
                         </div>
-                        <div class="toggle-desc">Your account is protected with Google Authenticator</div>
+                        <div class="toggle-desc">{{ 'PROFILE.twoFactorProtected' | translate }}</div>
                       </div>
                       <button mat-stroked-button color="warn" (click)="twoFactorSetupStep.set('disable')">
-                        Disable
+                        {{ 'PROFILE.disable' | translate }}
                       </button>
                     </div>
                   }
@@ -401,19 +403,19 @@ function passwordMatchValidator(control: AbstractControl): ValidationErrors | nu
                         @if (twoFactorError()) {
                           <div class="error-banner">{{ twoFactorError() }}</div>
                         }
-                        <p>Enter your current authenticator code to confirm disabling 2FA.</p>
+                        <p>{{ 'PROFILE.disable2FAConfirm' | translate }}</p>
                         <mat-form-field appearance="outline" class="otp-field">
-                          <mat-label>Authenticator code</mat-label>
+                          <mat-label>{{ 'PROFILE.authenticatorCode' | translate }}</mat-label>
                           <input matInput [formControl]="otpControl" inputmode="numeric"
                                  maxlength="6" placeholder="000000" />
                           <mat-icon matPrefix>pin</mat-icon>
                         </mat-form-field>
                         <div class="step-actions">
-                          <button mat-button (click)="cancelSetup()">Cancel</button>
+                          <button mat-button (click)="cancelSetup()">{{ 'COMMON.cancel' | translate }}</button>
                           <button mat-raised-button color="warn"
                                   (click)="disable2fa()" [disabled]="otpControl.invalid || twoFactorLoading()">
                             @if (twoFactorLoading()) { <mat-spinner diameter="18" /> }
-                            @else { Disable 2FA }
+                            @else { {{ 'PROFILE.disable2FA' | translate }} }
                           </button>
                         </div>
                       </div>
@@ -426,10 +428,10 @@ function passwordMatchValidator(control: AbstractControl): ValidationErrors | nu
                 <div class="security-row">
                   <div class="security-icon"><mat-icon>devices</mat-icon></div>
                   <div class="toggle-info">
-                    <div class="toggle-label">Active sessions</div>
-                    <div class="toggle-desc">View and revoke sessions on other devices</div>
+                    <div class="toggle-label">{{ 'PROFILE.activeSessions' | translate }}</div>
+                    <div class="toggle-desc">{{ 'PROFILE.activeSessionsDesc' | translate }}</div>
                   </div>
-                  <button mat-stroked-button disabled>Coming soon</button>
+                  <button mat-stroked-button disabled>{{ 'COMMON.comingSoon' | translate }}</button>
                 </div>
 
                 <mat-divider />
@@ -437,10 +439,10 @@ function passwordMatchValidator(control: AbstractControl): ValidationErrors | nu
                 <div class="security-row">
                   <div class="security-icon warn"><mat-icon>download</mat-icon></div>
                   <div class="toggle-info">
-                    <div class="toggle-label">Export personal data</div>
-                    <div class="toggle-desc">Download a copy of all data associated with your account</div>
+                    <div class="toggle-label">{{ 'PROFILE.exportData' | translate }}</div>
+                    <div class="toggle-desc">{{ 'PROFILE.exportDataDesc' | translate }}</div>
                   </div>
-                  <button mat-stroked-button disabled>Coming soon</button>
+                  <button mat-stroked-button disabled>{{ 'COMMON.comingSoon' | translate }}</button>
                 </div>
 
               </div>
@@ -652,6 +654,7 @@ export class ProfileComponent implements OnInit {
   private fb   = inject(FormBuilder);
   private snackBar = inject(MatSnackBar);
   private dialog = inject(MatDialog);
+  private translate = inject(TranslateService);
 
   profile  = signal<UserProfile | null>(null);
   loading  = signal(true);
@@ -722,9 +725,9 @@ export class ProfileComponent implements OnInit {
           this.auth.currentUser.set({ ...cur, ...this.profileForm.value });
         }
         this.savingProfile.set(false);
-        this.snackBar.open('Profile updated', 'Close', { duration: 2500 });
+        this.snackBar.open(this.translate.instant('PROFILE.profileUpdated'), this.translate.instant('COMMON.close'), { duration: 2500 });
       },
-      error: () => { this.savingProfile.set(false); this.snackBar.open('Save failed', 'Close', { duration: 2500 }); },
+      error: () => { this.savingProfile.set(false); this.snackBar.open(this.translate.instant('PROFILE.saveFailed'), this.translate.instant('COMMON.close'), { duration: 2500 }); },
     });
   }
 
@@ -737,10 +740,10 @@ export class ProfileComponent implements OnInit {
       next: () => {
         this.savingPassword.set(false);
         this.passwordForm.reset();
-        this.snackBar.open('Password updated successfully', 'Close', { duration: 3000 });
+        this.snackBar.open(this.translate.instant('PROFILE.passwordUpdated'), this.translate.instant('COMMON.close'), { duration: 3000 });
       },
       error: (err) => {
-        this.pwdError.set(err.error?.error || 'Password update failed.');
+        this.pwdError.set(err.error?.error || this.translate.instant('PROFILE.passwordFailed'));
         this.savingPassword.set(false);
       },
     });
@@ -829,13 +832,13 @@ export class ProfileComponent implements OnInit {
 
       this.registeringPasskey.set(false);
       this.loadPasskeys();
-      this.snackBar.open('Passkey registered successfully', 'OK', { duration: 3000 });
+      this.snackBar.open(this.translate.instant('PROFILE.passkeyRegistered'), this.translate.instant('COMMON.ok'), { duration: 3000 });
     } catch (e: any) {
       this.registeringPasskey.set(false);
       const msg = e?.message === 'The operation either timed out or was not allowed.'
-        ? 'Passkey registration was cancelled.'
-        : (e?.message || 'Failed to register passkey.');
-      this.snackBar.open(msg, 'Dismiss', { duration: 4000 });
+        ? this.translate.instant('PROFILE.passkeyCancelled')
+        : (e?.message || this.translate.instant('PROFILE.passkeyFailed'));
+      this.snackBar.open(msg, this.translate.instant('COMMON.dismiss'), { duration: 4000 });
     }
   }
 
@@ -868,10 +871,10 @@ export class ProfileComponent implements OnInit {
         this.twoFactorSetupStep.set('');
         this.otpControl.reset();
         this.twoFactorLoading.set(false);
-        this.snackBar.open('Two-factor authentication enabled', undefined, { duration: 3000 });
+        this.snackBar.open(this.translate.instant('PROFILE.twoFactorEnabled'), undefined, { duration: 3000 });
       },
       error: (err) => {
-        this.twoFactorError.set(err.error?.error || 'Invalid code. Please try again.');
+        this.twoFactorError.set(err.error?.error || this.translate.instant('PROFILE.invalidCode'));
         this.twoFactorLoading.set(false);
       },
     });
@@ -888,10 +891,10 @@ export class ProfileComponent implements OnInit {
         this.twoFactorSetupStep.set('');
         this.otpControl.reset();
         this.twoFactorLoading.set(false);
-        this.snackBar.open('Two-factor authentication disabled', undefined, { duration: 3000 });
+        this.snackBar.open(this.translate.instant('PROFILE.twoFactorDisabled'), undefined, { duration: 3000 });
       },
       error: (err) => {
-        this.twoFactorError.set(err.error?.error || 'Invalid code. Please try again.');
+        this.twoFactorError.set(err.error?.error || this.translate.instant('PROFILE.invalidCode'));
         this.twoFactorLoading.set(false);
       },
     });
@@ -923,10 +926,10 @@ export class ProfileComponent implements OnInit {
             this.auth.currentUser.set(updated);
             localStorage.setItem('pip_user', JSON.stringify(updated));
           }
-          this.snackBar.open('Profile picture updated', '', { duration: 2000 });
+          this.snackBar.open(this.translate.instant('PROFILE.pictureUpdated'), '', { duration: 2000 });
         }
       })
-      .catch(() => this.snackBar.open('Failed to upload picture', '', { duration: 3000 }));
+      .catch(() => this.snackBar.open(this.translate.instant('PROFILE.pictureFailed'), '', { duration: 3000 }));
   }
 
   removePasskey(pk: PasskeyInfo): void {
@@ -945,7 +948,7 @@ export class ProfileComponent implements OnInit {
       this.api.delete(`/auth/passkey/passkeys/${pk.credentialId}`).subscribe({
         next: () => {
           this.passkeys.update((list) => list.filter((p) => p.credentialId !== pk.credentialId));
-          this.snackBar.open('Passkey removed', 'OK', { duration: 3000 });
+          this.snackBar.open(this.translate.instant('PROFILE.passkeyRemoved'), this.translate.instant('COMMON.ok'), { duration: 3000 });
         },
       });
     });

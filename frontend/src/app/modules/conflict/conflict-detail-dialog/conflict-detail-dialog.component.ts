@@ -9,6 +9,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ApiService } from '../../../core/api.service';
 import { MiniGaugeComponent } from '../../../shared/mini-gauge/mini-gauge.component';
 import { RiskBadgeComponent } from '../../../shared/risk-badge/risk-badge.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 type ScriptSection =
   | { key: string; label: string; type: 'string'; value: string }
@@ -44,6 +45,7 @@ interface ConflictAnalysis {
     MatProgressSpinnerModule,
     MiniGaugeComponent,
     RiskBadgeComponent,
+    TranslateModule,
   ],
   template: `
     <h2 mat-dialog-title>
@@ -56,7 +58,7 @@ interface ConflictAnalysis {
       <div class="meta-row">
         <div class="score-block" [class]="data.riskLevel">
           <div class="score-num">{{ data.riskScore }}</div>
-          <div class="score-label">Risk Score</div>
+          <div class="score-label">{{ "CONFLICT.riskScore" | translate }}</div>
         </div>
         <div class="meta-info">
           <div class="meta-item">
@@ -78,7 +80,7 @@ interface ConflictAnalysis {
       </div>
 
       <div class="section">
-        <h3><mat-icon>auto_awesome</mat-icon> AI Analysis</h3>
+        <h3><mat-icon>auto_awesome</mat-icon> {{ "CONFLICT.aiAnalysis" | translate }}</h3>
         <p class="narrative">{{ data.aiNarrative }}</p>
       </div>
 
@@ -86,7 +88,7 @@ interface ConflictAnalysis {
       @if (data.conflictTypes.length) {
         <mat-divider />
         <div class="section">
-          <h3><mat-icon>manage_search</mat-icon> Drill-down by Conflict Type</h3>
+          <h3><mat-icon>manage_search</mat-icon> {{ "CONFLICT.drillDown" | translate }}</h3>
           <p class="drill-hint">Run a focused sub-analysis for each detected conflict type to get deeper insights and targeted manager scripts.</p>
 
           <div class="sub-analyses-list">
@@ -115,7 +117,7 @@ interface ConflictAnalysis {
                     </div>
                   } @else {
                     <div class="sub-score-bar-wrap empty">
-                      <div class="sub-score-bar-placeholder">No sub-analysis yet</div>
+                      <div class="sub-score-bar-placeholder">{{ "CONFLICT.noSubAnalysis" | translate }}</div>
                     </div>
                   }
                 </div>
@@ -146,7 +148,7 @@ interface ConflictAnalysis {
       @if (data.managerScript) {
         <mat-divider />
         <div class="section">
-          <h3><mat-icon>record_voice_over</mat-icon> Manager Conversation Guide</h3>
+          <h3><mat-icon>record_voice_over</mat-icon> {{ "CONFLICT.managerGuide" | translate }}</h3>
 
           @if (scriptSections().length > 0) {
             <div class="script-sections">
@@ -170,8 +172,8 @@ interface ConflictAnalysis {
                     <table class="topics-table">
                       <thead>
                         <tr>
-                          <th>Topic</th>
-                          <th>Talking Points</th>
+                          <th>{{ "CONFLICT.topic" | translate }}</th>
+                          <th>{{ "CONFLICT.talkingPoints" | translate }}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -213,14 +215,14 @@ interface ConflictAnalysis {
 
     <mat-dialog-actions align="end">
       <button mat-stroked-button (click)="exportPdf()" style="margin-right: auto">
-        <mat-icon>picture_as_pdf</mat-icon> Export PDF
+        <mat-icon>picture_as_pdf</mat-icon> {{ "CONFLICT.exportPdf" | translate }}
       </button>
       @if (!data.escalationRequested && data.riskLevel !== 'low') {
         <button mat-stroked-button color="warn" (click)="escalate()">
-          <mat-icon>escalator_warning</mat-icon> Escalate to HR
+          <mat-icon>escalator_warning</mat-icon> {{ "CONFLICT.escalateToHR" | translate }}
         </button>
       }
-      <button mat-raised-button color="primary" mat-dialog-close>Close</button>
+      <button mat-raised-button color="primary" mat-dialog-close>{{ "COMMON.close" | translate }}</button>
     </mat-dialog-actions>
   `,
   styles: [`

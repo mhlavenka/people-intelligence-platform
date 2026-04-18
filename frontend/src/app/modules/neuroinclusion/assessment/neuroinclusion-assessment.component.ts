@@ -11,6 +11,7 @@ import { MatSliderModule } from '@angular/material/slider';
 import { MatSelectModule } from '@angular/material/select';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ApiService } from '../../../core/api.service';
+import { TranslateModule } from '@ngx-translate/core';
 
 interface Dimension {
   name: string;
@@ -54,11 +55,12 @@ interface AssessmentResult {
     MatSliderModule,
     MatSelectModule,
     MatProgressSpinnerModule,
+    TranslateModule,
   ],
   template: `
     <div class="assessment-page" [class.results-mode]="completed()">
       <div class="page-header">
-        <h1>Neuro-Inclusion Compass™</h1>
+        <h1>{{ "NEURO.title" | translate }}</h1>
         <p>Assess, build, and sustain neuroinclusive cultures — organizational diagnostic across 8 evidence-based dimensions</p>
       </div>
 
@@ -103,7 +105,7 @@ interface AssessmentResult {
               </svg>
             </div>
             <div class="results-summary">
-              <h2>Assessment Complete</h2>
+              <h2>{{ "NEURO.assessmentComplete" | translate }}</h2>
               <p class="maturity-level">Maturity Level: <strong>{{ maturityLabel() }}</strong></p>
               @if (completedAt()) {
                 <p class="completed-date">Completed {{ completedAt() | date:'MMM d, y' }}</p>
@@ -130,7 +132,7 @@ interface AssessmentResult {
                 <div class="report-section gap-analysis">
                   <div class="section-heading">
                     <div class="section-icon blue"><mat-icon>psychology</mat-icon></div>
-                    <h3>Gap Analysis</h3>
+                    <h3>{{ "NEURO.gapAnalysis" | translate }}</h3>
                   </div>
                   <div class="gap-paragraphs">
                     @for (para of aiGapAnalysis(); track $index) {
@@ -146,7 +148,7 @@ interface AssessmentResult {
                   <div class="report-section">
                     <div class="section-heading">
                       <div class="section-icon navy"><mat-icon>route</mat-icon></div>
-                      <h3>Action Roadmap</h3>
+                      <h3>{{ "NEURO.actionRoadmap" | translate }}</h3>
                     </div>
                     <ol class="action-list">
                       @for (action of actionRoadmap(); track $index) {

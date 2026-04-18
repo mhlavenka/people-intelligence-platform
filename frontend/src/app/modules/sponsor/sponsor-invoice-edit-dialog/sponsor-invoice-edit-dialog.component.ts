@@ -12,6 +12,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { HttpErrorResponse } from '@angular/common/http';
 import { SponsorInvoice, SponsorService } from '../sponsor.service';
+import { TranslateModule } from '@ngx-translate/core';
 
 interface LineItemForm { description: string; quantity: number; unitPriceDollars: number; }
 
@@ -33,9 +34,10 @@ export interface SponsorInvoiceEditData {
     MatDialogModule, MatFormFieldModule, MatInputModule,
     MatDatepickerModule, MatNativeDateModule,
     MatButtonModule, MatIconModule, MatProgressSpinnerModule,
+    TranslateModule,
   ],
   template: `
-    <h2 mat-dialog-title>Edit invoice</h2>
+    <h2 mat-dialog-title>{{ "SPONSOR.editInvoice" | translate }}</h2>
     <mat-dialog-content>
       <div class="line-items">
         <div class="line-head">
@@ -57,7 +59,7 @@ export interface SponsorInvoiceEditData {
           </div>
         }
         <button mat-button class="add-row" (click)="addRow()">
-          <mat-icon>add</mat-icon> Add line item
+          <mat-icon>add</mat-icon> {{ "SPONSOR.addLineItem" | translate }}
         </button>
       </div>
 

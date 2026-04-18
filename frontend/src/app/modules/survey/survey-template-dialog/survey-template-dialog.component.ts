@@ -16,6 +16,7 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatChipsModule } from '@angular/material/chips';
 import { ApiService } from '../../../core/api.service';
+import { TranslateModule } from '@ngx-translate/core';
 
 interface SurveyTemplate {
   _id: string;
@@ -91,6 +92,7 @@ interface SurveyTemplate {
     MatTabsModule,
     MatSlideToggleModule,
     MatChipsModule,
+    TranslateModule,
   ],
   template: `
     <h2 mat-dialog-title>

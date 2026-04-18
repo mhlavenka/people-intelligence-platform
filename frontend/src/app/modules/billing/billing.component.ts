@@ -10,6 +10,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ApiService } from '../../core/api.service';
 import { EmptyStateComponent } from '../../shared/empty-state/empty-state.component';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 interface LineItem {
   description: string;
@@ -99,6 +100,7 @@ interface AvailablePlan {
     MatProgressSpinnerModule,
     DatePipe,
     EmptyStateComponent,
+    TranslateModule,
   ],
   template: `
     <div class="billing-page">

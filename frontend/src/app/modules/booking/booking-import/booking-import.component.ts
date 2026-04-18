@@ -13,6 +13,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import {
   BookingService,
   ImportCoachee,
@@ -36,6 +37,7 @@ type State = 'idle' | 'loading' | 'preview' | 'importing' | 'done';
     MatFormFieldModule, MatInputModule, MatSelectModule,
     MatDatepickerModule, MatNativeDateModule,
     MatCheckboxModule, MatTooltipModule, MatExpansionModule, MatSnackBarModule,
+    TranslateModule,
   ],
   template: `
     <div class="import-wrap">
@@ -45,7 +47,7 @@ type State = 'idle' | 'loading' | 'preview' | 'importing' | 'done';
         <div class="idle">
           <div class="intro">
             <mat-icon>cloud_download</mat-icon>
-            <h2>Import from Google Calendar</h2>
+            <h2>{{ 'BOOKING.importTitle' | translate }}</h2>
             <p>
               Pull existing coaching sessions from your connected Google Calendar into
               this booking dashboard. Every event is previewed first — you approve
@@ -55,7 +57,7 @@ type State = 'idle' | 'loading' | 'preview' | 'importing' | 'done';
 
           <div class="calendar-row">
             <mat-form-field appearance="outline" class="calendar-field">
-              <mat-label>Source Calendar</mat-label>
+              <mat-label>{{ 'BOOKING.sourceCalendar' | translate }}</mat-label>
               <mat-select [(ngModel)]="selectedCalendarId" [disabled]="loadingCalendars()">
                 @for (c of calendars(); track c.id) {
                   <mat-option [value]="c.id">
@@ -560,6 +562,7 @@ export class BookingImportComponent implements OnInit {
     private bookingSvc: BookingService,
     private calendarSvc: CalendarIntegrationService,
     private snack: MatSnackBar,
+    private translate: TranslateService,
   ) {}
 
   ngOnInit(): void {

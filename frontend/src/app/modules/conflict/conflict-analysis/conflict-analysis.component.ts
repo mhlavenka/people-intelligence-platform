@@ -11,6 +11,7 @@ import { ApiService } from '../../../core/api.service';
 import { MiniGaugeComponent } from '../../../shared/mini-gauge/mini-gauge.component';
 import { RiskBadgeComponent } from '../../../shared/risk-badge/risk-badge.component';
 import { ConflictAnalyzeDialogComponent } from '../conflict-analyze-dialog/conflict-analyze-dialog.component';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 interface ConflictAnalysis {
   _id: string;
@@ -33,6 +34,7 @@ interface ConflictAnalysis {
     CommonModule, MatIconModule, MatButtonModule, MatProgressSpinnerModule,
     MatDialogModule, MatSnackBarModule, MatTooltipModule,
     MiniGaugeComponent, RiskBadgeComponent,
+    TranslateModule,
   ],
   template: `
     <!-- Module banner -->
@@ -65,7 +67,7 @@ interface ConflictAnalysis {
     <!-- Analyses list -->
     <div class="analyses-section">
       <div class="analyses-header">
-        <h2>Analyses</h2>
+        <h2>{{ "CONFLICT.analyses" | translate }}</h2>
         <span class="analyses-count">{{ analyses().length }} total</span>
       </div>
 
@@ -96,12 +98,12 @@ interface ConflictAnalysis {
                   }
                   @if (a.escalationRequested) {
                     <span class="escalated-badge">
-                      <mat-icon>gavel</mat-icon> Escalated
+                      <mat-icon>gavel</mat-icon> {{ "CONFLICT.escalated" | translate }}
                     </span>
                   }
                 </div>
                 <button mat-icon-button class="delete-analysis-btn"
-                        matTooltip="Delete analysis"
+                        [matTooltip]="'CONFLICT.deleteAnalysis' | translate"
                         (click)="deleteAnalysis(a); $event.stopPropagation()">
                   <mat-icon>delete_outline</mat-icon>
                 </button>
@@ -125,7 +127,7 @@ interface ConflictAnalysis {
 
           <div class="analysis-card new-analysis-card" (click)="runNewAnalysis()">
             <mat-icon class="new-analysis-icon">add</mat-icon>
-            <span>New Analysis</span>
+            <span>{{ "CONFLICT.newAnalysis" | translate }}</span>
           </div>
         </div>
       }
@@ -136,7 +138,7 @@ interface ConflictAnalysis {
       <div class="section-header">
         <div class="section-icon red"><mat-icon>escalator_warning</mat-icon></div>
         <div>
-          <h3>Mediation Escalation Pathway</h3>
+          <h3>{{ "CONFLICT.mediationPathway" | translate }}</h3>
           <p>When coaching guides are insufficient, escalate directly to Helena's professional mediation services — coaching-integrated, interest-based, and designed to preserve relationships.</p>
         </div>
       </div>
@@ -144,28 +146,28 @@ interface ConflictAnalysis {
         <div class="escalation-step">
           <div class="step-num">1</div>
           <div class="step-content">
-            <strong>Flag for Escalation</strong>
+            <strong>{{ "CONFLICT.step1Title" | translate }}</strong>
             <span>Click "Escalate" on any high or critical risk analysis. HR is notified immediately.</span>
           </div>
         </div>
         <div class="escalation-step">
           <div class="step-num">2</div>
           <div class="step-content">
-            <strong>Initial Consultation</strong>
+            <strong>{{ "CONFLICT.step2Title" | translate }}</strong>
             <span>Helena reviews the AI analysis and conducts a 30-min intake with the HR contact to understand context.</span>
           </div>
         </div>
         <div class="escalation-step">
           <div class="step-num">3</div>
           <div class="step-content">
-            <strong>Mediation Process</strong>
+            <strong>{{ "CONFLICT.step3Title" | translate }}</strong>
             <span>Interest-based negotiation session facilitated by Helena — focuses on underlying needs, not positions.</span>
           </div>
         </div>
         <div class="escalation-step">
           <div class="step-num">4</div>
           <div class="step-content">
-            <strong>Resolution & Follow-up</strong>
+            <strong>{{ "CONFLICT.step4Title" | translate }}</strong>
             <span>Agreement documented, follow-up pulse survey scheduled to verify resolution at 30 and 60 days.</span>
           </div>
         </div>

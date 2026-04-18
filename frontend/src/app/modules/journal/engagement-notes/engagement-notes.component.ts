@@ -9,6 +9,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { JournalService, SessionNote, EngagementInsight } from '../journal.service';
 import { ApiService } from '../../../core/api.service';
 
+import { TranslateModule } from '@ngx-translate/core';
 interface EngagementInfo {
   _id: string;
   status: string;
@@ -18,7 +19,9 @@ interface EngagementInfo {
 @Component({
   selector: 'app-engagement-notes',
   standalone: true,
-  imports: [CommonModule, DatePipe, RouterLink, MatIconModule, MatButtonModule, MatProgressSpinnerModule, MatCheckboxModule, MatDividerModule],
+  imports: [CommonModule, DatePipe, RouterLink, MatIconModule, MatButtonModule, MatProgressSpinnerModule, MatCheckboxModule, MatDividerModule,
+    TranslateModule,
+  ],
   template: `
     <div class="journal-page">
       <!-- Header -->
@@ -33,7 +36,7 @@ interface EngagementInfo {
           <div class="eng-title">
             <mat-icon>auto_stories</mat-icon>
             <div>
-              <h1>Session Journal</h1>
+              <h1>{{ 'JOURNAL.sessionJournalTitle' | translate }}</h1>
               @if (engagement()) {
                 <span class="coachee-name">{{ engagement()!.coacheeId?.firstName }} {{ engagement()!.coacheeId?.lastName }}</span>
                 <span class="eng-status" [class]="engagement()!.status">{{ engagement()!.status }}</span>
@@ -56,7 +59,7 @@ interface EngagementInfo {
         @if (notes().length === 0) {
           <div class="empty-state">
             <mat-icon>description</mat-icon>
-            <h3>No session notes yet</h3>
+            <h3>{{ 'JOURNAL.noSessionNotes' | translate }}</h3>
             <p>Capture your first session when you're ready.</p>
           </div>
         } @else {

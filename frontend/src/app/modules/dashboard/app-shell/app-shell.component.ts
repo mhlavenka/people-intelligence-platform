@@ -9,6 +9,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatDialog } from '@angular/material/dialog';
+import { TranslateModule } from '@ngx-translate/core';
 import { AuthService } from '../../../core/auth.service';
 import { ApiService } from '../../../core/api.service';
 import { ThemeService, OrgTheme } from '../../../core/theme.service';
@@ -59,6 +60,7 @@ function isGroup(entry: NavEntry): entry is NavGroup {
     MatTooltipModule,
     MatDividerModule,
     MatBadgeModule,
+    TranslateModule,
   ],
   template: `
     <div class="app-layout" [class.collapsed]="sidebarCollapsed()">
@@ -85,7 +87,7 @@ function isGroup(entry: NavEntry): entry is NavGroup {
           @if (sidebarCollapsed()) {
             <!-- Collapsed: logo centred, toggle below -->
             <img src="assets/artes_icon_512.png" alt="ARTES" class="brand-logo" />
-            <button class="expand-btn" (click)="sidebarCollapsed.set(false)" title="Expand sidebar">
+            <button class="expand-btn" (click)="sidebarCollapsed.set(false)" [title]="'NAV.expandSidebar' | translate">
               <mat-icon>chevron_right</mat-icon>
             </button>
           } @else {
@@ -123,12 +125,12 @@ function isGroup(entry: NavEntry): entry is NavGroup {
               <a [routerLink]="entry.route"
                  routerLinkActive="active"
                  class="nav-item"
-                 [matTooltip]="sidebarCollapsed() ? entry.label : ''"
+                 [matTooltip]="sidebarCollapsed() ? (entry.label | translate) : ''"
                  matTooltipPosition="right"
                  (click)="mobileMenuOpen.set(false)">
                 <mat-icon>{{ entry.icon }}</mat-icon>
                 @if (!sidebarCollapsed()) {
-                  <span class="nav-label">{{ entry.label }}</span>
+                  <span class="nav-label">{{ entry.label | translate }}</span>
                 }
               </a>
 
@@ -138,7 +140,7 @@ function isGroup(entry: NavEntry): entry is NavGroup {
                 <!-- Collapsed: show icon with Mat menu flyout -->
                 <button class="nav-item group-trigger"
                         [matMenuTriggerFor]="flyout"
-                        [matTooltip]="entry.label"
+                        [matTooltip]="entry.label | translate"
                         matTooltipPosition="right"
                         [class.group-active]="isGroupActive(entry)">
                   <mat-icon>{{ entry.icon }}</mat-icon>
@@ -147,7 +149,7 @@ function isGroup(entry: NavEntry): entry is NavGroup {
                   @for (child of entry.children; track child.route) {
                     <button mat-menu-item [routerLink]="child.route">
                       <mat-icon>{{ child.icon }}</mat-icon>
-                      {{ child.label }}
+                      {{ child.label | translate }}
                     </button>
                   }
                 </mat-menu>
@@ -158,7 +160,7 @@ function isGroup(entry: NavEntry): entry is NavGroup {
                         (click)="toggleGroup(entry.label)"
                         [class.group-active]="isGroupActive(entry)">
                   <mat-icon>{{ entry.icon }}</mat-icon>
-                  <span class="nav-label">{{ entry.label }}</span>
+                  <span class="nav-label">{{ entry.label | translate }}</span>
                   <mat-icon class="chevron" [class.open]="isGroupOpen(entry.label)">
                     chevron_right
                   </mat-icon>
@@ -171,7 +173,7 @@ function isGroup(entry: NavEntry): entry is NavGroup {
                          class="nav-item sub-item"
                          [class.active]="isChildActive(entry, child)">
                         <mat-icon>{{ child.icon }}</mat-icon>
-                        <span class="nav-label">{{ child.label }}</span>
+                        <span class="nav-label">{{ child.label | translate }}</span>
                       </a>
                     }
                   </div>
@@ -199,7 +201,7 @@ function isGroup(entry: NavEntry): entry is NavGroup {
             </button>
             <button class="hub-btn"
                     (click)="openHub()"
-                    [matTooltip]="sidebarCollapsed() ? 'Messages & Alerts' : ''"
+                    [matTooltip]="sidebarCollapsed() ? ('NAV.messagesAlerts' | translate) : ''"
                     matTooltipPosition="right">
               <mat-icon
                 [class.bell-ringing]="unreadCount() > 0"
@@ -212,14 +214,14 @@ function isGroup(entry: NavEntry): entry is NavGroup {
           </div>
           <mat-menu #userMenu="matMenu">
             <button mat-menu-item routerLink="/profile">
-              <mat-icon>person</mat-icon> Profile
+              <mat-icon>person</mat-icon> {{ 'NAV.profile' | translate }}
             </button>
             <button mat-menu-item routerLink="/settings">
-              <mat-icon>settings</mat-icon> Settings
+              <mat-icon>settings</mat-icon> {{ 'NAV.settings' | translate }}
             </button>
             <mat-divider />
             <button mat-menu-item (click)="logout()">
-              <mat-icon>logout</mat-icon> Sign out
+              <mat-icon>logout</mat-icon> {{ 'NAV.signOut' | translate }}
             </button>
           </mat-menu>
         </div>
@@ -231,18 +233,18 @@ function isGroup(entry: NavEntry): entry is NavGroup {
           @if (inactivityWarning()) {
             <div class="inactivity-banner">
               <mat-icon>timer</mat-icon>
-              <span>You've been inactive. You'll be logged out in 2 minutes.</span>
-              <button (click)="authService.startActivityTracking()">Stay logged in</button>
+              <span>{{ 'NAV.inactivityWarning' | translate }}</span>
+              <button (click)="authService.startActivityTracking()">{{ 'NAV.stayLoggedIn' | translate }}</button>
             </div>
           }
           <router-outlet />
         </main>
         <footer class="app-footer">
-          <span>Built by <a href="https://www.headsoft.net" target="_blank">HeadSoft Tech</a> &times; <a href="https://www.helenacoaching.com" target="_blank">Helena Coaching</a></span>
+          <span>{{ 'NAV.builtBy' | translate }} <a href="https://www.headsoft.net" target="_blank">HeadSoft Tech</a> &times; <a href="https://www.helenacoaching.com" target="_blank">Helena Coaching</a></span>
           <div class="footer-legal">
-            <a routerLink="/termsofservice" target="_blank">Terms</a>
-            <a routerLink="/privacystatement" target="_blank">Privacy</a>
-            <a routerLink="/eula" target="_blank">EULA</a>
+            <a routerLink="/termsofservice" target="_blank">{{ 'NAV.terms' | translate }}</a>
+            <a routerLink="/privacystatement" target="_blank">{{ 'NAV.privacy' | translate }}</a>
+            <a routerLink="/eula" target="_blank">{{ 'NAV.eula' | translate }}</a>
           </div>
         </footer>
       </div>
@@ -600,52 +602,52 @@ export class AppShellComponent implements OnInit, OnDestroy {
   isGroup = isGroup;
 
   private readonly ALL_NAV: NavEntry[] = [
-    { label: 'Dashboard',               icon: 'dashboard',    route: '/dashboard', roles: ['admin', 'hr_manager', 'manager', 'coach'] as AppRole[] },
+    { label: 'NAV.dashboard',               icon: 'dashboard',    route: '/dashboard', roles: ['admin', 'hr_manager', 'manager', 'coach'] as AppRole[] },
     {
-      label: 'Conflict Intelligence',
+      label: 'NAV.conflict',
       icon: 'warning_amber',
       module: 'conflict',
       children: [
-        { label: 'Analysis',           icon: 'analytics',   route: '/conflict/analysis',           roles: ['admin', 'hr_manager', 'manager', 'coach'] as AppRole[], module: 'conflict' },
-        { label: 'Conflict IDPs',      icon: 'psychology',  route: '/conflict/skill-development',  roles: ['admin', 'hr_manager', 'manager', 'coach'] as AppRole[], module: 'conflict' },
-        { label: 'Knowledge Building', icon: 'school',      route: '/conflict/skill-building',     roles: ['admin', 'hr_manager', 'manager', 'coach'] as AppRole[], module: 'conflict' },
+        { label: 'NAV.conflictAnalysis',   icon: 'analytics',   route: '/conflict/analysis',           roles: ['admin', 'hr_manager', 'manager', 'coach'] as AppRole[], module: 'conflict' },
+        { label: 'NAV.conflictIDPs',       icon: 'psychology',  route: '/conflict/skill-development',  roles: ['admin', 'hr_manager', 'manager', 'coach'] as AppRole[], module: 'conflict' },
+        { label: 'NAV.knowledgeBuilding',  icon: 'school',      route: '/conflict/skill-building',     roles: ['admin', 'hr_manager', 'manager', 'coach'] as AppRole[], module: 'conflict' },
       ],
     },
-    { label: 'Neuro-Inclusion',         icon: 'psychology',   route: '/neuroinclusion', roles: ['admin', 'hr_manager', 'manager'],               module: 'neuroinclusion' },
-    { label: 'Leadership & Succession', icon: 'trending_up',  route: '/succession',  roles: ['admin', 'hr_manager', 'coach', 'coachee'],        module: 'succession' },
+    { label: 'NAV.neuroinclusion',         icon: 'psychology',   route: '/neuroinclusion', roles: ['admin', 'hr_manager', 'manager'],               module: 'neuroinclusion' },
+    { label: 'NAV.leadershipSuccession',   icon: 'trending_up',  route: '/succession',  roles: ['admin', 'hr_manager', 'coach', 'coachee'],        module: 'succession' },
     {
-      label: 'Coaching',
+      label: 'NAV.coaching',
       icon: 'psychology_alt',
       module: 'coaching',
       children: [
-        { label: 'Engagements', icon: 'groups_2',     route: '/coaching',  roles: ['admin', 'hr_manager', 'coach', 'coachee'] as AppRole[], module: 'coaching' },
-        { label: 'Coachees',    icon: 'people_alt',   route: '/coaching/coachees', roles: ['coach'] as AppRole[],                               module: 'coaching' },
-        { label: 'Sponsors',    icon: 'account_balance', route: '/sponsors', roles: ['admin', 'hr_manager', 'coach'] as AppRole[],            module: 'coaching' },
-        { label: 'My Journal',  icon: 'menu_book',    route: '/journal',   roles: ['admin', 'hr_manager', 'coach'] as AppRole[],            module: 'coaching' },
+        { label: 'NAV.engagements', icon: 'groups_2',     route: '/coaching',  roles: ['admin', 'hr_manager', 'coach', 'coachee'] as AppRole[], module: 'coaching' },
+        { label: 'NAV.coachees',    icon: 'people_alt',   route: '/coaching/coachees', roles: ['coach'] as AppRole[],                               module: 'coaching' },
+        { label: 'NAV.sponsors',    icon: 'account_balance', route: '/sponsors', roles: ['admin', 'hr_manager', 'coach'] as AppRole[],            module: 'coaching' },
+        { label: 'NAV.myJournal',   icon: 'menu_book',    route: '/journal',   roles: ['admin', 'hr_manager', 'coach'] as AppRole[],            module: 'coaching' },
       ],
     },
-    { label: 'Booking',            icon: 'event_available', route: '/booking',     roles: ['admin', 'hr_manager', 'coach'],              module: 'coaching' },
+    { label: 'NAV.booking',            icon: 'event_available', route: '/booking',     roles: ['admin', 'hr_manager', 'coach'],              module: 'coaching' },
     {
-      label: 'Intakes',
+      label: 'NAV.intakes',
       icon: 'record_voice_over',
       children: [
-        { label: 'Conduct Interview', icon: 'mic',        route: '/coach/interview', roles: ['coach'] as AppRole[] },
-        { label: 'Intake Management',  icon: 'assignment', route: '/intakes',         roles: ['coach'] as AppRole[] },
+        { label: 'NAV.conductInterview', icon: 'mic',        route: '/coach/interview', roles: ['coach'] as AppRole[] },
+        { label: 'NAV.intakeManagement', icon: 'assignment', route: '/intakes',         roles: ['coach'] as AppRole[] },
       ],
     },
     {
-      label: 'Administration',
+      label: 'NAV.admin',
       icon: 'admin_panel_settings',
       children: [
-        { label: 'Intake Management', icon: 'assignment',           route: '/intakes',              roles: ['admin', 'hr_manager'] },
-        { label: 'Users',             icon: 'group',               route: '/admin/users',          roles: ['admin', 'hr_manager'] },
-        { label: 'Organization',      icon: 'business',            route: '/admin/organization',   roles: ['admin'] },
-        { label: 'Org Chart',         icon: 'account_tree',        route: '/org-chart',            roles: ['admin', 'hr_manager'] },
-        { label: 'Role Permissions',  icon: 'policy',              route: '/admin/roles',          roles: ['admin', 'hr_manager'] },
-        { label: 'EQi Assessments',    icon: 'psychology',          route: '/eq-import/records',    roles: ['admin'] },
-        { label: 'Reports',           icon: 'assessment',          route: '/admin/reports',        roles: ['admin', 'hr_manager'] },
-        { label: 'Activity Log',      icon: 'history',             route: '/admin/activity',       roles: ['admin', 'hr_manager'] },
-        { label: 'Billing',           icon: 'receipt_long',        route: '/billing',              roles: ['admin'] },
+        { label: 'NAV.intakeManagement', icon: 'assignment',           route: '/intakes',              roles: ['admin', 'hr_manager'] },
+        { label: 'NAV.users',             icon: 'group',               route: '/admin/users',          roles: ['admin', 'hr_manager'] },
+        { label: 'NAV.organization',      icon: 'business',            route: '/admin/organization',   roles: ['admin'] },
+        { label: 'NAV.orgChart',           icon: 'account_tree',        route: '/org-chart',            roles: ['admin', 'hr_manager'] },
+        { label: 'NAV.rolePermissions',   icon: 'policy',              route: '/admin/roles',          roles: ['admin', 'hr_manager'] },
+        { label: 'NAV.eqiAssessments',    icon: 'psychology',          route: '/eq-import/records',    roles: ['admin'] },
+        { label: 'NAV.reports',           icon: 'assessment',          route: '/admin/reports',        roles: ['admin', 'hr_manager'] },
+        { label: 'NAV.activityLog',      icon: 'history',             route: '/admin/activity',       roles: ['admin', 'hr_manager'] },
+        { label: 'NAV.billing',           icon: 'receipt_long',        route: '/billing',              roles: ['admin'] },
       ],
     },
   ];

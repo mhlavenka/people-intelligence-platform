@@ -4,18 +4,21 @@ import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-conflict-skill-building',
   standalone: true,
-  imports: [CommonModule, RouterLink, MatIconModule, MatButtonModule, MatTooltipModule],
+  imports: [CommonModule, RouterLink, MatIconModule, MatButtonModule, MatTooltipModule,
+    TranslateModule,
+  ],
   template: `
     <!-- Knowledge & Skill Building -->
     <div class="section-card knowledge">
       <div class="section-header">
         <div class="section-icon blue"><mat-icon>school</mat-icon></div>
         <div>
-          <h3>Knowledge &amp; Skill Building</h3>
+          <h3>{{ "CONFLICT.knowledgeSkillBuilding" | translate }}</h3>
           <p>Structured learning paths to build conflict literacy, emotional intelligence, and leadership capability — drawing on tools available within this platform and leading external assessments.</p>
         </div>
       </div>
@@ -60,7 +63,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
       <div class="section-header">
         <div class="section-icon green"><mat-icon>handshake</mat-icon></div>
         <div>
-          <h3>Interest-Based Negotiation Toolkit</h3>
+          <h3>{{ "CONFLICT.negotiationToolkit" | translate }}</h3>
           <p>Downloadable frameworks and guided exercises for self-directed conflict resolution, based on Helena's methodology.</p>
         </div>
       </div>

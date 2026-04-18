@@ -10,6 +10,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ApiService } from '../../core/api.service';
+import { TranslateModule } from '@ngx-translate/core';
 
 // ── Layout constants ──────────────────────────────────────────────────────────
 const NW   = 300;   // node width
@@ -176,6 +177,7 @@ const DEPT_PALETTE = [
     MatTooltipModule,
     MatProgressSpinnerModule,
     MatSnackBarModule,
+    TranslateModule,
   ],
   template: `
     <div class="oc-page">

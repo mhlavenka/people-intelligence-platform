@@ -13,6 +13,7 @@ import { ConflictAnalyzeDialogComponent } from '../conflict-analyze-dialog/confl
 import { ConflictIdpDialogComponent } from '../conflict-idp-dialog/conflict-idp-dialog.component';
 import { MiniGaugeComponent } from '../../../shared/mini-gauge/mini-gauge.component';
 import { RiskBadgeComponent } from '../../../shared/risk-badge/risk-badge.component';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 interface ConflictMilestone {
   _id: string;
@@ -67,6 +68,7 @@ interface ConflictAnalysis {
     DatePipe,
     MiniGaugeComponent,
     RiskBadgeComponent,
+    TranslateModule,
   ],
   template: `
     <div class="conflict-page">
@@ -74,7 +76,7 @@ interface ConflictAnalysis {
       <!-- Page header -->
       <div class="page-header">
         <div>
-          <h1>Conflict Intelligence™</h1>
+          <h1>{{ "CONFLICT.title" | translate }}</h1>
           <p>Proactive workplace conflict detection and resolution grounded in Helena's coaching-integrated mediation methodology</p>
         </div>
       </div>
@@ -110,7 +112,7 @@ interface ConflictAnalysis {
       <!-- Analyses list -->
       <div class="analyses-section">
         <div class="analyses-header">
-          <h2>Analyses</h2>
+          <h2>{{ "CONFLICT.analyses" | translate }}</h2>
           <span class="analyses-count">{{ analyses().length }} total</span>
         </div>
 
@@ -164,7 +166,7 @@ interface ConflictAnalysis {
 
                 <div class="analysis-card-actions">
                   <button mat-stroked-button (click)="viewAnalysis(a)">
-                    <mat-icon>open_in_new</mat-icon> View Details
+                    <mat-icon>open_in_new</mat-icon> {{ "CONFLICT.viewDetails" | translate }}
                   </button>
                   @if (!a.escalationRequested && (a.riskLevel === 'high' || a.riskLevel === 'critical')) {
                     <button mat-stroked-button color="warn" (click)="escalate(a._id)">
@@ -178,7 +180,7 @@ interface ConflictAnalysis {
             <!-- New Analysis card -->
             <div class="analysis-card new-analysis-card" (click)="runNewAnalysis()">
               <mat-icon class="new-analysis-icon">add</mat-icon>
-              <span>New Analysis</span>
+              <span>{{ "CONFLICT.newAnalysis" | translate }}</span>
             </div>
           </div>
         }
@@ -189,7 +191,7 @@ interface ConflictAnalysis {
         <div class="section-header">
           <div class="section-icon red"><mat-icon>escalator_warning</mat-icon></div>
           <div>
-            <h3>Mediation Escalation Pathway</h3>
+            <h3>{{ "CONFLICT.mediationPathway" | translate }}</h3>
             <p>When coaching guides are insufficient, escalate directly to Helena's professional mediation services — coaching-integrated, interest-based, and designed to preserve relationships.</p>
           </div>
         </div>
@@ -225,7 +227,7 @@ interface ConflictAnalysis {
         </div>
         <a href="mailto:helena@helenacoaching.com?subject=Mediation%20Escalation%20Request"
            mat-stroked-button class="escalation-cta">
-          <mat-icon>email</mat-icon> Contact Helena for Mediation
+          <mat-icon>email</mat-icon> {{ "CONFLICT.contactHelena" | translate }}
         </a>
       </div>
 
@@ -234,7 +236,7 @@ interface ConflictAnalysis {
         <div class="section-header">
           <div class="section-icon purple"><mat-icon>psychology</mat-icon></div>
           <div>
-            <h3>Skill Development Plans</h3>
+            <h3>{{ "CONFLICT.skillDevPlans" | translate }}</h3>
             <p>Generate AI-powered Individual Development Plans (IDPs) based on conflict analysis findings — targeted skill building using the GROW model.</p>
           </div>
           @if (analyses().length > 0) {
@@ -320,7 +322,7 @@ interface ConflictAnalysis {
 
                 <!-- Milestone timeline -->
                 <div class="milestone-section">
-                  <h4>Milestones</h4>
+                  <h4>{{ "CONFLICT.milestones" | translate }}</h4>
                   <div class="milestone-timeline">
                     @for (ms of idp.milestones; track ms._id) {
                       <div class="milestone-item" [class]="ms.status">

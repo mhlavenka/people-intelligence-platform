@@ -16,6 +16,7 @@ import { ApiService } from '../../../core/api.service';
 import { SurveyResponsesDialogComponent } from '../../survey/survey-responses-dialog/survey-responses-dialog.component';
 import { MiniGaugeComponent } from '../../../shared/mini-gauge/mini-gauge.component';
 import { RiskBadgeComponent } from '../../../shared/risk-badge/risk-badge.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 type ScriptSection =
   | { key: string; label: string; type: 'string'; value: string }
@@ -64,6 +65,7 @@ interface RecommendedActions {
     MatChipsModule, MatDividerModule, MatProgressSpinnerModule,
     MatTooltipModule, MatSnackBarModule, MatDialogModule, MatExpansionModule, MatCheckboxModule,
     MiniGaugeComponent, RiskBadgeComponent,
+    TranslateModule,
   ],
   template: `
     @if (loading()) {
@@ -71,7 +73,7 @@ interface RecommendedActions {
     } @else if (!analysis()) {
       <div class="not-found">
         <mat-icon>error_outline</mat-icon>
-        <h2>Analysis not found</h2>
+        <h2>{{ "CONFLICT.analysisNotFound" | translate }}</h2>
         <a mat-stroked-button routerLink="/conflict/analysis">
           <mat-icon>arrow_back</mat-icon> Back to analyses
         </a>
@@ -106,7 +108,7 @@ interface RecommendedActions {
           <div class="header-right">
             <div class="score-block" [class]="analysis()!.riskLevel">
               <div class="score-num">{{ analysis()!.riskScore }}</div>
-              <div class="score-label">Risk Score</div>
+              <div class="score-label">{{ "CONFLICT.riskScore" | translate }}</div>
             </div>
             <app-risk-badge [level]="analysis()!.riskLevel" [label]="(analysis()!.riskLevel | titlecase) + ' Risk'" />
           </div>
@@ -127,11 +129,11 @@ interface RecommendedActions {
           <mat-tab>
             <ng-template mat-tab-label>
               <mat-icon>auto_awesome</mat-icon>
-              <span>AI Analysis</span>
+              <span>{{ "CONFLICT.aiAnalysis" | translate }}</span>
             </ng-template>
             <div class="tab-body">
               <div class="section">
-                <h3><mat-icon>auto_awesome</mat-icon> AI Narrative</h3>
+                <h3><mat-icon>auto_awesome</mat-icon> {{ "CONFLICT.aiNarrative" | translate }}</h3>
                 <div class="narrative">
                   @for (para of splitParagraphs(analysis()!.aiNarrative); track $index) {
                     <p>{{ para }}</p>
@@ -142,7 +144,7 @@ interface RecommendedActions {
               @if (analysis()!.conflictTypes.length) {
                 <mat-divider />
                 <div class="section">
-                  <h3><mat-icon>manage_search</mat-icon> Drill-down by Conflict Type</h3>
+                  <h3><mat-icon>manage_search</mat-icon> {{ "CONFLICT.drillDown" | translate }}</h3>
                   <p class="drill-hint">Run a focused sub-analysis for each detected conflict type.</p>
                   <div class="sub-analyses-list">
                     @for (ct of analysis()!.conflictTypes; track ct) {
@@ -203,7 +205,7 @@ interface RecommendedActions {
               @if (analysis()!.managerScript) {
                 <mat-divider />
                 <div class="section">
-                  <h3><mat-icon>record_voice_over</mat-icon> Manager Conversation Guide</h3>
+                  <h3><mat-icon>record_voice_over</mat-icon> {{ "CONFLICT.managerGuide" | translate }}</h3>
                   @if (scriptSections().length > 0) {
                     <div class="script-sections">
                       @for (section of scriptSections(); track section.key) {
@@ -217,7 +219,7 @@ interface RecommendedActions {
                           }
                           @if (section.type === 'topics') {
                             <table class="topics-table">
-                              <thead><tr><th>Topic</th><th>Talking Points</th></tr></thead>
+                              <thead><tr><th>{{ "CONFLICT.topic" | translate }}</th><th>{{ "CONFLICT.talkingPoints" | translate }}</th></tr></thead>
                               <tbody>
                                 @for (row of section.topics; track $index) {
                                   <tr>
@@ -243,19 +245,19 @@ interface RecommendedActions {
           <mat-tab>
             <ng-template mat-tab-label>
               <mat-icon>lightbulb</mat-icon>
-              <span>AI Recommended Actions</span>
+              <span>{{ "CONFLICT.aiRecommendedActions" | translate }}</span>
             </ng-template>
             <div class="tab-body">
               @if (!recommendedActions() && !generatingActions()) {
                 <div class="generate-state">
                   <mat-icon>lightbulb</mat-icon>
-                  <h3>AI Recommended Actions</h3>
+                  <h3>{{ "CONFLICT.aiRecommendedActions" | translate }}</h3>
                   <p>
                     Generate concrete, prioritized action items based on this analysis.
                     Actions are grouped by timeframe — immediate, short-term, and long-term.
                   </p>
                   <button mat-flat-button color="primary" (click)="generateActions()">
-                    <mat-icon>auto_awesome</mat-icon> Generate Recommended Actions
+                    <mat-icon>auto_awesome</mat-icon> {{ "CONFLICT.generateRecommendedActions" | translate }}
                   </button>
                 </div>
               }

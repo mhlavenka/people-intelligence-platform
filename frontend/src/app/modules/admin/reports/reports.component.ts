@@ -6,6 +6,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ApiService } from '../../../core/api.service';
+import { TranslateModule } from '@ngx-translate/core';
 
 interface EngagementReport {
   users: { total: number; active: number; recentLogins: number };
@@ -44,13 +45,15 @@ const ROLE_LABELS: Record<string, string> = {
 @Component({
   selector: 'app-org-reports',
   standalone: true,
-  imports: [CommonModule, MatIconModule, MatButtonModule, MatProgressSpinnerModule, MatDividerModule, MatTooltipModule],
+  imports: [CommonModule, MatIconModule, MatButtonModule, MatProgressSpinnerModule, MatDividerModule, MatTooltipModule,
+    TranslateModule,
+  ],
   template: `
     <div class="page">
       <div class="page-header">
         <div>
-          <h1>Reports</h1>
-          <p>Organization analytics, engagement metrics, and module activity</p>
+          <h1>{{ "ADMIN.reports" | translate }}</h1>
+          <p>{{ "ADMIN.reportsDesc" | translate }}</p>
         </div>
       </div>
 
@@ -63,8 +66,8 @@ const ROLE_LABELS: Record<string, string> = {
           <div class="report-header">
             <mat-icon>groups</mat-icon>
             <div>
-              <h2>Team Engagement</h2>
-              <p>User activity and login trends</p>
+              <h2>{{ "ADMIN.teamEngagement" | translate }}</h2>
+              <p>{{ "ADMIN.teamEngagementDesc" | translate }}</p>
             </div>
           </div>
           @if (engagement()) {

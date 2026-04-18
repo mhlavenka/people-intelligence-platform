@@ -10,6 +10,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { JournalService, ReflectiveEntry, JournalMood } from '../journal.service';
 
+import { TranslateModule } from '@ngx-translate/core';
 const MOOD_CONFIG: Record<JournalMood, { icon: string; color: string }> = {
   energized:  { icon: 'bolt',           color: '#f59e0b' },
   reflective: { icon: 'self_improvement', color: '#3A9FD6' },
@@ -25,6 +26,7 @@ const MOOD_CONFIG: Record<JournalMood, { icon: string; color: string }> = {
     CommonModule, DatePipe, FormsModule, RouterLink,
     MatIconModule, MatButtonModule, MatProgressSpinnerModule, MatSelectModule,
     MatFormFieldModule, MatSlideToggleModule,
+    TranslateModule,
   ],
   template: `
     <div class="journal-page">
@@ -41,7 +43,7 @@ const MOOD_CONFIG: Record<JournalMood, { icon: string; color: string }> = {
       <!-- Filters -->
       <div class="filter-bar">
         <mat-form-field appearance="outline" class="filter-field">
-          <mat-label>Mood</mat-label>
+          <mat-label>{{ 'JOURNAL.moodFilter' | translate }}</mat-label>
           <mat-select [(ngModel)]="moodFilter" (selectionChange)="applyFilters()">
             <mat-option value="">All</mat-option>
             @for (m of moods; track m) {
@@ -57,7 +59,7 @@ const MOOD_CONFIG: Record<JournalMood, { icon: string; color: string }> = {
       } @else if (filtered().length === 0) {
         <div class="empty-state">
           <mat-icon>edit_note</mat-icon>
-          <h3>No reflective entries yet</h3>
+          <h3>{{ 'JOURNAL.noReflectiveEntries' | translate }}</h3>
           <p>Capture your coaching reflections, professional insights, and supervision preparation notes.</p>
         </div>
       } @else {

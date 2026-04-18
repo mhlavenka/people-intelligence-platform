@@ -13,6 +13,7 @@ import { AuthService } from '../../../core/auth.service';
 import { EngagementDialogComponent } from '../engagement-dialog/engagement-dialog.component';
 import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog.component';
 
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 interface DashboardStats {
   activeEngagements: number;
   totalEngagements: number;
@@ -71,13 +72,14 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: string
   imports: [
     CommonModule, DatePipe, RouterLink, MatIconModule, MatButtonModule,
     MatProgressSpinnerModule, MatSnackBarModule, MatTooltipModule, MatMenuModule,
+    TranslateModule,
   ],
   template: `
     <div class="coaching-page">
       <div class="page-header">
         <div>
-          <h1>Coaching</h1>
-          <p>Manage coaching engagements and sessions</p>
+          <h1>{{ 'COACHING.title' | translate }}</h1>
+          <p>{{ 'COACHING.subtitle' | translate }}</p>
         </div>
       </div>
 
@@ -87,11 +89,11 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: string
 
         <!-- Stats -->
         <div class="stats-row">
-          <div class="stat-card"><div class="stat-num">{{ stats()?.activeEngagements ?? 0 }}</div><div class="stat-label">Active</div></div>
-          <div class="stat-card"><div class="stat-num">{{ stats()?.completedSessions ?? 0 }}</div><div class="stat-label">Sessions</div></div>
-          <div class="stat-card"><div class="stat-num">{{ stats()?.totalHours ?? 0 }}h</div><div class="stat-label">Hours</div></div>
-          <div class="stat-card"><div class="stat-num">{{ stats()?.upcomingSessions ?? 0 }}</div><div class="stat-label">Upcoming</div></div>
-          <div class="stat-card"><div class="stat-num">{{ stats()?.totalEngagements ?? 0 }}</div><div class="stat-label">Total</div></div>
+          <div class="stat-card"><div class="stat-num">{{ stats()?.activeEngagements ?? 0 }}</div><div class="stat-label">{{ 'COACHING.active' | translate }}</div></div>
+          <div class="stat-card"><div class="stat-num">{{ stats()?.completedSessions ?? 0 }}</div><div class="stat-label">{{ 'COACHING.sessions' | translate }}</div></div>
+          <div class="stat-card"><div class="stat-num">{{ stats()?.totalHours ?? 0 }}h</div><div class="stat-label">{{ 'COACHING.hours' | translate }}</div></div>
+          <div class="stat-card"><div class="stat-num">{{ stats()?.upcomingSessions ?? 0 }}</div><div class="stat-label">{{ 'COACHING.upcoming' | translate }}</div></div>
+          <div class="stat-card"><div class="stat-num">{{ stats()?.totalEngagements ?? 0 }}</div><div class="stat-label">{{ 'COACHING.total' | translate }}</div></div>
         </div>
 
         <div class="main-layout">
@@ -100,8 +102,8 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: string
             @if (engagements().length === 0 && !canManage()) {
               <div class="empty-state">
                 <mat-icon>psychology_alt</mat-icon>
-                <h3>No coaching engagements yet</h3>
-                <p>You'll see your engagements here once your coach sets one up.</p>
+                <h3>{{ 'COACHING.noEngagementsYet' | translate }}</h3>
+                <p>{{ 'COACHING.noEngagementsDesc' | translate }}</p>
               </div>
             } @else {
               <div class="engagements-grid">
@@ -119,8 +121,8 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: string
                           <mat-icon>more_vert</mat-icon>
                         </button>
                         <mat-menu #engMenu="matMenu">
-                          <button mat-menu-item (click)="editEngagement(eng)"><mat-icon>edit</mat-icon> Edit</button>
-                          <button mat-menu-item class="delete-item" (click)="deleteEngagement(eng)"><mat-icon>delete</mat-icon> Delete</button>
+                          <button mat-menu-item (click)="editEngagement(eng)"><mat-icon>edit</mat-icon> {{ 'COMMON.edit' | translate }}</button>
+                          <button mat-menu-item class="delete-item" (click)="deleteEngagement(eng)"><mat-icon>delete</mat-icon> {{ 'COMMON.delete' | translate }}</button>
                         </mat-menu>
                       }
                     </div>
@@ -137,7 +139,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: string
                           <div class="coachee-info">
                             <strong>{{ eng.coachId.firstName }} {{ eng.coachId.lastName }}</strong>
                             @if (eng.coachId.email) { <span>{{ eng.coachId.email }}</span> }
-                            <span class="role-label">Your coach</span>
+                            <span class="role-label">{{ 'COACHING.yourCoach' | translate }}</span>
                           </div>
                         }
                       } @else {
@@ -180,7 +182,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: string
                 @if (canManage()) {
                   <button class="engagement-card add-card" (click)="createEngagement()" type="button">
                     <mat-icon class="add-icon">add</mat-icon>
-                    <span class="add-label">New engagement</span>
+                    <span class="add-label">{{ 'COACHING.newEngagement' | translate }}</span>
                   </button>
                 }
               </div>
@@ -220,7 +222,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: string
                 <!-- Upcoming sessions list -->
                 @if (upcomingSessions().length > 0) {
                   <div class="cal-upcoming">
-                    <h4>Upcoming</h4>
+                    <h4>{{ 'COACHING.upcoming' | translate }}</h4>
                     @for (s of upcomingSessions(); track s._id) {
                       <a class="upcoming-item" [routerLink]="'/coaching/' + s.engagementId">
                         <span class="upcoming-date">{{ s.date | date:'MMM d' }}</span>
@@ -420,6 +422,7 @@ export class CoachingDashboardComponent implements OnInit {
     private dialog: MatDialog,
     private snack: MatSnackBar,
     private router: Router,
+    private translate: TranslateService,
   ) {}
 
   canManage = () => ['admin', 'hr_manager', 'coach'].includes(this.auth.currentUser()?.role ?? '');
@@ -520,7 +523,7 @@ export class CoachingDashboardComponent implements OnInit {
   deleteEngagement(eng: Engagement): void {
     const ref = this.dialog.open(ConfirmDialogComponent, {
       width: '420px',
-      data: { title: 'Delete Engagement', message: 'Delete this engagement and all its sessions? This cannot be undone.', confirmLabel: 'Delete', confirmColor: 'warn', icon: 'delete_forever' },
+      data: { title: this.translate.instant('COACHING.deleteEngagement'), message: this.translate.instant('COACHING.deleteEngagementConfirm'), confirmLabel: this.translate.instant('COMMON.delete'), confirmColor: 'warn', icon: 'delete_forever' },
     });
     ref.afterClosed().subscribe((confirmed) => {
       if (!confirmed) return;

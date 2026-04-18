@@ -9,6 +9,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { ApiService } from '../../../core/api.service';
 import { ConflictIdpDialogComponent } from '../conflict-idp-dialog/conflict-idp-dialog.component';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 interface ConflictMilestone {
   _id: string;
@@ -46,16 +47,17 @@ interface ConflictAnalysis {
   imports: [
     CommonModule, MatIconModule, MatButtonModule, MatProgressSpinnerModule,
     MatDialogModule, MatSnackBarModule, MatTooltipModule, MatExpansionModule, DatePipe,
+    TranslateModule,
   ],
   template: `
     <div class="section-header">
       <div class="section-icon purple"><mat-icon>psychology</mat-icon></div>
       <div>
-        <h3>Skill Development Plans</h3>
+        <h3>{{ "CONFLICT.skillDevPlans" | translate }}</h3>
         <p>Generate AI-powered Individual Development Plans (IDPs) based on conflict analysis findings — targeted skill building using the GROW model.</p>
       </div>
       <button mat-raised-button color="primary" class="section-action-btn" (click)="openDialog()">
-        <mat-icon>add_circle</mat-icon> Generate Conflict IDP
+        <mat-icon>add_circle</mat-icon> {{ "CONFLICT.generateConflictIDP" | translate }}
       </button>
     </div>
 
@@ -104,7 +106,7 @@ interface ConflictAnalysis {
             </mat-accordion>
 
             <div class="milestone-section">
-              <h4>Milestones</h4>
+              <h4>{{ "CONFLICT.milestones" | translate }}</h4>
               <div class="milestone-timeline">
                 @for (ms of idp.milestones; track ms._id) {
                   <div class="milestone-item" [class]="ms.status">

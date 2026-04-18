@@ -8,6 +8,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatStepperModule } from '@angular/material/stepper';
+import { TranslateModule } from '@ngx-translate/core';
 import { AuthService } from '../../../core/auth.service';
 
 @Component({
@@ -23,13 +24,14 @@ import { AuthService } from '../../../core/auth.service';
     MatIconModule,
     MatProgressSpinnerModule,
     MatStepperModule,
+    TranslateModule,
   ],
   template: `
     <div class="auth-page">
       <div class="auth-card">
         <div class="auth-brand">
           <div class="brand-logo"><span class="logo-pip">ARTES</span></div>
-          <h1>Create Your Organization</h1>
+          <h1>{{ 'AUTH.createOrganization' | translate }}</h1>
           <p>ARTES</p>
         </div>
 
@@ -39,48 +41,48 @@ import { AuthService } from '../../../core/auth.service';
 
         <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
           <mat-stepper orientation="vertical" [linear]="true" #stepper>
-            <mat-step label="Organization" [stepControl]="orgGroup">
+            <mat-step [label]="'AUTH.organizationStep' | translate" [stepControl]="orgGroup">
               <div formGroupName="org" class="step-fields">
                 <mat-form-field appearance="outline" class="full-width">
-                  <mat-label>Organization Name</mat-label>
+                  <mat-label>{{ 'AUTH.organizationName' | translate }}</mat-label>
                   <input matInput formControlName="orgName" />
                 </mat-form-field>
                 <mat-form-field appearance="outline" class="full-width">
-                  <mat-label>Slug (unique URL identifier)</mat-label>
+                  <mat-label>{{ 'AUTH.slug' | translate }}</mat-label>
                   <input matInput formControlName="orgSlug" />
-                  <mat-hint>Lowercase letters, numbers, hyphens only</mat-hint>
+                  <mat-hint>{{ 'AUTH.slugHint' | translate }}</mat-hint>
                 </mat-form-field>
                 <mat-form-field appearance="outline" class="full-width">
-                  <mat-label>Billing Email</mat-label>
+                  <mat-label>{{ 'AUTH.billingEmail' | translate }}</mat-label>
                   <input matInput type="email" formControlName="billingEmail" />
                 </mat-form-field>
-                <button mat-raised-button color="primary" matStepperNext type="button">Next</button>
+                <button mat-raised-button color="primary" matStepperNext type="button">{{ 'COMMON.next' | translate }}</button>
               </div>
             </mat-step>
 
-            <mat-step label="Admin Account" [stepControl]="adminGroup">
+            <mat-step [label]="'AUTH.adminAccountStep' | translate" [stepControl]="adminGroup">
               <div formGroupName="admin" class="step-fields">
                 <div class="name-row">
                   <mat-form-field appearance="outline">
-                    <mat-label>First Name</mat-label>
+                    <mat-label>{{ 'AUTH.firstName' | translate }}</mat-label>
                     <input matInput formControlName="firstName" />
                   </mat-form-field>
                   <mat-form-field appearance="outline">
-                    <mat-label>Last Name</mat-label>
+                    <mat-label>{{ 'AUTH.lastName' | translate }}</mat-label>
                     <input matInput formControlName="lastName" />
                   </mat-form-field>
                 </div>
                 <mat-form-field appearance="outline" class="full-width">
-                  <mat-label>Work Email</mat-label>
+                  <mat-label>{{ 'AUTH.workEmail' | translate }}</mat-label>
                   <input matInput type="email" formControlName="email" />
                 </mat-form-field>
                 <mat-form-field appearance="outline" class="full-width">
-                  <mat-label>Password</mat-label>
+                  <mat-label>{{ 'AUTH.password' | translate }}</mat-label>
                   <input matInput type="password" formControlName="password" />
-                  <mat-hint>Minimum 8 characters</mat-hint>
+                  <mat-hint>{{ 'AUTH.minChars' | translate }}</mat-hint>
                 </mat-form-field>
                 <div class="step-actions">
-                  <button mat-button matStepperPrevious type="button">Back</button>
+                  <button mat-button matStepperPrevious type="button">{{ 'COMMON.back' | translate }}</button>
                   <button
                     mat-raised-button
                     color="primary"
@@ -88,7 +90,7 @@ import { AuthService } from '../../../core/auth.service';
                     [disabled]="loading()"
                   >
                     @if (loading()) { <mat-spinner diameter="18" /> }
-                    @else { Create Organization }
+                    @else { {{ 'AUTH.createOrganization' | translate }} }
                   </button>
                 </div>
               </div>
@@ -97,7 +99,7 @@ import { AuthService } from '../../../core/auth.service';
         </form>
 
         <div class="auth-links">
-          <a routerLink="/auth/login">Already have an account? Sign in</a>
+          <a routerLink="/auth/login">{{ 'AUTH.hasAccount' | translate }} {{ 'AUTH.signIn' | translate }}</a>
         </div>
       </div>
     </div>
@@ -186,7 +188,7 @@ export class RegisterComponent {
     this.authService.register({ ...org, ...admin }).subscribe({
       next: () => this.router.navigate(['/dashboard']),
       error: (err) => {
-        this.error.set(err.error?.error || 'Registration failed.');
+        this.error.set(err.error?.error || 'Registration failed');
         this.loading.set(false);
       },
     });

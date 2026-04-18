@@ -6,10 +6,13 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { JournalService, EngagementInsight } from '../journal.service';
 
+import { TranslateModule } from '@ngx-translate/core';
 @Component({
   selector: 'app-engagement-insights',
   standalone: true,
-  imports: [CommonModule, RouterLink, MatIconModule, MatButtonModule, MatProgressSpinnerModule],
+  imports: [CommonModule, RouterLink, MatIconModule, MatButtonModule, MatProgressSpinnerModule,
+    TranslateModule,
+  ],
   template: `
     <div class="journal-page">
       <div class="page-header">
@@ -20,7 +23,7 @@ import { JournalService, EngagementInsight } from '../journal.service';
       @if (!data() && !loading() && !error()) {
         <div class="generate-prompt">
           <mat-icon>insights</mat-icon>
-          <h3>Generate Cross-Session Insights</h3>
+          <h3>{{ 'JOURNAL.generateCrossSession' | translate }}</h3>
           <p>Analyze patterns across all completed session notes for this engagement.</p>
           <button mat-flat-button color="primary" (click)="generate()"><mat-icon>auto_awesome</mat-icon> Generate Insights</button>
         </div>
@@ -44,25 +47,25 @@ import { JournalService, EngagementInsight } from '../journal.service';
           </div>
 
           <div class="report-section">
-            <h3>Recurring Themes</h3>
+            <h3>{{ 'JOURNAL.recurringThemes' | translate }}</h3>
             <div class="theme-list">
               @for (t of data()!.recurringThemes; track t) { <span class="theme-chip">{{ t }}</span> }
             </div>
           </div>
 
           <div class="report-section">
-            <h3>Growth Arc</h3>
+            <h3>{{ 'JOURNAL.growthArc' | translate }}</h3>
             <p>{{ data()!.growthArc }}</p>
           </div>
 
           <div class="report-section">
-            <h3>Coach Observations</h3>
+            <h3>{{ 'JOURNAL.coachObservations' | translate }}</h3>
             <p>{{ data()!.coachObservations }}</p>
           </div>
 
           @if (data()!.openThreads.length) {
             <div class="report-section">
-              <h3>Open Threads</h3>
+              <h3>{{ 'JOURNAL.openThreads' | translate }}</h3>
               <ul>@for (t of data()!.openThreads; track t) { <li>{{ t }}</li> }</ul>
             </div>
           }

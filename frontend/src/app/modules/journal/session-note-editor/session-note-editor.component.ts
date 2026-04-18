@@ -17,6 +17,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { JournalService, SessionNote, AccountabilityItem } from '../journal.service';
 import { ApiService } from '../../../core/api.service';
 
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 @Component({
   selector: 'app-session-note-editor',
   standalone: true,
@@ -25,6 +26,7 @@ import { ApiService } from '../../../core/api.service';
     MatIconModule, MatButtonModule, MatTabsModule, MatFormFieldModule, MatInputModule,
     MatSelectModule, MatDatepickerModule, MatNativeDateModule, MatChipsModule,
     MatCheckboxModule, MatProgressSpinnerModule, MatSnackBarModule,
+    TranslateModule,
   ],
   template: `
     <div class="journal-page">
@@ -39,13 +41,13 @@ import { ApiService } from '../../../core/api.service';
         <!-- Meta fields -->
         <div class="meta-row">
           <mat-form-field appearance="outline">
-            <mat-label>Session Date</mat-label>
+            <mat-label>{{ 'JOURNAL.sessionDate' | translate }}</mat-label>
             <input matInput [matDatepicker]="dp" [(ngModel)]="sessionDate">
             <mat-datepicker-toggle matIconSuffix [for]="dp" />
             <mat-datepicker #dp />
           </mat-form-field>
           <mat-form-field appearance="outline">
-            <mat-label>Duration (min)</mat-label>
+            <mat-label>{{ 'JOURNAL.durationMin' | translate }}</mat-label>
             <input matInput type="number" [(ngModel)]="durationMinutes">
           </mat-form-field>
           <mat-form-field appearance="outline">
@@ -357,6 +359,7 @@ export class SessionNoteEditorComponent implements OnInit {
     private journal: JournalService,
     private api: ApiService,
     private snack: MatSnackBar,
+    private translate: TranslateService,
   ) {}
 
   ngOnInit(): void {

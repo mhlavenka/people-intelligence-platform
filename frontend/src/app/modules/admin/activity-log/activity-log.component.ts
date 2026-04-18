@@ -7,6 +7,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../../core/api.service';
 import { OrgContextService } from '../../../core/org-context.service';
+import { TranslateModule } from '@ngx-translate/core';
 
 interface ActivityItem {
   type: string;
@@ -54,18 +55,19 @@ const CLASS_MAP: Record<string, string> = {
     CommonModule, DatePipe, FormsModule,
     MatIconModule, MatProgressSpinnerModule,
     MatFormFieldModule, MatSelectModule,
+    TranslateModule,
   ],
   template: `
     <div class="page">
       <div class="page-header">
         <div>
-          <h1>Activity Log</h1>
+          <h1>{{ "ADMIN.activityLog" | translate }}</h1>
           <p>Everything that's happened across your organization's modules.</p>
         </div>
         <mat-form-field appearance="outline" class="type-filter">
           <mat-label>Type</mat-label>
           <mat-select [ngModel]="typeFilter()" (ngModelChange)="typeFilter.set($event)">
-            <mat-option value="all">All types</mat-option>
+            <mat-option value="all">{{ "ADMIN.allTypes" | translate }}</mat-option>
             @for (t of availableTypes(); track t.key) {
               <mat-option [value]="t.key">{{ t.label }}</mat-option>
             }

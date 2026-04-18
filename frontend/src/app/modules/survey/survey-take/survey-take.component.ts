@@ -10,6 +10,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ApiService } from '../../../core/api.service';
+import { TranslateModule } from '@ngx-translate/core';
 
 interface QuestionOption {
   value: string;
@@ -53,6 +54,7 @@ const DEPARTMENTS = [
     MatFormFieldModule,
     MatSelectModule,
     MatProgressSpinnerModule,
+    TranslateModule,
   ],
   template: `
     <div class="survey-page">
@@ -61,14 +63,14 @@ const DEPARTMENTS = [
         @if (loading()) {
           <div class="loading-center">
             <mat-spinner diameter="40" />
-            <p>Loading survey...</p>
+            <p>{{ "SURVEY.loadingSurvey" | translate }}</p>
           </div>
         } @else if (surveyInactive()) {
           <div class="thank-you">
             <div class="thank-you-icon already">
               <mat-icon>block</mat-icon>
             </div>
-            <h2>Survey no longer available</h2>
+            <h2>{{ "SURVEY.surveyNotAvailable" | translate }}</h2>
             <p>This survey has been closed by your administrator and is no longer accepting responses.</p>
             <button mat-raised-button color="primary" (click)="goToDashboard()">
               Back to Dashboard

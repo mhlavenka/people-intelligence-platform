@@ -70,8 +70,8 @@ const DEFAULT_SETTINGS: Settings = {
   template: `
     <div class="settings-page">
       <div class="page-header">
-        <h1>Settings</h1>
-        <p>Customize your experience and notification preferences</p>
+        <h1>{{ 'SETTINGS.title' | translate }}</h1>
+        <p>{{ 'SETTINGS.subtitle' | translate }}</p>
       </div>
 
       <div class="settings-layout">
@@ -81,23 +81,23 @@ const DEFAULT_SETTINGS: Settings = {
           <div class="card-header">
             <mat-icon>notifications</mat-icon>
             <div>
-              <h2>Email Notifications</h2>
-              <p>Choose which events trigger an email notification</p>
+              <h2>{{ 'SETTINGS.emailNotifications' | translate }}</h2>
+              <p>{{ 'SETTINGS.emailNotificationsDesc' | translate }}</p>
             </div>
           </div>
           <mat-divider />
           <div class="card-body">
             <!-- Booking notifications: calendar invites vs email -->
-            <div class="group-label">Booking & session notifications</div>
-            <div class="group-desc">Choose how you receive booking updates — via calendar invites or email. When calendar invites are on, booking emails are automatically suppressed to avoid duplicates.</div>
+            <div class="group-label">{{ 'SETTINGS.bookingNotifications' | translate }}</div>
+            <div class="group-desc">{{ 'SETTINGS.bookingNotificationsDesc' | translate }}</div>
 
             <div class="toggle-row">
               <div class="toggle-icon green">
                 <mat-icon>event</mat-icon>
               </div>
               <div class="toggle-info">
-                <div class="toggle-label">Calendar invites</div>
-                <div class="toggle-desc">Receive calendar invites (Google/Outlook) when sessions are booked, changed, or cancelled</div>
+                <div class="toggle-label">{{ 'SETTINGS.calendarInvites' | translate }}</div>
+                <div class="toggle-desc">{{ 'SETTINGS.calendarInvitesDesc' | translate }}</div>
               </div>
               <mat-slide-toggle
                 color="primary"
@@ -127,7 +127,7 @@ const DEFAULT_SETTINGS: Settings = {
             }
 
             <!-- Other notifications -->
-            <div class="group-label" style="margin-top: 20px;">Other notifications</div>
+            <div class="group-label" style="margin-top: 20px;">{{ 'SETTINGS.otherNotifications' | translate }}</div>
 
             @for (n of otherNotificationItems; track n.key) {
               <div class="toggle-row">
@@ -150,12 +150,12 @@ const DEFAULT_SETTINGS: Settings = {
               <div class="test-email-row">
                 <div class="toggle-icon blue"><mat-icon>send</mat-icon></div>
                 <div class="toggle-info">
-                  <div class="toggle-label">Send a test email</div>
-                  <div class="toggle-desc">Verify that AWS SES is configured correctly</div>
+                  <div class="toggle-label">{{ 'SETTINGS.sendTestEmail' | translate }}</div>
+                  <div class="toggle-desc">{{ 'SETTINGS.sendTestEmailDesc' | translate }}</div>
                 </div>
                 <div class="test-email-controls">
                   <mat-form-field appearance="outline" class="test-email-field">
-                    <mat-label>Recipient</mat-label>
+                    <mat-label>{{ 'SETTINGS.recipient' | translate }}</mat-label>
                     <input matInput type="email" [formControl]="testEmailControl" placeholder="you@example.com" />
                     <mat-icon matPrefix>alternate_email</mat-icon>
                   </mat-form-field>
@@ -165,7 +165,7 @@ const DEFAULT_SETTINGS: Settings = {
                     @if (testEmailLoading()) {
                       <mat-spinner diameter="16" />
                     } @else {
-                      <mat-icon>send</mat-icon> Send
+                      <mat-icon>send</mat-icon> {{ 'SETTINGS.send' | translate }}
                     }
                   </button>
                 </div>
@@ -179,15 +179,15 @@ const DEFAULT_SETTINGS: Settings = {
           <div class="card-header">
             <mat-icon>palette</mat-icon>
             <div>
-              <h2>Display Preferences</h2>
-              <p>Adjust language, timezone, and layout options</p>
+              <h2>{{ 'SETTINGS.displayPreferences' | translate }}</h2>
+              <p>{{ 'SETTINGS.displayPreferencesDesc' | translate }}</p>
             </div>
           </div>
           <mat-divider />
           <div class="card-body">
             <div class="select-row">
               <mat-form-field appearance="outline">
-                <mat-label>Language</mat-label>
+                <mat-label>{{ 'SETTINGS.language' | translate }}</mat-label>
                 <mat-select [ngModel]="settings().language"
                             (ngModelChange)="changeLanguage($event)">
                   <mat-option value="en">English</mat-option>
@@ -196,7 +196,7 @@ const DEFAULT_SETTINGS: Settings = {
               </mat-form-field>
 
               <mat-form-field appearance="outline">
-                <mat-label>Timezone</mat-label>
+                <mat-label>{{ 'SETTINGS.timezone' | translate }}</mat-label>
                 <mat-select [ngModel]="settings().timezone"
                             (ngModelChange)="updateSetting('timezone', $event)">
                   @for (tz of timezones; track tz.value) {
@@ -211,8 +211,8 @@ const DEFAULT_SETTINGS: Settings = {
             <div class="toggle-row">
               <div class="toggle-icon blue"><mat-icon>view_sidebar</mat-icon></div>
               <div class="toggle-info">
-                <div class="toggle-label">Compact sidebar</div>
-                <div class="toggle-desc">Start with the sidebar collapsed by default</div>
+                <div class="toggle-label">{{ 'SETTINGS.compactSidebar' | translate }}</div>
+                <div class="toggle-desc">{{ 'SETTINGS.compactSidebarDesc' | translate }}</div>
               </div>
               <mat-slide-toggle color="primary"
                 [checked]="settings().compactSidebar"
@@ -224,8 +224,8 @@ const DEFAULT_SETTINGS: Settings = {
             <div class="toggle-row">
               <div class="toggle-icon green"><mat-icon>tips_and_updates</mat-icon></div>
               <div class="toggle-info">
-                <div class="toggle-label">Show contextual tips</div>
-                <div class="toggle-desc">Display helpful hints and guidance throughout the platform</div>
+                <div class="toggle-label">{{ 'SETTINGS.showTips' | translate }}</div>
+                <div class="toggle-desc">{{ 'SETTINGS.showTipsDesc' | translate }}</div>
               </div>
               <mat-slide-toggle color="primary"
                 [checked]="settings().showTips"
@@ -239,8 +239,8 @@ const DEFAULT_SETTINGS: Settings = {
           <div class="card-header">
             <mat-icon>shield</mat-icon>
             <div>
-              <h2>Privacy & Surveys</h2>
-              <p>Control how your data is handled when taking surveys</p>
+              <h2>{{ 'SETTINGS.privacySurveys' | translate }}</h2>
+              <p>{{ 'SETTINGS.privacySurveysDesc' | translate }}</p>
             </div>
           </div>
           <mat-divider />
@@ -248,11 +248,8 @@ const DEFAULT_SETTINGS: Settings = {
             <div class="toggle-row">
               <div class="toggle-icon green"><mat-icon>visibility_off</mat-icon></div>
               <div class="toggle-info">
-                <div class="toggle-label">Submit surveys anonymously</div>
-                <div class="toggle-desc">
-                  Your identity is never stored with your responses. Only an
-                  irreversible token is used to prevent duplicate submissions.
-                </div>
+                <div class="toggle-label">{{ 'SETTINGS.surveyAnonymous' | translate }}</div>
+                <div class="toggle-desc">{{ 'SETTINGS.surveyAnonymousDesc' | translate }}</div>
               </div>
               <mat-slide-toggle color="primary"
                 [checked]="settings().surveyAnonymous"
@@ -263,8 +260,7 @@ const DEFAULT_SETTINGS: Settings = {
 
             <div class="info-box">
               <mat-icon>info</mat-icon>
-              <p>Survey results are only visible to administrators after a minimum of
-              <strong>5 responses</strong> have been collected, protecting individual privacy at all times.</p>
+              <p [innerHTML]="'SETTINGS.privacyInfoBox' | translate"></p>
             </div>
           </div>
         </div>
@@ -438,12 +434,12 @@ export class SettingsComponent implements OnInit {
     }).subscribe({
       next: (res) => {
         this.testEmailLoading.set(false);
-        this.snackBar.open(`Test email sent to ${res.sentTo}`, undefined, { duration: 4000 });
+        this.snackBar.open(this.translate.instant('SETTINGS.testEmailSent', { email: res.sentTo }), undefined, { duration: 4000 });
       },
       error: (err) => {
         this.testEmailLoading.set(false);
-        const msg = err.error?.error || 'Failed to send test email';
-        this.snackBar.open(msg, 'Dismiss', { duration: 5000 });
+        const msg = err.error?.error || this.translate.instant('SETTINGS.testEmailFailed');
+        this.snackBar.open(msg, this.translate.instant('COMMON.dismiss'), { duration: 5000 });
       },
     });
   }
@@ -464,8 +460,8 @@ export class SettingsComponent implements OnInit {
       notifications: { ...s.notifications, ...updates },
     }));
     this.api.put('/users/me/notification-preferences', this.settings().notifications).subscribe({
-      next: () => this.snackBar.open('Notification preferences saved', undefined, { duration: 1500 }),
-      error: () => this.snackBar.open('Failed to save preferences', 'Dismiss', { duration: 3000 }),
+      next: () => this.snackBar.open(this.translate.instant('SETTINGS.notificationPrefsSaved'), undefined, { duration: 1500 }),
+      error: () => this.snackBar.open(this.translate.instant('SETTINGS.notificationPrefsFailed'), this.translate.instant('COMMON.dismiss'), { duration: 3000 }),
     });
   }
 
@@ -475,8 +471,8 @@ export class SettingsComponent implements OnInit {
       notifications: { ...s.notifications, [key]: value },
     }));
     this.api.put('/users/me/notification-preferences', this.settings().notifications).subscribe({
-      next: () => this.snackBar.open('Notification preference saved', undefined, { duration: 1500 }),
-      error: () => this.snackBar.open('Failed to save preference', 'Dismiss', { duration: 3000 }),
+      next: () => this.snackBar.open(this.translate.instant('SETTINGS.notificationPrefSaved'), undefined, { duration: 1500 }),
+      error: () => this.snackBar.open(this.translate.instant('SETTINGS.notificationPrefFailed'), this.translate.instant('COMMON.dismiss'), { duration: 3000 }),
     });
   }
 
@@ -485,8 +481,8 @@ export class SettingsComponent implements OnInit {
     this.translate.use(lang);
     localStorage.setItem('artes_language', lang);
     this.api.put('/users/me', { preferredLanguage: lang }).subscribe({
-      next: () => this.snackBar.open('Language updated', undefined, { duration: 1500 }),
-      error: () => this.snackBar.open('Failed to save language preference', 'Dismiss', { duration: 3000 }),
+      next: () => this.snackBar.open(this.translate.instant('SETTINGS.languageUpdated'), undefined, { duration: 1500 }),
+      error: () => this.snackBar.open(this.translate.instant('SETTINGS.languageFailed'), this.translate.instant('COMMON.dismiss'), { duration: 3000 }),
     });
     this.persist();
   }
@@ -498,6 +494,6 @@ export class SettingsComponent implements OnInit {
 
   private persist(): void {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(this.settings()));
-    this.snackBar.open('Settings saved', undefined, { duration: 1500 });
+    this.snackBar.open(this.translate.instant('SETTINGS.settingsSaved'), undefined, { duration: 1500 });
   }
 }

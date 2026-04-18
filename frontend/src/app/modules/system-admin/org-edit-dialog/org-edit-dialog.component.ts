@@ -11,6 +11,7 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ApiService } from '../../../core/api.service';
+import { TranslateModule } from '@ngx-translate/core';
 
 interface PlanOption {
   _id: string;
@@ -67,6 +68,7 @@ export interface OrgRow {
     MatSlideToggleModule,
     MatIconModule,
     MatSnackBarModule,
+    TranslateModule,
   ],
   template: `
     <h2 mat-dialog-title>

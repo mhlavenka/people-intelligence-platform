@@ -12,6 +12,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDividerModule } from '@angular/material/divider';
 import { ApiService } from '../../core/api.service';
 import { AvatarComponent } from '../../shared/avatar/avatar.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 interface HubUser {
   _id: string;
@@ -60,13 +61,14 @@ interface NotificationDoc {
     MatTooltipModule,
     MatDividerModule,
     AvatarComponent,
+    TranslateModule,
   ],
   template: `
     <div class="hub-dialog">
 
       <!-- Header -->
       <div class="hub-header">
-        <h2>Message Hub</h2>
+        <h2>{{ "HUB.title" | translate }}</h2>
         <button class="close-btn" (click)="dialogRef.close(unreadOnOpen > 0)">
           <mat-icon>close</mat-icon>
         </button>

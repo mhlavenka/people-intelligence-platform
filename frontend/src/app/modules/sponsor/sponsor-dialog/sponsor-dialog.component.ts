@@ -12,6 +12,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ProvinceTaxInfo, Sponsor, SponsorService } from '../sponsor.service';
+import { TranslateModule } from '@ngx-translate/core';
 
 export interface SponsorDialogData {
   sponsor?: Sponsor;
@@ -25,9 +26,10 @@ export interface SponsorDialogData {
     MatDialogModule, MatFormFieldModule, MatInputModule,
     MatSelectModule, MatSlideToggleModule,
     MatButtonModule, MatIconModule, MatProgressSpinnerModule,
+    TranslateModule,
   ],
   template: `
-    <h2 mat-dialog-title>{{ data.sponsor ? 'Edit sponsor' : 'New sponsor' }}</h2>
+    <h2 mat-dialog-title>{{ data.sponsor ? ("SPONSOR.editSponsor" | translate) : ("SPONSOR.newSponsor" | translate) }}</h2>
     <mat-dialog-content>
       <div class="row">
         <mat-form-field appearance="outline" class="full">

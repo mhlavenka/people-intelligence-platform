@@ -8,6 +8,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSelectModule } from '@angular/material/select';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../../core/api.service';
+import { TranslateModule } from '@ngx-translate/core';
 
 interface AgingBucket { count: number; total: number; }
 interface AgingSummary { current: AgingBucket; days30: AgingBucket; days60: AgingBucket; days90: AgingBucket; over90: AgingBucket; grandTotal: number; }
@@ -19,13 +20,15 @@ interface OrgSummaryItem { name: string; plan: string; isActive: boolean; userCo
 @Component({
   selector: 'app-sa-reports',
   standalone: true,
-  imports: [CommonModule, MatIconModule, MatButtonModule, MatProgressSpinnerModule, MatDividerModule, MatTooltipModule, MatSelectModule, FormsModule],
+  imports: [CommonModule, MatIconModule, MatButtonModule, MatProgressSpinnerModule, MatDividerModule, MatTooltipModule, MatSelectModule, FormsModule,
+    TranslateModule,
+  ],
   template: `
     <div class="page">
       <div class="page-header">
         <div>
-          <h1>Reports</h1>
-          <p>Platform-wide analytics and financial reporting</p>
+          <h1>{{ "SYSADMIN.reports" | translate }}</h1>
+          <p>{{ "SYSADMIN.reportsDesc" | translate }}</p>
         </div>
       </div>
 
@@ -38,8 +41,8 @@ interface OrgSummaryItem { name: string; plan: string; isActive: boolean; userCo
           <div class="report-header">
             <mat-icon>account_balance</mat-icon>
             <div>
-              <h2>Accounts Receivable Aging</h2>
-              <p>Outstanding invoices by aging bucket</p>
+              <h2>{{ "SYSADMIN.arAging" | translate }}</h2>
+              <p>{{ "SYSADMIN.arAgingDesc" | translate }}</p>
             </div>
           </div>
 

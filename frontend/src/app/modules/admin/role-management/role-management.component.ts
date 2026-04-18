@@ -11,6 +11,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ApiService } from '../../../core/api.service';
 import { RoleDialogComponent, CustomRole } from '../role-dialog/role-dialog.component';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 // Permission key → display label mapping
 const PERM_LABELS: Record<string, { feature: string; category: string }> = {
@@ -75,13 +76,14 @@ interface SystemRoleData { permissions: string[]; isOverridden: boolean; }
     MatMenuModule,
     MatCheckboxModule,
     MatSnackBarModule,
+    TranslateModule,
   ],
   template: `
     <div class="roles-page">
       <div class="page-header">
         <div>
-          <h1>Role Permissions</h1>
-          <p>System role capabilities and custom roles for your organisation</p>
+          <h1>{{ "ADMIN.rolePermissions" | translate }}</h1>
+          <p>{{ "ADMIN.rolePermissionsDesc" | translate }}</p>
         </div>
       </div>
 
@@ -92,7 +94,7 @@ interface SystemRoleData { permissions: string[]; isOverridden: boolean; }
           Custom Roles
         </div>
         <button mat-raised-button color="primary" (click)="openCreate()">
-          <mat-icon>add</mat-icon> New Role
+          <mat-icon>add</mat-icon> {{ "ADMIN.newRole" | translate }}
         </button>
       </div>
 

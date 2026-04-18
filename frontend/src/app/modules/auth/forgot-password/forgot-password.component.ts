@@ -6,33 +6,34 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { TranslateModule } from '@ngx-translate/core';
 import { ApiService } from '../../../core/api.service';
 
 @Component({
   selector: 'app-forgot-password',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, MatFormFieldModule, MatInputModule, MatButtonModule, MatProgressSpinnerModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, MatFormFieldModule, MatInputModule, MatButtonModule, MatProgressSpinnerModule, TranslateModule],
   template: `
     <div class="auth-page">
       <div class="auth-card">
-        <h2>Reset Password</h2>
-        <p class="subtitle">Enter your email and we'll send a reset link.</p>
+        <h2>{{ 'AUTH.resetPassword' | translate }}</h2>
+        <p class="subtitle">{{ 'AUTH.resetPasswordDesc' | translate }}</p>
 
         @if (sent()) {
-          <div class="success-banner">Check your email for the reset link.</div>
+          <div class="success-banner">{{ 'AUTH.checkEmailForReset' | translate }}</div>
         } @else {
           <form [formGroup]="form" (ngSubmit)="onSubmit()">
             <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Email address</mat-label>
+              <mat-label>{{ 'AUTH.emailAddress' | translate }}</mat-label>
               <input matInput type="email" formControlName="email" />
             </mat-form-field>
             <button mat-raised-button color="primary" type="submit" class="full-width" [disabled]="loading()">
-              @if (loading()) { <mat-spinner diameter="18" /> } @else { Send Reset Link }
+              @if (loading()) { <mat-spinner diameter="18" /> } @else { {{ 'AUTH.sendResetLink' | translate }} }
             </button>
           </form>
         }
 
-        <div class="auth-links"><a routerLink="/auth/login">Back to login</a></div>
+        <div class="auth-links"><a routerLink="/auth/login">{{ 'AUTH.backToLogin' | translate }}</a></div>
       </div>
     </div>
   `,

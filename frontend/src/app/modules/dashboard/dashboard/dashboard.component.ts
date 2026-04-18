@@ -7,6 +7,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { TranslateModule } from '@ngx-translate/core';
 import { ApiService } from '../../../core/api.service';
 import { AuthService, AppRole } from '../../../core/auth.service';
 import { OrgContextService } from '../../../core/org-context.service';
@@ -35,16 +36,16 @@ interface ModuleCard {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink, MatCardModule, MatIconModule, MatButtonModule, MatProgressBarModule, MatProgressSpinnerModule, MatTooltipModule, DatePipe],
+  imports: [CommonModule, RouterLink, MatCardModule, MatIconModule, MatButtonModule, MatProgressBarModule, MatProgressSpinnerModule, MatTooltipModule, DatePipe, TranslateModule],
   template: `
     <div class="dashboard-page">
       <div class="page-header">
         <div>
-          <h1>Organization Dashboard</h1>
-          <p>Welcome back, {{ firstName() }}. Here's your organization health overview.</p>
+          <h1>{{ 'DASHBOARD.title' | translate }}</h1>
+          <p>{{ 'DASHBOARD.welcomeBack' | translate:{ name: firstName() } }}</p>
         </div>
         <div class="header-actions">
-          <span class="last-updated">Updated just now</span>
+          <span class="last-updated">{{ 'DASHBOARD.updatedJustNow' | translate }}</span>
         </div>
       </div>
 
@@ -68,11 +69,11 @@ interface ModuleCard {
                 <span class="metric-label">{{ card.metricLabel }}</span>
               } @else {
                 <span class="metric-value metric-none">—</span>
-                <span class="metric-label">no data yet</span>
+                <span class="metric-label">{{ 'DASHBOARD.noDataYet' | translate }}</span>
               }
             </div>
             <div class="card-footer">
-              <button mat-button color="primary">Open →</button>
+              <button mat-button color="primary">{{ 'DASHBOARD.open' | translate }} →</button>
             </div>
           </div>
         }
@@ -81,8 +82,8 @@ interface ModuleCard {
       @if (visibleCards().length === 0 && orgCtx.loaded()) {
         <div class="empty-state">
           <mat-icon>dashboard_customize</mat-icon>
-          <h3>No modules available</h3>
-          <p>Your subscription does not include any modules, or your role does not have access. Contact your administrator.</p>
+          <h3>{{ 'DASHBOARD.noModulesTitle' | translate }}</h3>
+          <p>{{ 'DASHBOARD.noModulesDesc' | translate }}</p>
         </div>
       }
 
@@ -90,15 +91,15 @@ interface ModuleCard {
       @if (showUpcoming()) {
         <div class="section-card">
           <div class="section-header">
-            <h2><mat-icon class="sh-icon">event</mat-icon> Upcoming events</h2>
-            <a mat-button color="primary" routerLink="/booking">View all</a>
+            <h2><mat-icon class="sh-icon">event</mat-icon> {{ 'DASHBOARD.upcomingEvents' | translate }}</h2>
+            <a mat-button color="primary" routerLink="/booking">{{ 'DASHBOARD.viewAll' | translate }}</a>
           </div>
           @if (upcomingLoading()) {
             <div class="upcoming-loading"><mat-spinner diameter="28" /></div>
           } @else if (!upcomingEvents().length) {
             <div class="upcoming-empty">
               <mat-icon>event_available</mat-icon>
-              <span>No upcoming sessions.</span>
+              <span>{{ 'DASHBOARD.noUpcomingSessions' | translate }}</span>
             </div>
           } @else {
             <ul class="upcoming-list">
@@ -117,7 +118,7 @@ interface ModuleCard {
                   </div>
                   @if (b.googleMeetLink) {
                     <a mat-icon-button [href]="b.googleMeetLink" target="_blank"
-                       matTooltip="Join Google Meet">
+                       [matTooltip]="'DASHBOARD.joinGoogleMeet' | translate">
                       <mat-icon>videocam</mat-icon>
                     </a>
                   }

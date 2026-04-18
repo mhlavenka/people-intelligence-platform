@@ -5,6 +5,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Sponsor, SponsorInvoice, SponsorService } from '../sponsor.service';
+import { TranslateModule } from '@ngx-translate/core';
 
 interface FullInvoice extends SponsorInvoice {
   lineItems: Array<{ description: string; quantity: number; unitPrice: number; amount: number }>;
@@ -23,6 +24,7 @@ interface FullInvoice extends SponsorInvoice {
   imports: [
     CommonModule, CurrencyPipe, DatePipe, RouterLink,
     MatButtonModule, MatIconModule, MatProgressSpinnerModule,
+    TranslateModule,
   ],
   template: `
     <div class="screen-toolbar no-print">
@@ -32,7 +34,7 @@ interface FullInvoice extends SponsorInvoice {
       </a>
       <span class="spacer"></span>
       <button mat-stroked-button (click)="print()">
-        <mat-icon>print</mat-icon> Print
+        <mat-icon>print</mat-icon> {{ "COMMON.print" | translate }}
       </button>
     </div>
 
@@ -42,7 +44,7 @@ interface FullInvoice extends SponsorInvoice {
       <div class="invoice-page">
         <header class="head">
           <div class="brand">
-            <h1>INVOICE</h1>
+            <h1>{{ "SPONSOR.invoice" | translate }}</h1>
             <span class="inv-no">{{ invoice()!.invoiceNumber }}</span>
           </div>
           <div class="status-block">

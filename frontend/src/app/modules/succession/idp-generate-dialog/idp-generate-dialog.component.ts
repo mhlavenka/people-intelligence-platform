@@ -11,6 +11,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatStepperModule } from '@angular/material/stepper';
 import { ApiService } from '../../../core/api.service';
+import { TranslateModule } from '@ngx-translate/core';
 
 interface User {
   _id: string;
@@ -65,11 +66,12 @@ const COMMON_GAPS = [
     MatProgressSpinnerModule,
     MatChipsModule,
     MatStepperModule,
+    TranslateModule,
   ],
   template: `
     <h2 mat-dialog-title>
       <mat-icon>auto_awesome</mat-icon>
-      Generate AI Development Plan
+      {{ "SUCCESSION.generateAIDevPlan" | translate }}
     </h2>
 
     <mat-dialog-content>
@@ -83,7 +85,7 @@ const COMMON_GAPS = [
         <mat-step label="Select Coachee" [stepControl]="coacheeGroup">
           <div class="step-body" [formGroup]="coacheeGroup">
             <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Coachee</mat-label>
+              <mat-label>{{ "SUCCESSION.coachee" | translate }}</mat-label>
               <mat-select formControlName="coacheeId">
                 @for (u of coachees(); track u._id) {
                   <mat-option [value]="u._id">
@@ -92,12 +94,12 @@ const COMMON_GAPS = [
                 }
               </mat-select>
               @if (loadingUsers()) {
-                <mat-hint>Loading users...</mat-hint>
+                <mat-hint>{{ "SUCCESSION.loadingUsers" | translate }}</mat-hint>
               }
             </mat-form-field>
 
             <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Coach (optional)</mat-label>
+              <mat-label>{{ "SUCCESSION.coachOptional" | translate }}</mat-label>
               <mat-select formControlName="coachId">
                 <mat-option [value]="null">— None —</mat-option>
                 @for (u of coaches(); track u._id) {
@@ -119,7 +121,7 @@ const COMMON_GAPS = [
         <mat-step label="Goals & Competency Gaps" [stepControl]="goalsGroup">
           <div class="step-body" [formGroup]="goalsGroup">
             <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Development Goal</mat-label>
+              <mat-label>{{ "SUCCESSION.developmentGoal" | translate }}</mat-label>
               <textarea matInput formControlName="goals" rows="3"
                 placeholder="e.g. Transition from individual contributor to people manager within 12 months"></textarea>
             </mat-form-field>
@@ -139,16 +141,16 @@ const COMMON_GAPS = [
             </div>
 
             <mat-form-field appearance="outline" class="full-width" style="margin-top: 12px">
-              <mat-label>Add custom gap</mat-label>
+              <mat-label>{{ "SUCCESSION.addCustomGap" | translate }}</mat-label>
               <input matInput #customGapInput
                 placeholder="Type and press Enter"
                 (keydown.enter)="addCustomGap(customGapInput.value); customGapInput.value = ''" />
-              <mat-hint>Press Enter to add</mat-hint>
+              <mat-hint>{{ "SUCCESSION.pressEnterToAdd" | translate }}</mat-hint>
             </mat-form-field>
 
             @if (selectedGaps().length) {
               <div class="selected-gaps">
-                <strong>Selected:</strong>
+                <strong>{{ "SUCCESSION.selected" | translate }}</strong>
                 @for (gap of selectedGaps(); track gap) {
                   <span class="gap-tag">
                     {{ gap }}
@@ -225,7 +227,7 @@ const COMMON_GAPS = [
                       (click)="generate()" [disabled]="generating()" type="button">
                 @if (generating()) {
                   <mat-spinner diameter="18" />
-                  &nbsp; Generating...
+                  &nbsp; {{ "COMMON.generating" | translate }}
                 } @else {
                   <mat-icon>auto_awesome</mat-icon> Generate IDP
                 }

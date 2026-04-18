@@ -12,6 +12,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { ApiService } from '../../../core/api.service';
 import { EmptyStateComponent } from '../../../shared/empty-state/empty-state.component';
 import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 interface ScoreRecord {
   _id: string;
@@ -54,6 +55,7 @@ const COMPOSITE_LABELS: Record<string, string> = {
     CommonModule, DatePipe, RouterLink, MatIconModule, MatButtonModule,
     MatProgressSpinnerModule, MatTooltipModule, MatExpansionModule,
     MatDividerModule, MatSnackBarModule, EmptyStateComponent,
+    TranslateModule,
   ],
   template: `
     <div class="records-page">

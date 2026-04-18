@@ -13,6 +13,7 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { HttpErrorResponse } from '@angular/common/http';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import {
   PublicBookingService,
   CoachPublicInfo,
@@ -28,6 +29,7 @@ import {
     MatButtonModule, MatIconModule, MatFormFieldModule, MatInputModule,
     MatSelectModule, MatDatepickerModule, MatNativeDateModule,
     MatProgressSpinnerModule, MatSnackBarModule,
+    TranslateModule,
   ],
   template: `
     <div class="booking-page">
@@ -56,7 +58,7 @@ import {
           </div>
           @if (showTzPicker) {
             <mat-form-field appearance="outline" class="tz-select">
-              <mat-label>Your timezone</mat-label>
+              <mat-label>{{ 'BOOKING.yourTimezone' | translate }}</mat-label>
               <mat-select [(ngModel)]="clientTimezone" (selectionChange)="onTimezoneChange()">
                 @for (tz of timezones; track tz) {
                   <mat-option [value]="tz">{{ tz }}</mat-option>
@@ -132,20 +134,20 @@ import {
                 <form class="booking-form" (ngSubmit)="submitBooking()">
                   <div class="name-row">
                     <mat-form-field appearance="outline">
-                      <mat-label>First Name</mat-label>
+                      <mat-label>{{ 'BOOKING.firstName' | translate }}</mat-label>
                       <input matInput [(ngModel)]="firstName" name="firstName" required />
                     </mat-form-field>
                     <mat-form-field appearance="outline">
-                      <mat-label>Last Name</mat-label>
+                      <mat-label>{{ 'BOOKING.lastName' | translate }}</mat-label>
                       <input matInput [(ngModel)]="lastName" name="lastName" required />
                     </mat-form-field>
                   </div>
                   <mat-form-field appearance="outline" class="full-width">
-                    <mat-label>Email</mat-label>
+                    <mat-label>{{ 'BOOKING.emailLabel' | translate }}</mat-label>
                     <input matInput type="email" [(ngModel)]="email" name="email" required />
                   </mat-form-field>
                   <mat-form-field appearance="outline" class="full-width">
-                    <mat-label>Phone (optional)</mat-label>
+                    <mat-label>{{ 'BOOKING.phoneOptional' | translate }}</mat-label>
                     <input matInput type="tel" [(ngModel)]="phone" name="phone" />
                   </mat-form-field>
                   <mat-form-field appearance="outline" class="full-width">
@@ -396,6 +398,7 @@ export class PublicBookingComponent implements OnInit {
     private publicBookingSvc: PublicBookingService,
     private snackBar: MatSnackBar,
     private auth: AuthService,
+    private translate: TranslateService,
   ) {}
 
   /** Optional inputs for dialog/host embedding — when set, skip route reads. */

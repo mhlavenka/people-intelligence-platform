@@ -8,6 +8,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDividerModule } from '@angular/material/divider';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AuthService } from '../../../core/auth.service';
 import { ApiService } from '../../../core/api.service';
 import { environment } from '../../../../environments/environment';
@@ -37,123 +38,123 @@ interface ModuleSlide {
 const MODULE_SLIDES: ModuleSlide[] = [
   {
     icon: 'warning_amber',
-    title: 'Conflict Intelligence\u2122',
-    subtitle: 'Predict. Prevent. Resolve.',
+    title: 'AUTH.slides.conflict.title',
+    subtitle: 'AUTH.slides.conflict.subtitle',
     color: '#e86c3a',
     heroImage: 'assets/module_conflict.png',
     paragraphs: [
-      'Built on the Harvard Negotiation Project\u2019s interest-based negotiation framework \u2014 the methodology behind Getting to Yes (Fisher, Ury & Patton) and Difficult Conversations (Stone, Patton & Heen). Every layer of the module is designed to surface underlying interests, not just manage surface-level positions.',
-      'The AI analysis maps anonymous survey data to the Three Conversations framework: the \u201cWhat Happened\u201d conversation (divergent narratives), the Feelings conversation (suppressed emotions driving escalation), and the Identity conversation (threats to self-image causing rigidity). This multi-layer diagnosis enables interventions that address the full depth of conflict.',
-      'Manager conversation guides translate principled negotiation into practical scripts any manager can use \u2014 with interest-probing questions, emotion-acknowledging language, and collaborative resolution pathways. When bilateral resolution isn\u2019t enough, the structured escalation pathway activates William Ury\u2019s \u201cThird Side\u201d model for professional mediation.',
+      'AUTH.slides.conflict.p1',
+      'AUTH.slides.conflict.p2',
+      'AUTH.slides.conflict.p3',
     ],
     workflow: [
-      { icon: 'poll', label: 'Survey', desc: 'Anonymous pulse & deep-dive surveys detect early conflict signals across teams' },
-      { icon: 'auto_awesome', label: 'AI Analysis', desc: 'Pattern recognition scores risk (0\u2013100) and identifies conflict types with root causes' },
-      { icon: 'record_voice_over', label: 'Guide', desc: 'Manager conversation scripts and recommended actions across time horizons' },
-      { icon: 'shield', label: 'Resolve', desc: 'Track actions to completion or escalate to professional mediation' },
+      { icon: 'poll', label: 'AUTH.slides.conflict.wf1Label', desc: 'AUTH.slides.conflict.wf1Desc' },
+      { icon: 'auto_awesome', label: 'AUTH.slides.conflict.wf2Label', desc: 'AUTH.slides.conflict.wf2Desc' },
+      { icon: 'record_voice_over', label: 'AUTH.slides.conflict.wf3Label', desc: 'AUTH.slides.conflict.wf3Desc' },
+      { icon: 'shield', label: 'AUTH.slides.conflict.wf4Label', desc: 'AUTH.slides.conflict.wf4Desc' },
     ],
-    features: ['Bi-weekly pulse (15 items) & quarterly deep-dive (21 items)', 'AI risk scoring with low/medium/high/critical levels', 'Sub-analysis drill-down per conflict type', 'Interest-based manager conversation scripts', 'Prioritised action plans (immediate / short / long term)', 'Completion tracking with per-action checkboxes', 'Escalation-to-mediation pathway with status tracking', 'Preventive measures and systemic recommendations'],
-    stats: [{ value: '36', label: 'Survey questions across 2 instruments' }, { value: '4', label: 'Risk levels with escalation protocols' }, { value: '3', label: 'Conversation layers detected by AI' }],
+    features: ['AUTH.slides.conflict.f1', 'AUTH.slides.conflict.f2', 'AUTH.slides.conflict.f3', 'AUTH.slides.conflict.f4', 'AUTH.slides.conflict.f5', 'AUTH.slides.conflict.f6', 'AUTH.slides.conflict.f7', 'AUTH.slides.conflict.f8'],
+    stats: [{ value: '36', label: 'AUTH.slides.conflict.s1' }, { value: '4', label: 'AUTH.slides.conflict.s2' }, { value: '3', label: 'AUTH.slides.conflict.s3' }],
   },
   {
     icon: 'psychology_alt',
-    title: 'Coaching & Development',
-    subtitle: 'From Engagement to Transformation.',
+    title: 'AUTH.slides.coaching.title',
+    subtitle: 'AUTH.slides.coaching.subtitle',
     color: '#27C4A0',
     heroImage: 'assets/module_coaching.png',
     paragraphs: [
-      'A complete coaching practice management platform built on the GROW Model (Goal, Reality, Options, Will) and aligned with ICF Core Competencies. Coaches manage the full engagement lifecycle \u2014 from discovery and chemistry matching through structured sessions to final assessment and alumni follow-up.',
-      'Every session is enriched with AI-powered documentation, pre/post session intake forms, and EQ-i 2.0 psychometric integration (5 composites, 15 subscales). Coaches can generate AI-driven debrief narratives from assessment data, automatically populate session plans, and track coaching arcs across engagements.',
-      'Sponsor organisations get transparent reporting on engagement progress, session completion rates, and development outcomes \u2014 with full contract management, invoicing, and rebillable session tracking built in. The coachee portal provides a dedicated space for session booking, between-session reflection, and progress visibility.',
+      'AUTH.slides.coaching.p1',
+      'AUTH.slides.coaching.p2',
+      'AUTH.slides.coaching.p3',
     ],
     workflow: [
-      { icon: 'handshake', label: 'Discovery', desc: 'Intake assessment, contracting, and baseline psychometric evaluation' },
-      { icon: 'flag', label: 'Goal Setting', desc: 'GROW Model IDP creation with AI-generated development plans' },
-      { icon: 'event_note', label: 'Sessions', desc: 'Pre/post forms, AI notes, ratings, and coaching arc tracking' },
-      { icon: 'assessment', label: 'Outcomes', desc: 'Sponsor reporting, progress measurement, and alumni follow-up' },
+      { icon: 'handshake', label: 'AUTH.slides.coaching.wf1Label', desc: 'AUTH.slides.coaching.wf1Desc' },
+      { icon: 'flag', label: 'AUTH.slides.coaching.wf2Label', desc: 'AUTH.slides.coaching.wf2Desc' },
+      { icon: 'event_note', label: 'AUTH.slides.coaching.wf3Label', desc: 'AUTH.slides.coaching.wf3Desc' },
+      { icon: 'assessment', label: 'AUTH.slides.coaching.wf4Label', desc: 'AUTH.slides.coaching.wf4Desc' },
     ],
-    features: ['GROW Model session framework with AI documentation', 'EQ-i 2.0 psychometric integration (133 questions, 15 subscales)', 'Pre/post session intake forms linked to templates', 'Engagement lifecycle with status tracking', 'Sponsor contracts, invoicing & rebillable sessions', 'Coachee portal for booking and between-session work', 'Coach journal with AI-generated session summaries', 'Multi-engagement coaching arc visibility'],
-    stats: [{ value: '15', label: 'EQ-i subscales tracked per coachee' }, { value: '4', label: 'GROW phases structured per session' }, { value: '\u221e', label: 'Engagements per coach' }],
+    features: ['AUTH.slides.coaching.f1', 'AUTH.slides.coaching.f2', 'AUTH.slides.coaching.f3', 'AUTH.slides.coaching.f4', 'AUTH.slides.coaching.f5', 'AUTH.slides.coaching.f6', 'AUTH.slides.coaching.f7', 'AUTH.slides.coaching.f8'],
+    stats: [{ value: '15', label: 'AUTH.slides.coaching.s1' }, { value: '4', label: 'AUTH.slides.coaching.s2' }, { value: '\u221e', label: 'AUTH.slides.coaching.s3' }],
   },
   {
     icon: 'psychology',
-    title: 'Neuro-Inclusion',
-    subtitle: 'Build a Truly Inclusive Workplace.',
+    title: 'AUTH.slides.neuro.title',
+    subtitle: 'AUTH.slides.neuro.subtitle',
     color: '#7c5cbf',
     heroImage: 'assets/module_neuro.png',
     paragraphs: [
-      'Assess your organisation\u2019s neuroinclusion maturity across multiple dimensions with structured assessments designed for neurodivergent employees and the teams that support them. The module moves beyond awareness training to measurable, actionable inclusion strategies.',
-      'AI-driven gap analysis benchmarks your scores against dimension-level targets, identifies the highest-impact areas for improvement, and generates targeted action plans. Progress is tracked over time, allowing organisations to demonstrate measurable inclusion gains to leadership, boards, and external stakeholders.',
-      'The assessment covers physical environment, communication practices, management approaches, recruitment processes, career development pathways, and organisational culture \u2014 providing a holistic view of where neurodivergent employees experience friction and where the organisation excels.',
+      'AUTH.slides.neuro.p1',
+      'AUTH.slides.neuro.p2',
+      'AUTH.slides.neuro.p3',
     ],
     workflow: [
-      { icon: 'quiz', label: 'Assess', desc: 'Multi-dimension neuroinclusion maturity assessment' },
-      { icon: 'insights', label: 'Analyse', desc: 'AI benchmarks scores and identifies highest-impact gaps' },
-      { icon: 'lightbulb', label: 'Plan', desc: 'Targeted inclusion action plans per dimension' },
-      { icon: 'show_chart', label: 'Track', desc: 'Measure progress over time with repeat assessments' },
+      { icon: 'quiz', label: 'AUTH.slides.neuro.wf1Label', desc: 'AUTH.slides.neuro.wf1Desc' },
+      { icon: 'insights', label: 'AUTH.slides.neuro.wf2Label', desc: 'AUTH.slides.neuro.wf2Desc' },
+      { icon: 'lightbulb', label: 'AUTH.slides.neuro.wf3Label', desc: 'AUTH.slides.neuro.wf3Desc' },
+      { icon: 'show_chart', label: 'AUTH.slides.neuro.wf4Label', desc: 'AUTH.slides.neuro.wf4Desc' },
     ],
-    features: ['Multi-dimension maturity assessment', 'AI gap analysis with benchmarking', 'Dimension-level scoring and visualisation', 'Targeted inclusion action plans', 'Progress tracking across assessment cycles', 'Physical, cultural & process dimensions covered', 'Board-ready reporting on inclusion gains', 'Integration with coaching for manager development'],
-    stats: [{ value: '6+', label: 'Inclusion dimensions assessed' }, { value: 'AI', label: 'Powered gap analysis' }, { value: '\u0394', label: 'Progress tracked over time' }],
+    features: ['AUTH.slides.neuro.f1', 'AUTH.slides.neuro.f2', 'AUTH.slides.neuro.f3', 'AUTH.slides.neuro.f4', 'AUTH.slides.neuro.f5', 'AUTH.slides.neuro.f6', 'AUTH.slides.neuro.f7', 'AUTH.slides.neuro.f8'],
+    stats: [{ value: '6+', label: 'AUTH.slides.neuro.s1' }, { value: 'AI', label: 'AUTH.slides.neuro.s2' }, { value: '\u0394', label: 'AUTH.slides.neuro.s3' }],
   },
   {
     icon: 'trending_up',
-    title: 'Leadership & Succession',
-    subtitle: 'Develop Tomorrow\u2019s Leaders Today.',
+    title: 'AUTH.slides.leadership.title',
+    subtitle: 'AUTH.slides.leadership.subtitle',
     color: '#3A9FD6',
     heroImage: 'assets/module_leadership.png',
     paragraphs: [
-      'Build a measurable leadership pipeline with AI-generated Individual Development Plans using the GROW coaching model. The module synthesises inputs from EQ-i 2.0 assessments, conflict analysis data, competency gap evaluations, and coach observations to create evidence-based development roadmaps.',
-      'Each IDP includes structured goals, reality assessments, options for development, and concrete action commitments \u2014 with milestones that can be tracked to completion. The AI doesn\u2019t just generate a plan; it contextualises development priorities against the individual\u2019s assessment profile and organisational needs.',
-      'The conflict-to-IDP pipeline is unique: when the Conflict Intelligence module identifies patterns that suggest a leadership development need, the system can generate a targeted IDP that addresses the root cause \u2014 turning conflict data into growth opportunities.',
+      'AUTH.slides.leadership.p1',
+      'AUTH.slides.leadership.p2',
+      'AUTH.slides.leadership.p3',
     ],
     workflow: [
-      { icon: 'psychology', label: 'Assess', desc: 'EQ-i 2.0, competency evaluations, and conflict data inputs' },
-      { icon: 'auto_awesome', label: 'Generate', desc: 'AI creates GROW Model IDP with contextualised priorities' },
-      { icon: 'task_alt', label: 'Execute', desc: 'Track milestone completion with notes and evidence' },
-      { icon: 'refresh', label: 'Iterate', desc: 'Regenerate plans as new data emerges from coaching & assessments' },
+      { icon: 'psychology', label: 'AUTH.slides.leadership.wf1Label', desc: 'AUTH.slides.leadership.wf1Desc' },
+      { icon: 'auto_awesome', label: 'AUTH.slides.leadership.wf2Label', desc: 'AUTH.slides.leadership.wf2Desc' },
+      { icon: 'task_alt', label: 'AUTH.slides.leadership.wf3Label', desc: 'AUTH.slides.leadership.wf3Desc' },
+      { icon: 'refresh', label: 'AUTH.slides.leadership.wf4Label', desc: 'AUTH.slides.leadership.wf4Desc' },
     ],
-    features: ['GROW Model AI-generated development plans', 'EQ-i 2.0 score integration (15 subscales)', 'Competency gap analysis and mapping', 'Milestone tracking with completion status', 'Conflict-to-IDP pipeline for root cause development', 'Multi-source input synthesis (assessments + coaching + surveys)', 'Plan regeneration as new data arrives', 'Coach and coachee collaborative goal-setting'],
-    stats: [{ value: 'GROW', label: 'Model structures every plan' }, { value: '15', label: 'EQ-i subscales inform development' }, { value: 'AI', label: 'Generates contextualised IDPs' }],
+    features: ['AUTH.slides.leadership.f1', 'AUTH.slides.leadership.f2', 'AUTH.slides.leadership.f3', 'AUTH.slides.leadership.f4', 'AUTH.slides.leadership.f5', 'AUTH.slides.leadership.f6', 'AUTH.slides.leadership.f7', 'AUTH.slides.leadership.f8'],
+    stats: [{ value: 'GROW', label: 'AUTH.slides.leadership.s1' }, { value: '15', label: 'AUTH.slides.leadership.s2' }, { value: 'AI', label: 'AUTH.slides.leadership.s3' }],
   },
   {
     icon: 'calendar_month',
-    title: 'Booking & Scheduling',
-    subtitle: 'Effortless Scheduling, Zero Friction.',
+    title: 'AUTH.slides.booking.title',
+    subtitle: 'AUTH.slides.booking.subtitle',
     color: '#2080b0',
     heroImage: 'assets/module_booking.png',
     paragraphs: [
-      'Professional booking pages for every coach with real-time availability, timezone-aware slot generation, and configurable rules for buffer times, advance notice, and daily limits. Clients access a public, shareable link \u2014 no login required \u2014 and book in seconds.',
-      'Google Calendar two-way sync means bookings automatically create calendar events with Google Meet links, and changes in either direction (reschedule, cancel, decline) propagate instantly via webhook. Date exclusions, country holidays, and special availability rules ensure coaches maintain full control over their schedule.',
-      'Built natively into ARTES \u2014 no Calendly dependency, no redirect to third-party tools. All booking data is scoped by coach and tenant, with automated confirmation and reminder emails via AWS SES keeping both parties informed.',
+      'AUTH.slides.booking.p1',
+      'AUTH.slides.booking.p2',
+      'AUTH.slides.booking.p3',
     ],
     workflow: [
-      { icon: 'settings', label: 'Configure', desc: 'Set weekly availability, event types, timezone, and buffer rules' },
-      { icon: 'link', label: 'Share', desc: 'Public booking link \u2014 no login required for clients' },
-      { icon: 'event_available', label: 'Book', desc: 'Client selects slot; calendar event + Meet link auto-created' },
-      { icon: 'sync', label: 'Sync', desc: 'Two-way Google Calendar sync with webhook-driven updates' },
+      { icon: 'settings', label: 'AUTH.slides.booking.wf1Label', desc: 'AUTH.slides.booking.wf1Desc' },
+      { icon: 'link', label: 'AUTH.slides.booking.wf2Label', desc: 'AUTH.slides.booking.wf2Desc' },
+      { icon: 'event_available', label: 'AUTH.slides.booking.wf3Label', desc: 'AUTH.slides.booking.wf3Desc' },
+      { icon: 'sync', label: 'AUTH.slides.booking.wf4Label', desc: 'AUTH.slides.booking.wf4Desc' },
     ],
-    features: ['Public shareable booking pages per coach', 'Google Calendar two-way sync with webhooks', 'Automated Google Meet link generation', 'Timezone-aware slot generation', 'Configurable buffer time and advance notice', 'Date exclusions and country holidays', 'Client self-service reschedule and cancel', 'Automated confirmation and reminder emails'],
-    stats: [{ value: '2-way', label: 'Google Calendar sync' }, { value: '0', label: 'External dependencies' }, { value: '24/7', label: 'Self-service booking' }],
+    features: ['AUTH.slides.booking.f1', 'AUTH.slides.booking.f2', 'AUTH.slides.booking.f3', 'AUTH.slides.booking.f4', 'AUTH.slides.booking.f5', 'AUTH.slides.booking.f6', 'AUTH.slides.booking.f7', 'AUTH.slides.booking.f8'],
+    stats: [{ value: '2-way', label: 'AUTH.slides.booking.s1' }, { value: '0', label: 'AUTH.slides.booking.s2' }, { value: '24/7', label: 'AUTH.slides.booking.s3' }],
   },
   {
     icon: 'assignment',
-    title: 'Intake Management',
-    subtitle: 'One Engine, Every Assessment.',
+    title: 'AUTH.slides.intake.title',
+    subtitle: 'AUTH.slides.intake.subtitle',
     color: '#f0a500',
     heroImage: 'assets/module_intake.png',
     paragraphs: [
-      'A flexible intake engine powering every module in the platform. Design custom questionnaires with mixed question types (scale, boolean, text, multi-select), deploy them as anonymous self-service surveys, coach-led interviews, or structured assessments \u2014 all from a single template builder.',
-      'Privacy-first aggregation ensures that individual responses are never exposed. A minimum group size of 5 respondents per analysis prevents statistical de-anonymisation, while public survey links allow distribution without requiring respondents to create accounts. Coach-led sessions capture richer contextual data with session format, target name, and coachee linkage.',
-      'Cross-module analytics feed survey data into Conflict Intelligence (risk scoring), Neuro-Inclusion (maturity assessment), and Coaching (pre/post session forms) \u2014 making the intake engine the connective tissue of the entire platform.',
+      'AUTH.slides.intake.p1',
+      'AUTH.slides.intake.p2',
+      'AUTH.slides.intake.p3',
     ],
     workflow: [
-      { icon: 'edit_note', label: 'Design', desc: 'Build templates with mixed question types and branching logic' },
-      { icon: 'send', label: 'Deploy', desc: 'Anonymous links, coach-led sessions, or embedded assessments' },
-      { icon: 'analytics', label: 'Aggregate', desc: 'Privacy-first response aggregation with minimum group sizes' },
-      { icon: 'hub', label: 'Connect', desc: 'Feed data into Conflict, Neuro-Inclusion, and Coaching modules' },
+      { icon: 'edit_note', label: 'AUTH.slides.intake.wf1Label', desc: 'AUTH.slides.intake.wf1Desc' },
+      { icon: 'send', label: 'AUTH.slides.intake.wf2Label', desc: 'AUTH.slides.intake.wf2Desc' },
+      { icon: 'analytics', label: 'AUTH.slides.intake.wf3Label', desc: 'AUTH.slides.intake.wf3Desc' },
+      { icon: 'hub', label: 'AUTH.slides.intake.wf4Label', desc: 'AUTH.slides.intake.wf4Desc' },
     ],
-    features: ['Custom template builder with mixed question types', 'Anonymous self-service surveys via public links', 'Coach-led interview and assessment modes', 'Privacy-first aggregation (min. 5 respondents)', 'Real-time response tracking and counts', 'Cross-module data pipeline (Conflict, Neuro, Coaching)', 'Submission token deduplication', 'Global and organisation-scoped templates'],
-    stats: [{ value: '3', label: 'Intake modes (survey, interview, assessment)' }, { value: '5+', label: 'Minimum group for privacy' }, { value: '6', label: 'Modules powered by intake data' }],
+    features: ['AUTH.slides.intake.f1', 'AUTH.slides.intake.f2', 'AUTH.slides.intake.f3', 'AUTH.slides.intake.f4', 'AUTH.slides.intake.f5', 'AUTH.slides.intake.f6', 'AUTH.slides.intake.f7', 'AUTH.slides.intake.f8'],
+    stats: [{ value: '3', label: 'AUTH.slides.intake.s1' }, { value: '5+', label: 'AUTH.slides.intake.s2' }, { value: '6', label: 'AUTH.slides.intake.s3' }],
   },
 ];
 
@@ -170,6 +171,7 @@ const MODULE_SLIDES: ModuleSlide[] = [
     MatIconModule,
     MatProgressSpinnerModule,
     MatDividerModule,
+    TranslateModule,
   ],
   template: `
     <div class="auth-page">
@@ -177,8 +179,8 @@ const MODULE_SLIDES: ModuleSlide[] = [
       <div class="info-panel">
         <div class="info-top">
           <img src="assets/artes_transparent_dark.png" alt="ARTES" class="info-logo" />
-          <p class="info-tagline">People Intelligence Platform</p>
-          <p class="info-sub">AI-powered insights for coaching, conflict resolution, neuroinclusion, and leadership development.</p>
+          <p class="info-tagline">{{ 'AUTH.tagline' | translate }}</p>
+          <p class="info-sub">{{ 'AUTH.taglineSub' | translate }}</p>
         </div>
 
         <div class="module-carousel" (mouseenter)="hoverPause(true)" (mouseleave)="hoverPause(false)">
@@ -199,8 +201,8 @@ const MODULE_SLIDES: ModuleSlide[] = [
                   </div>
                 </div>
                 <div class="slide-title-block">
-                  <h3 [style.color]="m.color">{{ m.title }}</h3>
-                  <span class="slide-subtitle">{{ m.subtitle }}</span>
+                  <h3 [style.color]="m.color">{{ m.title | translate }}</h3>
+                  <span class="slide-subtitle">{{ m.subtitle | translate }}</span>
                 </div>
               </div>
 
@@ -214,7 +216,7 @@ const MODULE_SLIDES: ModuleSlide[] = [
               <!-- Paragraphs -->
               <div class="slide-body">
                 @for (p of m.paragraphs; track $index) {
-                  <p>{{ p }}</p>
+                  <p>{{ p | translate }}</p>
                 }
               </div>
 
@@ -227,8 +229,8 @@ const MODULE_SLIDES: ModuleSlide[] = [
                       <span class="wf-num">{{ j + 1 }}</span>
                     </div>
                     <div class="wf-text">
-                      <strong>{{ s.label }}</strong>
-                      <span>{{ s.desc }}</span>
+                      <strong>{{ s.label | translate }}</strong>
+                      <span>{{ s.desc | translate }}</span>
                     </div>
                   </div>
                 }
@@ -239,7 +241,7 @@ const MODULE_SLIDES: ModuleSlide[] = [
                 @for (f of m.features; track f) {
                   <span class="feature-chip">
                     <mat-icon>check_circle</mat-icon>
-                    {{ f }}
+                    {{ f | translate }}
                   </span>
                 }
               </div>
@@ -249,7 +251,7 @@ const MODULE_SLIDES: ModuleSlide[] = [
                 @for (s of m.stats; track s.label) {
                   <div class="stat" [style.color]="m.color">
                     <span class="stat-val">{{ s.value }}</span>
-                    <span class="stat-label">{{ s.label }}</span>
+                    <span class="stat-label">{{ s.label | translate }}</span>
                   </div>
                 }
               </div>
@@ -272,15 +274,15 @@ const MODULE_SLIDES: ModuleSlide[] = [
         <div class="info-bottom">
           <div class="bottom-row">
             <div class="trust-bar">
-              <span>Built by</span>
+              <span>{{ 'NAV.builtBy' | translate }}</span>
               <a href="https://www.headsoft.net" target="_blank">HeadSoft Tech</a>
               <span class="sep">&times;</span>
               <a href="https://www.helenacoaching.com" target="_blank">Helena Coaching</a>
             </div>
             <div class="legal-bar">
-              <a routerLink="/termsofservice">Terms</a>
-              <a routerLink="/privacystatement">Privacy</a>
-              <a routerLink="/eula">EULA</a>
+              <a routerLink="/termsofservice">{{ 'NAV.terms' | translate }}</a>
+              <a routerLink="/privacystatement">{{ 'NAV.privacy' | translate }}</a>
+              <a routerLink="/eula">{{ 'NAV.eula' | translate }}</a>
             </div>
           </div>
         </div>
@@ -289,7 +291,7 @@ const MODULE_SLIDES: ModuleSlide[] = [
       <!-- Mobile: Compact brand bar -->
       <div class="mobile-brand">
         <img src="assets/artes_light.png" alt="ARTES" class="mobile-logo" />
-        <p class="mobile-tagline">People Intelligence Platform</p>
+        <p class="mobile-tagline">{{ 'AUTH.tagline' | translate }}</p>
       </div>
 
       <!-- Right: Login Card -->
@@ -300,8 +302,8 @@ const MODULE_SLIDES: ModuleSlide[] = [
             <img src="assets/artes_light.png" alt="ARTES" class="card-logo" />
           </div>
           <div class="card-header">
-            <h2>Welcome back</h2>
-            <p>Sign in to your account</p>
+            <h2>{{ 'AUTH.welcomeBack' | translate }}</h2>
+            <p>{{ 'AUTH.signInToAccount' | translate }}</p>
           </div>
 
           <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
@@ -310,16 +312,16 @@ const MODULE_SLIDES: ModuleSlide[] = [
             }
 
             <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Email address</mat-label>
+              <mat-label>{{ 'AUTH.emailAddress' | translate }}</mat-label>
               <input matInput type="email" formControlName="email" autocomplete="email" />
               <mat-icon matPrefix>email</mat-icon>
               @if (form.get('email')?.invalid && form.get('email')?.touched) {
-                <mat-error>Valid email required</mat-error>
+                <mat-error>{{ 'AUTH.validEmailRequired' | translate }}</mat-error>
               }
             </mat-form-field>
 
             <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Password</mat-label>
+              <mat-label>{{ 'AUTH.password' | translate }}</mat-label>
               <input matInput [type]="showPassword() ? 'text' : 'password'"
                      formControlName="password" autocomplete="current-password" />
               <mat-icon matPrefix>lock</mat-icon>
@@ -328,26 +330,26 @@ const MODULE_SLIDES: ModuleSlide[] = [
                 <mat-icon>{{ showPassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
               </button>
               @if (form.get('password')?.invalid && form.get('password')?.touched) {
-                <mat-error>Password required</mat-error>
+                <mat-error>{{ 'AUTH.passwordRequired' | translate }}</mat-error>
               }
             </mat-form-field>
 
             <div class="form-actions">
               <button mat-raised-button color="primary" type="submit"
                       class="full-width submit-btn" [disabled]="loading()">
-                @if (loading()) { <mat-spinner diameter="20" /> } @else { Sign In }
+                @if (loading()) { <mat-spinner diameter="20" /> } @else { {{ 'AUTH.signIn' | translate }} }
               </button>
             </div>
 
             <div class="auth-links">
-              <a routerLink="/auth/forgot-password">Forgot password?</a>
+              <a routerLink="/auth/forgot-password">{{ 'AUTH.forgotPassword' | translate }}</a>
             </div>
 
             <!-- Passkey + OAuth divider -->
             @if (providers()?.google || providers()?.microsoft || providers()?.passkey) {
               <div class="divider-row">
                 <mat-divider />
-                <span class="divider-text">or continue with</span>
+                <span class="divider-text">{{ 'AUTH.orContinueWith' | translate }}</span>
                 <mat-divider />
               </div>
 
@@ -356,7 +358,7 @@ const MODULE_SLIDES: ModuleSlide[] = [
                   <button type="button" class="alt-auth-btn passkey-btn" (click)="loginWithPasskey()"
                           [disabled]="loading()">
                     <mat-icon>fingerprint</mat-icon>
-                    <span>Passkey</span>
+                    <span>{{ 'AUTH.passkey' | translate }}</span>
                   </button>
                 }
                 @if (providers()?.google) {
@@ -368,7 +370,7 @@ const MODULE_SLIDES: ModuleSlide[] = [
                       <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
                       <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
                     </svg>
-                    <span>Google</span>
+                    <span>{{ 'AUTH.google' | translate }}</span>
                   </button>
                 }
                 @if (providers()?.microsoft) {
@@ -380,7 +382,7 @@ const MODULE_SLIDES: ModuleSlide[] = [
                       <rect x="1" y="11" width="9" height="9" fill="#00a4ef"/>
                       <rect x="11" y="11" width="9" height="9" fill="#ffb900"/>
                     </svg>
-                    <span>Microsoft</span>
+                    <span>{{ 'AUTH.microsoft' | translate }}</span>
                   </button>
                 }
               </div>
@@ -390,9 +392,9 @@ const MODULE_SLIDES: ModuleSlide[] = [
           <div class="auth-brand-footer mobile-only">
             <p><a href="https://www.headsoft.net" target="_blank"><img class="icon-logo" src="assets/headsoft-logo-black.jpeg"/>HeadSoft Tech</a> | <a href="https://www.helenacoaching.com" target="_blank"><img class="icon-logo" src="assets/Helena-H-Icon_transparent-1024-px.png"/>Helena Coaching</a></p>
             <div class="legal-bar">
-              <a routerLink="/termsofservice">Terms</a>
-              <a routerLink="/privacystatement">Privacy</a>
-              <a routerLink="/eula">EULA</a>
+              <a routerLink="/termsofservice">{{ 'NAV.terms' | translate }}</a>
+              <a routerLink="/privacystatement">{{ 'NAV.privacy' | translate }}</a>
+              <a routerLink="/eula">{{ 'NAV.eula' | translate }}</a>
             </div>
           </div>
 
@@ -401,8 +403,8 @@ const MODULE_SLIDES: ModuleSlide[] = [
           <form [formGroup]="otpForm" (ngSubmit)="onVerify2fa()" novalidate>
             <div class="twofa-header">
               <div class="twofa-icon"><mat-icon>phonelink_lock</mat-icon></div>
-              <h2>Two-factor authentication</h2>
-              <p>Enter the 6-digit code from your Google Authenticator app.</p>
+              <h2>{{ 'AUTH.twoFactorAuth' | translate }}</h2>
+              <p>{{ 'AUTH.twoFactorPrompt' | translate }}</p>
             </div>
 
             @if (error()) {
@@ -410,7 +412,7 @@ const MODULE_SLIDES: ModuleSlide[] = [
             }
 
             <mat-form-field appearance="outline" class="full-width otp-field">
-              <mat-label>Authenticator code</mat-label>
+              <mat-label>{{ 'AUTH.authenticatorCode' | translate }}</mat-label>
               <input matInput formControlName="otp" inputmode="numeric"
                      maxlength="6" autocomplete="one-time-code"
                      placeholder="000 000" />
@@ -420,13 +422,13 @@ const MODULE_SLIDES: ModuleSlide[] = [
             <div class="form-actions">
               <button mat-raised-button color="primary" type="submit"
                       class="full-width submit-btn" [disabled]="loading()">
-                @if (loading()) { <mat-spinner diameter="20" /> } @else { Verify }
+                @if (loading()) { <mat-spinner diameter="20" /> } @else { {{ 'AUTH.verify' | translate }} }
               </button>
             </div>
 
             <div class="back-link">
               <button mat-button type="button" (click)="resetToLogin()">
-                <mat-icon>arrow_back</mat-icon> Back to login
+                <mat-icon>arrow_back</mat-icon> {{ 'AUTH.backToLogin' | translate }}
               </button>
             </div>
           </form>
@@ -718,6 +720,7 @@ export class LoginComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private api: ApiService,
     private router: Router,
+    private translate: TranslateService,
   ) {
     this.form = this.fb.group({
       email:    ['', [Validators.required, Validators.email]],
@@ -801,7 +804,7 @@ export class LoginComponent implements OnInit, OnDestroy {
         }
       },
       error: (err) => {
-        this.error.set(err.error?.error || 'Login failed. Please try again.');
+        this.error.set(err.error?.error || this.translate.instant('AUTH.loginFailed'));
         this.loading.set(false);
       },
     });
@@ -815,7 +818,7 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.authService.verify2fa(this.tempToken, this.otpForm.value.otp).subscribe({
       next: () => this.router.navigate(['/dashboard']),
       error: (err) => {
-        this.error.set(err.error?.error || 'Verification failed. Please try again.');
+        this.error.set(err.error?.error || this.translate.instant('AUTH.verificationFailed'));
         this.loading.set(false);
       },
     });
@@ -832,7 +835,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   async loginWithPasskey(): Promise<void> {
     const email = this.form.get('email')?.value;
     if (!email) {
-      this.error.set('Enter your email address first, then click Passkey.');
+      this.error.set(this.translate.instant('AUTH.enterEmailFirst'));
       return;
     }
 
@@ -847,7 +850,7 @@ export class LoginComponent implements OnInit, OnDestroy {
       });
       if (!res.ok) {
         const err = await res.json();
-        this.error.set(err.error || 'No passkey found for this account.');
+        this.error.set(err.error || this.translate.instant('AUTH.noPasskeyFound'));
         this.loading.set(false);
         return;
       }
@@ -893,7 +896,7 @@ export class LoginComponent implements OnInit, OnDestroy {
       });
       if (!verifyRes.ok) {
         const err = await verifyRes.json();
-        this.error.set(err.error || 'Passkey verification failed.');
+        this.error.set(err.error || this.translate.instant('AUTH.passkeyVerificationFailed'));
         this.loading.set(false);
         return;
       }
@@ -902,8 +905,8 @@ export class LoginComponent implements OnInit, OnDestroy {
       this.router.navigate(['/dashboard']);
     } catch (e: any) {
       this.error.set(e?.message === 'The operation either timed out or was not allowed.'
-        ? 'Passkey authentication was cancelled.'
-        : 'Passkey authentication failed. Please try again.');
+        ? this.translate.instant('AUTH.passkeyCancelled')
+        : this.translate.instant('AUTH.passkeyAuthFailed'));
       this.loading.set(false);
     }
   }

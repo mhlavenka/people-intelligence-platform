@@ -6,26 +6,27 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-passkey-label-dialog',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatIconModule],
+  imports: [CommonModule, FormsModule, MatDialogModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatIconModule, TranslateModule],
   template: `
     <h2 mat-dialog-title>
-      <mat-icon>fingerprint</mat-icon> Name Your Passkey
+      <mat-icon>fingerprint</mat-icon> {{ 'PROFILE.namePasskey' | translate }}
     </h2>
     <mat-dialog-content>
-      <p class="desc">Give this passkey a name so you can identify it later.</p>
+      <p class="desc">{{ 'PROFILE.namePasskeyDesc' | translate }}</p>
       <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Passkey name</mat-label>
+        <mat-label>{{ 'PROFILE.passkeyName' | translate }}</mat-label>
         <input matInput [(ngModel)]="label" placeholder='e.g. "MacBook Touch ID", "YubiKey"' autofocus />
       </mat-form-field>
     </mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button mat-button mat-dialog-close>Cancel</button>
+      <button mat-button mat-dialog-close>{{ 'COMMON.cancel' | translate }}</button>
       <button mat-raised-button color="primary" [disabled]="!label.trim()" (click)="save()">
-        <mat-icon>check</mat-icon> Save
+        <mat-icon>check</mat-icon> {{ 'COMMON.save' | translate }}
       </button>
     </mat-dialog-actions>
   `,

@@ -20,6 +20,7 @@ import { CancelDialogComponent, CancelDialogResult } from '../../booking/cancel-
 import { BookingService, BookingRecord } from '../../booking/booking.service';
 import { SurveyResponsesDialogComponent, SurveyTemplate as IntakeTemplate } from '../../survey/survey-responses-dialog/survey-responses-dialog.component';
 
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 interface Session {
   _id: string;
   date: string;
@@ -51,6 +52,7 @@ interface Session {
   imports: [
     CommonModule, DatePipe, CurrencyPipe, RouterLink, MatIconModule, MatButtonModule,
     MatProgressSpinnerModule, MatDividerModule, MatSnackBarModule, MatTooltipModule,
+    TranslateModule,
   ],
   template: `
     <div class="detail-page">
@@ -924,6 +926,7 @@ export class EngagementDetailComponent implements OnInit {
     private snack: MatSnackBar,
     private journal: JournalService,
     private bookingSvc: BookingService,
+    private translate: TranslateService,
   ) {}
 
   canManage = () => ['admin', 'hr_manager', 'coach'].includes(this.auth.currentUser()?.role ?? '');

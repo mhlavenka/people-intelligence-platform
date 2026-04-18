@@ -13,6 +13,7 @@ import { MatTableModule } from '@angular/material/table';
 import { ApiService } from '../../../core/api.service';
 import { AvatarComponent } from '../../../shared/avatar/avatar.component';
 
+import { TranslateModule } from '@ngx-translate/core';
 type EngagementStatus = 'prospect' | 'contracted' | 'active' | 'paused' | 'completed' | 'alumni';
 type FilterKey = 'all' | EngagementStatus | 'none';
 
@@ -86,13 +87,14 @@ const STATUS_PRIORITY: EngagementStatus[] = ['active', 'contracted', 'prospect',
     MatIconModule, MatButtonModule, MatProgressSpinnerModule,
     MatFormFieldModule, MatInputModule, MatTooltipModule, MatTableModule,
     AvatarComponent,
+    TranslateModule,
   ],
   template: `
     <div class="page">
       <div class="page-header">
         <div>
-          <h1>Coachees</h1>
-          <p>Every active coachee in the organization. Filter by engagement status.</p>
+          <h1>{{ 'COACHING.coacheesTitle' | translate }}</h1>
+          <p>{{ 'COACHING.coacheesSubtitle' | translate }}</p>
         </div>
       </div>
 
@@ -101,8 +103,8 @@ const STATUS_PRIORITY: EngagementStatus[] = ['active', 'contracted', 'prospect',
       } @else if (!allRows().length) {
         <div class="empty">
           <mat-icon>people_alt</mat-icon>
-          <h3>No active coachees</h3>
-          <p>Invite coachees from User Management to start coaching.</p>
+          <h3>{{ 'COACHING.noActiveCoachees' | translate }}</h3>
+          <p>{{ 'COACHING.inviteCoachees' | translate }}</p>
         </div>
       } @else {
         <!-- Filter pills -->
@@ -129,7 +131,7 @@ const STATUS_PRIORITY: EngagementStatus[] = ['active', 'contracted', 'prospect',
         @if (!filtered().length) {
           <div class="empty-small">
             <mat-icon>filter_list_off</mat-icon>
-            <p>No coachees match the current filter.</p>
+            <p>{{ 'COACHING.noCoacheesMatch' | translate }}</p>
           </div>
         } @else {
           <div class="table-wrap">

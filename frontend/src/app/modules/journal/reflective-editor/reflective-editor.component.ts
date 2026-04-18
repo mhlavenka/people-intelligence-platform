@@ -14,6 +14,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { JournalService, JournalMood, ReflectiveEntry } from '../journal.service';
 
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 const MOODS: { value: JournalMood; icon: string; label: string }[] = [
   { value: 'energized',  icon: 'bolt',           label: 'Energized' },
   { value: 'reflective', icon: 'self_improvement', label: 'Reflective' },
@@ -30,6 +31,7 @@ const MOODS: { value: JournalMood; icon: string; label: string }[] = [
     MatIconModule, MatButtonModule, MatFormFieldModule, MatInputModule,
     MatDatepickerModule, MatNativeDateModule, MatChipsModule, MatSlideToggleModule,
     MatProgressSpinnerModule, MatSnackBarModule,
+    TranslateModule,
   ],
   template: `
     <div class="journal-page">
@@ -44,11 +46,11 @@ const MOODS: { value: JournalMood; icon: string; label: string }[] = [
         <div class="editor-card">
           <div class="row-2">
             <mat-form-field appearance="outline" class="flex-grow">
-              <mat-label>Title</mat-label>
+              <mat-label>{{ 'JOURNAL.title' | translate }}</mat-label>
               <input matInput [(ngModel)]="title" placeholder="What's on your mind?">
             </mat-form-field>
             <mat-form-field appearance="outline" style="width: 160px">
-              <mat-label>Date</mat-label>
+              <mat-label>{{ 'JOURNAL.dateLabel' | translate }}</mat-label>
               <input matInput [matDatepicker]="dp" [(ngModel)]="entryDate">
               <mat-datepicker-toggle matIconSuffix [for]="dp" />
               <mat-datepicker #dp />
@@ -68,7 +70,7 @@ const MOODS: { value: JournalMood; icon: string; label: string }[] = [
 
           <!-- Body -->
           <mat-form-field appearance="outline" class="full-width">
-            <mat-label>Your Reflection</mat-label>
+            <mat-label>{{ 'JOURNAL.yourReflection' | translate }}</mat-label>
             <textarea matInput rows="10" [(ngModel)]="body" placeholder="Write freely about your coaching practice, observations, or professional growth..."></textarea>
           </mat-form-field>
 
@@ -189,6 +191,7 @@ export class ReflectiveEditorComponent implements OnInit {
     private router: Router,
     private journal: JournalService,
     private snack: MatSnackBar,
+    private translate: TranslateService,
   ) {}
 
   ngOnInit(): void {
@@ -239,10 +242,10 @@ export class ReflectiveEditorComponent implements OnInit {
     obs.subscribe({
       next: () => {
         this.saving.set(false);
-        this.snack.open('Entry saved', '', { duration: 2000 });
+        this.snack.open(this.translate.instant('JOURNAL.entrySaved'), '', { duration: 2000 });
         this.router.navigate(['/journal/reflective']);
       },
-      error: () => { this.saving.set(false); this.snack.open('Failed to save', '', { duration: 3000 }); },
+      error: () => { this.saving.set(false); this.snack.open(this.translate.instant('JOURNAL.failedSave'), '', { duration: 3000 }); },
     });
   }
 
@@ -251,7 +254,7 @@ export class ReflectiveEditorComponent implements OnInit {
     this.saving.set(true);
     this.journal.deleteReflectiveEntry(this.entryId).subscribe({
       next: () => { this.router.navigate(['/journal/reflective']); },
-      error: () => { this.saving.set(false); this.snack.open('Failed to delete', '', { duration: 3000 }); },
+      error: () => { this.saving.set(false); this.snack.open(this.translate.instant('JOURNAL.failedDelete'), '', { duration: 3000 }); },
     });
   }
 }

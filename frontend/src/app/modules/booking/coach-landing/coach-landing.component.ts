@@ -14,6 +14,7 @@ import {
 import { PublicBookingComponent } from '../public-booking/public-booking.component';
 import { BookingConfirmComponent } from '../booking-confirm/booking-confirm.component';
 
+import { TranslateModule } from '@ngx-translate/core';
 @Component({
   selector: 'app-coach-landing',
   standalone: true,
@@ -21,6 +22,7 @@ import { BookingConfirmComponent } from '../booking-confirm/booking-confirm.comp
     CommonModule,
     MatIconModule, MatButtonModule, MatProgressSpinnerModule,
     PublicBookingComponent, BookingConfirmComponent,
+    TranslateModule,
   ],
   template: `
     <div class="page" [class.dialog-mode]="isDialog" [class.embedded-step]="step() !== 'list'">
@@ -54,7 +56,7 @@ import { BookingConfirmComponent } from '../booking-confirm/booking-confirm.comp
       } @else if (notFound()) {
         <div class="error-state">
           <mat-icon>error_outline</mat-icon>
-          <h2>Coach page not found</h2>
+          <h2>{{ 'BOOKING.coachPageNotFound' | translate }}</h2>
           <p>The link you followed may be broken or the coach page is no longer available.</p>
         </div>
       } @else if (data()) {
@@ -74,7 +76,7 @@ import { BookingConfirmComponent } from '../booking-confirm/booking-confirm.comp
           </header>
 
           <section class="events">
-            <h2 class="events-label">Book a session</h2>
+            <h2 class="events-label">{{ 'BOOKING.bookASession' | translate }}</h2>
             @if (!data()!.eventTypes.length) {
               <p class="empty">No booking types are currently available.</p>
             } @else {
@@ -110,7 +112,7 @@ import { BookingConfirmComponent } from '../booking-confirm/booking-confirm.comp
           </section>
 
           <footer class="footer">
-            Powered by ARTES
+            {{ 'BOOKING.poweredBy' | translate }}
           </footer>
         </div>
       }

@@ -4,10 +4,13 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { BookingResult, PublicBookingService } from '../booking.service';
 
+import { TranslateModule } from '@ngx-translate/core';
 @Component({
   selector: 'app-booking-confirm',
   standalone: true,
-  imports: [CommonModule, DatePipe, MatButtonModule],
+  imports: [CommonModule, DatePipe, MatButtonModule,
+    TranslateModule,
+  ],
   template: `
     <div class="confirm-page">
       @if (loading()) {
@@ -19,7 +22,7 @@ import { BookingResult, PublicBookingService } from '../booking.service';
           <div class="success-icon">
             <span class="material-icons">check_circle</span>
           </div>
-          <h1>Your Session is Confirmed!</h1>
+          <h1>{{ 'BOOKING.sessionConfirmed' | translate }}</h1>
 
           <div class="detail-box">
             <div class="detail-row">
@@ -87,7 +90,7 @@ import { BookingResult, PublicBookingService } from '../booking.service';
           <div class="warn-icon">
             <span class="material-icons">info</span>
           </div>
-          <h2>No booking information found</h2>
+          <h2>{{ 'BOOKING.noBookingInfo' | translate }}</h2>
           <p class="fallback-text">Please book a session first.</p>
           <button mat-flat-button color="primary" (click)="goBack()">
             Go to Booking Page

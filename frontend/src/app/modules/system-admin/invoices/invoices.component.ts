@@ -13,6 +13,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { ApiService } from '../../../core/api.service';
+import { TranslateModule } from '@ngx-translate/core';
 
 // ---------------------------------------------------------------------------
 // Interfaces
@@ -131,6 +132,7 @@ const COUNTRY_TAX_RATES: Record<string, number> = {
     MatDatepickerModule,
     MatNativeDateModule,
     DatePipe,
+    TranslateModule,
   ],
   template: `
     <div class="page">

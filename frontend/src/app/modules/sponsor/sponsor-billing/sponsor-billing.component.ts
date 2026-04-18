@@ -12,6 +12,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { SponsorBilling, SponsorService } from '../sponsor.service';
 import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog.component';
 import { SponsorInvoiceEditDialogComponent } from '../sponsor-invoice-edit-dialog/sponsor-invoice-edit-dialog.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-sponsor-billing',
@@ -20,13 +21,14 @@ import { SponsorInvoiceEditDialogComponent } from '../sponsor-invoice-edit-dialo
     CommonModule, CurrencyPipe, DatePipe, RouterLink,
     MatButtonModule, MatIconModule, MatProgressSpinnerModule, MatTooltipModule,
     MatMenuModule, MatDialogModule,
+    TranslateModule,
   ],
   template: `
     <div class="page">
       <div class="header">
         <a mat-icon-button routerLink="/sponsors"><mat-icon>arrow_back</mat-icon></a>
         <div class="header-text">
-          <h1>Sponsor billing</h1>
+          <h1>{{ "SPONSOR.billing" | translate }}</h1>
           @if (data()) {
             <p>{{ data()!.sponsor.name }} · {{ data()!.sponsor.email }}</p>
           }
@@ -35,7 +37,7 @@ import { SponsorInvoiceEditDialogComponent } from '../sponsor-invoice-edit-dialo
           <button mat-flat-button color="primary"
                   (click)="generate()" [disabled]="generating()">
             @if (generating()) { <mat-spinner diameter="18" /> }
-            <mat-icon>request_quote</mat-icon> Generate invoice
+            <mat-icon>request_quote</mat-icon> {{ "SPONSOR.generateInvoice" | translate }}
           </button>
         }
       </div>

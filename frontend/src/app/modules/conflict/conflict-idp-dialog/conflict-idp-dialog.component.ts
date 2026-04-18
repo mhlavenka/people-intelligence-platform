@@ -9,6 +9,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ApiService } from '../../../core/api.service';
+import { TranslateModule } from '@ngx-translate/core';
 
 interface ConflictAnalysis {
   _id: string;
@@ -40,11 +41,12 @@ interface Coachee {
     MatButtonModule,
     MatIconModule,
     MatProgressSpinnerModule,
+    TranslateModule,
   ],
   template: `
     <h2 mat-dialog-title>
       <mat-icon>psychology</mat-icon>
-      Generate Conflict Skill Development Plan
+      {{ "CONFLICT.generateConflictSkillPlan" | translate }}
     </h2>
 
     <mat-dialog-content>
@@ -59,7 +61,7 @@ interface Coachee {
 
       <!-- Analysis selection -->
       <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Based on Analysis</mat-label>
+        <mat-label>{{ "CONFLICT.basedOnAnalysis" | translate }}</mat-label>
         <mat-select [(ngModel)]="selectedAnalysisId">
           @for (a of analyses; track a._id) {
             <mat-option [value]="a._id">
@@ -68,12 +70,12 @@ interface Coachee {
             </mat-option>
           }
         </mat-select>
-        <mat-hint>Select the conflict analysis to base this plan on</mat-hint>
+        <mat-hint>{{ "CONFLICT.selectAnalysisHint" | translate }}</mat-hint>
       </mat-form-field>
 
       <!-- User selection -->
       <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Create Plan For</mat-label>
+        <mat-label>{{ "CONFLICT.createPlanFor" | translate }}</mat-label>
         <mat-select [(ngModel)]="selectedCoacheeId">
           @for (u of users(); track u._id) {
             <mat-option [value]="u._id">
@@ -82,22 +84,22 @@ interface Coachee {
             </mat-option>
           }
         </mat-select>
-        <mat-hint>Team member who will follow the development plan</mat-hint>
+        <mat-hint>{{ "CONFLICT.teamMemberHint" | translate }}</mat-hint>
       </mat-form-field>
 
       <!-- Goals -->
       <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Development Goals</mat-label>
+        <mat-label>{{ "CONFLICT.developmentGoals" | translate }}</mat-label>
         <textarea matInput [(ngModel)]="goals" rows="3"
                   placeholder="e.g. Improve conflict resolution skills, develop active listening, learn interest-based negotiation techniques"></textarea>
-        <mat-hint>Describe the key skills or behaviours to develop</mat-hint>
+        <mat-hint>{{ "CONFLICT.developmentGoalsHint" | translate }}</mat-hint>
       </mat-form-field>
 
       @if (selectedAnalysisId) {
         <div class="analysis-preview">
           <mat-icon>info</mat-icon>
           <div>
-            <strong>Conflict types detected:</strong>
+            <strong>{{ "CONFLICT.conflictTypesDetected" | translate }}</strong>
             {{ getSelectedAnalysis()?.conflictTypes?.join(', ') || 'None' }}
           </div>
         </div>

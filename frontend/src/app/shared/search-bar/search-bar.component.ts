@@ -4,11 +4,12 @@ import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { FormsModule } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-search-bar',
   standalone: true,
-  imports: [MatFormFieldModule, MatInputModule, MatIconModule, MatButtonModule, FormsModule],
+  imports: [MatFormFieldModule, MatInputModule, MatIconModule, MatButtonModule, FormsModule, TranslateModule],
   template: `
     <mat-form-field appearance="outline" class="search-field">
       <mat-label>{{ placeholder }}</mat-label>

@@ -7,6 +7,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDividerModule } from '@angular/material/divider';
 import { AuthService } from '../../../core/auth.service';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-system-admin-shell',
@@ -21,6 +22,7 @@ import { AuthService } from '../../../core/auth.service';
     MatMenuModule,
     MatTooltipModule,
     MatDividerModule,
+    TranslateModule,
   ],
   template: `
     <div class="sa-layout" [class.collapsed]="collapsed()">
@@ -38,7 +40,7 @@ import { AuthService } from '../../../core/auth.service';
               <img src="assets/artes_v2_transparent_dark.png" alt="PIP" class="brand-logo-wide" />
               <div class="brand-text">
                 <span class="brand-name">HeadSoft</span>
-                <span class="brand-sub">System Administration</span>
+                <span class="brand-sub">{{ "SYSADMIN.systemAdmin" | translate }}</span>
               </div>
             </div>
             <button mat-icon-button class="collapse-btn" (click)="collapsed.set(true)">
@@ -92,17 +94,17 @@ import { AuthService } from '../../../core/auth.service';
             @if (!collapsed()) {
               <div class="user-info">
                 <span class="user-name">{{ name() }}</span>
-                <span class="user-role">System Admin</span>
+                <span class="user-role">{{ "SYSADMIN.systemAdmin" | translate }}</span>
               </div>
             }
           </button>
           <mat-menu #userMenu="matMenu">
             <button mat-menu-item routerLink="/system-admin/profile">
-              <mat-icon>person</mat-icon> Profile
+              <mat-icon>person</mat-icon> {{ "SYSADMIN.profile" | translate }}
             </button>
             <mat-divider />
             <button mat-menu-item (click)="logout()">
-              <mat-icon>logout</mat-icon> Sign out
+              <mat-icon>logout</mat-icon> {{ "SYSADMIN.signOut" | translate }}
             </button>
           </mat-menu>
         </div>

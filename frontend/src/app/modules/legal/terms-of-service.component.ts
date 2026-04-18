@@ -3,11 +3,14 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-terms-of-service',
   standalone: true,
-  imports: [CommonModule, RouterLink, MatIconModule, MatButtonModule],
+  imports: [CommonModule, RouterLink, MatIconModule, MatButtonModule,
+    TranslateModule,
+  ],
   template: `
     <div class="legal-page">
       <header class="legal-header">
@@ -16,16 +19,16 @@ import { MatButtonModule } from '@angular/material/button';
           <span class="logo-text">ARTES</span>
         </a>
         <nav>
-          <a routerLink="/privacystatement" class="nav-link">Privacy Statement</a>
-          <a routerLink="/login" mat-stroked-button class="nav-btn">Sign in</a>
+          <a routerLink="/privacystatement" class="nav-link">{{ "LEGAL.privacyLink" | translate }}</a>
+          <a routerLink="/login" mat-stroked-button class="nav-btn">{{ "LEGAL.signIn" | translate }}</a>
         </nav>
       </header>
 
       <main class="legal-content">
         <div class="hero">
           <mat-icon class="hero-icon">gavel</mat-icon>
-          <h1>Terms of Service</h1>
-          <p class="subtitle">Last updated: 17 April 2026</p>
+          <h1>{{ "LEGAL.termsTitle" | translate }}</h1>
+          <p class="subtitle">{{ "LEGAL.lastUpdated" | translate }}</p>
         </div>
 
         <article class="document">

@@ -12,6 +12,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ApiService } from '../../../core/api.service';
+import { TranslateModule } from '@ngx-translate/core';
 
 interface AppSettings {
   passwordPolicy: {
@@ -84,6 +85,7 @@ const REFRESH_EXPIRY_OPTIONS = [
     MatProgressSpinnerModule,
     MatTooltipModule,
     MatSnackBarModule,
+    TranslateModule,
   ],
   template: `
     <div class="settings-page">

@@ -23,7 +23,13 @@
       "Bash(npx ng:*)",
       "Bash(node -e ':*)",
       "Bash(ssh:*)",
-      "Bash(npx jest:*)"
+      "Bash(npx jest:*)",
+      "Bash(python /tmp/i18n_templates.py)",
+      "Bash(node -e ' *)",
+      "Bash(python \"D:/CUSTOMERS/HeadSoft/people-intelligence-platform/i18n_batch_c.py\")",
+      "Bash(node i18n-batch.js)",
+      "Bash(python -c \"import json; json.load\\(open\\('D:/CUSTOMERS/HeadSoft/people-intelligence-platform/frontend/src/assets/i18n/en.json'\\)\\); print\\('en.json: valid'\\); json.load\\(open\\('D:/CUSTOMERS/HeadSoft/people-intelligence-platform/frontend/src/assets/i18n/fr.json'\\)\\); print\\('fr.json: valid'\\)\")",
+      "Bash(node -e \"const en=require\\('./en.json'\\); const fr=require\\('./fr.json'\\); const countKeys=\\(o,p=''\\)=>{let c=0;for\\(const k in o\\){if\\(typeof o[k]==='object'&&o[k]!==null\\)c+=countKeys\\(o[k],p+k+'.'\\);else c++;}return c;}; console.log\\('EN keys:', countKeys\\(en\\)\\); console.log\\('FR keys:', countKeys\\(fr\\)\\); const enK=new Set\\(\\); const frK=new Set\\(\\); const collect=\\(o,p='',s\\)=>{for\\(const k in o\\){if\\(typeof o[k]==='object'&&o[k]!==null\\)collect\\(o[k],p+k+'.',s\\);else s.add\\(p+k\\);}}; collect\\(en,'',enK\\); collect\\(fr,'',frK\\); const missing=[...enK].filter\\(k=>!frK.has\\(k\\)\\); console.log\\('Missing in FR:', missing.length\\); if\\(missing.length>0\\)console.log\\('  First 10:', missing.slice\\(0,10\\)\\);\")"
     ]
   }
 }

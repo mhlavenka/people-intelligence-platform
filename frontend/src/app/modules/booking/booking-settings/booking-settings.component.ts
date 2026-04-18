@@ -13,6 +13,7 @@ import { Clipboard } from '@angular/cdk/clipboard';
 import { Router } from '@angular/router';
 import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog.component';
 import { ApiService } from '../../../core/api.service';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import {
   CalendarIntegrationService,
   CalendarStatus,
@@ -31,12 +32,13 @@ import {
     MatButtonModule, MatIconModule, MatDividerModule,
     MatProgressSpinnerModule, MatSnackBarModule, MatTooltipModule,
     MatMenuModule, MatDialogModule,
+    TranslateModule,
   ],
   template: `
     <div class="settings-container">
       <div class="page-header">
         <div>
-          <h1>Event Types</h1>
+          <h1>{{ 'BOOKING.eventTypesTitle' | translate }}</h1>
           <p>Create booking pages for different session types — each with its own link, duration, and schedule.</p>
         </div>
       </div>
@@ -86,7 +88,7 @@ import {
       } @else if (!eventTypes().length) {
         <div class="empty-state">
           <mat-icon>event_note</mat-icon>
-          <h3>No event types yet</h3>
+          <h3>{{ 'BOOKING.noEventTypes' | translate }}</h3>
           <p>Create your first event type to start accepting bookings.</p>
           <button mat-flat-button color="primary" (click)="createEventType()">
             <mat-icon>add</mat-icon> Create Event Type
@@ -303,6 +305,7 @@ export class BookingSettingsComponent implements OnInit {
     private router: Router,
     private dialog: MatDialog,
     private api: ApiService,
+    private translate: TranslateService,
   ) {}
 
   ngOnInit(): void {

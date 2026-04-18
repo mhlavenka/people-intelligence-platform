@@ -12,6 +12,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ApiService } from '../../../core/api.service';
+import { TranslateModule } from '@ngx-translate/core';
 
 export interface CustomRole {
   _id: string;
@@ -110,6 +111,7 @@ const PRESET_COLORS = [
     MatProgressSpinnerModule,
     MatDividerModule,
     MatTooltipModule,
+    TranslateModule,
   ],
   template: `
     <h2 mat-dialog-title>

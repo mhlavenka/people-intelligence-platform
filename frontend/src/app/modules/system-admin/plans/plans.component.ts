@@ -11,6 +11,7 @@ import { ApiService } from '../../../core/api.service';
 import { PlanEditDialogComponent } from '../plan-edit-dialog/plan-edit-dialog.component';
 import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog.component';
 import { EmptyStateComponent } from '../../../shared/empty-state/empty-state.component';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 interface PlanLimits {
   maxAIAnalyses: number;
@@ -53,6 +54,7 @@ const MODULE_DEFS = [
     MatDividerModule,
     MatTooltipModule,
     EmptyStateComponent,
+    TranslateModule,
   ],
   template: `
     <div class="page">

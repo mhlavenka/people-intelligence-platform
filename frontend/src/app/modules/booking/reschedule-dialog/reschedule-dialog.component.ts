@@ -11,6 +11,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { AvailableSlot, BookingRecord, BookingService } from '../booking.service';
 
+import { TranslateModule } from '@ngx-translate/core';
 export interface RescheduleDialogData {
   booking: BookingRecord;
   /** When true, show a "Message to coach" textarea; the submitted note
@@ -33,9 +34,10 @@ export interface RescheduleDialogResult {
     MatDialogModule, MatFormFieldModule, MatInputModule,
     MatDatepickerModule, MatNativeDateModule,
     MatButtonModule, MatIconModule, MatProgressSpinnerModule,
+    TranslateModule,
   ],
   template: `
-    <h2 mat-dialog-title>Reschedule booking</h2>
+    <h2 mat-dialog-title>{{ 'BOOKING.rescheduleBookingTitle' | translate }}</h2>
     <mat-dialog-content>
       <p class="intro">
         Current session: <strong>{{ data.booking.clientName }}</strong> on
@@ -45,7 +47,7 @@ export interface RescheduleDialogResult {
 
       <div class="pickers">
         <mat-form-field appearance="outline" class="date-field">
-          <mat-label>New date</mat-label>
+          <mat-label>{{ 'BOOKING.newDate' | translate }}</mat-label>
           <input matInput [matDatepicker]="picker" [ngModel]="newDate"
                  (ngModelChange)="onDateChange($event)"
                  [min]="minDate" required />

@@ -13,6 +13,7 @@ import { SponsorDialogComponent } from '../sponsor-dialog/sponsor-dialog.compone
 import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog.component';
 import { AvatarComponent } from '../../../shared/avatar/avatar.component';
 import { HttpErrorResponse } from '@angular/common/http';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-sponsor-list',
@@ -22,13 +23,14 @@ import { HttpErrorResponse } from '@angular/common/http';
     MatButtonModule, MatIconModule, MatProgressSpinnerModule,
     MatMenuModule, MatTooltipModule, MatDialogModule,
     AvatarComponent,
+    TranslateModule,
   ],
   template: `
     <div class="page">
       <div class="page-header">
         <div>
-          <h1>Sponsors</h1>
-          <p>Manage who gets billed for coaching engagements.</p>
+          <h1>{{ "SPONSOR.title" | translate }}</h1>
+          <p>{{ "SPONSOR.titleDesc" | translate }}</p>
         </div>
       </div>
 
@@ -37,10 +39,10 @@ import { HttpErrorResponse } from '@angular/common/http';
       } @else if (sponsors().length === 0) {
         <div class="empty">
           <mat-icon>account_balance</mat-icon>
-          <h3>No sponsors yet</h3>
+          <h3>{{ "SPONSOR.noSponsors" | translate }}</h3>
           <p>Create your first sponsor to start tracking coaching billing.</p>
           <button mat-flat-button color="primary" (click)="newSponsor()">
-            <mat-icon>add</mat-icon> New sponsor
+            <mat-icon>add</mat-icon> {{ "SPONSOR.newSponsor" | translate }}
           </button>
         </div>
       } @else {

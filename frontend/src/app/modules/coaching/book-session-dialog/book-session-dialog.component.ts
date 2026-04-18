@@ -10,6 +10,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 
+import { TranslateModule } from '@ngx-translate/core';
 export interface BookSessionData {
   coachName: string;
   engagementId: string;
@@ -21,6 +22,7 @@ export interface BookSessionData {
   imports: [
     CommonModule, FormsModule, MatDialogModule, MatButtonModule, MatIconModule,
     MatFormFieldModule, MatInputModule, MatSelectModule, MatDatepickerModule, MatNativeDateModule,
+    TranslateModule,
   ],
   template: `
     <h2 mat-dialog-title>
@@ -32,7 +34,7 @@ export interface BookSessionData {
         <p class="subtitle">Schedule a coaching session with <strong>{{ data.coachName }}</strong></p>
 
         <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Preferred Date</mat-label>
+          <mat-label>{{ 'COACHING.preferredDate' | translate }}</mat-label>
           <input matInput [matDatepicker]="picker" [(ngModel)]="preferredDate" [min]="minDate">
           <mat-datepicker-toggle matSuffix [for]="picker" />
           <mat-datepicker #picker />
@@ -40,7 +42,7 @@ export interface BookSessionData {
 
         <div class="time-row">
           <mat-form-field appearance="outline">
-            <mat-label>Preferred Time</mat-label>
+            <mat-label>{{ 'COACHING.preferredTime' | translate }}</mat-label>
             <mat-select [(ngModel)]="preferredTime">
               @for (t of timeSlots; track t) {
                 <mat-option [value]="t">{{ t }}</mat-option>
@@ -59,13 +61,13 @@ export interface BookSessionData {
         </div>
 
         <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Notes (optional)</mat-label>
+          <mat-label>{{ 'COACHING.notesOptional' | translate }}</mat-label>
           <textarea matInput [(ngModel)]="notes" rows="3" placeholder="Anything you'd like to discuss or prepare for..."></textarea>
         </mat-form-field>
       } @else {
         <div class="confirmation">
           <mat-icon class="confirm-icon">check_circle</mat-icon>
-          <h3>Request Sent</h3>
+          <h3>{{ 'COACHING.requestSent' | translate }}</h3>
           <p>Your booking request has been sent to <strong>{{ data.coachName }}</strong>. You'll receive a confirmation once the session is scheduled.</p>
         </div>
       }

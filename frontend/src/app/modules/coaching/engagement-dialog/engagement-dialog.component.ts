@@ -18,6 +18,7 @@ import { OrgContextService } from '../../../core/org-context.service';
 import { Sponsor, SponsorService } from '../../sponsor/sponsor.service';
 import { SponsorDialogComponent } from '../../sponsor/sponsor-dialog/sponsor-dialog.component';
 
+import { TranslateModule } from '@ngx-translate/core';
 interface Coachee { _id: string; firstName: string; lastName: string; email: string; department?: string; }
 
 @Component({
@@ -27,16 +28,17 @@ interface Coachee { _id: string; firstName: string; lastName: string; email: str
     CommonModule, FormsModule, MatDialogModule, MatFormFieldModule, MatInputModule,
     MatSelectModule, MatButtonModule, MatIconModule, MatProgressSpinnerModule,
     MatDatepickerModule, MatNativeDateModule, MatChipsModule, MatSlideToggleModule,
+    TranslateModule,
   ],
   template: `
     <h2 mat-dialog-title>
       <mat-icon>psychology_alt</mat-icon>
-      {{ isEdit ? 'Edit Engagement' : 'New Coaching Engagement' }}
+      {{ isEdit ? ('COACHING.editEngagement' | translate) : ('COACHING.newCoachingEngagement' | translate) }}
     </h2>
     <mat-dialog-content>
       @if (!isEdit) {
         <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Coachee</mat-label>
+          <mat-label>{{ 'COACHING.coachee' | translate }}</mat-label>
           <mat-select [(ngModel)]="form.coacheeId" required>
             @for (c of coachees(); track c._id) {
               <mat-option [value]="c._id">{{ c.firstName }} {{ c.lastName }} ({{ c.email }})</mat-option>
@@ -46,66 +48,66 @@ interface Coachee { _id: string; firstName: string; lastName: string; email: str
       }
 
       <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Status</mat-label>
+        <mat-label>{{ 'COACHING.status' | translate }}</mat-label>
         <mat-select [(ngModel)]="form.status">
-          <mat-option value="prospect">Prospect</mat-option>
-          <mat-option value="contracted">Contracted</mat-option>
-          <mat-option value="active">Active</mat-option>
-          <mat-option value="paused">Paused</mat-option>
-          <mat-option value="completed">Completed</mat-option>
-          <mat-option value="alumni">Alumni</mat-option>
+          <mat-option value="prospect">{{ 'COACHING.prospect' | translate }}</mat-option>
+          <mat-option value="contracted">{{ 'COACHING.contracted' | translate }}</mat-option>
+          <mat-option value="active">{{ 'COACHING.active' | translate }}</mat-option>
+          <mat-option value="paused">{{ 'COACHING.paused' | translate }}</mat-option>
+          <mat-option value="completed">{{ 'COACHING.completed' | translate }}</mat-option>
+          <mat-option value="alumni">{{ 'COACHING.alumni' | translate }}</mat-option>
         </mat-select>
       </mat-form-field>
 
       <div class="form-row">
         <mat-form-field appearance="outline">
-          <mat-label>Sessions Purchased</mat-label>
+          <mat-label>{{ 'COACHING.sessionsPurchased' | translate }}</mat-label>
           <input matInput type="number" [(ngModel)]="form.sessionsPurchased" min="0" />
         </mat-form-field>
         <mat-form-field appearance="outline">
-          <mat-label>Cadence</mat-label>
+          <mat-label>{{ 'COACHING.cadence' | translate }}</mat-label>
           <mat-select [(ngModel)]="form.cadence">
-            <mat-option value="weekly">Weekly</mat-option>
-            <mat-option value="biweekly">Biweekly</mat-option>
-            <mat-option value="monthly">Monthly</mat-option>
+            <mat-option value="weekly">{{ 'COACHING.weekly' | translate }}</mat-option>
+            <mat-option value="biweekly">{{ 'COACHING.biweekly' | translate }}</mat-option>
+            <mat-option value="monthly">{{ 'COACHING.monthly' | translate }}</mat-option>
           </mat-select>
         </mat-form-field>
       </div>
 
       <div class="form-row">
         <mat-form-field appearance="outline">
-          <mat-label>Format</mat-label>
+          <mat-label>{{ 'COACHING.format' | translate }}</mat-label>
           <mat-select [(ngModel)]="form.sessionFormat">
-            <mat-option value="video">Video</mat-option>
-            <mat-option value="phone">Phone</mat-option>
-            <mat-option value="in_person">In Person</mat-option>
+            <mat-option value="video">{{ 'COACHING.video' | translate }}</mat-option>
+            <mat-option value="phone">{{ 'COACHING.phone' | translate }}</mat-option>
+            <mat-option value="in_person">{{ 'COACHING.inPerson' | translate }}</mat-option>
           </mat-select>
         </mat-form-field>
         <mat-form-field appearance="outline">
-          <mat-label>Start Date</mat-label>
+          <mat-label>{{ 'COACHING.startDate' | translate }}</mat-label>
           <input matInput [matDatepicker]="startPicker" [(ngModel)]="form.startDate" />
           <mat-datepicker-toggle matIconSuffix [for]="startPicker" /><mat-datepicker #startPicker />
         </mat-form-field>
       </div>
 
       <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Goals (comma separated)</mat-label>
+        <mat-label>{{ 'COACHING.goalsComma' | translate }}</mat-label>
         <input matInput [(ngModel)]="goalsRaw" placeholder="e.g. Leadership development, Communication skills" />
       </mat-form-field>
 
-      <div class="section-label">Billing</div>
+      <div class="section-label">{{ 'COACHING.billing' | translate }}</div>
       <mat-form-field appearance="outline" class="full-width">
-        <mat-label>How is this engagement paid?</mat-label>
+        <mat-label>{{ 'COACHING.billingMode' | translate }}</mat-label>
         <mat-select [(ngModel)]="form.billingMode" (selectionChange)="onBillingModeChange()">
-          <mat-option value="subscription">Covered by subscription plan</mat-option>
-          <mat-option value="sponsor">Sponsor pays per engagement</mat-option>
+          <mat-option value="subscription">{{ 'COACHING.subscription' | translate }}</mat-option>
+          <mat-option value="sponsor">{{ 'COACHING.sponsorPays' | translate }}</mat-option>
         </mat-select>
       </mat-form-field>
 
       @if (form.billingMode === 'sponsor') {
         <div class="form-row">
           <mat-form-field appearance="outline">
-            <mat-label>Sponsor</mat-label>
+            <mat-label>{{ 'COACHING.sponsor' | translate }}</mat-label>
             <mat-select [(ngModel)]="form.sponsorId" required>
               @for (s of sponsors(); track s._id) {
                 <mat-option [value]="s._id">
@@ -119,7 +121,7 @@ interface Coachee { _id: string; firstName: string; lastName: string; email: str
           </button>
         </div>
         <mat-form-field appearance="outline" class="rate-field">
-          <mat-label>Hourly rate (override)</mat-label>
+          <mat-label>{{ 'COACHING.hourlyRate' | translate }}</mat-label>
           <input matInput type="number" [(ngModel)]="form.hourlyRate" min="0" step="0.01" />
           <mat-icon matPrefix>attach_money</mat-icon>
           <mat-hint>Leave blank to use the sponsor's default rate</mat-hint>
@@ -127,7 +129,7 @@ interface Coachee { _id: string; firstName: string; lastName: string; email: str
       }
 
       <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Notes (private)</mat-label>
+        <mat-label>{{ 'COACHING.notesPrivate' | translate }}</mat-label>
         <textarea matInput [(ngModel)]="form.notes" rows="3" placeholder="Coach-only notes about this engagement"></textarea>
       </mat-form-field>
     </mat-dialog-content>
@@ -137,7 +139,7 @@ interface Coachee { _id: string; firstName: string; lastName: string; email: str
       <button mat-raised-button color="primary" (click)="save()" [disabled]="saving()">
         @if (saving()) { <mat-spinner diameter="18" /> }
         @else { <mat-icon>{{ isEdit ? 'save' : 'add' }}</mat-icon> }
-        {{ isEdit ? 'Save' : 'Create' }}
+        {{ isEdit ? ('COMMON.save' | translate) : ('COACHING.create' | translate) }}
       </button>
     </mat-dialog-actions>
   `,

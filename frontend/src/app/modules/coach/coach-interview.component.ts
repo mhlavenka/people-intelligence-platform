@@ -10,6 +10,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ApiService } from '../../core/api.service';
 import { EmptyStateComponent } from '../../shared/empty-state/empty-state.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 interface SurveyTemplate {
   _id: string;
@@ -58,6 +59,7 @@ const FORMAT_OPTIONS: { key: SessionFormat; label: string; icon: string; hint: s
     MatProgressBarModule,
     MatProgressSpinnerModule,
     EmptyStateComponent,
+    TranslateModule,
   ],
   template: `
     <div class="interview-page">
@@ -72,7 +74,7 @@ const FORMAT_OPTIONS: { key: SessionFormat; label: string; icon: string; hint: s
         } @else if (step() === 'done') {
           <div class="done-state">
             <div class="done-icon"><mat-icon>check_circle</mat-icon></div>
-            <h2>Session Recorded</h2>
+            <h2>{{ "COACH.sessionRecorded" | translate }}</h2>
             <p>
               {{ sessionFormat() === 'individual' ? 'Interview' : (selectedTemplate()?.intakeType === 'assessment' ? 'Assessment' : 'Interview') }}
               for <strong>{{ targetName() || (selectedCoachee()?.firstName + ' ' + selectedCoachee()?.lastName) }}</strong> has been saved.

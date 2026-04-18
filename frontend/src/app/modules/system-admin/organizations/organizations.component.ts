@@ -17,6 +17,7 @@ import { ApiService } from '../../../core/api.service';
 import { OrgEditDialogComponent, OrgRow } from '../org-edit-dialog/org-edit-dialog.component';
 import { CreateUserDialogComponent } from '../create-user-dialog/create-user-dialog.component';
 import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 interface Stats {
   totalOrgs: number;
@@ -44,6 +45,7 @@ interface Stats {
     MatInputModule,
     MatFormFieldModule,
     MatSelectModule,
+    TranslateModule,
   ],
   template: `
     <div class="page">
@@ -51,11 +53,11 @@ interface Stats {
       <!-- Header -->
       <div class="page-header">
         <div>
-          <h1>Organizations</h1>
-          <p>Manage all tenant organizations, plans, and access</p>
+          <h1>{{ "SYSADMIN.organizations" | translate }}</h1>
+          <p>{{ "SYSADMIN.organizationsDesc" | translate }}</p>
         </div>
         <button mat-raised-button color="primary" (click)="openCreate()">
-          <mat-icon>add</mat-icon> New Organization
+          <mat-icon>add</mat-icon> {{ "SYSADMIN.newOrganization" | translate }}
         </button>
       </div>
 

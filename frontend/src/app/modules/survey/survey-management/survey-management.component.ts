@@ -15,6 +15,7 @@ import { ApiService } from '../../../core/api.service';
 import { SurveyTemplateDialogComponent } from '../survey-template-dialog/survey-template-dialog.component';
 import { SurveyResponsesDialogComponent } from '../survey-responses-dialog/survey-responses-dialog.component';
 import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog.component';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 interface SurveyTemplate {
   _id: string;
@@ -56,16 +57,17 @@ interface SurveyTemplate {
     MatTooltipModule,
     MatSlideToggleModule,
     MatDividerModule,
+    TranslateModule,
   ],
   template: `
     <div class="surveys-page">
       <div class="page-header">
         <div>
-          <h1>Intake Management</h1>
-          <p>Create and manage intake templates across all modules</p>
+          <h1>{{ "SURVEY.intakeManagement" | translate }}</h1>
+          <p>{{ "SURVEY.intakeManagementDesc" | translate }}</p>
         </div>
         <button mat-raised-button color="primary" (click)="openCreateDialog()">
-          <mat-icon>add</mat-icon> New Intake
+          <mat-icon>add</mat-icon> {{ "SURVEY.newIntake" | translate }}
         </button>
       </div>
 

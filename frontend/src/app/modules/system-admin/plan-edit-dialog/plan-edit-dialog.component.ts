@@ -11,6 +11,7 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ApiService } from '../../../core/api.service';
+import { TranslateModule } from '@ngx-translate/core';
 
 interface PlanLimits {
   maxAIAnalyses: number;
@@ -48,11 +49,12 @@ const MODULE_DEFS = [
     CommonModule, FormsModule, MatDialogModule, MatFormFieldModule, MatInputModule,
     MatButtonModule, MatIconModule, MatCheckboxModule, MatSlideToggleModule,
     MatProgressSpinnerModule, MatSnackBarModule,
+    TranslateModule,
   ],
   template: `
     <h2 mat-dialog-title>
       <mat-icon>sell</mat-icon>
-      {{ isEdit ? 'Edit Plan' : 'New Plan' }}
+      {{ isEdit ? ("SYSADMIN.editPlan" | translate) : ("SYSADMIN.newPlan" | translate) }}
     </h2>
 
     <mat-dialog-content>
