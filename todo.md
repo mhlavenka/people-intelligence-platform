@@ -29,13 +29,6 @@ II. SYSTEM
 **Google Test Env**
  - need to switch to prod and have the app approved by google
 **Multilingual**
- - design done, need to implement
-   - make sure that all future changes ad keys to all language files that exist (might be adding languages) 
-   - Add a line to CLAUDE.md like: All new UI strings must use `{{ 'KEY' | translate }}` — add keys to both `frontend/src/assets/i18n/en.json` and `fr.json` in the same change.
-   - Add a pre-deploy test that will search for missing translations - if not passed will prompt and add
-   - add spanish
-
-     That way every future Claude Code session picks it up from the project instructions.
 
 **Placeholders**
  - Billing - contact us to upgrade - create form to send a contact us to system admin via SES. Alternatively let the organization admin upgrade / choose a plan

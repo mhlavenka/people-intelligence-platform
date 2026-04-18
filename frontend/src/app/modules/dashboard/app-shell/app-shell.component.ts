@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, signal, computed, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, computed, inject, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
@@ -114,7 +114,23 @@ function isGroup(entry: NavEntry): entry is NavGroup {
               <mat-icon>business</mat-icon>
             }
             <span class="org-name">{{ orgName() }}</span>
-            <mat-icon class="plan-badge">star</mat-icon>
+            <div class="flag-trigger" [matMenuTriggerFor]="langMenu">
+              @switch (translateService.currentLang) {
+                @case ('fr') { <svg width="20" height="14" viewBox="0 0 20 14"><rect width="6.67" height="14" fill="#002395"/><rect x="6.67" width="6.67" height="14" fill="#fff"/><rect x="13.33" width="6.67" height="14" fill="#ED2939"/></svg> }
+                @case ('es') { <svg width="20" height="14" viewBox="0 0 20 14"><rect width="20" height="14" fill="#AA151B"/><rect y="3.5" width="20" height="7" fill="#F1BF00"/></svg> }
+                @default { <svg width="20" height="14" viewBox="0 0 20 14"><rect width="20" height="14" fill="#012169"/><path d="M0,0L20,14M20,0L0,14" stroke="#fff" stroke-width="2.4"/><path d="M0,0L20,14M20,0L0,14" stroke="#C8102E" stroke-width="1.2"/><path d="M10,0V14M0,7H20" stroke="#fff" stroke-width="4"/><path d="M10,0V14M0,7H20" stroke="#C8102E" stroke-width="2.4"/></svg> }
+              }
+            </div>
+            <mat-menu #langMenu="matMenu">
+              @for (l of languages; track l.code) {
+                @if (l.code !== translateService.currentLang) {
+                  <button mat-menu-item (click)="switchLang(l.code)">
+                    <span [innerHTML]="safeSvg(l.svg)"></span>
+                    <span style="margin-left:8px">{{ l.label }}</span>
+                  </button>
+                }
+              }
+            </mat-menu>
           </div>
         }
 
@@ -201,20 +217,6 @@ function isGroup(entry: NavEntry): entry is NavGroup {
                 </div>
               }
             </button>
-            <div class="lang-picker" (click)="langOpen.set(!langOpen())">
-              <button class="flag-btn active" [innerHTML]="langFlag(translateService.currentLang)"></button>
-              @if (langOpen()) {
-                <div class="lang-dropdown">
-                  @for (l of languages; track l.code) {
-                    @if (l.code !== translateService.currentLang) {
-                      <button class="flag-option" (click)="switchLang(l.code); $event.stopPropagation()">
-                        <span [innerHTML]="safeSvg(l.svg)"></span> {{ l.label }}
-                      </button>
-                    }
-                  }
-                </div>
-              }
-            </div>
             <button class="hub-btn"
                     (click)="openHub()"
                     [matTooltip]="sidebarCollapsed() ? ('NAV.messagesAlerts' | translate) : ''"
@@ -281,7 +283,8 @@ function isGroup(entry: NavEntry): entry is NavGroup {
       flex-direction: column;
       transition: width 0.2s ease;
       flex-shrink: 0;
-      overflow: hidden;
+      overflow-x: hidden;
+      overflow-y: visible;
     }
 
     .app-layout.collapsed .sidebar { width: 72px; }
@@ -361,10 +364,20 @@ function isGroup(entry: NavEntry): entry is NavGroup {
       background: rgba(255,255,255,0.05);
       border-bottom: 1px solid rgba(255,255,255,0.08);
       font-size: 13px;
+      position: relative;
+      overflow: visible;
       mat-icon { font-size: 18px; color: var(--artes-accent); }
       .org-logo-icon { width: 22px; height: 22px; border-radius: 4px; object-fit: contain; flex-shrink: 0; }
       .org-name { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
       .plan-badge { font-size: 16px; color: #f0a500; }
+    }
+
+    .flag-trigger {
+      cursor: pointer;
+      padding: 4px 6px; border-radius: 4px;
+      line-height: 0; display: inline-flex; align-items: center;
+      &:hover { background: rgba(255,255,255,0.1); }
+      svg { display: block; border-radius: 2px; }
     }
 
     .nav-list {
@@ -374,6 +387,7 @@ function isGroup(entry: NavEntry): entry is NavGroup {
       flex-direction: column;
       gap: 2px;
       overflow-y: auto;
+      overflow-x: hidden;
     }
 
     .nav-item {
@@ -393,7 +407,7 @@ function isGroup(entry: NavEntry): entry is NavGroup {
       text-align: left;
 
       mat-icon { font-size: 20px; width: 20px; height: 20px; flex-shrink: 0; }
-      .nav-label { white-space: nowrap; flex: 1; }
+      .nav-label { flex: 1; line-height: 1.3; word-break: break-word; }
 
       &:hover { background: rgba(255,255,255,0.08); color: white; }
       &.active { background: color-mix(in srgb, var(--artes-accent) 20%, transparent); color: var(--artes-accent); }
@@ -449,32 +463,6 @@ function isGroup(entry: NavEntry): entry is NavGroup {
         color: white;
         text-align: left;
         &:hover { background: rgba(255,255,255,0.08); }
-      }
-
-      .lang-picker {
-        position: relative; cursor: pointer;
-      }
-      .flag-btn {
-        background: none; border: none; cursor: pointer;
-        font-size: 18px; padding: 2px 4px; border-radius: 4px;
-        line-height: 1;
-        &.active { opacity: 1; }
-        &:hover { background: rgba(255,255,255,0.1); }
-      }
-      .lang-dropdown {
-        position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%);
-        background: #1B2A47; border: 1px solid rgba(255,255,255,0.15);
-        border-radius: 8px; padding: 4px; margin-bottom: 6px;
-        display: flex; flex-direction: column; gap: 2px;
-        box-shadow: 0 4px 16px rgba(0,0,0,0.3);
-        z-index: 100;
-      }
-      .flag-option {
-        background: none; border: none; cursor: pointer;
-        color: rgba(255,255,255,0.8); font-size: 13px;
-        padding: 6px 12px; border-radius: 4px;
-        white-space: nowrap; text-align: left;
-        &:hover { background: rgba(255,255,255,0.12); color: #fff; }
       }
 
       .hub-btn {
@@ -803,7 +791,6 @@ export class AppShellComponent implements OnInit, OnDestroy {
     { code: 'fr', label: 'Français', svg: '<svg width="20" height="14" viewBox="0 0 20 14"><rect width="6.67" height="14" fill="#002395"/><rect x="6.67" width="6.67" height="14" fill="#fff"/><rect x="13.33" width="6.67" height="14" fill="#ED2939"/></svg>' },
     { code: 'es', label: 'Español', svg: '<svg width="20" height="14" viewBox="0 0 20 14"><rect width="20" height="14" fill="#AA151B"/><rect y="3.5" width="20" height="7" fill="#F1BF00"/></svg>' },
   ];
-  langOpen = signal(false);
 
   langFlag(code: string): SafeHtml {
     const svg = this.languages.find(l => l.code === code)?.svg || '';
@@ -817,7 +804,6 @@ export class AppShellComponent implements OnInit, OnDestroy {
   switchLang(lang: string): void {
     this.translateService.use(lang);
     localStorage.setItem('artes_language', lang);
-    this.langOpen.set(false);
     this.api.put('/users/me', { preferredLanguage: lang }).subscribe();
   }
 
