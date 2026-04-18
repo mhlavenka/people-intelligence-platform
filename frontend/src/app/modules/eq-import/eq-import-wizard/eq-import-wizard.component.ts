@@ -89,8 +89,8 @@ const SUBSCALE_LABELS: Record<string, string> = {
     <div class="import-page">
       <div class="page-header">
         <div>
-          <h1>Import EQi 2.0 Assessment</h1>
-          <p>Import MHS EQi 2.0 PDF reports with full privacy controls</p>
+          <h1>{{ "EQ.importPageTitle" | translate }}</h1>
+          <p>{{ "EQ.importPageDesc" | translate }}</p>
         </div>
       </div>
 
@@ -100,26 +100,26 @@ const SUBSCALE_LABELS: Record<string, string> = {
         <mat-step [completed]="!!privacyMode()">
           <ng-template matStepLabel>Privacy Mode</ng-template>
           <div class="step-content">
-            <p class="step-desc">Select how client data should be stored. This cannot be changed after import.</p>
+            <p class="step-desc">{{ "EQ.privacyModeDesc" | translate }}</p>
 
             <div class="mode-cards">
               <div class="mode-card" [class.selected]="privacyMode() === 'ANONYMIZED'" [class.green]="true"
                    (click)="privacyMode.set('ANONYMIZED')">
                 <mat-icon>shield</mat-icon>
-                <h3>Anonymized</h3>
-                <span class="mode-default">Default — Recommended</span>
+                <h3>{{ "EQ.anonymized" | translate }}</h3>
+                <span class="mode-default">{{ "EQ.defaultRecommended" | translate }}</span>
                 <p>Scores + context only. Zero identifying information. Contributes to norm database.</p>
               </div>
               <div class="mode-card" [class.selected]="privacyMode() === 'PSEUDONYMIZED'" [class.amber]="true"
                    (click)="privacyMode.set('PSEUDONYMIZED')">
                 <mat-icon>badge</mat-icon>
-                <h3>Pseudonymized</h3>
+                <h3>{{ "EQ.pseudonymized" | translate }}</h3>
                 <p>Coded profile. You hold the offline mapping key. Suitable for recent clients.</p>
               </div>
               <div class="mode-card" [class.selected]="privacyMode() === 'IDENTIFIED'" [class.blue]="true"
                    (click)="privacyMode.set('IDENTIFIED')">
                 <mat-icon>person</mat-icon>
-                <h3>Identified</h3>
+                <h3>{{ "EQ.identified" | translate }}</h3>
                 <p>Full client profile stored. Requires explicit written consent.</p>
               </div>
             </div>
@@ -267,7 +267,7 @@ const SUBSCALE_LABELS: Record<string, string> = {
           <div class="step-content">
             @if (!importResult()) {
               <div class="confirm-card">
-                <h3>Import Summary</h3>
+                <h3>{{ "EQ.importSummary" | translate }}</h3>
                 <div class="confirm-row"><span>Privacy Mode</span><strong>{{ privacyMode() }}</strong></div>
                 <div class="confirm-row"><span>Report Type</span><strong>{{ parseResult()?.reportType }}</strong></div>
                 <div class="confirm-row"><span>Total EI</span><strong>{{ parseResult()?.scores?.['totalEI'] ?? '—' }}</strong></div>
@@ -282,7 +282,7 @@ const SUBSCALE_LABELS: Record<string, string> = {
                   <button mat-raised-button color="primary" (click)="doImport()" [disabled]="importing()">
                     @if (importing()) { <mat-spinner diameter="18" /> }
                     @else { <mat-icon>file_download</mat-icon> }
-                    Import Assessment
+                    {{ "EQ.importAssessment" | translate }}
                   </button>
                 </div>
               </div>
@@ -290,7 +290,7 @@ const SUBSCALE_LABELS: Record<string, string> = {
               <!-- Result -->
               <div class="result-card" [class.success]="importResult()!.success" [class.error]="!importResult()!.success">
                 <mat-icon class="result-icon">{{ importResult()!.success ? 'check_circle' : 'error' }}</mat-icon>
-                <h3>{{ importResult()!.success ? 'Assessment imported successfully' : 'Import failed' }}</h3>
+                <h3>{{ importResult()!.success ? ("EQ.assessmentImported" | translate) : ("EQ.importFailedMsg" | translate) }}</h3>
                 @if (importResult()!.success) {
                   <p>Import ID: <code>{{ importResult()!.importId }}</code></p>
                 }
@@ -301,7 +301,7 @@ const SUBSCALE_LABELS: Record<string, string> = {
                 }
                 <div class="step-actions">
                   <button mat-raised-button color="primary" (click)="reset()">
-                    <mat-icon>add</mat-icon> Import Another
+                    <mat-icon>add</mat-icon> {{ "EQ.importAnother" | translate }}
                   </button>
                 </div>
               </div>

@@ -78,13 +78,13 @@ interface Session {
               }
               <h2>{{ coacheeName() }}</h2>
               <span class="status-chip" [style.background]="statusColor() + '18'" [style.color]="statusColor()">
-                {{ engagement()!.status | titlecase }}
+                {{ translateStatus(engagement()!.status) }}
               </span>
             </div>
             <mat-divider />
             <div class="info-list">
               <div class="info-item"><span class="info-label">{{ 'COACHING.sessions' | translate }}</span><span>{{ engagement()!.sessionsUsed }} / {{ engagement()!.sessionsPurchased }}</span></div>
-              @if (engagement()!.cadence) { <div class="info-item"><span class="info-label">{{ 'COACHING.cadence' | translate }}</span><span>{{ engagement()!.cadence }}</span></div> }
+              @if (engagement()!.cadence) { <div class="info-item"><span class="info-label">{{ 'COACHING.cadence' | translate }}</span><span>{{ translateCadence(engagement()!.cadence) }}</span></div> }
               @if (engagement()!.startDate) { <div class="info-item"><span class="info-label">{{ 'COACHING.started' | translate }}</span><span>{{ engagement()!.startDate | date:'MMM d, y' }}</span></div> }
               @if (engagement()!.sponsorId?.name) {
                 <div class="info-item">
@@ -174,7 +174,7 @@ interface Session {
                       <div class="upcoming-row">
                         <span class="upcoming-date">{{ s.date | date:'MMM d' }}</span>
                         <span class="upcoming-time">{{ s.date | date:'h:mm a' }}</span>
-                        <span class="upcoming-dur">{{ s.duration }}m · {{ s.format }}</span>
+                        <span class="upcoming-dur">{{ s.duration }}m · {{ translateFormat(s.format) }}</span>
                       </div>
                     }
                   </div>
@@ -201,7 +201,7 @@ interface Session {
                           [class.active]="isStatusActive(p.key)"
                           (click)="toggleStatus(p.key)">
                     <mat-icon>{{ p.icon }}</mat-icon>
-                    {{ p.label }}
+                    {{ p.labelKey | translate }}
                     <span class="pill-count">{{ statusCount(p.key) }}</span>
                   </button>
                 }
@@ -235,8 +235,8 @@ interface Session {
                         <mat-icon>event</mat-icon>
                         <strong>{{ s.date | date:'MMM d, y — h:mm a' }}</strong>
                       </div>
-                      <span class="session-duration">{{ s.duration }} {{ 'COACHING.min' | translate }} · {{ s.format }}</span>
-                      <span class="session-status" [class]="s.status">{{ s.status }}</span>
+                      <span class="session-duration">{{ s.duration }} {{ 'COACHING.min' | translate }} · {{ translateFormat(s.format) }}</span>
+                      <span class="session-status" [class]="s.status">{{ translateSessionStatus(s.status) }}</span>
                       @if (s.createdVia === 'coachee_booking') {
                         <span class="source-chip booked"
                               [matTooltip]="'COACHING.coacheeBookedTooltip' | translate">
@@ -432,16 +432,16 @@ interface Session {
                       <div class="journal-panel">
                         <div class="journal-header">
                           <mat-icon>auto_stories</mat-icon>
-                          <span class="journal-label">Note #{{ note.sessionNumber }}</span>
-                          <span class="journal-status" [class]="note.status">{{ note.status }}</span>
+                          <span class="journal-label">{{ 'COACHING.noteLabel' | translate:{ number: note.sessionNumber } }}</span>
+                          <span class="journal-status" [class]="note.status">{{ translateJournalStatus(note.status) }}</span>
                           @if (canManage()) {
-                            <a mat-icon-button [routerLink]="['/journal/note', note._id, 'edit']" matTooltip="Open journal note" class="journal-open-btn">
+                            <a mat-icon-button [routerLink]="['/journal/note', note._id, 'edit']" [matTooltip]="'COACHING.openJournalNote' | translate" class="journal-open-btn">
                               <mat-icon>open_in_new</mat-icon>
                             </a>
                           } @else {
                             <a mat-icon-button [routerLink]="'/my-journal/engagement/' + engId"
                                [queryParams]="{ sessionId: s._id }"
-                               matTooltip="Open this session's journal" class="journal-open-btn">
+                               [matTooltip]="'COACHING.openSessionJournal' | translate" class="journal-open-btn">
                               <mat-icon>open_in_new</mat-icon>
                             </a>
                           }
@@ -450,61 +450,61 @@ interface Session {
                         @if (canManage()) {
                           @if (note.preSession?.agenda) {
                             <div class="journal-field">
-                              <span class="journal-field-label">Agenda</span>
+                              <span class="journal-field-label">{{ 'COACHING.agenda' | translate }}</span>
                               <p>{{ note.preSession!.agenda! | slice:0:120 }}{{ note.preSession!.agenda!.length > 120 ? '...' : '' }}</p>
                             </div>
                           }
                           @if (note.inSession?.observations) {
                             <div class="journal-field">
-                              <span class="journal-field-label">Observations</span>
+                              <span class="journal-field-label">{{ 'COACHING.observations' | translate }}</span>
                               <p>{{ note.inSession!.observations! | slice:0:150 }}{{ note.inSession!.observations!.length > 150 ? '...' : '' }}</p>
                             </div>
                           }
                           @if (note.postSession?.coachReflection) {
                             <div class="journal-field">
-                              <span class="journal-field-label">Reflection</span>
+                              <span class="journal-field-label">{{ 'COACHING.reflection' | translate }}</span>
                               <p>{{ note.postSession!.coachReflection! | slice:0:120 }}{{ note.postSession!.coachReflection!.length > 120 ? '...' : '' }}</p>
                             </div>
                           }
                           @if (!note.preSession?.agenda && !note.inSession?.observations && !note.postSession?.coachReflection) {
-                            <p class="journal-empty-hint">No content yet — open to start writing.</p>
+                            <p class="journal-empty-hint">{{ 'COACHING.noContentYetCoach' | translate }}</p>
                           }
                         } @else {
                           @if (note.coacheePre?.mainTopic) {
                             <div class="journal-field">
-                              <span class="journal-field-label">Main topic</span>
+                              <span class="journal-field-label">{{ 'COACHING.mainTopicLabel' | translate }}</span>
                               <p>{{ note.coacheePre!.mainTopic! | slice:0:120 }}{{ note.coacheePre!.mainTopic!.length > 120 ? '...' : '' }}</p>
                             </div>
                           }
                           @if (note.inSession?.observations) {
                             <div class="journal-field">
-                              <span class="journal-field-label">From your coach</span>
+                              <span class="journal-field-label">{{ 'COACHING.fromYourCoach' | translate }}</span>
                               <p>{{ note.inSession!.observations! | slice:0:150 }}{{ note.inSession!.observations!.length > 150 ? '...' : '' }}</p>
                             </div>
                           }
                           @if (note.coacheePost?.biggestInsight) {
                             <div class="journal-field">
-                              <span class="journal-field-label">My biggest insight</span>
+                              <span class="journal-field-label">{{ 'COACHING.myBiggestInsight' | translate }}</span>
                               <p>{{ note.coacheePost!.biggestInsight! | slice:0:120 }}{{ note.coacheePost!.biggestInsight!.length > 120 ? '...' : '' }}</p>
                             </div>
                           }
                           @if (!note.coacheePre?.mainTopic && !note.inSession?.observations && !note.coacheePost?.biggestInsight) {
-                            <p class="journal-empty-hint">No content yet — open to add your pre/post notes.</p>
+                            <p class="journal-empty-hint">{{ 'COACHING.noContentYetCoachee' | translate }}</p>
                           }
                         }
                       </div>
                     } @else {
                       <div class="journal-panel journal-empty">
                         <mat-icon>auto_stories</mat-icon>
-                        <span>No journal note</span>
+                        <span>{{ 'COACHING.noJournalNote' | translate }}</span>
                         @if (canManage()) {
                           <a class="add-journal-link" [routerLink]="'/journal/note/new/' + engId" [queryParams]="{ sessionId: s._id }">
-                            <mat-icon>add</mat-icon> Add Note
+                            <mat-icon>add</mat-icon> {{ 'COACHING.addNote' | translate }}
                           </a>
                         } @else {
                           <a class="add-journal-link" [routerLink]="'/my-journal/engagement/' + engId"
                              [queryParams]="{ sessionId: s._id }">
-                            <mat-icon>add</mat-icon> Open journal
+                            <mat-icon>add</mat-icon> {{ 'COACHING.openJournal' | translate }}
                           </a>
                         }
                       </div>
@@ -518,14 +518,14 @@ interface Session {
             @if (canManage()) {
               <button class="session-card add-session-card" type="button" (click)="addSession()">
                 <mat-icon class="add-icon">add</mat-icon>
-                <span class="add-label">New session</span>
+                <span class="add-label">{{ 'COACHING.newSession' | translate }}</span>
               </button>
             }
             <!-- Coachee: 'Book a Session' as an empty + tile -->
             @if (!canManage()) {
               <button class="session-card add-session-card" type="button" (click)="bookSession()">
                 <mat-icon class="add-icon">add</mat-icon>
-                <span class="add-label">Book a session</span>
+                <span class="add-label">{{ 'COACHING.bookASession' | translate }}</span>
               </button>
             }
           </div>
@@ -873,11 +873,11 @@ export class EngagementDetailComponent implements OnInit {
   private readonly DEFAULT_STATUSES: ReadonlySet<string> = new Set(['scheduled', 'no_show']);
   activeStatuses = signal<Set<string>>(new Set(this.DEFAULT_STATUSES));
 
-  readonly statusPills: { key: string; label: string; icon: string }[] = [
-    { key: 'scheduled', label: 'Scheduled', icon: 'event' },
-    { key: 'completed', label: 'Completed', icon: 'check_circle' },
-    { key: 'cancelled', label: 'Cancelled', icon: 'event_busy' },
-    { key: 'no_show',   label: 'No-show',   icon: 'report' },
+  readonly statusPills: { key: string; labelKey: string; icon: string }[] = [
+    { key: 'scheduled', labelKey: 'COACHING.scheduled', icon: 'event' },
+    { key: 'completed', labelKey: 'COACHING.completed', icon: 'check_circle' },
+    { key: 'cancelled', labelKey: 'COACHING.cancelled', icon: 'event_busy' },
+    { key: 'no_show',   labelKey: 'COACHING.noShow',   icon: 'report' },
   ];
 
   filteredSessions = computed(() => {
@@ -962,7 +962,8 @@ export class EngagementDetailComponent implements OnInit {
   preSessionIntakeTitle(s: Session): string | null {
     const tpl = s.preSessionIntakeTemplateId;
     if (!tpl) return null;
-    return typeof tpl === 'string' ? 'Pre-session intake' : (tpl.title || 'Pre-session intake');
+    const fallback = this.translate.instant('COACHING.preSessionIntakeDefault');
+    return typeof tpl === 'string' ? fallback : (tpl.title || fallback);
   }
 
   preSessionIntakeTemplateId(s: Session): string | null {
@@ -998,17 +999,17 @@ export class EngagementDetailComponent implements OnInit {
     }).subscribe({
       next: () => {
         this.generatingPostFor.set(null);
-        this.snack.open('Post-session reflection sent to coachee', 'OK', { duration: 3000 });
+        this.snack.open(this.translate.instant('COACHING.postReflectionSentSnack'), this.translate.instant('COMMON.ok'), { duration: 3000 });
         this.load();
       },
       error: (err: any) => {
         this.generatingPostFor.set(null);
-        const msg = err?.error?.error || 'Failed to generate post-session form';
+        const msg = err?.error?.error || this.translate.instant('COACHING.failedGeneratePost');
         if (msg.includes('summary')) {
           const summary = prompt(msg);
           if (summary?.trim()) { this.doGeneratePost(sessionId, summary.trim()); return; }
         }
-        this.snack.open(msg, 'OK', { duration: 4000 });
+        this.snack.open(msg, this.translate.instant('COMMON.ok'), { duration: 4000 });
       },
     });
   }
@@ -1050,7 +1051,7 @@ export class EngagementDetailComponent implements OnInit {
           data: { template, sessionId: s._id },
         });
       },
-      error: () => this.snack.open('Failed to load intake', 'Close', { duration: 3000 }),
+      error: () => this.snack.open(this.translate.instant('COACHING.failedLoadIntake'), this.translate.instant('COMMON.close'), { duration: 3000 }),
     });
   }
 
@@ -1089,6 +1090,26 @@ export class EngagementDetailComponent implements OnInit {
     const map: Record<string, string> = { prospect: '#9aa5b4', contracted: '#3A9FD6', active: '#27C4A0', paused: '#f0a500', completed: '#1a9678', alumni: '#7c5cbf' };
     return map[this.engagement()?.status] || '#9aa5b4';
   }
+
+  private readonly statusKeyMap: Record<string, string> = {
+    prospect: 'COACHING.prospect', contracted: 'COACHING.contracted', active: 'COACHING.active',
+    paused: 'COACHING.paused', completed: 'COACHING.completed', alumni: 'COACHING.alumni',
+  };
+  translateStatus(status: string): string { return this.translate.instant(this.statusKeyMap[status] || status); }
+
+  private readonly cadenceKeyMap: Record<string, string> = { weekly: 'COACHING.weekly', biweekly: 'COACHING.biweekly', monthly: 'COACHING.monthly' };
+  translateCadence(cadence: string): string { return this.translate.instant(this.cadenceKeyMap[cadence] || cadence); }
+
+  private readonly formatKeyMap: Record<string, string> = { video: 'COACHING.video', phone: 'COACHING.phone', in_person: 'COACHING.inPerson' };
+  translateFormat(format: string): string { return this.translate.instant(this.formatKeyMap[format] || format); }
+
+  private readonly sessionStatusKeyMap: Record<string, string> = {
+    scheduled: 'COACHING.scheduled', completed: 'COACHING.completed', cancelled: 'COACHING.cancelled', no_show: 'COACHING.noShow',
+  };
+  translateSessionStatus(status: string): string { return this.translate.instant(this.sessionStatusKeyMap[status] || status); }
+
+  private readonly journalStatusKeyMap: Record<string, string> = { complete: 'COACHING.journalComplete', draft: 'COACHING.journalDraft' };
+  translateJournalStatus(status: string): string { return this.translate.instant(this.journalStatusKeyMap[status] || status); }
 
   ngOnInit(): void {
     // Subscribe to params (not snapshot) so navigating between engagements
@@ -1134,7 +1155,7 @@ export class EngagementDetailComponent implements OnInit {
       next: (coaches) => {
         const withSlug = coaches.filter((c) => !!c.publicSlug);
         if (!withSlug.length) {
-          this.snack.open('No coaches available for booking yet.', 'OK', { duration: 3000 });
+          this.snack.open(this.translate.instant('COACHING.noCoachesAvailable'), this.translate.instant('COMMON.ok'), { duration: 3000 });
           return;
         }
 
@@ -1152,8 +1173,8 @@ export class EngagementDetailComponent implements OnInit {
             this.openLandingDialog(assigned.publicSlug);
           } else {
             this.snack.open(
-              'Your coach is not currently available for booking. Please contact your admin.',
-              'OK', { duration: 4000 },
+              this.translate.instant('COACHING.coachNotAvailable'),
+              this.translate.instant('COMMON.ok'), { duration: 4000 },
             );
           }
           return;
@@ -1173,7 +1194,7 @@ export class EngagementDetailComponent implements OnInit {
           }
         });
       },
-      error: () => this.snack.open('Failed to load coaches', 'OK', { duration: 3000 }),
+      error: () => this.snack.open(this.translate.instant('COACHING.failedLoadCoaches'), this.translate.instant('COMMON.ok'), { duration: 3000 }),
     });
   }
 
@@ -1196,7 +1217,7 @@ export class EngagementDetailComponent implements OnInit {
       ? eng.coacheeId._id
       : eng?.coacheeId;
     if (!eng || !this.engId || !coacheeId) {
-      this.snack.open('Engagement still loading — try again in a moment.', 'OK', { duration: 3000 });
+      this.snack.open(this.translate.instant('COACHING.engagementLoading'), this.translate.instant('COMMON.ok'), { duration: 3000 });
       return;
     }
     const ref = this.dialog.open(SessionDialogComponent, {
@@ -1216,7 +1237,7 @@ export class EngagementDetailComponent implements OnInit {
 
   deleteSession(s: Session): void {
     const ref = this.dialog.open(ConfirmDialogComponent, {
-      width: '420px', data: { title: 'Delete Session', message: 'Delete this session?', confirmLabel: 'Delete', confirmColor: 'warn', icon: 'delete_forever' },
+      width: '420px', data: { title: this.translate.instant('COACHING.deleteSessionTitle'), message: this.translate.instant('COACHING.deleteSessionConfirm'), confirmLabel: this.translate.instant('COACHING.delete'), confirmColor: 'warn', icon: 'delete_forever' },
     });
     ref.afterClosed().subscribe((confirmed) => {
       if (!confirmed) return;
@@ -1231,12 +1252,12 @@ export class EngagementDetailComponent implements OnInit {
     const ref = this.dialog.open(CancelDialogComponent, {
       width: '480px',
       data: {
-        title: 'Cancel session',
+        title: this.translate.instant('COACHING.cancelSession'),
         startTime: s.date,
         coachName: coacheeName,
-        noteLabel: 'Message to coachee (optional)',
-        notePlaceholder: 'Let the coachee know why you\'re cancelling…',
-        confirmLabel: 'Cancel session',
+        noteLabel: this.translate.instant('COACHING.noteToCoachee'),
+        notePlaceholder: this.translate.instant('COACHING.noteToCoacheePlaceholder'),
+        confirmLabel: this.translate.instant('COACHING.cancelSession'),
       },
     });
     ref.afterClosed().subscribe((result: CancelDialogResult | null | undefined) => {
@@ -1244,18 +1265,18 @@ export class EngagementDetailComponent implements OnInit {
       if (s.bookingId) {
         this.bookingSvc.cancelBooking(s.bookingId, result.reason).subscribe({
           next: () => {
-            this.snack.open('Session cancelled. The coachee has been notified.', 'OK', { duration: 3000 });
+            this.snack.open(this.translate.instant('COACHING.sessionCancelledCoacheeNotified'), this.translate.instant('COMMON.ok'), { duration: 3000 });
             this.load();
           },
-          error: (err: any) => this.snack.open(err?.error?.error || 'Cancel failed', 'OK', { duration: 3000 }),
+          error: (err: any) => this.snack.open(err?.error?.error || this.translate.instant('COACHING.cancelFailed'), this.translate.instant('COMMON.ok'), { duration: 3000 }),
         });
       } else {
         this.api.put(`/coaching/sessions/${s._id}`, { status: 'cancelled' }).subscribe({
           next: () => {
-            this.snack.open('Session cancelled.', 'OK', { duration: 3000 });
+            this.snack.open(this.translate.instant('COACHING.sessionCancelled'), this.translate.instant('COMMON.ok'), { duration: 3000 });
             this.load();
           },
-          error: (err: any) => this.snack.open(err?.error?.error || 'Cancel failed', 'OK', { duration: 3000 }),
+          error: (err: any) => this.snack.open(err?.error?.error || this.translate.instant('COACHING.cancelFailed'), this.translate.instant('COMMON.ok'), { duration: 3000 }),
         });
       }
     });
@@ -1271,12 +1292,12 @@ export class EngagementDetailComponent implements OnInit {
     const ref = this.dialog.open(CancelDialogComponent, {
       width: '480px',
       data: {
-        title: late ? 'Late cancellation' : 'Cancel session',
+        title: late ? this.translate.instant('COACHING.lateCancellation') : this.translate.instant('COACHING.cancelSession'),
         startTime: s.date,
         coachName,
-        confirmLabel: late ? 'Cancel anyway (counts as used)' : 'Cancel session',
+        confirmLabel: late ? this.translate.instant('COACHING.cancelAnyway') : this.translate.instant('COACHING.cancelSession'),
         warning: late
-          ? `This session is within ${this.deadlineHours} hours. Cancelling now will count as a used session from your allotment. You will need to book a new session.`
+          ? this.translate.instant('COACHING.lateCancelWarning', { hours: this.deadlineHours })
           : undefined,
       },
     });
@@ -1284,12 +1305,12 @@ export class EngagementDetailComponent implements OnInit {
       if (!result) return;
       this.bookingSvc.cancelBooking(s.bookingId!, result.reason).subscribe({
         next: () => {
-          this.snack.open('Session cancelled. Your coach has been notified.', 'OK', { duration: 3000 });
+          this.snack.open(this.translate.instant('COACHING.sessionCancelledCoachNotified'), this.translate.instant('COMMON.ok'), { duration: 3000 });
           this.load();
         },
         error: (err) => {
-          const msg = err?.error?.error || 'Failed to cancel.';
-          this.snack.open(msg, 'OK', { duration: 4000 });
+          const msg = err?.error?.error || this.translate.instant('COACHING.failedToCancel');
+          this.snack.open(msg, this.translate.instant('COMMON.ok'), { duration: 4000 });
         },
       });
     });
@@ -1320,12 +1341,12 @@ export class EngagementDetailComponent implements OnInit {
       if (!result) return;
       this.bookingSvc.rescheduleBooking(s.bookingId!, result.newStartTime, result.note).subscribe({
         next: () => {
-          this.snack.open('Session rescheduled. Your coach has been notified.', 'OK', { duration: 3000 });
+          this.snack.open(this.translate.instant('COACHING.sessionRescheduled'), this.translate.instant('COMMON.ok'), { duration: 3000 });
           this.load();
         },
         error: (err) => {
-          const msg = err?.error?.error || 'Failed to reschedule.';
-          this.snack.open(msg, 'OK', { duration: 4000 });
+          const msg = err?.error?.error || this.translate.instant('COACHING.failedToReschedule');
+          this.snack.open(msg, this.translate.instant('COMMON.ok'), { duration: 4000 });
         },
       });
     });

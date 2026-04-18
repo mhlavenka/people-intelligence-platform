@@ -62,11 +62,11 @@ const MODULE_DEFS = [
       <!-- Page header -->
       <div class="page-header">
         <div>
-          <h1>Subscription Plans</h1>
-          <p>Define and manage the plans available to organizations</p>
+          <h1>{{ "SYSADMIN.subscriptionPlans" | translate }}</h1>
+          <p>{{ "SYSADMIN.subscriptionPlansDesc" | translate }}</p>
         </div>
         <button mat-raised-button color="primary" (click)="openCreate()">
-          <mat-icon>add</mat-icon> New Plan
+          <mat-icon>add</mat-icon> {{ "SYSADMIN.newPlan" | translate }}
         </button>
       </div>
 
@@ -87,7 +87,7 @@ const MODULE_DEFS = [
                     <span class="plan-badge" [class.inactive-badge]="!plan.isActive">{{ plan.name }}</span>
                     <span class="plan-key">{{ plan.key }}</span>
                     @if (!plan.isActive) {
-                      <span class="inactive-chip">Inactive</span>
+                      <span class="inactive-chip">{{ "SYSADMIN.inactive" | translate }}</span>
                     }
                   </div>
                   <div class="plan-actions">

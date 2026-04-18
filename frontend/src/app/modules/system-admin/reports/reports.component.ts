@@ -96,8 +96,8 @@ interface OrgSummaryItem { name: string; plan: string; isActive: boolean; userCo
           <div class="report-header">
             <mat-icon>trending_up</mat-icon>
             <div>
-              <h2>Revenue</h2>
-              <p>Monthly paid invoice revenue</p>
+              <h2>{{ "SYSADMIN.revenue" | translate }}</h2>
+              <p>{{ "SYSADMIN.revenueDesc" | translate }}</p>
             </div>
             <span class="report-total">Total: {{ formatMoney(revenueTotalAmount()) }}</span>
           </div>
@@ -112,7 +112,7 @@ interface OrgSummaryItem { name: string; plan: string; isActive: boolean; userCo
               }
             </div>
           } @else {
-            <div class="report-empty">No revenue data yet.</div>
+            <div class="report-empty">{{ "SYSADMIN.noRevenueYet" | translate }}</div>
           }
         </div>
 
@@ -121,8 +121,8 @@ interface OrgSummaryItem { name: string; plan: string; isActive: boolean; userCo
           <div class="report-header">
             <mat-icon>speed</mat-icon>
             <div>
-              <h2>Platform Usage</h2>
-              <p>Users, organizations, and module activity</p>
+              <h2>{{ "SYSADMIN.platformUsageTitle" | translate }}</h2>
+              <p>{{ "SYSADMIN.platformUsageDesc" | translate }}</p>
             </div>
           </div>
 
@@ -138,7 +138,7 @@ interface OrgSummaryItem { name: string; plan: string; isActive: boolean; userCo
 
             <div class="breakdown-row">
               <div class="breakdown-col">
-                <h4>Users by Role</h4>
+                <h4>{{ "SYSADMIN.usersByRole" | translate }}</h4>
                 @for (entry of objectEntries(usage()!.roleBreakdown); track entry[0]) {
                   <div class="breakdown-item">
                     <span class="breakdown-key">{{ entry[0] }}</span>
@@ -147,7 +147,7 @@ interface OrgSummaryItem { name: string; plan: string; isActive: boolean; userCo
                 }
               </div>
               <div class="breakdown-col">
-                <h4>Organizations by Plan</h4>
+                <h4>{{ "SYSADMIN.orgsByPlan" | translate }}</h4>
                 @for (entry of objectEntries(usage()!.planBreakdown); track entry[0]) {
                   <div class="breakdown-item">
                     <span class="breakdown-key">{{ entry[0] }}</span>
@@ -164,8 +164,8 @@ interface OrgSummaryItem { name: string; plan: string; isActive: boolean; userCo
           <div class="report-header">
             <mat-icon>business</mat-icon>
             <div>
-              <h2>Organization Summary</h2>
-              <p>Per-organization activity and revenue</p>
+              <h2>{{ "SYSADMIN.orgSummaryTitle" | translate }}</h2>
+              <p>{{ "SYSADMIN.orgSummaryDesc" | translate }}</p>
             </div>
           </div>
 

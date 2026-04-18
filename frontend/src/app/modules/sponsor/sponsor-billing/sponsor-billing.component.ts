@@ -12,7 +12,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { SponsorBilling, SponsorService } from '../sponsor.service';
 import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog.component';
 import { SponsorInvoiceEditDialogComponent } from '../sponsor-invoice-edit-dialog/sponsor-invoice-edit-dialog.component';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-sponsor-billing',
@@ -48,25 +48,25 @@ import { TranslateModule } from '@ngx-translate/core';
         @if (data()!.engagements.length === 0) {
           <div class="empty">
             <mat-icon>receipt_long</mat-icon>
-            <p>No billable engagements for this sponsor yet.</p>
+            <p>{{ "SPONSOR.noBillableEngagementsMsg" | translate }}</p>
           </div>
         } @else {
           <!-- Estimate + total -->
           <div class="totals-row">
             <div class="totals estimate">
-              <span class="totals-label">Pending invoicing</span>
+              <span class="totals-label">{{ "SPONSOR.pendingInvoicing" | translate }}</span>
               <span class="totals-value">{{ data()!.unbilledEstimate | currency }}</span>
-              <span class="totals-hint">Engagements not yet on a non-void invoice</span>
+              <span class="totals-hint">{{ "SPONSOR.pendingInvoicingHint" | translate }}</span>
             </div>
             <div class="totals">
-              <span class="totals-label">Total billed</span>
+              <span class="totals-label">{{ "SPONSOR.totalBilled" | translate }}</span>
               <span class="totals-value">{{ data()!.grandTotal | currency }}</span>
-              <span class="totals-hint">All sponsor-mode engagements combined</span>
+              <span class="totals-hint">{{ "SPONSOR.totalBilledHint" | translate }}</span>
             </div>
           </div>
 
           <!-- Coachee groups -->
-          <h2 class="section-h">Bills by coachee</h2>
+          <h2 class="section-h">{{ "SPONSOR.billsByCoachee" | translate }}</h2>
           @for (group of data()!.coacheeGroups; track group.coachee._id) {
             <div class="coachee-group">
               <div class="coachee-head">
@@ -105,9 +105,9 @@ import { TranslateModule } from '@ngx-translate/core';
           }
 
           <!-- Invoices -->
-          <h2 class="section-h">Invoices</h2>
+          <h2 class="section-h">{{ "SPONSOR.invoicesSection" | translate }}</h2>
           @if (data()!.invoices.length === 0) {
-            <p class="muted-row">No invoices generated yet — use the button above to create one.</p>
+            <p class="muted-row">{{ "SPONSOR.noInvoicesYet" | translate }}</p>
           } @else {
             <div class="invoice-list">
               @for (inv of data()!.invoices; track inv._id) {
@@ -130,25 +130,25 @@ import { TranslateModule } from '@ngx-translate/core';
                     <mat-menu #invMenu="matMenu">
                       @if (inv.status === 'draft') {
                         <button mat-menu-item (click)="editInvoice(inv)">
-                          <mat-icon>edit</mat-icon> Edit invoice
+                          <mat-icon>edit</mat-icon> {{ "SPONSOR.editInvoiceMenu" | translate }}
                         </button>
                         <button mat-menu-item (click)="sendInvoice(inv)">
-                          <mat-icon>send</mat-icon> Send to sponsor
+                          <mat-icon>send</mat-icon> {{ "SPONSOR.sendToSponsor" | translate }}
                         </button>
                       }
                       @if (inv.status === 'overdue') {
                         <button mat-menu-item (click)="sendInvoice(inv)">
-                          <mat-icon>send</mat-icon> Resend
+                          <mat-icon>send</mat-icon> {{ "SPONSOR.resend" | translate }}
                         </button>
                       }
                       @if (inv.status !== 'void' && inv.status !== 'paid') {
                         <button mat-menu-item (click)="voidInvoice(inv)">
-                          <mat-icon>block</mat-icon> Void invoice
+                          <mat-icon>block</mat-icon> {{ "SPONSOR.voidInvoiceMenu" | translate }}
                         </button>
                       }
                       @if (inv.status === 'draft' || inv.status === 'void') {
                         <button mat-menu-item class="delete-item" (click)="deleteInvoice(inv)">
-                          <mat-icon>delete</mat-icon> Delete invoice
+                          <mat-icon>delete</mat-icon> {{ "SPONSOR.deleteInvoiceMenu" | translate }}
                         </button>
                       }
                     </mat-menu>
@@ -282,6 +282,7 @@ export class SponsorBillingComponent implements OnInit {
     private sponsorSvc: SponsorService,
     private snack: MatSnackBar,
     private dialog: MatDialog,
+    private translate: TranslateService,
   ) {}
 
   ngOnInit(): void {
@@ -302,7 +303,7 @@ export class SponsorBillingComponent implements OnInit {
     this.sponsorSvc.generateInvoice(this.sponsorId).subscribe({
       next: () => {
         this.generating.set(false);
-        this.snack.open('Invoice generated as draft', 'OK', { duration: 3000 });
+        this.snack.open(this.translate.instant('SPONSOR.invoiceGenAsDraft'), 'OK', { duration: 3000 });
         this.load();
       },
       error: (err: HttpErrorResponse) => {

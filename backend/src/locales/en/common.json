@@ -160,6 +160,24 @@
     "sessionNotScheduled": "Session is no longer scheduled.",
     "formAvailable24h": "This form will be available 24 hours before your session.",
 
-    "tooManyRequests": "Too many requests, please try again later"
+    "tooManyRequests": "Too many requests, please try again later",
+
+    "focusConflictTypeRequired": "focusConflictType is required",
+    "parentAnalysisNotFound": "Parent analysis not found",
+
+    "endsAtRequired": "endsAt is required",
+    "endsAtMustBeFuture": "endsAt must be a future date",
+    "noActiveTrialToRevert": "No active trial to revert.",
+
+    "promptRequired": "prompt is required",
+
+    "noBookingCalendarSelected": "No booking calendar selected. Open Booking Settings and pick the calendar this app syncs with before importing.",
+    "googleCalendarNotConnected": "Google Calendar not connected. Connect it from Booking Settings first.",
+    "approvedEventIdsRequired": "approvedEventIds must be a non-empty array.",
+
+    "toUserIdAndContentRequired": "toUserId and content are required",
+    "recipientNotFoundInOrg": "Recipient not found in this organization",
+
+    "updatesArrayRequired": "updates array is required"
   }
 }

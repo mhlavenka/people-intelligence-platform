@@ -12,7 +12,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ProvinceTaxInfo, Sponsor, SponsorService } from '../sponsor.service';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 export interface SponsorDialogData {
   sponsor?: Sponsor;
@@ -33,30 +33,30 @@ export interface SponsorDialogData {
     <mat-dialog-content>
       <div class="row">
         <mat-form-field appearance="outline" class="full">
-          <mat-label>Name *</mat-label>
+          <mat-label>{{ "SPONSOR.nameRequired" | translate }}</mat-label>
           <input matInput [(ngModel)]="form.name" required />
         </mat-form-field>
       </div>
 
       <div class="row two">
         <mat-form-field appearance="outline">
-          <mat-label>Email *</mat-label>
+          <mat-label>{{ "SPONSOR.emailRequired" | translate }}</mat-label>
           <input matInput type="email" [(ngModel)]="form.email" required />
         </mat-form-field>
         <mat-form-field appearance="outline">
-          <mat-label>Phone</mat-label>
+          <mat-label>{{ "SPONSOR.phoneLabel" | translate }}</mat-label>
           <input matInput [(ngModel)]="form.phone" />
         </mat-form-field>
       </div>
 
       <div class="row">
         <mat-form-field appearance="outline" class="full">
-          <mat-label>Organization (company)</mat-label>
+          <mat-label>{{ "SPONSOR.organization" | translate }}</mat-label>
           <input matInput [(ngModel)]="form.organization" />
         </mat-form-field>
       </div>
 
-      <div class="section-label">Billing address</div>
+      <div class="section-label">{{ "SPONSOR.billingAddress" | translate }}</div>
       <div class="row">
         <mat-form-field appearance="outline" class="full">
           <mat-label>Address line 1</mat-label>
@@ -106,19 +106,19 @@ export interface SponsorDialogData {
         }
       </div>
 
-      <div class="section-label">Tax</div>
+      <div class="section-label">{{ "SPONSOR.taxSection" | translate }}</div>
       <div class="row two">
         <mat-form-field appearance="outline">
-          <mat-label>Tax ID (GST/HST/VAT)</mat-label>
+          <mat-label>{{ "SPONSOR.taxIdLabel" | translate }}</mat-label>
           <input matInput [(ngModel)]="form.taxId" />
         </mat-form-field>
         <div class="exempt-toggle">
-          <mat-slide-toggle [(ngModel)]="form.taxExempt">Tax-exempt</mat-slide-toggle>
-          <span class="exempt-hint">Skips tax calculation entirely</span>
+          <mat-slide-toggle [(ngModel)]="form.taxExempt">{{ "SPONSOR.taxExempt" | translate }}</mat-slide-toggle>
+          <span class="exempt-hint">{{ "SPONSOR.taxExemptHint" | translate }}</span>
         </div>
       </div>
 
-      <div class="section-label">Defaults</div>
+      <div class="section-label">{{ "SPONSOR.defaults" | translate }}</div>
       <div class="row">
         <mat-form-field appearance="outline" class="full">
           <mat-label>Default hourly rate</mat-label>
@@ -139,10 +139,10 @@ export interface SponsorDialogData {
       }
     </mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button mat-button (click)="cancel()" [disabled]="saving()">Cancel</button>
+      <button mat-button (click)="cancel()" [disabled]="saving()">{{ "COMMON.cancel" | translate }}</button>
       <button mat-flat-button color="primary" (click)="save()" [disabled]="saving() || !isValid()">
         @if (saving()) { <mat-spinner diameter="18" /> }
-        Save
+        {{ "COMMON.save" | translate }}
       </button>
     </mat-dialog-actions>
   `,
@@ -189,6 +189,7 @@ export class SponsorDialogComponent implements OnInit {
     private dialogRef: MatDialogRef<SponsorDialogComponent, Sponsor | null>,
     private sponsorSvc: SponsorService,
     private snack: MatSnackBar,
+    private translate: TranslateService,
   ) {
     if (data.sponsor) {
       this.form = {
@@ -230,12 +231,12 @@ export class SponsorDialogComponent implements OnInit {
     op.subscribe({
       next: (sponsor) => {
         this.saving.set(false);
-        this.snack.open(this.data.sponsor ? 'Sponsor updated' : 'Sponsor created', 'OK', { duration: 2500 });
+        this.snack.open(this.data.sponsor ? this.translate.instant('SPONSOR.sponsorUpdated') : this.translate.instant('SPONSOR.sponsorCreated'), 'OK', { duration: 2500 });
         this.dialogRef.close(sponsor);
       },
       error: (err: HttpErrorResponse) => {
         this.saving.set(false);
-        this.errorMsg.set(err?.error?.error || 'Failed to save sponsor');
+        this.errorMsg.set(err?.error?.error || this.translate.instant('SPONSOR.saveFailed'));
       },
     });
   }

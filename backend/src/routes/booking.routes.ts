@@ -191,7 +191,7 @@ publicBookingRouter.get('/:coachSlug/confirmation/:bookingId', async (req: Reque
 publicBookingRouter.get('/:coachSlug/cancel/:bookingId/:token', async (req: Request, res: Response, next: NextFunction) => {
   try {
     await clientCancelBooking(req.params['bookingId'], req.params['token']);
-    res.json({ message: 'Booking cancelled successfully' });
+    res.json({ message: req.t('errors.bookingCancelledSuccess') });
   } catch (e) { next(e); }
 });
 

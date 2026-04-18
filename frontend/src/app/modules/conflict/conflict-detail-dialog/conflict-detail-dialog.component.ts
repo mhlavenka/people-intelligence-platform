@@ -67,7 +67,7 @@ interface ConflictAnalysis {
           </div>
           <div class="meta-item">
             <mat-icon>corporate_fare</mat-icon>
-            <span>{{ data.departmentId || 'All Departments' }}</span>
+            <span>{{ data.departmentId || ("CONFLICT.allDepartments" | translate) }}</span>
           </div>
           @if (data.intakeTemplateId?.title; as tplTitle) {
             <div class="meta-item">
@@ -89,7 +89,7 @@ interface ConflictAnalysis {
         <mat-divider />
         <div class="section">
           <h3><mat-icon>manage_search</mat-icon> {{ "CONFLICT.drillDown" | translate }}</h3>
-          <p class="drill-hint">Run a focused sub-analysis for each detected conflict type to get deeper insights and targeted manager scripts.</p>
+          <p class="drill-hint">{{ "CONFLICT.drillHintText" | translate }}</p>
 
           <div class="sub-analyses-list">
             @for (ct of data.conflictTypes; track ct) {
@@ -110,9 +110,9 @@ interface ConflictAnalysis {
                     <div class="sub-narrative">
                       @if (isNarrativeExpanded(ct)) {
                         {{ sub.aiNarrative }}
-                        <a class="narrative-toggle" (click)="toggleNarrative(ct)">Show less</a>
+                        <a class="narrative-toggle" (click)="toggleNarrative(ct)">{{ "CONFLICT.showLess" | translate }}</a>
                       } @else {
-                        {{ sub.aiNarrative | slice:0:200 }}@if (sub.aiNarrative.length > 200) {<a class="narrative-toggle" (click)="toggleNarrative(ct)">…&nbsp;more</a>}
+                        {{ sub.aiNarrative | slice:0:200 }}@if (sub.aiNarrative.length > 200) {<a class="narrative-toggle" (click)="toggleNarrative(ct)">…&nbsp;{{ "CONFLICT.more" | translate }}</a>}
                       }
                     </div>
                   } @else {
@@ -135,7 +135,7 @@ interface ConflictAnalysis {
                       } @else {
                         <mat-icon>play_arrow</mat-icon>
                       }
-                      {{ runningFor() === ct ? 'Analyzing…' : 'Run Sub-Analysis' }}
+                      {{ runningFor() === ct ? ("CONFLICT.analyzingEllipsis" | translate) : ("CONFLICT.runSubAnalysisBtn" | translate) }}
                     </button>
                   }
                 </div>
@@ -208,7 +208,7 @@ interface ConflictAnalysis {
       @if (data.escalationRequested) {
         <div class="escalation-banner">
           <mat-icon>notifications_active</mat-icon>
-          Escalation has been requested — HR / Coach has been notified.
+          {{ "CONFLICT.escalationRequested" | translate }}
         </div>
       }
     </mat-dialog-content>

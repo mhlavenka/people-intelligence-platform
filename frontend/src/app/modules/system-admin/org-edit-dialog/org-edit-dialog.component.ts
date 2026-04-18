@@ -73,7 +73,7 @@ export interface OrgRow {
   template: `
     <h2 mat-dialog-title>
       <mat-icon>business</mat-icon>
-      {{ data._id ? 'Edit Organization' : 'New Organization' }}
+      {{ data._id ? ("SYSADMIN.editOrganization" | translate) : ("SYSADMIN.newOrganizationDialog" | translate) }}
     </h2>
 
     <mat-dialog-content>

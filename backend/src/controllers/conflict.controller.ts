@@ -27,7 +27,7 @@ export async function analyzeConflict(
     const minRequired = template?.minResponsesForAnalysis ?? (isSurvey ? MIN_GROUP_SIZE : 1);
     if (responses.length < minRequired) {
       res.status(400).json({
-        error: `Minimum ${minRequired} response${minRequired > 1 ? 's' : ''} required for analysis. Current: ${responses.length}`,
+        error: req.t('errors.minimumResponsesRequired', { min: minRequired, count: responses.length }),
       });
       return;
     }
@@ -49,7 +49,7 @@ export async function analyzeConflict(
 
     const org = await Organization.findById(organizationId);
     if (!org) {
-      res.status(404).json({ error: 'Organization not found' });
+      res.status(404).json({ error: req.t('errors.organizationNotFound') });
       return;
     }
 
@@ -147,7 +147,7 @@ export async function getAnalysis(
       organizationId,
     }).populate('intakeTemplateId', 'title');
     if (!analysis) {
-      res.status(404).json({ error: 'Analysis not found' });
+      res.status(404).json({ error: req.t('errors.analysisNotFound') });
       return;
     }
     res.json(analysis);
@@ -183,13 +183,13 @@ export async function createSubAnalysis(
     const { focusConflictType } = req.body as { focusConflictType: string };
 
     if (!focusConflictType) {
-      res.status(400).json({ error: 'focusConflictType is required' });
+      res.status(400).json({ error: req.t('errors.focusConflictTypeRequired') });
       return;
     }
 
     const parent = await ConflictAnalysis.findOne({ _id: req.params['id'], organizationId });
     if (!parent) {
-      res.status(404).json({ error: 'Parent analysis not found' });
+      res.status(404).json({ error: req.t('errors.parentAnalysisNotFound') });
       return;
     }
 
@@ -274,7 +274,7 @@ export async function generateRecommendedActions(
       organizationId,
     });
     if (!analysis) {
-      res.status(404).json({ error: 'Analysis not found' });
+      res.status(404).json({ error: req.t('errors.analysisNotFound') });
       return;
     }
 
@@ -322,7 +322,7 @@ export async function escalateConflict(
       { new: true }
     );
     if (!analysis) {
-      res.status(404).json({ error: 'Analysis not found' });
+      res.status(404).json({ error: req.t('errors.analysisNotFound') });
       return;
     }
     res.json(analysis);

@@ -91,8 +91,8 @@ const REFRESH_EXPIRY_OPTIONS = [
     <div class="settings-page">
       <div class="page-header">
         <div>
-          <h1>Application Settings</h1>
-          <p>Global platform configuration — applies to all organisations</p>
+          <h1>{{ "SYSADMIN.appSettingsTitle" | translate }}</h1>
+          <p>{{ "SYSADMIN.appSettingsSubtitle" | translate }}</p>
         </div>
         @if (settings()?.updatedAt) {
           <span class="last-saved">Last saved {{ formatDate(settings()!.updatedAt!) }}</span>

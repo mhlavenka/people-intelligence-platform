@@ -9,7 +9,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ApiService } from '../../../core/api.service';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 interface ConflictAnalysis {
   _id: string;
@@ -55,8 +55,7 @@ interface Coachee {
       }
 
       <p class="dialog-desc">
-        Create a targeted IDP based on a conflict analysis. The AI will generate a GROW-model
-        development plan focused on the conflict types and risk patterns identified.
+        {{ "CONFLICT.idpDialogDesc" | translate }}
       </p>
 
       <!-- Analysis selection -->
@@ -65,7 +64,7 @@ interface Coachee {
         <mat-select [(ngModel)]="selectedAnalysisId">
           @for (a of analyses; track a._id) {
             <mat-option [value]="a._id">
-              {{ a.departmentId || 'All Departments' }} — {{ a.name }}
+              {{ a.departmentId || ("CONFLICT.allDepartments" | translate) }} — {{ a.name }}
               (Risk: {{ a.riskScore }}/100 {{ a.riskLevel }})
             </mat-option>
           }
@@ -107,16 +106,16 @@ interface Coachee {
     </mat-dialog-content>
 
     <mat-dialog-actions align="end">
-      <button mat-button mat-dialog-close [disabled]="generating()">Cancel</button>
+      <button mat-button mat-dialog-close [disabled]="generating()">{{ "COMMON.cancel" | translate }}</button>
       <button mat-raised-button color="primary"
               (click)="generate()"
               [disabled]="generating() || !selectedAnalysisId || !selectedCoacheeId || !goals.trim()">
         @if (generating()) {
           <mat-spinner diameter="18" />
-          Generating...
+          {{ "CONFLICT.generatingEllipsis" | translate }}
         } @else {
           <mat-icon>auto_awesome</mat-icon>
-          Generate IDP
+          {{ "CONFLICT.generateIDP" | translate }}
         }
       </button>
     </mat-dialog-actions>
@@ -146,6 +145,7 @@ export class ConflictIdpDialogComponent implements OnInit {
   private api = inject(ApiService);
   private dialogRef = inject(MatDialogRef<ConflictIdpDialogComponent>);
   private data = inject<{ analyses: ConflictAnalysis[] }>(MAT_DIALOG_DATA);
+  private translate = inject(TranslateService);
 
   analyses: ConflictAnalysis[] = this.data.analyses;
   users = signal<Coachee[]>([]);
@@ -181,7 +181,7 @@ export class ConflictIdpDialogComponent implements OnInit {
       },
       error: (err) => {
         this.generating.set(false);
-        this.error.set(err.error?.error || 'Failed to generate IDP. Please try again.');
+        this.error.set(err.error?.error || this.translate.instant('CONFLICT.generateIDPFailed'));
       },
     });
   }

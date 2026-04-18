@@ -160,6 +160,24 @@
     "sessionNotScheduled": "La sesión ya no está programada.",
     "formAvailable24h": "Este formulario estará disponible 24 horas antes de su sesión.",
 
-    "tooManyRequests": "Demasiadas solicitudes, inténtelo de nuevo más tarde"
+    "tooManyRequests": "Demasiadas solicitudes, inténtelo de nuevo más tarde",
+
+    "focusConflictTypeRequired": "Se requiere focusConflictType",
+    "parentAnalysisNotFound": "Análisis principal no encontrado",
+
+    "endsAtRequired": "Se requiere endsAt",
+    "endsAtMustBeFuture": "endsAt debe ser una fecha futura",
+    "noActiveTrialToRevert": "No hay ningún periodo de prueba activo para revertir.",
+
+    "promptRequired": "Se requiere el prompt",
+
+    "noBookingCalendarSelected": "No se ha seleccionado un calendario de reservas. Abra los ajustes de reservas y seleccione el calendario a sincronizar antes de importar.",
+    "googleCalendarNotConnected": "Google Calendar no está conectado. Conéctelo desde los ajustes de reservas.",
+    "approvedEventIdsRequired": "approvedEventIds debe ser un array no vacío.",
+
+    "toUserIdAndContentRequired": "Se requieren toUserId y contenido",
+    "recipientNotFoundInOrg": "Destinatario no encontrado en esta organización",
+
+    "updatesArrayRequired": "Se requiere el array de actualizaciones"
   }
 }

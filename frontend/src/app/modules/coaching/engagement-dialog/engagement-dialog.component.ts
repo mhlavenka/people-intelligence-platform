@@ -92,7 +92,7 @@ interface Coachee { _id: string; firstName: string; lastName: string; email: str
 
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>{{ 'COACHING.goalsComma' | translate }}</mat-label>
-        <input matInput [(ngModel)]="goalsRaw" placeholder="e.g. Leadership development, Communication skills" />
+        <input matInput [(ngModel)]="goalsRaw" [placeholder]="'COACHING.goalsPlaceholder' | translate" />
       </mat-form-field>
 
       <div class="section-label">{{ 'COACHING.billing' | translate }}</div>
@@ -117,25 +117,25 @@ interface Coachee { _id: string; firstName: string; lastName: string; email: str
             </mat-select>
           </mat-form-field>
           <button mat-stroked-button class="new-sponsor-btn" (click)="createSponsor()">
-            <mat-icon>add</mat-icon> New
+            <mat-icon>add</mat-icon> {{ 'COMMON.add' | translate }}
           </button>
         </div>
         <mat-form-field appearance="outline" class="rate-field">
           <mat-label>{{ 'COACHING.hourlyRate' | translate }}</mat-label>
           <input matInput type="number" [(ngModel)]="form.hourlyRate" min="0" step="0.01" />
           <mat-icon matPrefix>attach_money</mat-icon>
-          <mat-hint>Leave blank to use the sponsor's default rate</mat-hint>
+          <mat-hint>{{ 'COACHING.hourlyRateHint' | translate }}</mat-hint>
         </mat-form-field>
       }
 
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>{{ 'COACHING.notesPrivate' | translate }}</mat-label>
-        <textarea matInput [(ngModel)]="form.notes" rows="3" placeholder="Coach-only notes about this engagement"></textarea>
+        <textarea matInput [(ngModel)]="form.notes" rows="3" [placeholder]="'COACHING.notesPrivatePlaceholder' | translate"></textarea>
       </mat-form-field>
     </mat-dialog-content>
 
     <mat-dialog-actions align="end">
-      <button mat-button mat-dialog-close [disabled]="saving()">Cancel</button>
+      <button mat-button mat-dialog-close [disabled]="saving()">{{ 'COMMON.cancel' | translate }}</button>
       <button mat-raised-button color="primary" (click)="save()" [disabled]="saving()">
         @if (saving()) { <mat-spinner diameter="18" /> }
         @else { <mat-icon>{{ isEdit ? 'save' : 'add' }}</mat-icon> }

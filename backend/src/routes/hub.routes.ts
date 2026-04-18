@@ -124,7 +124,7 @@ router.post('/messages', async (req: AuthRequest, res: Response, next: NextFunct
   try {
     const { toUserId, content } = req.body;
     if (!toUserId || !content?.trim()) {
-      res.status(400).json({ error: 'toUserId and content are required' });
+      res.status(400).json({ error: req.t('errors.toUserIdAndContentRequired') });
       return;
     }
 
@@ -135,7 +135,7 @@ router.post('/messages', async (req: AuthRequest, res: Response, next: NextFunct
     const recipient = await User.findOne({ _id: toId, organizationId: orgId })
       .setOptions({ bypassTenantCheck: true });
     if (!recipient) {
-      res.status(404).json({ error: 'Recipient not found in this organization' });
+      res.status(404).json({ error: req.t('errors.recipientNotFoundInOrg') });
       return;
     }
 

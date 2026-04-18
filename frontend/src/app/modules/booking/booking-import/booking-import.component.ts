@@ -48,11 +48,7 @@ type State = 'idle' | 'loading' | 'preview' | 'importing' | 'done';
           <div class="intro">
             <mat-icon>cloud_download</mat-icon>
             <h2>{{ 'BOOKING.importTitle' | translate }}</h2>
-            <p>
-              Pull existing coaching sessions from your connected Google Calendar into
-              this booking dashboard. Every event is previewed first — you approve
-              each one before anything is imported.
-            </p>
+            <p>{{ 'BOOKING.importDesc' | translate }}</p>
           </div>
 
           <div class="calendar-row">
@@ -63,28 +59,28 @@ type State = 'idle' | 'loading' | 'preview' | 'importing' | 'done';
                   <mat-option [value]="c.id">
                     {{ c.summary }}
                     @if (c.id === defaultCalendarId()) {
-                      <span class="default-tag">— default</span>
+                      <span class="default-tag">— {{ 'BOOKING.defaultTag' | translate }}</span>
                     }
                   </mat-option>
                 }
               </mat-select>
               @if (loadingCalendars()) {
-                <mat-hint>Loading calendars…</mat-hint>
+                <mat-hint>{{ 'BOOKING.loadingCalendars' | translate }}</mat-hint>
               } @else {
-                <mat-hint>Defaults to your booking-sync calendar — change to import from another.</mat-hint>
+                <mat-hint>{{ 'BOOKING.defaultCalendarHint' | translate }}</mat-hint>
               }
             </mat-form-field>
           </div>
 
           <div class="date-row">
             <mat-form-field appearance="outline">
-              <mat-label>From</mat-label>
+              <mat-label>{{ 'BOOKING.from' | translate }}</mat-label>
               <input matInput [matDatepicker]="pickerFrom" [(ngModel)]="fromDate" />
               <mat-datepicker-toggle matIconSuffix [for]="pickerFrom" />
               <mat-datepicker #pickerFrom />
             </mat-form-field>
             <mat-form-field appearance="outline">
-              <mat-label>To</mat-label>
+              <mat-label>{{ 'BOOKING.to' | translate }}</mat-label>
               <input matInput [matDatepicker]="pickerTo" [(ngModel)]="toDate" />
               <mat-datepicker-toggle matIconSuffix [for]="pickerTo" />
               <mat-datepicker #pickerTo />
@@ -92,7 +88,7 @@ type State = 'idle' | 'loading' | 'preview' | 'importing' | 'done';
           </div>
 
           <button mat-flat-button color="primary" (click)="runPreview()">
-            <mat-icon>search</mat-icon> Preview Events
+            <mat-icon>search</mat-icon> {{ 'BOOKING.previewEvents' | translate }}
           </button>
 
           @if (error()) {
@@ -108,8 +104,8 @@ type State = 'idle' | 'loading' | 'preview' | 'importing' | 'done';
       @if (state() === 'loading') {
         <div class="center-state">
           <mat-spinner diameter="40" />
-          <p>Fetching events from Google Calendar…</p>
-          <span class="hint">Calendars with many events can take a few seconds.</span>
+          <p>{{ 'BOOKING.fetchingEvents' | translate }}</p>
+          <span class="hint">{{ 'BOOKING.calendarsCanTake' | translate }}</span>
         </div>
       }
 
@@ -117,44 +113,44 @@ type State = 'idle' | 'loading' | 'preview' | 'importing' | 'done';
       @if (state() === 'preview') {
         <div class="preview">
           <div class="summary-bar">
-            <strong>{{ events().length }}</strong> events &middot;
-            <span class="chip done">{{ alreadyImportedCount() }} already imported</span>
-            <span class="chip pending">{{ pendingCount() }} pending</span>
+            <strong>{{ events().length }}</strong> {{ 'BOOKING.events' | translate }} &middot;
+            <span class="chip done">{{ alreadyImportedCount() }} {{ 'BOOKING.alreadyImported' | translate }}</span>
+            <span class="chip pending">{{ pendingCount() }} {{ 'BOOKING.pending' | translate }}</span>
           </div>
 
           <div class="bulk">
             <button mat-stroked-button (click)="approveAllPending()">
-              <mat-icon>check_circle</mat-icon> Approve all pending
+              <mat-icon>check_circle</mat-icon> {{ 'BOOKING.approveAllPending' | translate }}
             </button>
             <button mat-stroked-button (click)="skipAll()">
-              <mat-icon>do_not_disturb_on</mat-icon> Skip all
+              <mat-icon>do_not_disturb_on</mat-icon> {{ 'BOOKING.skipAll' | translate }}
             </button>
-            <button mat-button (click)="cancelPreview()">Cancel</button>
+            <button mat-button (click)="cancelPreview()">{{ 'COMMON.cancel' | translate }}</button>
           </div>
 
           @if (!events().length) {
             <div class="empty">
               <mat-icon>event_busy</mat-icon>
-              <p>No coaching sessions found in this date range.</p>
-              <span class="hint">Try widening the From / To window.</span>
+              <p>{{ 'BOOKING.noCoachingSessionsFound' | translate }}</p>
+              <span class="hint">{{ 'BOOKING.tryWideningWindow' | translate }}</span>
             </div>
           } @else {
             <div class="table">
               <div class="th">
                 <div class="col-check"></div>
-                <div class="col-when">Date &amp; time</div>
-                <div class="col-client">Attendee</div>
-                <div class="col-coachee">Coachee</div>
-                <div class="col-topic">Topic</div>
-                <div class="col-evtype">Event type</div>
-                <div class="col-dur">Duration</div>
-                <div class="col-status">Status</div>
+                <div class="col-when">{{ 'BOOKING.dateAndTime' | translate }}</div>
+                <div class="col-client">{{ 'BOOKING.attendee' | translate }}</div>
+                <div class="col-coachee">{{ 'BOOKING.coachee' | translate }}</div>
+                <div class="col-topic">{{ 'BOOKING.topic' | translate }}</div>
+                <div class="col-evtype">{{ 'BOOKING.eventType' | translate }}</div>
+                <div class="col-dur">{{ 'BOOKING.duration' | translate }}</div>
+                <div class="col-status">{{ 'BOOKING.status' | translate }}</div>
               </div>
               @for (ev of events(); track ev.googleEventId) {
                 <div class="tr" [class.imported]="ev.alreadyImported" [class.approved]="ev.approved">
                   <div class="col-check">
                     @if (ev.alreadyImported) {
-                      <mat-icon matTooltip="Already imported" class="lock-icon">lock</mat-icon>
+                      <mat-icon [matTooltip]="'BOOKING.alreadyImported' | translate" class="lock-icon">lock</mat-icon>
                     } @else {
                       <mat-checkbox [checked]="ev.approved" (change)="toggleRow(ev, $event.checked)" />
                     }
@@ -169,7 +165,7 @@ type State = 'idle' | 'loading' | 'preview' | 'importing' | 'done';
                     <div class="client-name">
                       {{ ev.clientName }}
                       @if (!ev.clientEmail) {
-                        <mat-icon class="warn-mark" matTooltip="No client email on this event">warning</mat-icon>
+                        <mat-icon class="warn-mark" [matTooltip]="'BOOKING.noClientEmail' | translate">warning</mat-icon>
                       }
                     </div>
                     @if (ev.clientEmail) { <div class="client-email">{{ ev.clientEmail }}</div> }
@@ -180,7 +176,7 @@ type State = 'idle' | 'loading' | 'preview' | 'importing' | 'done';
                             [value]="resolvedCoachee(ev) ?? ''"
                             (change)="setCoachee(ev, $any($event.target).value || null)"
                             [disabled]="ev.alreadyImported">
-                      <option value="">— No coachee —</option>
+                      <option value="">— {{ 'BOOKING.noCoachee' | translate }} —</option>
                       @for (c of coachees(); track c._id) {
                         <option [value]="c._id">
                           {{ c.firstName }} {{ c.lastName }} — {{ c.email }}
@@ -188,7 +184,7 @@ type State = 'idle' | 'loading' | 'preview' | 'importing' | 'done';
                       }
                     </select>
                     @if (ev.suggestedCoacheeId && ev.pickedCoacheeId === undefined) {
-                      <span class="match-badge">Matched by email</span>
+                      <span class="match-badge">{{ 'BOOKING.matchedByEmail' | translate }}</span>
                     }
                   </div>
 
@@ -210,25 +206,25 @@ type State = 'idle' | 'loading' | 'preview' | 'importing' | 'done';
                             [value]="resolvedEventType(ev) ?? ''"
                             (change)="setEventType(ev, $any($event.target).value || null)"
                             [disabled]="ev.alreadyImported">
-                      <option value="">— No type —</option>
+                      <option value="">— {{ 'BOOKING.noType' | translate }} —</option>
                       @for (t of eventTypes(); track t._id) {
                         <option [value]="t._id">{{ t.name }}</option>
                       }
                     </select>
                     @if (ev.suggestedEventTypeId && ev.pickedEventTypeId === undefined) {
-                      <span class="match-badge">Matched by title</span>
+                      <span class="match-badge">{{ 'BOOKING.matchedByTitle' | translate }}</span>
                     }
                   </div>
 
-                  <div class="col-dur">{{ ev.durationMinutes }} min</div>
+                  <div class="col-dur">{{ ev.durationMinutes }} {{ 'COACHING.min' | translate }}</div>
 
                   <div class="col-status">
                     @if (ev.alreadyImported) {
-                      <span class="st-chip imported">Imported</span>
+                      <span class="st-chip imported">{{ 'BOOKING.imported' | translate }}</span>
                     } @else {
                       <span class="st-chip" [class.past]="ev.status === 'completed'"
                                             [class.upcoming]="ev.status === 'upcoming'">
-                        {{ ev.status === 'completed' ? 'Past' : 'Upcoming' }}
+                        {{ ev.status === 'completed' ? ('BOOKING.pastStatus' | translate) : ('BOOKING.upcomingStatus' | translate) }}
                       </span>
                     }
                   </div>
@@ -239,21 +235,21 @@ type State = 'idle' | 'loading' | 'preview' | 'importing' | 'done';
 
                   @if (ev.expanded) {
                     <div class="detail">
-                      <div><strong>Raw title:</strong> {{ ev.rawSummary || '—' }}</div>
+                      <div><strong>{{ 'BOOKING.rawTitle' | translate }}:</strong> {{ ev.rawSummary || '—' }}</div>
                       @if (ev.googleMeetLink) {
-                        <div><strong>Meet link:</strong>
+                        <div><strong>{{ 'BOOKING.meetLink' | translate }}:</strong>
                           <a [href]="ev.googleMeetLink" target="_blank">{{ ev.googleMeetLink }}</a>
                         </div>
                       }
                       <div class="attendees">
-                        <strong>Attendees ({{ ev.attendees.length }}):</strong>
+                        <strong>{{ 'BOOKING.attendees' | translate }} ({{ ev.attendees.length }}):</strong>
                         <ul>
                           @for (a of ev.attendees; track a.email) {
                             <li>
                               {{ a.displayName || a.email }}
                               @if (a.email) { <span class="att-email">&lt;{{ a.email }}&gt;</span> }
-                              @if (a.self) { <span class="att-badge">you</span> }
-                              @if (a.organizer) { <span class="att-badge">organizer</span> }
+                              @if (a.self) { <span class="att-badge">{{ 'BOOKING.you' | translate }}</span> }
+                              @if (a.organizer) { <span class="att-badge">{{ 'BOOKING.organizer' | translate }}</span> }
                             </li>
                           }
                         </ul>
@@ -266,14 +262,14 @@ type State = 'idle' | 'loading' | 'preview' | 'importing' | 'done';
           }
 
           <div class="footer">
-            <span class="sel-count">{{ selectedCount() }} event{{ selectedCount() === 1 ? '' : 's' }} selected for import</span>
+            <span class="sel-count">{{ selectedCount() }} {{ 'BOOKING.selectedForImport' | translate }}</span>
             <div class="footer-actions">
-              <button mat-button (click)="cancelPreview()">Cancel</button>
+              <button mat-button (click)="cancelPreview()">{{ 'COMMON.cancel' | translate }}</button>
               <button mat-flat-button color="primary"
                       [disabled]="selectedCount() === 0"
                       (click)="runImport()">
                 <mat-icon>cloud_upload</mat-icon>
-                Import {{ selectedCount() }} event{{ selectedCount() === 1 ? '' : 's' }} →
+                {{ 'BOOKING.import' | translate }} {{ selectedCount() }} →
               </button>
             </div>
           </div>
@@ -284,8 +280,8 @@ type State = 'idle' | 'loading' | 'preview' | 'importing' | 'done';
       @if (state() === 'importing') {
         <div class="center-state">
           <mat-spinner diameter="40" />
-          <p>Importing {{ selectedCount() }} event{{ selectedCount() === 1 ? '' : 's' }}…</p>
-          <span class="hint">Do not close this tab.</span>
+          <p>{{ 'BOOKING.importingCount' | translate:{ count: selectedCount() } }}</p>
+          <span class="hint">{{ 'BOOKING.doNotCloseTab' | translate }}</span>
         </div>
       }
 
@@ -294,11 +290,11 @@ type State = 'idle' | 'loading' | 'preview' | 'importing' | 'done';
         <div class="done">
           <div class="done-card">
             <mat-icon class="done-icon">check_circle</mat-icon>
-            <h2>Import complete</h2>
+            <h2>{{ 'BOOKING.importComplete' | translate }}</h2>
             <div class="metrics">
-              <div><span class="num">{{ r.imported }}</span><span>Imported</span></div>
-              <div><span class="num">{{ r.skipped }}</span><span>Skipped</span></div>
-              <div [class.err]="r.errors.length"><span class="num">{{ r.errors.length }}</span><span>Errors</span></div>
+              <div><span class="num">{{ r.imported }}</span><span>{{ 'BOOKING.imported' | translate }}</span></div>
+              <div><span class="num">{{ r.skipped }}</span><span>{{ 'BOOKING.skipped' | translate }}</span></div>
+              <div [class.err]="r.errors.length"><span class="num">{{ r.errors.length }}</span><span>{{ 'BOOKING.errors' | translate }}</span></div>
             </div>
             @if (r.errors.length) {
               <details class="errors">
@@ -312,10 +308,10 @@ type State = 'idle' | 'loading' | 'preview' | 'importing' | 'done';
             }
             <div class="done-actions">
               <button mat-stroked-button (click)="viewDashboard.emit()">
-                <mat-icon>event</mat-icon> View booking dashboard
+                <mat-icon>event</mat-icon> {{ 'BOOKING.viewBookingDashboard' | translate }}
               </button>
               <button mat-flat-button color="primary" (click)="resetToIdle()">
-                <mat-icon>refresh</mat-icon> Import more
+                <mat-icon>refresh</mat-icon> {{ 'BOOKING.importMore' | translate }}
               </button>
             </div>
           </div>

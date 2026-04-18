@@ -1,1 +1,103 @@
-{}
+{
+  "booking": {
+    "sessionConfirmedTitle": "Su sesion esta confirmada!",
+    "newSessionBookedTitle": "Nueva sesion reservada",
+    "coach": "Coach",
+    "client": "Cliente",
+    "email": "Correo",
+    "phone": "Telefono",
+    "duration": "Duracion",
+    "durationMinutes": "{{minutes}} minutos",
+    "topic": "Tema",
+    "needToCancel": "Necesita cancelar?",
+    "cancelThisSession": "Cancelar esta sesion",
+    "confirmedSubject": "Confirmado: sesion de coaching el {{date}} con {{coachName}}",
+    "newBookingSubject": "Nueva reserva: {{clientName}} el {{date}} a las {{time}}",
+
+    "sessionCancelledTitle": "Sesion cancelada",
+    "cancelledBody": "La sesion de coaching programada para el <strong>{{date}}</strong> a las <strong>{{time}}</strong> ({{timezone}}) ha sido cancelada por {{byWhom}}.",
+    "reason": "Motivo",
+    "cancelledSubject": "Cancelada: sesion de coaching el {{date}}",
+
+    "sessionRescheduledTitle": "Su sesion ha sido reprogramada",
+    "rescheduledBody": "Su sesion de coaching con <strong>{{coachName}}</strong> ha sido cambiada.",
+    "previously": "Anteriormente",
+    "now": "Ahora",
+    "rescheduledSubject": "Reprogramada: sesion de coaching el {{date}}",
+    "coachRescheduledTitle": "Sesion reprogramada",
+    "coachRescheduledByCoachee": "<strong>{{clientName}}</strong> ha reprogramado su sesion.",
+    "coachRescheduledByAdmin": "La sesion con <strong>{{clientName}}</strong> ha sido cambiada.",
+    "coachRescheduledSubject": "Reprogramada: {{clientName}} el {{date}}",
+    "messageFrom": "Mensaje de {{name}}",
+
+    "reminderTitle": "Recordatorio: su sesion es {{timeLabel}}",
+    "tomorrow": "manana",
+    "inOneHour": "en 1 hora",
+    "reminderSubject": "Recordatorio: sesion de coaching {{timeLabel}} con {{coachName}}",
+
+    "joinGoogleMeet": "Unirse a Google Meet",
+    "joinTeamsMeeting": "Unirse a la reunion de Teams",
+    "teamsMeeting": "Reunion Teams",
+    "googleMeet": "Google Meet"
+  },
+  "general": {
+    "resetPasswordTitle": "Restablecer su contrasena",
+    "resetPasswordBody": "Recibimos una solicitud para restablecer su contrasena. Haga clic en el boton de abajo — este enlace expira en <strong>1 hora</strong>.",
+    "resetPasswordButton": "Restablecer contrasena",
+    "resetPasswordIgnore": "Si no solicito un restablecimiento de contrasena, puede ignorar este correo de forma segura. Su contrasena no cambiara.",
+    "resetPasswordSubject": "Restablezca su contrasena de ARTES",
+
+    "welcomeTitle": "Bienvenido/a, {{firstName}}!",
+    "welcomeBody": "Ha sido agregado/a a <strong>{{orgName}}</strong> en ARTES. Inicie sesion para comenzar.",
+    "welcomeTempPassword": "Contrasena temporal:",
+    "welcomeChangePwd": "(cambiela en el primer inicio de sesion)",
+    "welcomeButton": "Iniciar sesion",
+    "welcomeSubject": "Bienvenido/a a {{orgName}} en ARTES",
+
+    "idpReadyTitle": "Su PDI esta listo, {{firstName}}!",
+    "idpReadyBody": "Su coach ha generado un nuevo Plan de Desarrollo Individual impulsado por IA utilizando la metodologia GROW. Inicie sesion para revisar sus objetivos, hitos y pasos de accion.",
+    "idpReadyButton": "Ver mi PDI",
+    "idpReadySubject": "Su Plan de Desarrollo Individual esta listo",
+
+    "paymentReminderTitle": "Recordatorio de pago",
+    "paymentOverdueTitle": "Pago vencido",
+    "paymentOverdueBody": "Esta factura tiene {{days}} dia(s) de atraso. Pague inmediatamente para evitar la interrupcion del servicio.",
+    "paymentDueBody": "El pago vence el {{date}}. Asegurese de pagar a tiempo.",
+    "organization": "Organizacion",
+    "invoice": "Factura",
+    "amountDue": "Monto adeudado",
+    "payNow": "Pagar ahora",
+    "alreadyPaid": "Si ya ha pagado, ignore este mensaje.",
+    "paymentOverdueSubject": "[VENCIDO] Factura {{invoiceNumber}} — {{total}} vencida",
+    "paymentReminderSubject": "Recordatorio de pago — Factura {{invoiceNumber}} vence el {{dueDate}}",
+
+    "suspensionTitle": "Cuenta suspendida",
+    "suspensionBody": "El acceso a <strong>{{orgName}}</strong> en ARTES ha sido suspendido.",
+    "suspensionReason": "Motivo",
+    "suspensionRelatedInvoice": "Factura relacionada",
+    "suspensionRestore": "Para restaurar el acceso, liquide el saldo pendiente. Sus datos estan seguros y estaran completamente disponibles una vez que la cuenta sea reactivada.",
+    "suspensionButton": "Resolver ahora",
+    "suspensionSubject": "[Accion requerida] {{orgName}} — Cuenta suspendida",
+
+    "newMessageTitle": "Nuevo mensaje de {{fromName}}",
+    "newMessageButton": "Abrir mensajes",
+    "newMessageSubject": "Nuevo mensaje de {{fromName}}",
+
+    "newEngagementTitle": "Nuevo engagement de coaching",
+    "newEngagementBody": "Hola {{firstName}}, <strong>{{coachName}}</strong> ha iniciado un engagement de coaching con usted.",
+    "newEngagementCta": "Puede ver sus sesiones, objetivos y progreso en ARTES.",
+    "newEngagementButton": "Ver en ARTES",
+    "newEngagementSubject": "Nuevo engagement de coaching iniciado",
+
+    "newSessionTitle": "Nueva sesion programada",
+    "newSessionBody": "Hola {{firstName}}, <strong>{{coachName}}</strong> ha programado una sesion de coaching con usted.",
+    "newSessionButton": "Ver en ARTES",
+    "newSessionSubject": "Nueva sesion de coaching programada — {{date}}",
+
+    "postSessionTitle": "Hola {{firstName}}, es hora de reflexionar",
+    "postSessionBody": "{{coachName}} ha preparado una breve reflexion para usted tras su sesion de coaching del <strong>{{date}}</strong>.",
+    "postSessionMotivation": "Tomarse unos minutos para capturar sus pensamientos mientras la sesion esta fresca ayuda a consolidar sus aprendizajes y mantener su progreso.",
+    "postSessionButton": "Completar reflexion post-sesion",
+    "postSessionSubject": "Reflexion post-sesion — {{date}}"
+  }
+}

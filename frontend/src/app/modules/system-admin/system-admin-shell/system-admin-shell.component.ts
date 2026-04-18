@@ -52,38 +52,38 @@ import { TranslateModule } from '@ngx-translate/core';
         <nav class="sa-nav">
           <a routerLink="/system-admin/organizations" routerLinkActive="active"
              class="nav-item"
-             [matTooltip]="collapsed() ? 'Organizations' : ''"
+             [matTooltip]="collapsed() ? ('SYSADMIN.navOrganizations' | translate) : ''"
              matTooltipPosition="right">
             <mat-icon>business</mat-icon>
-            @if (!collapsed()) { <span>Organizations</span> }
+            @if (!collapsed()) { <span>{{ "SYSADMIN.navOrganizations" | translate }}</span> }
           </a>
           <a routerLink="/system-admin/invoices" routerLinkActive="active"
              class="nav-item"
-             [matTooltip]="collapsed() ? 'Invoices' : ''"
+             [matTooltip]="collapsed() ? ('SYSADMIN.navInvoices' | translate) : ''"
              matTooltipPosition="right">
             <mat-icon>receipt_long</mat-icon>
-            @if (!collapsed()) { <span>Invoices</span> }
+            @if (!collapsed()) { <span>{{ "SYSADMIN.navInvoices" | translate }}</span> }
           </a>
           <a routerLink="/system-admin/plans" routerLinkActive="active"
              class="nav-item"
-             [matTooltip]="collapsed() ? 'Plans' : ''"
+             [matTooltip]="collapsed() ? ('SYSADMIN.navPlans' | translate) : ''"
              matTooltipPosition="right">
             <mat-icon>sell</mat-icon>
-            @if (!collapsed()) { <span>Plans</span> }
+            @if (!collapsed()) { <span>{{ "SYSADMIN.navPlans" | translate }}</span> }
           </a>
           <a routerLink="/system-admin/reports" routerLinkActive="active"
              class="nav-item"
-             [matTooltip]="collapsed() ? 'Reports' : ''"
+             [matTooltip]="collapsed() ? ('SYSADMIN.navReports' | translate) : ''"
              matTooltipPosition="right">
             <mat-icon>assessment</mat-icon>
-            @if (!collapsed()) { <span>Reports</span> }
+            @if (!collapsed()) { <span>{{ "SYSADMIN.navReports" | translate }}</span> }
           </a>
           <a routerLink="/system-admin/settings" routerLinkActive="active"
              class="nav-item"
-             [matTooltip]="collapsed() ? 'Settings' : ''"
+             [matTooltip]="collapsed() ? ('SYSADMIN.navSettings' | translate) : ''"
              matTooltipPosition="right">
             <mat-icon>settings</mat-icon>
-            @if (!collapsed()) { <span>Settings</span> }
+            @if (!collapsed()) { <span>{{ "SYSADMIN.navSettings" | translate }}</span> }
           </a>
         </nav>
 

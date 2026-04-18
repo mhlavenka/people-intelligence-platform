@@ -8,7 +8,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 export interface CancelDialogData {
   /** What's being cancelled — shown in the confirmation copy. */
   title?: string;
@@ -38,14 +38,14 @@ export interface CancelDialogResult {
     TranslateModule,
   ],
   template: `
-    <h2 mat-dialog-title>{{ data.title || 'Cancel session' }}</h2>
+    <h2 mat-dialog-title>{{ data.title || ('BOOKING.cancelSession' | translate) }}</h2>
     <mat-dialog-content>
       @if (data.startTime) {
         <p class="intro">
-          Cancel the session
-          @if (data.coachName) { with <strong>{{ data.coachName }}</strong> }
-          on <strong>{{ data.startTime | date:'EEEE, MMM d, y' }}</strong>
-          at <strong>{{ data.startTime | date:'shortTime' }}</strong>?
+          {{ 'BOOKING.cancelSessionIntro' | translate }}
+          @if (data.coachName) { {{ 'BOOKING.withCoach' | translate }} <strong>{{ data.coachName }}</strong> }
+          {{ 'BOOKING.onDate' | translate }} <strong>{{ data.startTime | date:'EEEE, MMM d, y' }}</strong>
+          {{ 'BOOKING.atTime' | translate }} <strong>{{ data.startTime | date:'shortTime' }}</strong>?
         </p>
       }
 
@@ -57,10 +57,10 @@ export interface CancelDialogResult {
       }
 
       <mat-form-field appearance="outline" class="note-field">
-        <mat-label>{{ data.noteLabel || 'Message to coach (optional)' }}</mat-label>
+        <mat-label>{{ data.noteLabel || ('BOOKING.messageToCoach' | translate) }}</mat-label>
         <textarea matInput rows="4"
                   [(ngModel)]="reason"
-                  [placeholder]="data.notePlaceholder || 'Let the coach know why you\\'re cancelling…'">
+                  [placeholder]="data.notePlaceholder || translate.instant('BOOKING.cancelPlaceholder')">
         </textarea>
       </mat-form-field>
     </mat-dialog-content>
@@ -68,7 +68,7 @@ export interface CancelDialogResult {
       <button mat-button (click)="cancel()" [disabled]="saving()">{{ 'BOOKING.keepSession' | translate }}</button>
       <button mat-flat-button color="warn" (click)="confirm()" [disabled]="saving()">
         @if (saving()) { <mat-spinner diameter="18" /> }
-        {{ data.confirmLabel || 'Cancel session' }}
+        {{ data.confirmLabel || ('BOOKING.cancelSession' | translate) }}
       </button>
     </mat-dialog-actions>
   `,
@@ -93,6 +93,7 @@ export class CancelDialogComponent {
   constructor(
     @Inject(MAT_DIALOG_DATA) public data: CancelDialogData,
     private dialogRef: MatDialogRef<CancelDialogComponent, CancelDialogResult | null>,
+    public translate: TranslateService,
   ) {}
 
   cancel(): void { this.dialogRef.close(null); }

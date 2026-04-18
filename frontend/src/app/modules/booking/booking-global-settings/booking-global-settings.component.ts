@@ -415,7 +415,7 @@ const COMMON_TIMEZONES = [
     }
     .unavailable-label { color: #9aa5b4; font-style: italic; font-size: 14px; }
 
-    .deadline-field { width: 280px; }
+    .deadline-field { width: 100%; }
 
     .exclusions-layout {
       display: grid; grid-template-columns: minmax(280px, 360px) 1fr; gap: 24px;

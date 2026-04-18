@@ -43,7 +43,7 @@ interface AuditEntry {
       <div class="page-header">
         <div>
           <h1>{{ "EQ.auditLog" | translate }}</h1>
-          <p>Complete record of all EQi assessment imports — PIPEDA/Law 25 compliant</p>
+          <p>{{ "EQ.auditSubtitle" | translate }}</p>
         </div>
       </div>
 
@@ -67,14 +67,14 @@ interface AuditEntry {
         <table class="data-table">
           <thead>
             <tr>
-              <th>Date</th>
-              <th>Privacy</th>
-              <th>Report</th>
-              <th>Year</th>
-              <th>Consent</th>
-              <th>Validation</th>
-              <th>Import ID</th>
-              <th>Actions</th>
+              <th>{{ "EQ.dateCol" | translate }}</th>
+              <th>{{ "EQ.privacyCol" | translate }}</th>
+              <th>{{ "EQ.reportCol" | translate }}</th>
+              <th>{{ "EQ.yearCol" | translate }}</th>
+              <th>{{ "EQ.consentCol" | translate }}</th>
+              <th>{{ "EQ.validationCol" | translate }}</th>
+              <th>{{ "EQ.importIdCol" | translate }}</th>
+              <th>{{ "EQ.actionsCol" | translate }}</th>
             </tr>
           </thead>
           <tbody>
@@ -97,7 +97,7 @@ interface AuditEntry {
                     </button>
                   }
                   @if (e.erasedAt) {
-                    <span class="erased-badge">Erased</span>
+                    <span class="erased-badge">{{ "EQ.erasedBadge" | translate }}</span>
                   }
                 </td>
               </tr>

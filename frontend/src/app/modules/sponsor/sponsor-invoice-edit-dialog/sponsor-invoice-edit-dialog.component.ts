@@ -41,10 +41,10 @@ export interface SponsorInvoiceEditData {
     <mat-dialog-content>
       <div class="line-items">
         <div class="line-head">
-          <span class="col desc">Description</span>
-          <span class="col qty">Qty</span>
-          <span class="col price">Unit price</span>
-          <span class="col amt">Amount</span>
+          <span class="col desc">{{ "SPONSOR.descriptionCol" | translate }}</span>
+          <span class="col qty">{{ "SPONSOR.qtyCol" | translate }}</span>
+          <span class="col price">{{ "SPONSOR.unitPriceCol" | translate }}</span>
+          <span class="col amt">{{ "SPONSOR.amountCol" | translate }}</span>
           <span class="col act"></span>
         </div>
         @for (li of items; track li; let i = $index) {
@@ -92,10 +92,10 @@ export interface SponsorInvoiceEditData {
       }
     </mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button mat-button (click)="cancel()" [disabled]="saving()">Cancel</button>
+      <button mat-button (click)="cancel()" [disabled]="saving()">{{ "COMMON.cancel" | translate }}</button>
       <button mat-flat-button color="primary" (click)="save()" [disabled]="saving()">
         @if (saving()) { <mat-spinner diameter="18" /> }
-        Save changes
+        {{ "SPONSOR.saveChangesBtn" | translate }}
       </button>
     </mat-dialog-actions>
   `,

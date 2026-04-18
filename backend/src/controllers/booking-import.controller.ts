@@ -194,7 +194,7 @@ export async function preview(req: AuthRequest, res: Response, next: NextFunctio
     }
     if (!calendarId) {
       res.status(400).json({
-        error: 'No booking calendar selected. Open Booking → Settings and pick the calendar this app syncs with before importing.',
+        error: req.t('errors.noBookingCalendarSelected'),
       });
       return;
     }
@@ -203,7 +203,7 @@ export async function preview(req: AuthRequest, res: Response, next: NextFunctio
     try {
       auth = await getAuthenticatedClient(coachId);
     } catch {
-      res.status(401).json({ error: 'Google Calendar not connected. Connect it from Booking → Settings first.' });
+      res.status(401).json({ error: req.t('errors.googleCalendarNotConnected') });
       return;
     }
 
@@ -326,7 +326,7 @@ export async function execute(req: AuthRequest, res: Response, next: NextFunctio
     const { approvedEventIds, overrides, suggestions, calendarId: bodyCalendarId } = req.body as ExecuteBody;
 
     if (!Array.isArray(approvedEventIds) || approvedEventIds.length === 0) {
-      res.status(400).json({ error: 'approvedEventIds must be a non-empty array.' });
+      res.status(400).json({ error: req.t('errors.approvedEventIdsRequired') });
       return;
     }
 
@@ -335,7 +335,7 @@ export async function execute(req: AuthRequest, res: Response, next: NextFunctio
     const fallbackTz = resolved.fallbackTz;
     if (!calendarId) {
       res.status(400).json({
-        error: 'No booking calendar selected. Open Booking → Settings and pick the calendar this app syncs with before importing.',
+        error: req.t('errors.noBookingCalendarSelected'),
       });
       return;
     }
@@ -344,7 +344,7 @@ export async function execute(req: AuthRequest, res: Response, next: NextFunctio
     try {
       auth = await getAuthenticatedClient(coachId);
     } catch {
-      res.status(401).json({ error: 'Google Calendar not connected.' });
+      res.status(401).json({ error: req.t('errors.googleCalendarNotConnected') });
       return;
     }
     const calendar = calendarApi({ version: 'v3', auth });

@@ -42,7 +42,7 @@ router.put(
       const updates: Array<{ userId: string; managerId: string | null }> = req.body.updates;
 
       if (!Array.isArray(updates) || updates.length === 0) {
-        res.status(400).json({ error: 'updates array is required' });
+        res.status(400).json({ error: req.t('errors.updatesArrayRequired') });
         return;
       }
 

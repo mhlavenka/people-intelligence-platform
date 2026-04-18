@@ -56,7 +56,7 @@ interface FullInvoice extends SponsorInvoice {
 
         <section class="meta-grid">
           <div class="meta-block">
-            <div class="meta-label">Bill to</div>
+            <div class="meta-label">{{ "SPONSOR.billTo" | translate }}</div>
             <strong>{{ sponsor()!.name }}</strong>
             <div>{{ sponsor()!.email }}</div>
             @if (sponsor()!.organization) { <div>{{ sponsor()!.organization }}</div> }
@@ -73,9 +73,9 @@ interface FullInvoice extends SponsorInvoice {
             }
           </div>
           <div class="meta-block right">
-            <div><span class="meta-label">Invoice date</span> {{ invoice()!.createdAt | date:'mediumDate' }}</div>
-            <div><span class="meta-label">Due date</span> {{ invoice()!.dueDate | date:'mediumDate' }}</div>
-            <div><span class="meta-label">Period</span>
+            <div><span class="meta-label">{{ "SPONSOR.issuedDate" | translate }}</span> {{ invoice()!.createdAt | date:'mediumDate' }}</div>
+            <div><span class="meta-label">{{ "SPONSOR.dueDate" | translate }}</span> {{ invoice()!.dueDate | date:'mediumDate' }}</div>
+            <div><span class="meta-label">{{ "SPONSOR.periodLabel" | translate }}</span>
               {{ invoice()!.period.from | date:'mediumDate' }} – {{ invoice()!.period.to | date:'mediumDate' }}
             </div>
           </div>
@@ -84,10 +84,10 @@ interface FullInvoice extends SponsorInvoice {
         <table class="lines">
           <thead>
             <tr>
-              <th class="desc">Description</th>
-              <th class="num">Qty</th>
-              <th class="num">Unit price</th>
-              <th class="num">Amount</th>
+              <th class="desc">{{ "SPONSOR.descriptionCol" | translate }}</th>
+              <th class="num">{{ "SPONSOR.qtyCol" | translate }}</th>
+              <th class="num">{{ "SPONSOR.unitPriceCol" | translate }}</th>
+              <th class="num">{{ "SPONSOR.amountCol" | translate }}</th>
             </tr>
           </thead>
           <tbody>
@@ -102,7 +102,7 @@ interface FullInvoice extends SponsorInvoice {
           </tbody>
           <tfoot>
             <tr>
-              <td colspan="3" class="totals-label">Subtotal</td>
+              <td colspan="3" class="totals-label">{{ "SPONSOR.subtotal" | translate }}</td>
               <td class="num">{{ (invoice()!.subtotal / 100) | currency:invoice()!.currency }}</td>
             </tr>
             @if (invoice()!.taxBreakdown; as tb) {
@@ -125,7 +125,7 @@ interface FullInvoice extends SponsorInvoice {
               </tr>
             }
             <tr class="grand">
-              <td colspan="3" class="totals-label">Total due</td>
+              <td colspan="3" class="totals-label">{{ "SPONSOR.totalDue" | translate }}</td>
               <td class="num">{{ (invoice()!.total / 100) | currency:invoice()!.currency }}</td>
             </tr>
           </tfoot>

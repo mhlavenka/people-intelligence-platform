@@ -80,7 +80,7 @@ const FRAMEWORKS = [
 
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>{{ 'COACHING.topicsDiscussed' | translate }}</mat-label>
-          <input matInput [(ngModel)]="topicsRaw" placeholder="e.g. Leadership style, Team dynamics" />
+          <input matInput [(ngModel)]="topicsRaw" [placeholder]="'COACHING.topicsPlaceholder' | translate" />
           <mat-hint>{{ 'COACHING.commaSeparated' | translate }}</mat-hint>
         </mat-form-field>
 
@@ -97,60 +97,60 @@ const FRAMEWORKS = [
         <div class="section-label">{{ 'COACHING.preSessionIntake' | translate }}</div>
         <div class="intake-hint">
           <mat-icon>assignment_turned_in</mat-icon>
-          <span>Attach an assessment for the coachee to complete before the session.</span>
+          <span>{{ 'COACHING.attachAssessmentHint' | translate }}</span>
         </div>
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>{{ 'COACHING.preSessionAssessment' | translate }}</mat-label>
           <mat-select [(ngModel)]="form.preSessionIntakeTemplateId"
                       [disabled]="intakeStatus() === 'completed'">
-            <mat-option [value]="null">— None —</mat-option>
+            <mat-option [value]="null">— {{ 'COACHING.none' | translate }} —</mat-option>
             @for (t of assessmentTemplates(); track t._id) {
               <mat-option [value]="t._id">{{ t.title }}</mat-option>
             }
           </mat-select>
           <mat-hint>
             {{ intakeStatus() === 'completed'
-                ? 'Locked — the coachee has already completed this intake.'
-                : 'Only assessment-type templates appear here.' }}
+                ? ('COACHING.intakeLocked' | translate)
+                : ('COACHING.assessmentOnlyHint' | translate) }}
           </mat-hint>
         </mat-form-field>
         @if (intakeStatus() === 'completed') {
           <div class="intake-status completed">
             <mat-icon>check_circle</mat-icon>
-            <span>Coachee completed the pre-session intake.</span>
+            <span>{{ 'COACHING.intakeCompletedMsg' | translate }}</span>
           </div>
         } @else if (intakeStatus() === 'pending') {
           <div class="intake-status">
             <mat-icon>schedule</mat-icon>
-            <span>Waiting for the coachee to complete the pre-session intake.</span>
+            <span>{{ 'COACHING.intakePendingMsg' | translate }}</span>
           </div>
         }
 
         <div class="section-label">{{ 'COACHING.notes' | translate }}</div>
         <div class="notes-warning">
           <mat-icon>visibility</mat-icon>
-          <span><strong>Shared Notes</strong> are visible to the coachee.</span>
+          <span>{{ 'COACHING.sharedNotesVisibleHint' | translate }}</span>
         </div>
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>{{ 'COACHING.sharedNotes' | translate }}</mat-label>
           <textarea matInput [(ngModel)]="form.sharedNotes" rows="3"
-                    placeholder="Key takeaways to share with the coachee..."></textarea>
+                    [placeholder]="'COACHING.sharedNotesPlaceholder' | translate"></textarea>
         </mat-form-field>
 
         <div class="notes-private-warning">
           <mat-icon>lock</mat-icon>
-          <span><strong>Private Notes</strong> stay with you.</span>
+          <span>{{ 'COACHING.privateNotesStayHint' | translate }}</span>
         </div>
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>{{ 'COACHING.privateCoachNotes' | translate }}</mat-label>
           <textarea matInput [(ngModel)]="form.coachNotes" rows="3"
-                    placeholder="Your observations and patterns noticed..."></textarea>
+                    [placeholder]="'COACHING.privateNotesPlaceholder' | translate"></textarea>
         </mat-form-field>
       </div>
     </mat-dialog-content>
 
     <mat-dialog-actions align="end">
-      <button mat-button mat-dialog-close [disabled]="saving()">Cancel</button>
+      <button mat-button mat-dialog-close [disabled]="saving()">{{ 'COMMON.cancel' | translate }}</button>
       <button mat-raised-button color="primary" (click)="save()" [disabled]="saving()">
         @if (saving()) { <mat-spinner diameter="18" /> }
         @else { <mat-icon>{{ isEdit ? 'save' : 'add' }}</mat-icon> }

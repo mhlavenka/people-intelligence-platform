@@ -1,1 +1,103 @@
-{}
+{
+  "booking": {
+    "sessionConfirmedTitle": "Your Session is Confirmed!",
+    "newSessionBookedTitle": "New Session Booked",
+    "coach": "Coach",
+    "client": "Client",
+    "email": "Email",
+    "phone": "Phone",
+    "duration": "Duration",
+    "durationMinutes": "{{minutes}} minutes",
+    "topic": "Topic",
+    "needToCancel": "Need to cancel?",
+    "cancelThisSession": "Cancel this session",
+    "confirmedSubject": "Confirmed: Coaching Session on {{date}} with {{coachName}}",
+    "newBookingSubject": "New Booking: {{clientName}} on {{date}} at {{time}}",
+
+    "sessionCancelledTitle": "Session Cancelled",
+    "cancelledBody": "The coaching session scheduled for <strong>{{date}}</strong> at <strong>{{time}}</strong> ({{timezone}}) has been cancelled by {{byWhom}}.",
+    "reason": "Reason",
+    "cancelledSubject": "Cancelled: Coaching Session on {{date}}",
+
+    "sessionRescheduledTitle": "Your session has been rescheduled",
+    "rescheduledBody": "Your coaching session with <strong>{{coachName}}</strong> has been moved.",
+    "previously": "Previously",
+    "now": "Now",
+    "rescheduledSubject": "Rescheduled: Coaching Session on {{date}}",
+    "coachRescheduledTitle": "Session rescheduled",
+    "coachRescheduledByCoachee": "<strong>{{clientName}}</strong> has rescheduled their session.",
+    "coachRescheduledByAdmin": "The session with <strong>{{clientName}}</strong> has been moved.",
+    "coachRescheduledSubject": "Rescheduled: {{clientName}} on {{date}}",
+    "messageFrom": "Message from {{name}}",
+
+    "reminderTitle": "Reminder: Your session is {{timeLabel}}",
+    "tomorrow": "tomorrow",
+    "inOneHour": "in 1 hour",
+    "reminderSubject": "Reminder: Coaching session {{timeLabel}} with {{coachName}}",
+
+    "joinGoogleMeet": "Join Google Meet",
+    "joinTeamsMeeting": "Join Teams Meeting",
+    "teamsMeeting": "Teams Meeting",
+    "googleMeet": "Google Meet"
+  },
+  "general": {
+    "resetPasswordTitle": "Reset Your Password",
+    "resetPasswordBody": "We received a request to reset your password. Click the button below — this link expires in <strong>1 hour</strong>.",
+    "resetPasswordButton": "Reset Password",
+    "resetPasswordIgnore": "If you didn't request a password reset, you can safely ignore this email. Your password won't change.",
+    "resetPasswordSubject": "Reset your ARTES password",
+
+    "welcomeTitle": "Welcome, {{firstName}}!",
+    "welcomeBody": "You've been added to <strong>{{orgName}}</strong> on ARTES. Log in to get started.",
+    "welcomeTempPassword": "Temporary password:",
+    "welcomeChangePwd": "(please change on first login)",
+    "welcomeButton": "Log In Now",
+    "welcomeSubject": "Welcome to {{orgName}} on ARTES",
+
+    "idpReadyTitle": "Your IDP is ready, {{firstName}}!",
+    "idpReadyBody": "Your coach has generated a new AI-powered Individual Development Plan using the GROW methodology. Log in to review your goals, milestones, and action steps.",
+    "idpReadyButton": "View My IDP",
+    "idpReadySubject": "Your Individual Development Plan is ready",
+
+    "paymentReminderTitle": "Payment Reminder",
+    "paymentOverdueTitle": "Payment Overdue",
+    "paymentOverdueBody": "This invoice is {{days}} day(s) overdue. Please pay immediately to avoid service interruption.",
+    "paymentDueBody": "Payment is due on {{date}}. Please ensure timely payment.",
+    "organization": "Organization",
+    "invoice": "Invoice",
+    "amountDue": "Amount due",
+    "payNow": "Pay Now",
+    "alreadyPaid": "If you have already paid, please disregard this message.",
+    "paymentOverdueSubject": "[OVERDUE] Invoice {{invoiceNumber}} — {{total}} past due",
+    "paymentReminderSubject": "Payment reminder — Invoice {{invoiceNumber}} due {{dueDate}}",
+
+    "suspensionTitle": "Account Suspended",
+    "suspensionBody": "Access to <strong>{{orgName}}</strong> on ARTES has been suspended.",
+    "suspensionReason": "Reason",
+    "suspensionRelatedInvoice": "Related invoice",
+    "suspensionRestore": "To restore access, please settle the outstanding balance. Your data remains safe and will be fully available once the account is reactivated.",
+    "suspensionButton": "Resolve Now",
+    "suspensionSubject": "[Action Required] {{orgName}} — Account suspended",
+
+    "newMessageTitle": "New message from {{fromName}}",
+    "newMessageButton": "Open Messages",
+    "newMessageSubject": "New message from {{fromName}}",
+
+    "newEngagementTitle": "New Coaching Engagement",
+    "newEngagementBody": "Hi {{firstName}}, <strong>{{coachName}}</strong> has started a coaching engagement with you.",
+    "newEngagementCta": "You can view your sessions, goals, and progress in ARTES.",
+    "newEngagementButton": "View in ARTES",
+    "newEngagementSubject": "New coaching engagement started",
+
+    "newSessionTitle": "New Session Scheduled",
+    "newSessionBody": "Hi {{firstName}}, <strong>{{coachName}}</strong> has scheduled a coaching session with you.",
+    "newSessionButton": "View in ARTES",
+    "newSessionSubject": "New coaching session scheduled — {{date}}",
+
+    "postSessionTitle": "Hi {{firstName}}, time to reflect",
+    "postSessionBody": "{{coachName}} has prepared a short reflection for you following your coaching session on <strong>{{date}}</strong>.",
+    "postSessionMotivation": "Taking a few minutes to capture your thoughts while the session is fresh helps solidify your insights and keeps your growth on track.",
+    "postSessionButton": "Complete Post-Session Reflection",
+    "postSessionSubject": "Post-session reflection — {{date}}"
+  }
+}

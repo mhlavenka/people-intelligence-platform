@@ -12,7 +12,7 @@ router.post(
     try {
       const { prompt, systemPrompt } = req.body;
       if (!prompt) {
-        res.status(400).json({ error: 'prompt is required' });
+        res.status(400).json({ error: req.t('errors.promptRequired') });
         return;
       }
       const result = await callClaude(prompt, systemPrompt);

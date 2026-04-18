@@ -160,6 +160,24 @@
     "sessionNotScheduled": "La séance n'est plus programmée.",
     "formAvailable24h": "Ce formulaire sera disponible 24 heures avant votre séance.",
 
-    "tooManyRequests": "Trop de requêtes, veuillez réessayer plus tard"
+    "tooManyRequests": "Trop de requêtes, veuillez réessayer plus tard",
+
+    "focusConflictTypeRequired": "focusConflictType est requis",
+    "parentAnalysisNotFound": "Analyse parente introuvable",
+
+    "endsAtRequired": "endsAt est requis",
+    "endsAtMustBeFuture": "endsAt doit être une date future",
+    "noActiveTrialToRevert": "Aucun essai actif à annuler.",
+
+    "promptRequired": "Le prompt est requis",
+
+    "noBookingCalendarSelected": "Aucun calendrier de réservation sélectionné. Ouvrez les paramètres de réservation et choisissez le calendrier à synchroniser avant d'importer.",
+    "googleCalendarNotConnected": "Google Calendar non connecté. Connectez-le depuis les paramètres de réservation.",
+    "approvedEventIdsRequired": "approvedEventIds doit être un tableau non vide.",
+
+    "toUserIdAndContentRequired": "toUserId et le contenu sont requis",
+    "recipientNotFoundInOrg": "Destinataire introuvable dans cette organisation",
+
+    "updatesArrayRequired": "Le tableau updates est requis"
   }
 }

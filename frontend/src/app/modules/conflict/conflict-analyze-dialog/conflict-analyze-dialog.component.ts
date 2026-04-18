@@ -9,7 +9,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ApiService } from '../../../core/api.service';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 interface SurveyTemplate {
   _id: string;
@@ -53,8 +53,7 @@ interface OrgResponse {
       @if (noTemplates()) {
         <div class="warn-banner">
           <mat-icon>info</mat-icon>
-          No conflict intake templates found. Create a intake template first, collect at least
-          5 responses, then run an analysis.
+          {{ "CONFLICT.noTemplatesWarn" | translate }}
         </div>
       } @else {
         <form [formGroup]="form" class="dialog-form">
@@ -94,6 +93,7 @@ interface OrgResponse {
               <mat-icon>shield</mat-icon>
               <p>Analysis requires a minimum of <strong>{{ selectedMinRequired() }} responses</strong>
               to protect individual privacy. Results are aggregated — no individual data is shown.</p>
+
             </div>
           }
         </form>
@@ -101,7 +101,7 @@ interface OrgResponse {
     </mat-dialog-content>
 
     <mat-dialog-actions align="end">
-      <button mat-button mat-dialog-close [disabled]="analyzing()">Cancel</button>
+      <button mat-button mat-dialog-close [disabled]="analyzing()">{{ "COMMON.cancel" | translate }}</button>
       @if (!noTemplates()) {
         <button mat-raised-button color="primary"
                 (click)="analyze()" [disabled]="form.invalid || analyzing()">
@@ -170,7 +170,8 @@ export class ConflictAnalyzeDialogComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private api: ApiService,
-    private dialogRef: MatDialogRef<ConflictAnalyzeDialogComponent>
+    private dialogRef: MatDialogRef<ConflictAnalyzeDialogComponent>,
+    private translate: TranslateService
   ) {
     this.form = this.fb.group({
       name:         ['', Validators.required],
@@ -221,7 +222,7 @@ export class ConflictAnalyzeDialogComponent implements OnInit {
         this.dialogRef.close(result);
       },
       error: (err) => {
-        this.error.set(err.error?.error || 'Analysis failed. Please try again.');
+        this.error.set(err.error?.error || this.translate.instant('CONFLICT.analysisFailed'));
         this.analyzing.set(false);
       },
     });

@@ -142,11 +142,11 @@ const COUNTRY_TAX_RATES: Record<string, number> = {
            ================================================================ -->
       <div class="page-header">
         <div>
-          <h1>Invoices</h1>
-          <p>Generate, manage and track all organization invoices</p>
+          <h1>{{ "SYSADMIN.invoicesTitle" | translate }}</h1>
+          <p>{{ "SYSADMIN.invoicesSubtitle" | translate }}</p>
         </div>
         <button mat-raised-button color="primary" (click)="toggleGenerate()">
-          <mat-icon>add</mat-icon> Generate Invoice
+          <mat-icon>add</mat-icon> {{ "SYSADMIN.generateInvoice" | translate }}
         </button>
       </div>
 
@@ -156,19 +156,19 @@ const COUNTRY_TAX_RATES: Record<string, number> = {
       <div class="stats-bar">
         <div class="stat-card">
           <span class="stat-value">{{ invoices().length }}</span>
-          <span class="stat-label">Total Invoices</span>
+          <span class="stat-label">{{ "SYSADMIN.totalInvoices" | translate }}</span>
         </div>
         <div class="stat-card">
           <span class="stat-value blue">{{ outstandingTotal() | currency:'CAD':'symbol':'1.2-2' }}</span>
-          <span class="stat-label">Outstanding</span>
+          <span class="stat-label">{{ "SYSADMIN.outstanding" | translate }}</span>
         </div>
         <div class="stat-card">
           <span class="stat-value green">{{ paidThisMonth() | currency:'CAD':'symbol':'1.2-2' }}</span>
-          <span class="stat-label">Paid This Month</span>
+          <span class="stat-label">{{ "SYSADMIN.paidThisMonth" | translate }}</span>
         </div>
         <div class="stat-card">
           <span class="stat-value" [class.red]="overdueCount() > 0">{{ overdueCount() }}</span>
-          <span class="stat-label">Overdue</span>
+          <span class="stat-label">{{ "SYSADMIN.overdue" | translate }}</span>
         </div>
       </div>
 
@@ -178,7 +178,7 @@ const COUNTRY_TAX_RATES: Record<string, number> = {
       @if (showGenerate()) {
         <div class="generate-panel">
           <div class="panel-header">
-            <h2>Generate New Invoice</h2>
+            <h2>{{ "SYSADMIN.generateNew" | translate }}</h2>
             <button mat-icon-button (click)="showGenerate.set(false)">
               <mat-icon>close</mat-icon>
             </button>
@@ -536,7 +536,7 @@ const COUNTRY_TAX_RATES: Record<string, number> = {
             @if (filteredInvoices().length === 0) {
               <div class="no-results">
                 <mat-icon>receipt_long</mat-icon>
-                <span>No invoices match your filters</span>
+                <span>{{ "SYSADMIN.noInvoicesMatch" | translate }}</span>
               </div>
             }
           </div>

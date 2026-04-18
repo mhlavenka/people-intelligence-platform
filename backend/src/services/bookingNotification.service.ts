@@ -1,4 +1,5 @@
 import { DateTime } from 'luxon';
+import i18next from 'i18next';
 import ical, { ICalCalendarMethod, ICalEventStatus } from 'ical-generator';
 import { SESClient, SendRawEmailCommand } from '@aws-sdk/client-ses';
 import { config } from '../config/env';
@@ -27,6 +28,12 @@ const ses = new SESClient({
 
 const FROM = config.aws.sesFromEmail || 'noreply@headsoft.net';
 const isDev = config.nodeEnv !== 'production';
+
+// ─── i18n helper ───────────────────────────────────────────────────────────
+
+function getT(language: string) {
+  return i18next.getFixedT(language, 'emails');
+}
 
 // ─── ICS generation ─────────────────────────────────────────────────────────
 
@@ -153,6 +160,7 @@ export async function sendBookingConfirmation(
   cancelUrl: string,
   language = 'en',
 ): Promise<void> {
+  const t = getT(language);
   const clientDt = DateTime.fromJSDate(booking.startTime).setZone(booking.clientTimezone).setLocale(language);
   const coachDt = DateTime.fromJSDate(booking.startTime).setZone(booking.coachTimezone).setLocale(language);
   const duration = Math.round(
@@ -162,7 +170,9 @@ export async function sendBookingConfirmation(
   const icsContent = generateICS(booking, coachName, coachEmail);
 
   const link = booking.meetingLink || booking.googleMeetLink;
-  const linkLabel = booking.calendarProvider === 'microsoft' ? 'Teams Meeting' : 'Google Meet';
+  const linkLabel = booking.calendarProvider === 'microsoft'
+    ? t('booking.teamsMeeting')
+    : t('booking.googleMeet');
   const meetSection = link
     ? `<p style="margin:0 0 8px;">
          <strong>${linkLabel}:</strong>
@@ -171,9 +181,9 @@ export async function sendBookingConfirmation(
     : '';
 
   // ── Client email
-  const clientHtml = bookingHtml('Booking Confirmed', `
+  const clientHtml = bookingHtml(t('booking.sessionConfirmedTitle'), `
     <h2 style="color:#1B2A47;margin:0 0 12px;font-size:22px;">
-      Your Session is Confirmed!
+      ${t('booking.sessionConfirmedTitle')}
     </h2>
     <div style="background:#f0f9f4;border-left:4px solid #27C4A0;
                 padding:14px 18px;border-radius:0 8px 8px 0;margin:0 0 20px;">
@@ -186,30 +196,30 @@ export async function sendBookingConfirmation(
       </p>
     </div>
     <p style="color:#5a6a7e;margin:0 0 8px;">
-      <strong>Coach:</strong> ${coachName}
+      <strong>${t('booking.coach')}:</strong> ${coachName}
     </p>
     <p style="color:#5a6a7e;margin:0 0 8px;">
-      <strong>Duration:</strong> ${duration} minutes
+      <strong>${t('booking.duration')}:</strong> ${t('booking.durationMinutes', { minutes: duration })}
     </p>
     ${meetSection}
-    ${booking.topic ? `<p style="color:#5a6a7e;margin:0 0 8px;"><strong>Topic:</strong> ${booking.topic}</p>` : ''}
+    ${booking.topic ? `<p style="color:#5a6a7e;margin:0 0 8px;"><strong>${t('booking.topic')}:</strong> ${booking.topic}</p>` : ''}
     <p style="color:#9aa5b4;margin:24px 0 0;font-size:13px;">
-      Need to cancel?
-      <a href="${cancelUrl}" style="color:#3A9FD6;">Cancel this session</a>
+      ${t('booking.needToCancel')}
+      <a href="${cancelUrl}" style="color:#3A9FD6;">${t('booking.cancelThisSession')}</a>
     </p>
   `);
 
   await sendRawEmailWithICS({
     to: booking.clientEmail,
-    subject: `Confirmed: Coaching Session on ${clientDt.toFormat('LLL d')} with ${coachName}`,
+    subject: t('booking.confirmedSubject', { date: clientDt.toFormat('LLL d'), coachName }),
     html: clientHtml,
     icsContent,
   });
 
   // ── Coach email
-  const coachHtml = bookingHtml('New Booking', `
+  const coachHtml = bookingHtml(t('booking.newSessionBookedTitle'), `
     <h2 style="color:#1B2A47;margin:0 0 12px;font-size:22px;">
-      New Session Booked
+      ${t('booking.newSessionBookedTitle')}
     </h2>
     <div style="background:#EBF5FB;border-left:4px solid #3A9FD6;
                 padding:14px 18px;border-radius:0 8px 8px 0;margin:0 0 20px;">
@@ -222,19 +232,23 @@ export async function sendBookingConfirmation(
       </p>
     </div>
     <p style="color:#5a6a7e;margin:0 0 8px;">
-      <strong>Client:</strong> ${booking.clientName}
+      <strong>${t('booking.client')}:</strong> ${booking.clientName}
     </p>
     <p style="color:#5a6a7e;margin:0 0 8px;">
-      <strong>Email:</strong> ${booking.clientEmail}
+      <strong>${t('booking.email')}:</strong> ${booking.clientEmail}
     </p>
-    ${booking.clientPhone ? `<p style="color:#5a6a7e;margin:0 0 8px;"><strong>Phone:</strong> ${booking.clientPhone}</p>` : ''}
-    ${booking.topic ? `<p style="color:#5a6a7e;margin:0 0 8px;"><strong>Topic:</strong> ${booking.topic}</p>` : ''}
+    ${booking.clientPhone ? `<p style="color:#5a6a7e;margin:0 0 8px;"><strong>${t('booking.phone')}:</strong> ${booking.clientPhone}</p>` : ''}
+    ${booking.topic ? `<p style="color:#5a6a7e;margin:0 0 8px;"><strong>${t('booking.topic')}:</strong> ${booking.topic}</p>` : ''}
     ${meetSection}
   `);
 
   await sendRawEmailWithICS({
     to: coachEmail,
-    subject: `New Booking: ${booking.clientName} on ${coachDt.toFormat('LLL d')} at ${coachDt.toFormat('h:mm a')}`,
+    subject: t('booking.newBookingSubject', {
+      clientName: booking.clientName,
+      date: coachDt.toFormat('LLL d'),
+      time: coachDt.toFormat('h:mm a'),
+    }),
     html: coachHtml,
     icsContent,
   });
@@ -247,6 +261,7 @@ export async function sendCancellationEmail(
   cancelledBy: 'client' | 'coach',
   language = 'en',
 ): Promise<void> {
+  const t = getT(language);
   const clientDt = DateTime.fromJSDate(booking.startTime).setZone(booking.clientTimezone).setLocale(language);
   const coachDt = DateTime.fromJSDate(booking.startTime).setZone(booking.coachTimezone).setLocale(language);
   const byWhom = cancelledBy === 'client' ? booking.clientName : coachName;
@@ -255,25 +270,25 @@ export async function sendCancellationEmail(
   // original REQUEST invite and remove the event from attendee calendars.
   const cancelIcs = generateICS(booking, coachName, coachEmail, ICalCalendarMethod.CANCEL, 1);
 
-  const renderHtml = (dt: DateTime, tz: string) => bookingHtml('Session Cancelled', `
+  const renderHtml = (dt: DateTime, tz: string) => bookingHtml(t('booking.sessionCancelledTitle'), `
     <h2 style="color:#dc2626;margin:0 0 12px;font-size:22px;">
-      Session Cancelled
+      ${t('booking.sessionCancelledTitle')}
     </h2>
     <p style="color:#5a6a7e;margin:0 0 16px;line-height:1.6;">
-      The coaching session scheduled for
-      <strong>${dt.toFormat('cccc, LLLL d, yyyy')}</strong> at
-      <strong>${dt.toFormat('h:mm a')}</strong> (${tz})
-      has been cancelled by ${byWhom}.
+      ${t('booking.cancelledBody', {
+        date: dt.toFormat('cccc, LLLL d, yyyy'),
+        time: dt.toFormat('h:mm a'),
+        timezone: tz,
+        byWhom,
+      })}
     </p>
-    ${booking.cancellationReason ? `<p style="color:#5a6a7e;margin:0 0 16px;"><strong>Reason:</strong> ${booking.cancellationReason}</p>` : ''}
+    ${booking.cancellationReason ? `<p style="color:#5a6a7e;margin:0 0 16px;"><strong>${t('booking.reason')}:</strong> ${booking.cancellationReason}</p>` : ''}
   `);
 
   const subjectFor = (dt: DateTime) =>
-    `Cancelled: Coaching Session on ${dt.toFormat('LLL d')}`;
+    t('booking.cancelledSubject', { date: dt.toFormat('LLL d') });
 
-  // Email both parties so each calendar client removes its copy. The side
-  // that triggered the cancellation still gets a confirmation — matches how
-  // confirmation emails are sent on booking.
+  // Email both parties so each calendar client removes its copy.
   await sendRawEmailWithICS({
     to: booking.clientEmail,
     subject: subjectFor(clientDt),
@@ -303,12 +318,15 @@ export async function sendRescheduleConfirmation(
   note?: string,
   language = 'en',
 ): Promise<void> {
+  const t = getT(language);
   const oldClientDt = DateTime.fromJSDate(oldStartTime).setZone(booking.clientTimezone).setLocale(language);
   const newClientDt = DateTime.fromJSDate(booking.startTime).setZone(booking.clientTimezone).setLocale(language);
   const newCoachDt = DateTime.fromJSDate(booking.startTime).setZone(booking.coachTimezone).setLocale(language);
 
   const rscLink = booking.meetingLink || booking.googleMeetLink;
-  const rscLabel = booking.calendarProvider === 'microsoft' ? 'Join Teams Meeting' : 'Join Google Meet';
+  const rscLabel = booking.calendarProvider === 'microsoft'
+    ? t('booking.joinTeamsMeeting')
+    : t('booking.joinGoogleMeet');
   const meetSection = rscLink
     ? `<a href="${rscLink}"
          style="display:inline-block;background:#3A9FD6;color:#ffffff;
@@ -322,22 +340,22 @@ export async function sendRescheduleConfirmation(
 
   // Always email the client. Skip the coach when they triggered the change
   // from their own calendar — they already know.
-  const clientHtml = bookingHtml('Your session has been rescheduled', `
+  const clientHtml = bookingHtml(t('booking.sessionRescheduledTitle'), `
     <h2 style="color:#1B2A47;margin:0 0 12px;font-size:22px;">
-      Your session has been rescheduled
+      ${t('booking.sessionRescheduledTitle')}
     </h2>
     <p style="color:#5a6a7e;margin:0 0 16px;line-height:1.6;">
-      Your coaching session with <strong>${coachName}</strong> has been moved.
+      ${t('booking.rescheduledBody', { coachName })}
     </p>
     <table cellpadding="0" cellspacing="0" style="margin:0 0 20px;">
       <tr>
-        <td style="padding:8px 0;color:#9aa5b4;font-size:13px;">Previously</td>
+        <td style="padding:8px 0;color:#9aa5b4;font-size:13px;">${t('booking.previously')}</td>
         <td style="padding:8px 16px;color:#9aa5b4;text-decoration:line-through;">
           ${oldClientDt.toFormat('cccc, LLL d')} at ${oldClientDt.toFormat('h:mm a')}
         </td>
       </tr>
       <tr>
-        <td style="padding:8px 0;color:#1B2A47;font-size:13px;font-weight:600;">Now</td>
+        <td style="padding:8px 0;color:#1B2A47;font-size:13px;font-weight:600;">${t('booking.now')}</td>
         <td style="padding:8px 16px;color:#1B2A47;font-weight:600;">
           ${newClientDt.toFormat('cccc, LLLL d, yyyy')} at ${newClientDt.toFormat('h:mm a')}
           (${booking.clientTimezone})
@@ -346,13 +364,13 @@ export async function sendRescheduleConfirmation(
     </table>
     ${meetSection}
     <p style="color:#9aa5b4;font-size:12px;margin:20px 0 0;">
-      Need to cancel? <a href="${cancelUrl}" style="color:#3A9FD6;">Cancel this session</a>
+      ${t('booking.needToCancel')} <a href="${cancelUrl}" style="color:#3A9FD6;">${t('booking.cancelThisSession')}</a>
     </p>
   `);
 
   await sendRawEmailWithICS({
     to: booking.clientEmail,
-    subject: `Rescheduled: Coaching Session on ${newClientDt.toFormat('LLL d')}`,
+    subject: t('booking.rescheduledSubject', { date: newClientDt.toFormat('LLL d') }),
     html: clientHtml,
     icsContent,
   });
@@ -361,23 +379,23 @@ export async function sendRescheduleConfirmation(
 
   // Coach email (admin or coachee triggered).
   const rescheduledByLine = triggeredBy === 'coachee'
-    ? `<strong>${booking.clientName}</strong> has rescheduled their session.`
-    : `The session with <strong>${booking.clientName}</strong> has been moved.`;
+    ? t('booking.coachRescheduledByCoachee', { clientName: booking.clientName })
+    : t('booking.coachRescheduledByAdmin', { clientName: booking.clientName });
   const noteBlock = note && note.trim()
     ? `<div style="background:#f3eeff;border-left:4px solid #7c5cbf;border-radius:6px;
                    padding:12px 14px;margin:16px 0;">
          <div style="font-size:11px;font-weight:700;color:#7c5cbf;
                      text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">
-           Message from ${booking.clientName}
+           ${t('booking.messageFrom', { name: booking.clientName })}
          </div>
          <div style="color:#1B2A47;font-size:14px;line-height:1.5;white-space:pre-wrap;">
            ${note.trim()}
          </div>
        </div>`
     : '';
-  const coachHtml = bookingHtml('Session rescheduled', `
+  const coachHtml = bookingHtml(t('booking.coachRescheduledTitle'), `
     <h2 style="color:#1B2A47;margin:0 0 12px;font-size:22px;">
-      Session rescheduled
+      ${t('booking.coachRescheduledTitle')}
     </h2>
     <p style="color:#5a6a7e;margin:0 0 16px;line-height:1.6;">
       ${rescheduledByLine} The new time is
@@ -385,12 +403,15 @@ export async function sendRescheduleConfirmation(
       <strong>${newCoachDt.toFormat('h:mm a')}</strong> (${booking.coachTimezone}).
     </p>
     ${noteBlock}
-    ${booking.topic ? `<p style="color:#5a6a7e;margin:0 0 8px;"><strong>Topic:</strong> ${booking.topic}</p>` : ''}
+    ${booking.topic ? `<p style="color:#5a6a7e;margin:0 0 8px;"><strong>${t('booking.topic')}:</strong> ${booking.topic}</p>` : ''}
   `);
 
   await sendRawEmailWithICS({
     to: coachEmail,
-    subject: `Rescheduled: ${booking.clientName} on ${newCoachDt.toFormat('LLL d')}`,
+    subject: t('booking.coachRescheduledSubject', {
+      clientName: booking.clientName,
+      date: newCoachDt.toFormat('LLL d'),
+    }),
     html: coachHtml,
     icsContent,
   });
@@ -402,14 +423,17 @@ export async function sendReminder(
   type: '24h' | '1h',
   language = 'en',
 ): Promise<void> {
+  const t = getT(language);
   const clientDt = DateTime.fromJSDate(booking.startTime).setZone(booking.clientTimezone).setLocale(language);
   const duration = Math.round(
     (booking.endTime.getTime() - booking.startTime.getTime()) / 60_000,
   );
-  const timeLabel = type === '24h' ? 'tomorrow' : 'in 1 hour';
+  const timeLabel = type === '24h' ? t('booking.tomorrow') : t('booking.inOneHour');
 
   const remLink = booking.meetingLink || booking.googleMeetLink;
-  const remLabel = booking.calendarProvider === 'microsoft' ? 'Join Teams Meeting' : 'Join Google Meet';
+  const remLabel = booking.calendarProvider === 'microsoft'
+    ? t('booking.joinTeamsMeeting')
+    : t('booking.joinGoogleMeet');
   const meetSection = remLink
     ? `<a href="${remLink}"
          style="display:inline-block;background:#3A9FD6;color:#ffffff;
@@ -419,9 +443,9 @@ export async function sendReminder(
       </a>`
     : '';
 
-  const html = bookingHtml('Session Reminder', `
+  const html = bookingHtml(t('booking.reminderTitle', { timeLabel }), `
     <h2 style="color:#1B2A47;margin:0 0 12px;font-size:22px;">
-      Reminder: Your session is ${timeLabel}
+      ${t('booking.reminderTitle', { timeLabel })}
     </h2>
     <div style="background:#f0f9f4;border-left:4px solid #27C4A0;
                 padding:14px 18px;border-radius:0 8px 8px 0;margin:0 0 20px;">
@@ -434,7 +458,7 @@ export async function sendReminder(
       </p>
     </div>
     <p style="color:#5a6a7e;margin:0 0 8px;">
-      <strong>Coach:</strong> ${coachName}
+      <strong>${t('booking.coach')}:</strong> ${coachName}
     </p>
     ${meetSection}
   `);
@@ -450,7 +474,7 @@ export async function sendReminder(
     Destination: { ToAddresses: [booking.clientEmail] },
     Message: {
       Subject: {
-        Data: `Reminder: Coaching session ${timeLabel} with ${coachName}`,
+        Data: t('booking.reminderSubject', { timeLabel, coachName }),
         Charset: 'UTF-8',
       },
       Body: { Html: { Data: html, Charset: 'UTF-8' } },

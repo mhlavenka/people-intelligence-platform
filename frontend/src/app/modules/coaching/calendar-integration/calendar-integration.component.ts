@@ -50,8 +50,8 @@ import {
                 <mat-icon>cloud_off</mat-icon>
               </div>
               <div class="info">
-                <div class="label">Not connected</div>
-                <div class="desc">Connect your calendar to automatically sync coaching sessions.</div>
+                <div class="label">{{ 'COACHING.notConnected' | translate }}</div>
+                <div class="desc">{{ 'COACHING.connectCalDesc' | translate }}</div>
               </div>
             </div>
             <div class="provider-buttons">
@@ -81,8 +81,8 @@ import {
                 <mat-icon>check_circle</mat-icon>
               </div>
               <div class="info">
-                <div class="label">{{ providerLabel() }} Connected <span class="badge">Connected</span></div>
-                <div class="desc">Select a calendar to sync sessions to.</div>
+                <div class="label">{{ providerLabel() }} {{ 'BOOKING.connected' | translate }} <span class="badge">{{ 'BOOKING.connected' | translate }}</span></div>
+                <div class="desc">{{ 'COACHING.selectCalendarDesc' | translate }}</div>
               </div>
             </div>
             <div class="calendar-picker">
@@ -90,7 +90,7 @@ import {
                 <mat-spinner diameter="20" />
               } @else {
                 <mat-form-field appearance="outline" class="picker-field">
-                  <mat-label>Select a calendar</mat-label>
+                  <mat-label>{{ 'COACHING.selectCoachCalendar' | translate }}</mat-label>
                   <mat-select [(ngModel)]="selectedCalendarId"
                               (ngModelChange)="onCalendarSelected($event)">
                     @for (cal of calendars(); track cal.id) {
@@ -100,12 +100,12 @@ import {
                 </mat-form-field>
                 <button mat-raised-button color="primary"
                         (click)="saveCalendar()" [disabled]="!selectedCalendarId || saving()">
-                  @if (saving()) { <mat-spinner diameter="18" /> } @else { Save Calendar }
+                  @if (saving()) { <mat-spinner diameter="18" /> } @else { {{ 'COACHING.saveCalendar' | translate }} }
                 </button>
               }
             </div>
             <div class="disconnect-link">
-              <a (click)="disconnect()">Disconnect calendar</a>
+              <a (click)="disconnect()">{{ 'COACHING.disconnectCalendar' | translate }}</a>
             </div>
           }
 
@@ -116,8 +116,8 @@ import {
                 <mat-icon>check_circle</mat-icon>
               </div>
               <div class="info">
-                <div class="label">Change Calendar</div>
-                <div class="desc">Select a different calendar to sync sessions to.</div>
+                <div class="label">{{ 'COACHING.changeCalendar' | translate }}</div>
+                <div class="desc">{{ 'COACHING.selectCalendarDesc' | translate }}</div>
               </div>
             </div>
             <div class="calendar-picker">
@@ -125,7 +125,7 @@ import {
                 <mat-spinner diameter="20" />
               } @else {
                 <mat-form-field appearance="outline" class="picker-field">
-                  <mat-label>Select a calendar</mat-label>
+                  <mat-label>{{ 'COACHING.selectCoachCalendar' | translate }}</mat-label>
                   <mat-select [(ngModel)]="selectedCalendarId"
                               (ngModelChange)="onCalendarSelected($event)">
                     @for (cal of calendars(); track cal.id) {
@@ -135,9 +135,9 @@ import {
                 </mat-form-field>
                 <button mat-raised-button color="primary"
                         (click)="saveCalendar()" [disabled]="!selectedCalendarId || saving()">
-                  @if (saving()) { <mat-spinner diameter="18" /> } @else { Save Calendar }
+                  @if (saving()) { <mat-spinner diameter="18" /> } @else { {{ 'COACHING.saveCalendar' | translate }} }
                 </button>
-                <button mat-button (click)="changingCalendar.set(false)">Cancel</button>
+                <button mat-button (click)="changingCalendar.set(false)">{{ 'COMMON.cancel' | translate }}</button>
               }
             </div>
           }
@@ -150,15 +150,15 @@ import {
               </div>
               <div class="info">
                 <div class="label">
-                  Syncing to: {{ status()?.calendarName }}
-                  <span class="badge">Active</span>
+                  {{ 'COACHING.syncingTo' | translate }} {{ status()?.calendarName }}
+                  <span class="badge">{{ 'COMMON.active' | translate }}</span>
                 </div>
-                <div class="desc">New sessions will automatically appear in this calendar.</div>
+                <div class="desc">{{ 'COACHING.newSessionsAutoAppear' | translate }}</div>
               </div>
             </div>
             <div class="actions-row">
-              <a class="action-link" (click)="changeCalendar()">Change calendar</a>
-              <a class="action-link disconnect" (click)="disconnect()">Disconnect</a>
+              <a class="action-link" (click)="changeCalendar()">{{ 'COACHING.changeCalendar' | translate }}</a>
+              <a class="action-link disconnect" (click)="disconnect()">{{ 'BOOKING.disconnect' | translate }}</a>
             </div>
           }
         }
@@ -334,9 +334,9 @@ export class CalendarIntegrationComponent implements OnInit {
     const ref = this.dialog.open(ConfirmDialogComponent, {
       width: '420px',
       data: {
-        title: `Disconnect ${this.providerLabel()}`,
-        message: `This will stop syncing new sessions to ${this.providerLabel()}. Existing calendar events will remain.`,
-        confirmLabel: 'Disconnect',
+        title: this.translate.instant('COACHING.disconnectProvider', { provider: this.providerLabel() }),
+        message: this.translate.instant('COACHING.disconnectProviderMsg', { provider: this.providerLabel() }),
+        confirmLabel: this.translate.instant('BOOKING.disconnect'),
         confirmColor: 'warn',
         icon: 'link_off',
       },

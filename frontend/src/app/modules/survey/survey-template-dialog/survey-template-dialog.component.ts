@@ -16,7 +16,7 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatChipsModule } from '@angular/material/chips';
 import { ApiService } from '../../../core/api.service';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 interface SurveyTemplate {
   _id: string;
@@ -97,7 +97,7 @@ interface SurveyTemplate {
   template: `
     <h2 mat-dialog-title>
       <mat-icon>{{ isEdit() ? 'edit' : 'add_circle' }}</mat-icon>
-      {{ isEdit() ? 'Edit Intake Template' : 'New Intake Template' }}
+      {{ isEdit() ? ("SURVEY.editIntakeTemplate" | translate) : ("SURVEY.newIntakeTemplate" | translate) }}
     </h2>
 
     <mat-dialog-content>
@@ -111,13 +111,13 @@ interface SurveyTemplate {
           <!-- ══════════════════ TAB 1: IDENTITY ══════════════════ -->
           <mat-tab>
             <ng-template mat-tab-label>
-              <mat-icon class="tab-icon">info</mat-icon> Identity
+              <mat-icon class="tab-icon">info</mat-icon> {{ "SURVEY.tabIdentity" | translate }}
             </ng-template>
 
             <div class="tab-content">
 
               <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Template Title</mat-label>
+                <mat-label>{{ "SURVEY.templateTitleLabel" | translate }}</mat-label>
                 <input matInput formControlName="title"
                   placeholder="e.g. Thomas-Kilmann Conflict Mode Instrument (TKI)" />
               </mat-form-field>
@@ -153,19 +153,19 @@ interface SurveyTemplate {
                 <mat-form-field appearance="outline" class="half-width">
                   <mat-label>Module</mat-label>
                   <mat-select formControlName="moduleType">
-                    <mat-option value="conflict">Conflict Intelligence</mat-option>
-                    <mat-option value="neuroinclusion">Neuro-Inclusion Compass</mat-option>
-                    <mat-option value="succession">Leadership &amp; Succession</mat-option>
-                    <mat-option value="coaching">Coaching</mat-option>
+                    <mat-option value="conflict">{{ "SURVEY.conflictIntelligence" | translate }}</mat-option>
+                    <mat-option value="neuroinclusion">{{ "SURVEY.neuroInclusionCompass" | translate }}</mat-option>
+                    <mat-option value="succession">{{ "SURVEY.leadershipSuccession" | translate }}</mat-option>
+                    <mat-option value="coaching">{{ "SURVEY.coaching" | translate }}</mat-option>
                   </mat-select>
                 </mat-form-field>
 
                 <mat-form-field appearance="outline" class="half-width">
                   <mat-label>Intake Type</mat-label>
                   <mat-select formControlName="intakeType" (selectionChange)="onIntakeTypeChange($event.value)">
-                    <mat-option value="survey">Survey — self-completed</mat-option>
-                    <mat-option value="interview">Interview — coach-led</mat-option>
-                    <mat-option value="assessment">Assessment — coach-administered</mat-option>
+                    <mat-option value="survey">{{ "SURVEY.surveyTypeSelfCompleted" | translate }}</mat-option>
+                    <mat-option value="interview">{{ "SURVEY.interviewTypeCoachLed" | translate }}</mat-option>
+                    <mat-option value="assessment">{{ "SURVEY.assessmentTypeCoachAdmin" | translate }}</mat-option>
                   </mat-select>
                 </mat-form-field>
               </div>
@@ -183,9 +183,9 @@ interface SurveyTemplate {
 
               <div class="toggle-row">
                 <mat-slide-toggle formControlName="isActive" color="primary">
-                  Template is active
+                  {{ "SURVEY.templateIsActive" | translate }}
                 </mat-slide-toggle>
-                <span class="toggle-hint">Inactive templates are hidden from respondents and coach lists</span>
+                <span class="toggle-hint">{{ "SURVEY.templateIsActiveHint" | translate }}</span>
               </div>
 
             </div>
@@ -194,7 +194,7 @@ interface SurveyTemplate {
           <!-- ══════════════════ TAB 2: MEASUREMENT ══════════════════ -->
           <mat-tab>
             <ng-template mat-tab-label>
-              <mat-icon class="tab-icon">analytics</mat-icon> Measurement
+              <mat-icon class="tab-icon">analytics</mat-icon> {{ "SURVEY.tabMeasurement" | translate }}
             </ng-template>
 
             <div class="tab-content">
@@ -410,7 +410,7 @@ interface SurveyTemplate {
               <div class="questions-header">
                 <span class="qs-count">{{ questionsArray.length }} question{{ questionsArray.length !== 1 ? 's' : '' }}</span>
                 <button mat-stroked-button type="button" (click)="addQuestion()">
-                  <mat-icon>add</mat-icon> Add Question
+                  <mat-icon>add</mat-icon> {{ "SURVEY.addQuestion" | translate }}
                 </button>
               </div>
 
@@ -607,7 +607,7 @@ interface SurveyTemplate {
               </div>
 
               <button mat-stroked-button type="button" class="add-q-btn" (click)="addQuestion()">
-                <mat-icon>add</mat-icon> Add Another Question
+                <mat-icon>add</mat-icon> {{ "SURVEY.addAnotherQuestion" | translate }}
               </button>
 
             </div>
@@ -618,14 +618,14 @@ interface SurveyTemplate {
     </mat-dialog-content>
 
     <mat-dialog-actions align="end">
-      <button mat-button mat-dialog-close [disabled]="saving()">Cancel</button>
+      <button mat-button mat-dialog-close [disabled]="saving()">{{ "COMMON.cancel" | translate }}</button>
       <button mat-raised-button color="primary"
               (click)="save()" [disabled]="form.invalid || saving()">
         @if (saving()) {
           <mat-spinner diameter="18" />
         } @else {
           <mat-icon>{{ isEdit() ? 'save' : 'add_circle' }}</mat-icon>
-          {{ isEdit() ? 'Save Changes' : 'Create Template' }}
+          {{ isEdit() ? ("SURVEY.saveChanges" | translate) : ("SURVEY.createTemplate" | translate) }}
         }
       </button>
     </mat-dialog-actions>
@@ -795,6 +795,7 @@ export class SurveyTemplateDialogComponent implements OnInit {
   private api = inject(ApiService);
   private dialogRef = inject(MatDialogRef<SurveyTemplateDialogComponent>);
   private existingData = inject<SurveyTemplate | null>(MAT_DIALOG_DATA, { optional: true });
+  private translate = inject(TranslateService);
 
   form!: FormGroup;
   saving = signal(false);
@@ -1061,7 +1062,7 @@ export class SurveyTemplateDialogComponent implements OnInit {
     request.subscribe({
       next: (result) => { this.saving.set(false); this.dialogRef.close(result); },
       error: (err) => {
-        this.error.set(err.error?.error || 'Failed to save template.');
+        this.error.set(err.error?.error || this.translate.instant('SURVEY.saveFailed'));
         this.saving.set(false);
       },
     });

@@ -1,4 +1,5 @@
 import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses';
+import i18next from 'i18next';
 import { config } from '../config/env';
 
 // ─── Client ──────────────────────────────────────────────────────────────────
@@ -17,6 +18,12 @@ const ses = new SESClient({
 
 const FROM = config.aws.sesFromEmail || 'noreply@headsoft.net';
 const isDev = config.nodeEnv !== 'production';
+
+// ─── i18n helper ─────────────────────────────────────────────────────────────
+
+function getT(language: string) {
+  return i18next.getFixedT(language, 'emails');
+}
 
 // ─── Branded wrapper ──────────────────────────────────────────────────────────
 
@@ -110,27 +117,26 @@ export async function sendEmail(params: {
 // ─── Transactional templates ──────────────────────────────────────────────────
 
 export async function sendPasswordResetEmail(email: string, token: string, language = 'en'): Promise<void> {
+  const t = getT(language);
   const resetUrl = `${config.frontendUrl}/auth/reset-password?token=${token}`;
   await sendEmail({
     to: email,
-    subject: 'Reset your ARTES password',
-    html: brandedHtml('Reset Your Password', `
+    subject: t('general.resetPasswordSubject'),
+    html: brandedHtml(t('general.resetPasswordTitle'), `
       <h2 style="color:#1B2A47;margin:0 0 12px;font-size:22px;">
-        Reset Your Password
+        ${t('general.resetPasswordTitle')}
       </h2>
       <p style="color:#5a6a7e;margin:0 0 24px;line-height:1.6;">
-        We received a request to reset your password. Click the button below —
-        this link expires in <strong>1 hour</strong>.
+        ${t('general.resetPasswordBody')}
       </p>
       <a href="${resetUrl}"
          style="display:inline-block;background:#3A9FD6;color:#ffffff;
                 padding:14px 28px;border-radius:6px;text-decoration:none;
                 font-weight:600;font-size:15px;">
-        Reset Password
+        ${t('general.resetPasswordButton')}
       </a>
       <p style="color:#9aa5b4;margin:28px 0 0;font-size:13px;">
-        If you didn't request a password reset, you can safely ignore this email.
-        Your password won't change.
+        ${t('general.resetPasswordIgnore')}
       </p>
     `),
   });
@@ -143,26 +149,26 @@ export async function sendWelcomeEmail(params: {
   tempPassword?: string;
   language?: string;
 }): Promise<void> {
+  const t = getT(params.language || 'en');
   const loginUrl = `${config.frontendUrl}/auth/login`;
   const passwordLine = params.tempPassword
     ? `<p style="color:#5a6a7e;margin:0 0 8px;line-height:1.6;">
-         Temporary password: <strong style="font-family:monospace;
+         ${t('general.welcomeTempPassword')} <strong style="font-family:monospace;
          background:#f0f4f8;padding:2px 8px;border-radius:4px;">
          ${params.tempPassword}</strong>
-         &nbsp;(please change on first login)
+         &nbsp;${t('general.welcomeChangePwd')}
        </p>`
     : '';
 
   await sendEmail({
     to: params.email,
-    subject: `Welcome to ${params.orgName} on ARTES`,
-    html: brandedHtml('Welcome', `
+    subject: t('general.welcomeSubject', { orgName: params.orgName }),
+    html: brandedHtml(t('general.welcomeTitle', { firstName: params.firstName }), `
       <h2 style="color:#1B2A47;margin:0 0 12px;font-size:22px;">
-        Welcome, ${params.firstName}!
+        ${t('general.welcomeTitle', { firstName: params.firstName })}
       </h2>
       <p style="color:#5a6a7e;margin:0 0 16px;line-height:1.6;">
-        You've been added to <strong>${params.orgName}</strong> on ARTES.
-        Log in to get started.
+        ${t('general.welcomeBody', { orgName: params.orgName })}
       </p>
       <p style="color:#5a6a7e;margin:0 0 8px;line-height:1.6;">
         Email: <strong>${params.email}</strong>
@@ -172,7 +178,7 @@ export async function sendWelcomeEmail(params: {
          style="display:inline-block;background:#1B2A47;color:#ffffff;
                 padding:14px 28px;border-radius:6px;text-decoration:none;
                 font-weight:600;font-size:15px;margin-top:16px;">
-        Log In Now
+        ${t('general.welcomeButton')}
       </a>
     `),
   });
@@ -184,24 +190,23 @@ export async function sendIDPReadyEmail(params: {
   orgName: string;
   language?: string;
 }): Promise<void> {
+  const t = getT(params.language || 'en');
   const url = `${config.frontendUrl}/succession`;
   await sendEmail({
     to: params.email,
-    subject: 'Your Individual Development Plan is ready',
-    html: brandedHtml('IDP Ready', `
+    subject: t('general.idpReadySubject'),
+    html: brandedHtml(t('general.idpReadyTitle', { firstName: params.firstName }), `
       <h2 style="color:#1B2A47;margin:0 0 12px;font-size:22px;">
-        Your IDP is ready, ${params.firstName}!
+        ${t('general.idpReadyTitle', { firstName: params.firstName })}
       </h2>
       <p style="color:#5a6a7e;margin:0 0 24px;line-height:1.6;">
-        Your coach has generated a new AI-powered Individual Development Plan
-        using the GROW methodology. Log in to review your goals, milestones,
-        and action steps.
+        ${t('general.idpReadyBody')}
       </p>
       <a href="${url}"
          style="display:inline-block;background:#3A9FD6;color:#ffffff;
                 padding:14px 28px;border-radius:6px;text-decoration:none;
                 font-weight:600;font-size:15px;">
-        View My IDP
+        ${t('general.idpReadyButton')}
       </a>
     `),
   });
@@ -217,46 +222,46 @@ export async function sendPaymentReminderEmail(params: {
   isOverdue: boolean;
   language?: string;
 }): Promise<void> {
+  const t = getT(params.language || 'en');
   const billingUrl = `${config.frontendUrl}/billing`;
   const urgency = params.isOverdue
     ? `<p style="color:#dc2626;font-weight:600;margin:0 0 16px;font-size:15px;">
-         This invoice is ${params.daysOverdue} day${params.daysOverdue === 1 ? '' : 's'} overdue.
-         Please pay immediately to avoid service interruption.
+         ${t('general.paymentOverdueBody', { days: params.daysOverdue })}
        </p>`
     : `<p style="color:#f59e0b;font-weight:500;margin:0 0 16px;font-size:14px;">
-         Payment is due on ${params.dueDateFormatted}. Please ensure timely payment.
+         ${t('general.paymentDueBody', { date: params.dueDateFormatted })}
        </p>`;
 
   await sendEmail({
     to: params.email,
     subject: params.isOverdue
-      ? `[OVERDUE] Invoice ${params.invoiceNumber} — ${params.totalFormatted} past due`
-      : `Payment reminder — Invoice ${params.invoiceNumber} due ${params.dueDateFormatted}`,
-    html: brandedHtml('Payment Reminder', `
+      ? t('general.paymentOverdueSubject', { invoiceNumber: params.invoiceNumber, total: params.totalFormatted })
+      : t('general.paymentReminderSubject', { invoiceNumber: params.invoiceNumber, dueDate: params.dueDateFormatted }),
+    html: brandedHtml(params.isOverdue ? t('general.paymentOverdueTitle') : t('general.paymentReminderTitle'), `
       <h2 style="color:#1B2A47;margin:0 0 8px;font-size:22px;">
-        Payment ${params.isOverdue ? 'Overdue' : 'Reminder'}
+        ${params.isOverdue ? t('general.paymentOverdueTitle') : t('general.paymentReminderTitle')}
       </h2>
       <p style="color:#5a6a7e;margin:0 0 4px;line-height:1.6;">
-        <strong>Organization:</strong> ${params.orgName}
+        <strong>${t('general.organization')}:</strong> ${params.orgName}
       </p>
       <p style="color:#5a6a7e;margin:0 0 4px;line-height:1.6;">
-        <strong>Invoice:</strong> ${params.invoiceNumber}
+        <strong>${t('general.invoice')}:</strong> ${params.invoiceNumber}
       </p>
       <p style="color:#5a6a7e;margin:0 0 16px;line-height:1.6;">
-        <strong>Amount due:</strong> ${params.totalFormatted}
+        <strong>${t('general.amountDue')}:</strong> ${params.totalFormatted}
       </p>
       ${urgency}
       <a href="${billingUrl}"
          style="display:inline-block;background:${params.isOverdue ? '#dc2626' : '#3A9FD6'};color:#ffffff;
                 padding:14px 28px;border-radius:6px;text-decoration:none;
                 font-weight:600;font-size:15px;">
-        Pay Now
+        ${t('general.payNow')}
       </a>
       <p style="color:#9aa5b4;margin:20px 0 0;font-size:12px;">
-        If you have already paid, please disregard this message.
+        ${t('general.alreadyPaid')}
       </p>
     `),
-    text: `Payment ${params.isOverdue ? 'OVERDUE' : 'Reminder'}\n\nOrganization: ${params.orgName}\nInvoice: ${params.invoiceNumber}\nAmount: ${params.totalFormatted}\nDue: ${params.dueDateFormatted}\n\nPay at: ${billingUrl}`,
+    text: `${params.isOverdue ? t('general.paymentOverdueTitle') : t('general.paymentReminderTitle')}\n\n${t('general.organization')}: ${params.orgName}\n${t('general.invoice')}: ${params.invoiceNumber}\n${t('general.amountDue')}: ${params.totalFormatted}\n\n${billingUrl}`,
   });
 }
 
@@ -267,41 +272,40 @@ export async function sendSuspensionEmail(params: {
   invoiceNumber?: string;
   language?: string;
 }): Promise<void> {
+  const t = getT(params.language || 'en');
   const billingUrl = `${config.frontendUrl}/billing`;
   await sendEmail({
     to: params.email,
-    subject: `[Action Required] ${params.orgName} — Account suspended`,
-    html: brandedHtml('Account Suspended', `
+    subject: t('general.suspensionSubject', { orgName: params.orgName }),
+    html: brandedHtml(t('general.suspensionTitle'), `
       <h2 style="color:#dc2626;margin:0 0 8px;font-size:22px;">
-        Account Suspended
+        ${t('general.suspensionTitle')}
       </h2>
       <p style="color:#5a6a7e;margin:0 0 8px;line-height:1.6;">
-        Access to <strong>${params.orgName}</strong> on ARTES
-        has been suspended.
+        ${t('general.suspensionBody', { orgName: params.orgName })}
       </p>
       <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;
                   padding:14px 18px;margin:16px 0;">
         <p style="color:#dc2626;margin:0;font-weight:500;">
-          <strong>Reason:</strong> ${params.reason}
+          <strong>${t('general.suspensionReason')}:</strong> ${params.reason}
         </p>
       </div>
       ${params.invoiceNumber
         ? `<p style="color:#5a6a7e;margin:0 0 16px;line-height:1.6;">
-             Related invoice: <strong>${params.invoiceNumber}</strong>
+             ${t('general.suspensionRelatedInvoice')}: <strong>${params.invoiceNumber}</strong>
            </p>`
         : ''}
       <p style="color:#5a6a7e;margin:0 0 24px;line-height:1.6;">
-        To restore access, please settle the outstanding balance. Your data remains
-        safe and will be fully available once the account is reactivated.
+        ${t('general.suspensionRestore')}
       </p>
       <a href="${billingUrl}"
          style="display:inline-block;background:#dc2626;color:#ffffff;
                 padding:14px 28px;border-radius:6px;text-decoration:none;
                 font-weight:600;font-size:15px;">
-        Resolve Now
+        ${t('general.suspensionButton')}
       </a>
     `),
-    text: `Account Suspended\n\nOrganization: ${params.orgName}\nReason: ${params.reason}\n\nResolve at: ${billingUrl}`,
+    text: `${t('general.suspensionTitle')}\n\n${t('general.organization')}: ${params.orgName}\n${t('general.suspensionReason')}: ${params.reason}\n\n${billingUrl}`,
   });
 }
 
@@ -312,13 +316,14 @@ export async function sendMessageNotificationEmail(params: {
   preview: string;
   language?: string;
 }): Promise<void> {
+  const t = getT(params.language || 'en');
   const url = `${config.frontendUrl}/dashboard`;
   await sendEmail({
     to: params.email,
-    subject: `New message from ${params.fromName}`,
-    html: brandedHtml('New Message', `
+    subject: t('general.newMessageSubject', { fromName: params.fromName }),
+    html: brandedHtml(t('general.newMessageTitle', { fromName: params.fromName }), `
       <h2 style="color:#1B2A47;margin:0 0 12px;font-size:22px;">
-        New message from ${params.fromName}
+        ${t('general.newMessageTitle', { fromName: params.fromName })}
       </h2>
       <div style="background:#f7f9fc;border-left:4px solid #3A9FD6;
                   padding:14px 18px;border-radius:0 8px 8px 0;margin:0 0 24px;">
@@ -330,7 +335,7 @@ export async function sendMessageNotificationEmail(params: {
          style="display:inline-block;background:#1B2A47;color:#ffffff;
                 padding:14px 28px;border-radius:6px;text-decoration:none;
                 font-weight:600;font-size:15px;">
-        Open Messages
+        ${t('general.newMessageButton')}
       </a>
     `),
   });

@@ -61,12 +61,12 @@ const COMPOSITE_LABELS: Record<string, string> = {
     <div class="records-page">
       <div class="page-header">
         <div>
-          <h1>EQi Assessments</h1>
-          <p>Imported EQi 2.0 assessment records</p>
+          <h1>{{ "EQ.recordsTitle" | translate }}</h1>
+          <p>{{ "EQ.recordsSubtitle" | translate }}</p>
         </div>
         <div class="header-actions">
-          <a mat-stroked-button routerLink="/eq-import/audit"><mat-icon>receipt_long</mat-icon> Audit Log</a>
-          <a mat-raised-button color="primary" routerLink="/eq-import"><mat-icon>upload_file</mat-icon> Import New</a>
+          <a mat-stroked-button routerLink="/eq-import/audit"><mat-icon>receipt_long</mat-icon> {{ "EQ.auditLogBtn" | translate }}</a>
+          <a mat-raised-button color="primary" routerLink="/eq-import"><mat-icon>upload_file</mat-icon> {{ "EQ.importNewBtn" | translate }}</a>
         </div>
       </div>
 
@@ -78,11 +78,11 @@ const COMPOSITE_LABELS: Record<string, string> = {
         </app-empty-state>
       } @else {
         <div class="stats-bar">
-          <div class="stat-box"><div class="stat-num">{{ records().length }}</div><div class="stat-label">Total Imported</div></div>
-          <div class="stat-box"><div class="stat-num">{{ avgTotalEI() }}</div><div class="stat-label">Avg Total EI</div></div>
-          <div class="stat-box"><div class="stat-num">{{ modeCount('ANONYMIZED') }}</div><div class="stat-label">Anonymized</div></div>
-          <div class="stat-box"><div class="stat-num">{{ modeCount('PSEUDONYMIZED') }}</div><div class="stat-label">Pseudonymized</div></div>
-          <div class="stat-box"><div class="stat-num">{{ modeCount('IDENTIFIED') }}</div><div class="stat-label">Identified</div></div>
+          <div class="stat-box"><div class="stat-num">{{ records().length }}</div><div class="stat-label">{{ "EQ.totalImported" | translate }}</div></div>
+          <div class="stat-box"><div class="stat-num">{{ avgTotalEI() }}</div><div class="stat-label">{{ "EQ.avgTotalEI" | translate }}</div></div>
+          <div class="stat-box"><div class="stat-num">{{ modeCount('ANONYMIZED') }}</div><div class="stat-label">{{ "EQ.anonymized" | translate }}</div></div>
+          <div class="stat-box"><div class="stat-num">{{ modeCount('PSEUDONYMIZED') }}</div><div class="stat-label">{{ "EQ.pseudonymized" | translate }}</div></div>
+          <div class="stat-box"><div class="stat-num">{{ modeCount('IDENTIFIED') }}</div><div class="stat-label">{{ "EQ.identified" | translate }}</div></div>
         </div>
 
         <div class="records-grid">

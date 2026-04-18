@@ -20,23 +20,23 @@ import { TranslateModule } from '@ngx-translate/core';
     TranslateModule,
   ],
   template: `
-    <h2 mat-dialog-title><mat-icon>person_add</mat-icon> Create User — {{ data.orgName }}</h2>
+    <h2 mat-dialog-title><mat-icon>person_add</mat-icon> {{ "SYSADMIN.createUserTitle" | translate }} — {{ data.orgName }}</h2>
     <mat-dialog-content>
       @if (error()) { <div class="error-banner">{{ error() }}</div> }
       <div class="form-col">
         <div class="form-row">
-          <mat-form-field appearance="outline"><mat-label>First Name</mat-label>
+          <mat-form-field appearance="outline"><mat-label>{{ "SYSADMIN.firstName" | translate }}</mat-label>
             <input matInput [(ngModel)]="firstName" required /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>Last Name</mat-label>
+          <mat-form-field appearance="outline"><mat-label>{{ "SYSADMIN.lastName" | translate }}</mat-label>
             <input matInput [(ngModel)]="lastName" required /></mat-form-field>
         </div>
-        <mat-form-field appearance="outline" class="full-width"><mat-label>Email</mat-label>
+        <mat-form-field appearance="outline" class="full-width"><mat-label>{{ "SYSADMIN.email" | translate }}</mat-label>
           <input matInput [(ngModel)]="email" type="email" required /></mat-form-field>
-        <mat-form-field appearance="outline" class="full-width"><mat-label>Password</mat-label>
+        <mat-form-field appearance="outline" class="full-width"><mat-label>{{ "SYSADMIN.password" | translate }}</mat-label>
           <input matInput [(ngModel)]="password" type="password" required />
           <mat-hint>{{ "PROFILE.minChars" | translate }}</mat-hint>
         </mat-form-field>
-        <mat-form-field appearance="outline" class="full-width"><mat-label>Role</mat-label>
+        <mat-form-field appearance="outline" class="full-width"><mat-label>{{ "SYSADMIN.role" | translate }}</mat-label>
           <mat-select [(ngModel)]="role">
             <mat-option value="admin">Admin</mat-option>
             <mat-option value="hr_manager">HR Manager</mat-option>
@@ -48,12 +48,12 @@ import { TranslateModule } from '@ngx-translate/core';
       </div>
     </mat-dialog-content>
     <mat-dialog-actions align="end">
-      <button mat-button mat-dialog-close [disabled]="saving()">Cancel</button>
+      <button mat-button mat-dialog-close [disabled]="saving()">{{ "COMMON.cancel" | translate }}</button>
       <button mat-raised-button color="primary" (click)="save()"
               [disabled]="saving() || !firstName || !lastName || !email || !password || password.length < 8">
         @if (saving()) { <mat-spinner diameter="18" /> }
         @else { <mat-icon>person_add</mat-icon> }
-        Create User
+        {{ "SYSADMIN.createUserBtn" | translate }}
       </button>
     </mat-dialog-actions>
   `,

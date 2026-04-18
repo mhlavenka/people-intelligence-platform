@@ -13,7 +13,7 @@ export async function initI18n(): Promise<void> {
         loadPath: path.join(__dirname, '../locales/{{lng}}/{{ns}}.json'),
       },
       fallbackLng: 'en',
-      preload: ['en', 'fr'],
+      preload: ['en', 'fr', 'es'],
       ns: ['common', 'emails'],
       defaultNS: 'common',
       detection: {

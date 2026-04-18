@@ -81,6 +81,6 @@ export function requirePermission(...keys: string[]) {
       next();
       return;
     }
-    res.status(403).json({ error: 'Insufficient permissions' });
+    res.status(403).json({ error: req.t ? req.t('errors.insufficientPermissions') : 'Insufficient permissions' });
   };
 }
