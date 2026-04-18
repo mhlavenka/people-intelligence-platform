@@ -679,7 +679,7 @@ export class OrgEditDialogComponent implements OnInit {
   }
 
   formatPrice(cents: number): string {
-    return '$' + (cents / 100).toLocaleString('en-CA', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+    return '$' + (cents / 100).toLocaleString(localStorage.getItem('artes_language') || 'en', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
   }
 
   isModuleChecked(key: string): boolean {

@@ -27,7 +27,7 @@ export function startPreSessionIntakeJob(): void {
       for (const session of sessions) {
         try {
           const [coachee, coach, template] = await Promise.all([
-            User.findById(session.coacheeId).select('firstName lastName email'),
+            User.findById(session.coacheeId).select('firstName lastName email preferredLanguage'),
             User.findById(session.coachId).select('firstName lastName'),
             SurveyTemplate.findById(session.preSessionIntakeTemplateId)
               .select('title')
@@ -37,10 +37,11 @@ export function startPreSessionIntakeJob(): void {
           if (!coachee?.email || !template) continue;
 
           const coachName = coach ? `${coach.firstName} ${coach.lastName}` : 'your coach';
-          const sessionDate = session.date.toLocaleDateString('en-GB', {
+          const lang = coachee.preferredLanguage || 'en';
+          const sessionDate = session.date.toLocaleDateString(lang, {
             weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
           });
-          const sessionTime = session.date.toLocaleTimeString('en-GB', {
+          const sessionTime = session.date.toLocaleTimeString(lang, {
             hour: '2-digit', minute: '2-digit',
           });
           const intakeUrl = `${config.frontendUrl}/intake/${template._id}?sessionId=${session._id}`;

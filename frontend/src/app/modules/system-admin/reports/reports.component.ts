@@ -332,7 +332,7 @@ export class SaReportsComponent implements OnInit {
 
   formatMoney(cents: number): string {
     if (!cents) return '$0';
-    return 'CAD ' + new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD' }).format(cents / 100);
+    return 'CAD ' + new Intl.NumberFormat(localStorage.getItem('artes_language') || 'en', { style: 'currency', currency: 'CAD' }).format(cents / 100);
   }
 
   barHeight(revenue: number): number {

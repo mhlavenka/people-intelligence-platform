@@ -381,7 +381,7 @@ router.post(
       if (orgAdmins.length > 0) {
         const systemAdminId = new mongoose.Types.ObjectId(req.user!.userId);
         const orgOid = new mongoose.Types.ObjectId(invoice.organizationId.toString());
-        const dueDateStr2 = invoice.dueDate.toLocaleDateString('en-US', {
+        const dueDateStr2 = invoice.dueDate.toLocaleDateString(req.language || 'en', {
           year: 'numeric', month: 'long', day: 'numeric',
         });
 
@@ -416,17 +416,17 @@ router.post(
         )
         .join('');
 
-      const periodFrom = invoice.period.from.toLocaleDateString('en-US', {
+      const periodFrom = invoice.period.from.toLocaleDateString(req.language || 'en', {
         year: 'numeric',
         month: 'long',
         day: 'numeric',
       });
-      const periodTo = invoice.period.to.toLocaleDateString('en-US', {
+      const periodTo = invoice.period.to.toLocaleDateString(req.language || 'en', {
         year: 'numeric',
         month: 'long',
         day: 'numeric',
       });
-      const dueDateStr = invoice.dueDate.toLocaleDateString('en-US', {
+      const dueDateStr = invoice.dueDate.toLocaleDateString(req.language || 'en', {
         year: 'numeric',
         month: 'long',
         day: 'numeric',
@@ -616,7 +616,7 @@ router.post(
         orgName: org.name,
         invoiceNumber: invoice.invoiceNumber,
         totalFormatted: fmt(invoice.total),
-        dueDateFormatted: invoice.dueDate.toLocaleDateString('en-CA', {
+        dueDateFormatted: invoice.dueDate.toLocaleDateString(req.language || 'en', {
           year: 'numeric', month: 'long', day: 'numeric',
         }),
         daysOverdue,
@@ -670,7 +670,7 @@ router.post(
               orgName: org.name,
               invoiceNumber: invoice.invoiceNumber,
               totalFormatted: fmt(invoice.total),
-              dueDateFormatted: invoice.dueDate.toLocaleDateString('en-CA', {
+              dueDateFormatted: invoice.dueDate.toLocaleDateString(req.language || 'en', {
                 year: 'numeric', month: 'long', day: 'numeric',
               }),
               daysOverdue,

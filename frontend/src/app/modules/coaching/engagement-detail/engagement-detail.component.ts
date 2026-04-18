@@ -845,7 +845,7 @@ export class EngagementDetailComponent implements OnInit {
 
   dayHeaders = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
-  calMonthLabel = computed(() => this.currentMonth().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }));
+  calMonthLabel = computed(() => this.currentMonth().toLocaleDateString(localStorage.getItem('artes_language') || 'en', { month: 'long', year: 'numeric' }));
 
   calendarDays = computed(() => {
     const month = this.currentMonth();

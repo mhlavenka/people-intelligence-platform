@@ -257,10 +257,10 @@ export class AuthService {
     this.currentUser.set(res.user);
     this.scheduleTokenRefresh();
 
-    if (res.user.preferredLanguage) {
-      localStorage.setItem('artes_language', res.user.preferredLanguage);
-      this.translateService.use(res.user.preferredLanguage);
-    }
+    // Apply user's language preference (or default to English)
+    const lang = res.user.preferredLanguage || 'en';
+    localStorage.setItem('artes_language', lang);
+    this.translateService.use(lang);
   }
 
   /** Handle response from OAuth callback — stores tokens and user. */

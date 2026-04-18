@@ -359,7 +359,7 @@ export class PlansComponent implements OnInit {
 
   formatPrice(cents: number): string {
     if (cents === 0) return 'Custom';
-    return '$' + (cents / 100).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+    return '$' + (cents / 100).toLocaleString(localStorage.getItem('artes_language') || 'en', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
   }
 
   moduleColor(key: string): string {

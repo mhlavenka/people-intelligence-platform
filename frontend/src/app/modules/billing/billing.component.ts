@@ -1387,7 +1387,8 @@ export class BillingComponent implements OnInit {
 
   /** Format a value stored as cents (integer) to CAD string, e.g. 59900 → "CAD $599.00" */
   formatMoney(cents: number): string {
-    return 'CAD ' + new Intl.NumberFormat('en-CA', {
+    const locale = localStorage.getItem('artes_language') || 'en';
+    return 'CAD ' + new Intl.NumberFormat(locale, {
       style: 'currency',
       currency: 'CAD',
     }).format(cents / 100);
@@ -1408,11 +1409,12 @@ export class BillingComponent implements OnInit {
 
     const taxId = invoice.taxId ?? org?.taxId ?? '';
 
+    const loc = localStorage.getItem('artes_language') || 'en';
     const fmtDate = (iso: string) =>
-      new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+      new Date(iso).toLocaleDateString(loc, { year: 'numeric', month: 'long', day: 'numeric' });
 
     const fmtMoney = (cents: number) =>
-      new Intl.NumberFormat('en-US', { style: 'currency', currency: invoice.currency ?? 'USD' }).format(cents / 100);
+      new Intl.NumberFormat(loc, { style: 'currency', currency: invoice.currency ?? 'USD' }).format(cents / 100);
 
     const statusColors: Record<string, string> = {
       draft: '#6b7280', sent: '#3b82f6', paid: '#16a34a', overdue: '#ef4444', void: '#9ca3af',
@@ -1633,7 +1635,7 @@ export class BillingComponent implements OnInit {
     </div>
     <div class="footer-right">
       ${invoice.invoiceNumber}<br>
-      Generated ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+      Generated ${new Date().toLocaleDateString(loc, { year: 'numeric', month: 'long', day: 'numeric' })}
     </div>
   </div>
 

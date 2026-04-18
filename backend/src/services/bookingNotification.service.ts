@@ -153,8 +153,8 @@ export async function sendBookingConfirmation(
   cancelUrl: string,
   language = 'en',
 ): Promise<void> {
-  const clientDt = DateTime.fromJSDate(booking.startTime).setZone(booking.clientTimezone);
-  const coachDt = DateTime.fromJSDate(booking.startTime).setZone(booking.coachTimezone);
+  const clientDt = DateTime.fromJSDate(booking.startTime).setZone(booking.clientTimezone).setLocale(language);
+  const coachDt = DateTime.fromJSDate(booking.startTime).setZone(booking.coachTimezone).setLocale(language);
   const duration = Math.round(
     (booking.endTime.getTime() - booking.startTime.getTime()) / 60_000,
   );
@@ -247,8 +247,8 @@ export async function sendCancellationEmail(
   cancelledBy: 'client' | 'coach',
   language = 'en',
 ): Promise<void> {
-  const clientDt = DateTime.fromJSDate(booking.startTime).setZone(booking.clientTimezone);
-  const coachDt = DateTime.fromJSDate(booking.startTime).setZone(booking.coachTimezone);
+  const clientDt = DateTime.fromJSDate(booking.startTime).setZone(booking.clientTimezone).setLocale(language);
+  const coachDt = DateTime.fromJSDate(booking.startTime).setZone(booking.coachTimezone).setLocale(language);
   const byWhom = cancelledBy === 'client' ? booking.clientName : coachName;
 
   // METHOD:CANCEL ICS with sequence=1 so calendar clients supersede the
@@ -303,9 +303,9 @@ export async function sendRescheduleConfirmation(
   note?: string,
   language = 'en',
 ): Promise<void> {
-  const oldClientDt = DateTime.fromJSDate(oldStartTime).setZone(booking.clientTimezone);
-  const newClientDt = DateTime.fromJSDate(booking.startTime).setZone(booking.clientTimezone);
-  const newCoachDt = DateTime.fromJSDate(booking.startTime).setZone(booking.coachTimezone);
+  const oldClientDt = DateTime.fromJSDate(oldStartTime).setZone(booking.clientTimezone).setLocale(language);
+  const newClientDt = DateTime.fromJSDate(booking.startTime).setZone(booking.clientTimezone).setLocale(language);
+  const newCoachDt = DateTime.fromJSDate(booking.startTime).setZone(booking.coachTimezone).setLocale(language);
 
   const rscLink = booking.meetingLink || booking.googleMeetLink;
   const rscLabel = booking.calendarProvider === 'microsoft' ? 'Join Teams Meeting' : 'Join Google Meet';
@@ -402,7 +402,7 @@ export async function sendReminder(
   type: '24h' | '1h',
   language = 'en',
 ): Promise<void> {
-  const clientDt = DateTime.fromJSDate(booking.startTime).setZone(booking.clientTimezone);
+  const clientDt = DateTime.fromJSDate(booking.startTime).setZone(booking.clientTimezone).setLocale(language);
   const duration = Math.round(
     (booking.endTime.getTime() - booking.startTime.getTime()) / 60_000,
   );

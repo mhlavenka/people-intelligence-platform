@@ -374,13 +374,13 @@ export class PublicBookingComponent implements OnInit {
 
   monthLabel = computed(() => {
     const m = this.currentMonth();
-    return m.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    return m.toLocaleDateString(localStorage.getItem('artes_language') || 'en', { month: 'long', year: 'numeric' });
   });
 
   selectedDateLabel = computed(() => {
     if (!this.selectedDate()) return '';
     const d = new Date(this.selectedDate() + 'T12:00:00');
-    return d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+    return d.toLocaleDateString(localStorage.getItem('artes_language') || 'en', { weekday: 'long', month: 'long', day: 'numeric' });
   });
 
   slotsForSelectedDate = computed(() => {

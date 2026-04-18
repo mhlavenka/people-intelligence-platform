@@ -48,7 +48,7 @@ async function generateAndSendPostSessionForm(
     return;
   }
 
-  const sessionDate = session.date.toLocaleDateString('en-GB', {
+  const sessionDate = session.date.toLocaleDateString(language, {
     day: 'numeric', month: 'short', year: 'numeric',
   });
 
@@ -504,10 +504,10 @@ router.post(
         const coach = await User.findById(session.coachId).select('firstName lastName');
         if (coachee && coach && await isNotificationEnabled(session.coacheeId, 'sessionScheduled')) {
           const coachName = `${coach.firstName} ${coach.lastName}`;
-          const sessionDate = session.date.toLocaleDateString('en-GB', {
+          const sessionDate = session.date.toLocaleDateString(req.language || 'en', {
             weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
           });
-          const sessionTime = session.date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+          const sessionTime = session.date.toLocaleTimeString(req.language || 'en', { hour: '2-digit', minute: '2-digit' });
 
           sendEmail({
             to: coachee.email,
@@ -680,7 +680,7 @@ router.post(
         return;
       }
 
-      const sessionDate = session.date.toLocaleDateString('en-GB', {
+      const sessionDate = session.date.toLocaleDateString(req.language || 'en', {
         day: 'numeric', month: 'short', year: 'numeric',
       });
 

@@ -610,7 +610,7 @@ router.post(
             <td style="padding:8px 12px;border-bottom:1px solid #eef2f7;text-align:right;">${fmt(li.unitPrice)}</td>
             <td style="padding:8px 12px;border-bottom:1px solid #eef2f7;text-align:right;font-weight:600;">${fmt(li.amount)}</td>
           </tr>`).join('');
-        const dueStr = invoice.dueDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+        const dueStr = invoice.dueDate.toLocaleDateString(req.language || 'en', { year: 'numeric', month: 'long', day: 'numeric' });
         const html = `
           <div style="font-family:Arial,sans-serif;color:#1B2A47;max-width:640px;margin:0 auto;">
             <h2 style="margin:0 0 12px;">Invoice ${invoice.invoiceNumber}</h2>

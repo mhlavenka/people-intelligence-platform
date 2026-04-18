@@ -148,7 +148,7 @@ export class CoachingCalendarComponent implements OnInit {
 
   monthLabel = computed(() => {
     const d = this.currentMonth();
-    return d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    return d.toLocaleDateString(localStorage.getItem('artes_language') || 'en', { month: 'long', year: 'numeric' });
   });
 
   calendarDays = computed<CalendarDay[]>(() => {

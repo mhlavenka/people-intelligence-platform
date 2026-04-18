@@ -524,7 +524,7 @@ export class ConflictDetailDialogComponent implements OnInit {
     const rcBg: Record<string, string> = { low: 'rgba(39,196,160,0.15)', medium: 'rgba(240,165,0,0.15)', high: 'rgba(232,108,58,0.15)', critical: 'rgba(229,62,62,0.15)' };
     const color = rc[d.riskLevel] ?? '#9aa5b4';
     const colorBg = rcBg[d.riskLevel] ?? '#f0f4f8';
-    const date = new Date(d.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    const date = new Date(d.createdAt).toLocaleDateString(localStorage.getItem('artes_language') || 'en', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
     const subHtml = this.subAnalyses().map((s) => {
       const sc = rc[s.riskLevel] ?? '#9aa5b4';

@@ -384,7 +384,7 @@ export class CoachingDashboardComponent implements OnInit {
 
   dayHeaders = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
-  monthLabel = computed(() => this.currentMonth().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }));
+  monthLabel = computed(() => this.currentMonth().toLocaleDateString(localStorage.getItem('artes_language') || 'en', { month: 'long', year: 'numeric' }));
 
   calendarDays = computed<CalendarDay[]>(() => {
     const month = this.currentMonth();

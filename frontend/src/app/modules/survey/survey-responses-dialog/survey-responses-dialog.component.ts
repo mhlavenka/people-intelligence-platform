@@ -446,7 +446,7 @@ export class SurveyResponsesDialogComponent implements OnInit {
   private buildDateRange(responses: RawResponse[]): string {
     if (!responses.length) return '—';
     const times = responses.map((r) => new Date(r.submittedAt).getTime());
-    const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+    const fmt = (d: Date) => d.toLocaleDateString(localStorage.getItem('artes_language') || 'en', { day: 'numeric', month: 'short', year: 'numeric' });
     const earliest = new Date(Math.min(...times));
     const latest   = new Date(Math.max(...times));
     return earliest.getTime() === latest.getTime() ? fmt(earliest) : `${fmt(earliest)} – ${fmt(latest)}`;
