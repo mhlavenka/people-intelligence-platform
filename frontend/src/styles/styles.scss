@@ -428,6 +428,9 @@ a {
 // Card border radius follows theme
 .mat-mdc-card { border-radius: var(--artes-radius) !important; }
 
+// Hide the floating reCAPTCHA v3 badge — inline attribution is shown on forms instead
+.grecaptcha-badge { visibility: hidden !important; }
+
 // Ensure mat-icon-button icons are always vertically centered
 .mat-mdc-icon-button {
   display: inline-flex !important;

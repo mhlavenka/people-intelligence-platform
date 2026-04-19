@@ -137,6 +137,7 @@
     "hasAccount": "Already have an account?",
     "resetPassword": "Reset password",
     "backToLogin": "Back to sign in",
+    "recaptchaNotice": "Protected by reCAPTCHA · <a href=\"https://policies.google.com/privacy\" target=\"_blank\">Privacy</a> · <a href=\"https://policies.google.com/terms\" target=\"_blank\">Terms</a>",
     "tagline": "People Intelligence Platform",
     "taglineSub": "AI-powered insights for coaching, conflict resolution, neuroinclusion, and leadership development.",
     "welcomeBack": "Welcome back",

@@ -137,6 +137,7 @@
     "hasAccount": "¿Ya tiene una cuenta?",
     "resetPassword": "Restablecer contraseña",
     "backToLogin": "Volver a iniciar sesión",
+    "recaptchaNotice": "Protegido por reCAPTCHA · <a href=\"https://policies.google.com/privacy\" target=\"_blank\">Privacidad</a> · <a href=\"https://policies.google.com/terms\" target=\"_blank\">Términos</a>",
     "tagline": "Plataforma de Inteligencia de Personas",
     "taglineSub": "Perspectivas impulsadas por IA para coaching, resolución de conflictos, neuroinclusión y desarrollo de liderazgo.",
     "welcomeBack": "Bienvenido de nuevo",

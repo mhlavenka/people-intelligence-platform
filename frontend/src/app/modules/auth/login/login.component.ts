@@ -395,6 +395,7 @@ const MODULE_SLIDES: ModuleSlide[] = [
             }
           </form>
 
+          <div class="recaptcha-notice" [innerHTML]="'AUTH.recaptchaNotice' | translate"></div>
           <div class="auth-brand-footer mobile-only">
             <p><a href="https://www.headsoft.net" target="_blank"><img class="icon-logo" src="assets/headsoft-logo-black.jpeg"/>HeadSoft Tech</a> | <a href="https://www.helenacoaching.com" target="_blank"><img class="icon-logo" src="assets/Helena-H-Icon_transparent-1024-px.png"/>Helena Coaching</a></p>
             <div class="legal-bar">
@@ -715,6 +716,11 @@ const MODULE_SLIDES: ModuleSlide[] = [
       }
       .card-header { margin-bottom: 20px; h2 { font-size: 20px; } }
       .mobile-only { display: block; }
+    }
+
+    .recaptcha-notice {
+      text-align: center; font-size: 11px; color: #9aa5b4; margin-top: 12px;
+      ::ng-deep a { color: #9aa5b4; text-decoration: underline; }
     }
   `],
 })

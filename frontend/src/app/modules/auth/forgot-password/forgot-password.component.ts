@@ -35,6 +35,7 @@ import { RecaptchaService } from '../../../core/recaptcha.service';
         }
 
         <div class="auth-links"><a routerLink="/auth/login">{{ 'AUTH.backToLogin' | translate }}</a></div>
+        <div class="recaptcha-notice" [innerHTML]="'AUTH.recaptchaNotice' | translate"></div>
       </div>
     </div>
   `,
@@ -46,6 +47,10 @@ import { RecaptchaService } from '../../../core/recaptcha.service';
     .success-banner { background: #f0fdf4; border: 1px solid #86efac; color: #16a34a; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; }
     .full-width { width: 100%; }
     .auth-links { text-align: center; margin-top: 16px; a { color: var(--artes-accent); font-size: 14px; } }
+    .recaptcha-notice {
+      text-align: center; font-size: 11px; color: #9aa5b4; margin-top: 12px;
+      ::ng-deep a { color: #9aa5b4; text-decoration: underline; }
+    }
   `],
 })
 export class ForgotPasswordComponent {

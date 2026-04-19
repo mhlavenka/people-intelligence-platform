@@ -137,6 +137,7 @@
     "hasAccount": "Vous avez déjà un compte ?",
     "resetPassword": "Réinitialiser le mot de passe",
     "backToLogin": "Retour à la connexion",
+    "recaptchaNotice": "Protégé par reCAPTCHA · <a href=\"https://policies.google.com/privacy\" target=\"_blank\">Confidentialité</a> · <a href=\"https://policies.google.com/terms\" target=\"_blank\">Conditions</a>",
     "tagline": "Plateforme d'intelligence humaine",
     "taglineSub": "Des analyses basées sur l'IA pour le coaching, la résolution de conflits, la neuroinclusion et le développement du leadership.",
     "welcomeBack": "Bon retour",

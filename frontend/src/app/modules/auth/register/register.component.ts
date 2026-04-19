@@ -102,6 +102,7 @@ import { RecaptchaService } from '../../../core/recaptcha.service';
         <div class="auth-links">
           <a routerLink="/auth/login">{{ 'AUTH.hasAccount' | translate }} {{ 'AUTH.signIn' | translate }}</a>
         </div>
+        <div class="recaptcha-notice" [innerHTML]="'AUTH.recaptchaNotice' | translate"></div>
       </div>
     </div>
   `,
@@ -151,6 +152,10 @@ import { RecaptchaService } from '../../../core/recaptcha.service';
     .name-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .step-actions { display: flex; gap: 12px; align-items: center; margin-top: 8px; }
     .auth-links { text-align: center; margin-top: 16px; font-size: 14px; a { color: var(--artes-accent); } }
+    .recaptcha-notice {
+      text-align: center; font-size: 11px; color: #9aa5b4; margin-top: 12px;
+      ::ng-deep a { color: #9aa5b4; text-decoration: underline; }
+    }
   `],
 })
 export class RegisterComponent {

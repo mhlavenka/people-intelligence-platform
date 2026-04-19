@@ -160,6 +160,7 @@ import { RecaptchaService } from '../../../core/recaptcha.service';
                     @if (submitting()) { <mat-spinner diameter="20" /> }
                     {{ 'BOOKING.confirmBooking' | translate }}
                   </button>
+                  <div class="recaptcha-notice" [innerHTML]="'AUTH.recaptchaNotice' | translate"></div>
                 </form>
               }
             } @else {
@@ -276,6 +277,10 @@ import { RecaptchaService } from '../../../core/recaptcha.service';
     .submit-btn {
       margin-top: 4px; padding: 10px 0; font-size: 15px;
       mat-spinner { display: inline-block; margin-right: 8px; }
+    }
+    .recaptcha-notice {
+      text-align: center; font-size: 11px; color: #9aa5b4; margin-top: 10px;
+      ::ng-deep a { color: #9aa5b4; text-decoration: underline; }
     }
 
     @media (max-width: 768px) {
