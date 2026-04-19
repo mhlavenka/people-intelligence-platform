@@ -3,6 +3,7 @@ import rateLimit from 'express-rate-limit';
 import {
   authenticateToken, optionalAuth, requirePermission, AuthRequest,
 } from '../middleware/auth.middleware';
+import { verifyRecaptcha } from '../middleware/recaptcha.middleware';
 import { tenantResolver } from '../middleware/tenant.middleware';
 import { AvailabilityConfig, IAvailabilityConfig } from '../models/AvailabilityConfig.model';
 import { BookingSettings } from '../models/BookingSettings.model';
@@ -105,6 +106,7 @@ publicBookingRouter.get('/:coachSlug/slots', async (req: Request, res: Response,
 publicBookingRouter.post(
   '/:coachSlug',
   optionalAuth,
+  verifyRecaptcha,
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const { coachSlug } = req.params;

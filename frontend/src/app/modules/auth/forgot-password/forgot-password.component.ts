@@ -8,6 +8,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { TranslateModule } from '@ngx-translate/core';
 import { ApiService } from '../../../core/api.service';
+import { RecaptchaService } from '../../../core/recaptcha.service';
 
 @Component({
   selector: 'app-forgot-password',
@@ -52,15 +53,20 @@ export class ForgotPasswordComponent {
   loading = signal(false);
   sent = signal(false);
 
-  constructor(private fb: FormBuilder, private api: ApiService) {
+  constructor(private fb: FormBuilder, private api: ApiService, private recaptcha: RecaptchaService) {
     this.form = this.fb.group({ email: ['', [Validators.required, Validators.email]] });
   }
 
   onSubmit(): void {
     if (this.form.invalid) return;
     this.loading.set(true);
-    this.api.post('/auth/forgot-password', this.form.value).subscribe({
-      next: () => { this.sent.set(true); this.loading.set(false); },
+    this.recaptcha.execute('forgot_password').subscribe({
+      next: (token) => {
+        this.api.post('/auth/forgot-password', { ...this.form.value, recaptchaToken: token }).subscribe({
+          next: () => { this.sent.set(true); this.loading.set(false); },
+          error: () => { this.sent.set(true); this.loading.set(false); },
+        });
+      },
       error: () => { this.sent.set(true); this.loading.set(false); },
     });
   }

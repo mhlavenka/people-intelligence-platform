@@ -191,15 +191,16 @@ export class AuthService {
     lastName: string;
     email: string;
     password: string;
+    recaptchaToken?: string;
   }): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${environment.apiUrl}/auth/register`, data).pipe(
       tap((res) => this.storeAuth(res))
     );
   }
 
-  login(email: string, password: string): Observable<LoginResponse> {
+  login(email: string, password: string, recaptchaToken?: string): Observable<LoginResponse> {
     return this.http
-      .post<LoginResponse>(`${environment.apiUrl}/auth/login`, { email, password })
+      .post<LoginResponse>(`${environment.apiUrl}/auth/login`, { email, password, recaptchaToken })
       .pipe(tap((res) => { if (res.accessToken) this.storeAuth(res as AuthResponse); }));
   }
 

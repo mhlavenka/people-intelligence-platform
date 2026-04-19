@@ -11,6 +11,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AuthService } from '../../../core/auth.service';
 import { ApiService } from '../../../core/api.service';
+import { RecaptchaService } from '../../../core/recaptcha.service';
 import { environment } from '../../../../environments/environment';
 
 interface OAuthProviders {
@@ -739,6 +740,7 @@ export class LoginComponent implements OnInit, OnDestroy {
     private api: ApiService,
     private router: Router,
     public translate: TranslateService,
+    private recaptcha: RecaptchaService,
   ) {
     this.form = this.fb.group({
       email:    ['', [Validators.required, Validators.email]],
@@ -816,18 +818,26 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.error.set('');
 
     const { email, password } = this.form.value;
-    this.authService.login(email, password).subscribe({
-      next: (res) => {
-        this.loading.set(false);
-        if (res.requiresTwoFactor) {
-          this.tempToken = res.tempToken!;
-          this.twoFactorStep.set(true);
-        } else {
-          this.router.navigate(['/dashboard']);
-        }
+    this.recaptcha.execute('login').subscribe({
+      next: (token) => {
+        this.authService.login(email, password, token).subscribe({
+          next: (res) => {
+            this.loading.set(false);
+            if (res.requiresTwoFactor) {
+              this.tempToken = res.tempToken!;
+              this.twoFactorStep.set(true);
+            } else {
+              this.router.navigate(['/dashboard']);
+            }
+          },
+          error: (err) => {
+            this.error.set(err.error?.error || this.translate.instant('AUTH.loginFailed'));
+            this.loading.set(false);
+          },
+        });
       },
-      error: (err) => {
-        this.error.set(err.error?.error || this.translate.instant('AUTH.loginFailed'));
+      error: () => {
+        this.error.set(this.translate.instant('AUTH.loginFailed'));
         this.loading.set(false);
       },
     });

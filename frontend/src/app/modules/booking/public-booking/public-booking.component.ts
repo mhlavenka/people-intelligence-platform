@@ -20,6 +20,7 @@ import {
   AvailableSlot,
   BookingResult,
 } from '../booking.service';
+import { RecaptchaService } from '../../../core/recaptcha.service';
 
 @Component({
   selector: 'app-public-booking',
@@ -399,6 +400,7 @@ export class PublicBookingComponent implements OnInit {
     private snackBar: MatSnackBar,
     private auth: AuthService,
     private translate: TranslateService,
+    private recaptcha: RecaptchaService,
   ) {}
 
   /** Optional inputs for dialog/host embedding — when set, skip route reads. */
@@ -493,39 +495,45 @@ export class PublicBookingComponent implements OnInit {
 
     this.submitting.set(true);
 
-    this.publicBookingSvc.createBooking(this.coachSlug, {
-      startTime: slot.startUtc,
-      endTime: slot.endUtc,
-      clientName: `${this.firstName} ${this.lastName}`,
-      clientEmail: this.email,
-      clientPhone: this.phone || undefined,
-      topic: this.topic || undefined,
-      clientTimezone: this.clientTimezone,
-    }).subscribe({
-      next: (result: BookingResult) => {
-        this.submitting.set(false);
-        if (this.dialogMode) {
-          this.booked.emit(result);
-        } else {
-          this.router.navigate(['/book', this.coachSlug, 'confirmed', result._id]);
-        }
+    this.recaptcha.execute('booking').subscribe({
+      next: (recaptchaToken) => {
+        this.publicBookingSvc.createBooking(this.coachSlug, {
+          startTime: slot.startUtc,
+          endTime: slot.endUtc,
+          clientName: `${this.firstName} ${this.lastName}`,
+          clientEmail: this.email,
+          clientPhone: this.phone || undefined,
+          topic: this.topic || undefined,
+          clientTimezone: this.clientTimezone,
+          recaptchaToken,
+        }).subscribe({
+          next: (result: BookingResult) => {
+            this.submitting.set(false);
+            if (this.dialogMode) {
+              this.booked.emit(result);
+            } else {
+              this.router.navigate(['/book', this.coachSlug, 'confirmed', result._id]);
+            }
+          },
+          error: (err: HttpErrorResponse) => {
+            this.submitting.set(false);
+            if (err.status === 409) {
+              const serverMsg = err.error?.error as string | undefined;
+              const msg = serverMsg || this.translate.instant('BOOKING.slotJustBooked');
+              this.snackBar.open(msg, this.translate.instant('COMMON.ok'), { duration: 6000 });
+              if (!serverMsg) {
+                this.selectedSlot.set(null);
+                this.loadSlots();
+              }
+            } else {
+              this.snackBar.open(this.translate.instant('BOOKING.somethingWentWrong'), this.translate.instant('COMMON.ok'), { duration: 5000 });
+            }
+          },
+        });
       },
-      error: (err: HttpErrorResponse) => {
+      error: () => {
         this.submitting.set(false);
-        if (err.status === 409) {
-          // Could be a slot race OR an engagement quota block. The server
-          // message is meaningful for the latter; fall back to the slot
-          // copy when no explicit reason was returned.
-          const serverMsg = err.error?.error as string | undefined;
-          const msg = serverMsg || this.translate.instant('BOOKING.slotJustBooked');
-          this.snackBar.open(msg, this.translate.instant('COMMON.ok'), { duration: 6000 });
-          if (!serverMsg) {
-            this.selectedSlot.set(null);
-            this.loadSlots();
-          }
-        } else {
-          this.snackBar.open(this.translate.instant('BOOKING.somethingWentWrong'), this.translate.instant('COMMON.ok'), { duration: 5000 });
-        }
+        this.snackBar.open(this.translate.instant('BOOKING.somethingWentWrong'), this.translate.instant('COMMON.ok'), { duration: 5000 });
       },
     });
   }

@@ -55,6 +55,8 @@
 
     "bookingPageNotFound": "Booking page not found",
     "fromToRequired": "from and to query params required",
+    "recaptchaRequired": "Security verification is required",
+    "recaptchaFailed": "Security verification failed. Please try again.",
     "bookingFieldsRequired": "startTime, endTime, clientName, and clientEmail are required",
     "bookingQuotaExhausted": "Booking quota exhausted",
     "bookingNotFound": "Booking not found",

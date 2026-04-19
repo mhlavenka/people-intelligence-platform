@@ -50,6 +50,10 @@ export const config = {
     webhooksEnabled: process.env['BOOKING_WEBHOOKS_ENABLED'] === 'true',
     publicApiBaseUrl: process.env['PUBLIC_API_BASE_URL'] || process.env['API_BASE_URL'] || '',
   },
+  recaptcha: {
+    secretKey: process.env['RECAPTCHA_SECRET_KEY'] || '',
+    minScore: parseFloat(process.env['RECAPTCHA_MIN_SCORE'] || '0.5'),
+  },
   webauthn: {
     rpName: process.env['WEBAUTHN_RP_NAME'] || 'Artes Hub',
     rpId: process.env['WEBAUTHN_RP_ID'] || new URL(process.env['FRONTEND_URL'] || 'http://localhost:4200').hostname,

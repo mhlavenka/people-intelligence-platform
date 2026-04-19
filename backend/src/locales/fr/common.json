@@ -55,6 +55,8 @@
 
     "bookingPageNotFound": "Page de réservation introuvable",
     "fromToRequired": "Les paramètres from et to sont requis",
+    "recaptchaRequired": "La vérification de sécurité est requise",
+    "recaptchaFailed": "La vérification de sécurité a échoué. Veuillez réessayer.",
     "bookingFieldsRequired": "startTime, endTime, clientName et clientEmail sont requis",
     "bookingQuotaExhausted": "Quota de réservation épuisé",
     "bookingNotFound": "Réservation introuvable",

@@ -55,6 +55,8 @@
 
     "bookingPageNotFound": "Página de reserva no encontrada",
     "fromToRequired": "Se requieren los parámetros from y to",
+    "recaptchaRequired": "Se requiere verificación de seguridad",
+    "recaptchaFailed": "La verificación de seguridad falló. Inténtelo de nuevo.",
     "bookingFieldsRequired": "Se requieren startTime, endTime, clientName y clientEmail",
     "bookingQuotaExhausted": "Cuota de reservas agotada",
     "bookingNotFound": "Reserva no encontrada",

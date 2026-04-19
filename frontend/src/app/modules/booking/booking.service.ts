@@ -332,6 +332,7 @@ export class PublicBookingService {
     clientPhone?: string;
     topic?: string;
     clientTimezone?: string;
+    recaptchaToken?: string;
   }): Observable<BookingResult> {
     return this.api.post<BookingResult>(`/public/booking/${coachSlug}`, data);
   }

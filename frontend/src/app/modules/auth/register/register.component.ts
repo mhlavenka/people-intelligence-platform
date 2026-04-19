@@ -10,6 +10,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatStepperModule } from '@angular/material/stepper';
 import { TranslateModule } from '@ngx-translate/core';
 import { AuthService } from '../../../core/auth.service';
+import { RecaptchaService } from '../../../core/recaptcha.service';
 
 @Component({
   selector: 'app-register',
@@ -163,7 +164,8 @@ export class RegisterComponent {
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private recaptcha: RecaptchaService,
   ) {
     this.form = this.fb.group({
       org: this.fb.group({
@@ -185,10 +187,18 @@ export class RegisterComponent {
     this.loading.set(true);
     this.error.set('');
     const { org, admin } = this.form.value;
-    this.authService.register({ ...org, ...admin }).subscribe({
-      next: () => this.router.navigate(['/dashboard']),
-      error: (err) => {
-        this.error.set(err.error?.error || 'Registration failed');
+    this.recaptcha.execute('register').subscribe({
+      next: (token) => {
+        this.authService.register({ ...org, ...admin, recaptchaToken: token }).subscribe({
+          next: () => this.router.navigate(['/dashboard']),
+          error: (err) => {
+            this.error.set(err.error?.error || 'Registration failed');
+            this.loading.set(false);
+          },
+        });
+      },
+      error: () => {
+        this.error.set('Registration failed');
         this.loading.set(false);
       },
     });
