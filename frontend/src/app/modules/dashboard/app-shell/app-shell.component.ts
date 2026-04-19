@@ -815,9 +815,10 @@ export class AppShellComponent implements OnInit, OnDestroy {
       width: '640px',
       height: '80vh',
       panelClass: 'hub-dialog',
+      data: { onReadChange: () => this.loadUnreadCount() },
     });
-    ref.afterClosed().subscribe((hadUnread: boolean) => {
-      if (hadUnread) this.loadUnreadCount();
+    ref.afterClosed().subscribe(() => {
+      this.loadUnreadCount();
     });
   }
 

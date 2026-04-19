@@ -1,8 +1,8 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, signal, computed, Inject, Optional } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -70,7 +70,7 @@ interface NotificationDoc {
       <!-- Header -->
       <div class="hub-header">
         <h2>{{ "HUB.title" | translate }}</h2>
-        <button class="close-btn" (click)="dialogRef.close(unreadOnOpen > 0)">
+        <button class="close-btn" (click)="dialogRef.close()">
           <mat-icon>close</mat-icon>
         </button>
       </div>
@@ -118,9 +118,12 @@ interface NotificationDoc {
                         <div class="notif-text">{{ n.body }}</div>
                         <div class="notif-time">{{ n.createdAt | date:'MMM d, h:mm a' }}</div>
                       </div>
-                      @if (!n.isRead) {
-                        <div class="notif-dot"></div>
-                      }
+                      <button class="toggle-read-btn"
+                              [matTooltip]="(n.isRead ? 'HUB.markUnread' : 'HUB.markRead') | translate"
+                              matTooltipShowDelay="300"
+                              (click)="toggleNotifRead(n, $event)">
+                        <mat-icon>{{ n.isRead ? 'mark_email_unread' : 'mark_email_read' }}</mat-icon>
+                      </button>
                     </button>
                   }
                 </div>
@@ -193,6 +196,7 @@ interface NotificationDoc {
                 <div class="conversation-list">
                   @for (c of conversations(); track c.partner._id) {
                     <button class="conversation-item"
+                            [class.unread]="c.unreadCount > 0"
                             (click)="openThread(c)">
                       <app-avatar [firstName]="c.partner.firstName" [lastName]="c.partner.lastName" [size]="38" />
                       <div class="conv-info">
@@ -205,6 +209,12 @@ interface NotificationDoc {
                         <div class="conv-preview">{{ c.lastMsg.content | slice:0:60 }}</div>
                       </div>
                       <div class="conv-time">{{ c.lastMsg.createdAt | date:'MMM d' }}</div>
+                      <button class="toggle-read-btn"
+                              [matTooltip]="(c.unreadCount > 0 ? 'HUB.markRead' : 'HUB.markUnread') | translate"
+                              matTooltipShowDelay="300"
+                              (click)="toggleConvRead(c, $event)">
+                        <mat-icon>{{ c.unreadCount > 0 ? 'mark_email_read' : 'mark_email_unread' }}</mat-icon>
+                      </button>
                     </button>
                   }
                 </div>
@@ -336,6 +346,7 @@ interface NotificationDoc {
       border-bottom: 1px solid #f0f4f8;
       transition: background 0.12s;
       &:hover { background: #f8fbff; }
+      &.unread { background: beige; }
     }
 
 
@@ -435,7 +446,7 @@ interface NotificationDoc {
       text-align: left; width: 100%;
       border-bottom: 1px solid #f0f4f8; transition: background 0.12s;
       &:hover { background: #f8fbff; }
-      &.unread { background: #f0f8ff; }
+      &.unread { background: beige; }
     }
     .notif-icon {
       width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
@@ -451,7 +462,14 @@ interface NotificationDoc {
     .notif-title { font-size: 13px; font-weight: 600; color: var(--artes-primary); margin-bottom: 2px; }
     .notif-text  { font-size: 12px; color: #5a6a7e; line-height: 1.4; margin-bottom: 4px; }
     .notif-time  { font-size: 11px; color: #9aa5b4; }
-    .notif-dot   { width: 8px; height: 8px; border-radius: 50%; background: var(--artes-accent); flex-shrink: 0; margin-top: 6px; }
+    .toggle-read-btn {
+      display: flex; align-items: center; justify-content: center;
+      width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+      background: none; border: none; cursor: pointer; color: #bfc8d4;
+      transition: background 0.12s, color 0.12s;
+      mat-icon { font-size: 17px; width: 17px; height: 17px; }
+      &:hover { background: #eef2f7; color: var(--artes-accent); }
+    }
 
     /* Shared */
     .center-spinner { display: flex; justify-content: center; padding: 48px; }
@@ -492,6 +510,7 @@ export class MessageHubDialogComponent implements OnInit {
     public dialogRef: MatDialogRef<MessageHubDialogComponent>,
     private api: ApiService,
     private router: Router,
+    @Optional() @Inject(MAT_DIALOG_DATA) private data?: { onReadChange?: () => void },
   ) {}
 
   ngOnInit(): void {
@@ -601,9 +620,16 @@ export class MessageHubDialogComponent implements OnInit {
     });
   }
 
+  private notifyReadChange(): void {
+    this.data?.onReadChange?.();
+  }
+
   markAllRead(): void {
     this.api.put('/hub/notifications/read-all', {}).subscribe({
-      next: () => this.notifications.update((list) => list.map((n) => ({ ...n, isRead: true }))),
+      next: () => {
+        this.notifications.update((list) => list.map((n) => ({ ...n, isRead: true })));
+        this.notifyReadChange();
+      },
     });
   }
 
@@ -613,11 +639,42 @@ export class MessageHubDialogComponent implements OnInit {
       this.notifications.update((list) =>
         list.map((x) => (x._id === n._id ? { ...x, isRead: true } : x))
       );
+      this.notifyReadChange();
     }
     if (n.link) {
-      this.dialogRef.close(true);
+      this.dialogRef.close();
       this.router.navigate([n.link]);
     }
+  }
+
+  toggleNotifRead(n: NotificationDoc, event: Event): void {
+    event.stopPropagation();
+    const newRead = !n.isRead;
+    this.api.put(`/hub/notifications/${n._id}/read`, { isRead: newRead }).subscribe({
+      next: () => {
+        this.notifications.update((list) =>
+          list.map((x) => (x._id === n._id ? { ...x, isRead: newRead } : x))
+        );
+        this.notifyReadChange();
+      },
+    });
+  }
+
+  toggleConvRead(c: Conversation, event: Event): void {
+    event.stopPropagation();
+    const markRead = c.unreadCount > 0;
+    this.api.put(`/hub/messages/${c.partner._id}/read`, { isRead: markRead }).subscribe({
+      next: () => {
+        this.conversations.update((list) =>
+          list.map((conv) =>
+            conv.partner._id === c.partner._id
+              ? { ...conv, unreadCount: markRead ? 0 : 1 }
+              : conv
+          )
+        );
+        this.notifyReadChange();
+      },
+    });
   }
 
   notifIcon(type: string): string {

@@ -1785,6 +1785,8 @@
     "typeMessage": "Type a message...",
     "send": "Send",
     "markAllRead": "Mark all read",
+    "markRead": "Mark as read",
+    "markUnread": "Mark as unread",
     "startConversation": "Start conversation",
     "newMessage": "New Message",
     "to": "To"

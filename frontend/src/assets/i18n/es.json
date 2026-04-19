@@ -1785,6 +1785,8 @@
     "typeMessage": "Escriba un mensaje...",
     "send": "Enviar",
     "markAllRead": "Marcar todos como leídos",
+    "markRead": "Marcar como leído",
+    "markUnread": "Marcar como no leído",
     "startConversation": "Iniciar conversación",
     "newMessage": "Nuevo mensaje",
     "to": "Para"

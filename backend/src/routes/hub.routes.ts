@@ -227,10 +227,28 @@ router.put('/notifications/:id/read', async (req: AuthRequest, res: Response, ne
   try {
     const userId = new mongoose.Types.ObjectId(req.user!.userId);
     const orgId  = new mongoose.Types.ObjectId(req.user!.organizationId);
+    const isRead = req.body.isRead !== undefined ? Boolean(req.body.isRead) : true;
 
     await Notification.findOneAndUpdate(
       { _id: req.params['id'], organizationId: orgId, userId },
-      { isRead: true }
+      { isRead }
+    ).setOptions({ bypassTenantCheck: true });
+
+    res.json({ ok: true });
+  } catch (e) { next(e); }
+});
+
+/** Toggle read/unread for all messages in a conversation */
+router.put('/messages/:partnerId/read', async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const me       = new mongoose.Types.ObjectId(req.user!.userId);
+    const partner  = new mongoose.Types.ObjectId(req.params['partnerId']);
+    const orgId    = new mongoose.Types.ObjectId(req.user!.organizationId);
+    const isRead   = req.body.isRead !== undefined ? Boolean(req.body.isRead) : true;
+
+    await Message.updateMany(
+      { organizationId: orgId, fromUserId: partner, toUserId: me },
+      { isRead }
     ).setOptions({ bypassTenantCheck: true });
 
     res.json({ ok: true });
