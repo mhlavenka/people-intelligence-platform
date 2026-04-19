@@ -47,7 +47,7 @@ const MOODS: { value: JournalMood; icon: string; label: string }[] = [
           <div class="row-2">
             <mat-form-field appearance="outline" class="flex-grow">
               <mat-label>{{ 'JOURNAL.title' | translate }}</mat-label>
-              <input matInput [(ngModel)]="title" placeholder="What's on your mind?">
+              <input matInput [(ngModel)]="title" [placeholder]="'JOURNAL.titlePlaceholder' | translate">
             </mat-form-field>
             <mat-form-field appearance="outline" style="width: 160px">
               <mat-label>{{ 'JOURNAL.dateLabel' | translate }}</mat-label>
@@ -71,7 +71,7 @@ const MOODS: { value: JournalMood; icon: string; label: string }[] = [
           <!-- Body -->
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>{{ 'JOURNAL.yourReflection' | translate }}</mat-label>
-            <textarea matInput rows="10" [(ngModel)]="body" placeholder="Write freely about your coaching practice, observations, or professional growth..."></textarea>
+            <textarea matInput rows="10" [(ngModel)]="body" [placeholder]="'JOURNAL.reflectionPlaceholder' | translate"></textarea>
           </mat-form-field>
 
           <!-- Tags -->
@@ -83,7 +83,7 @@ const MOODS: { value: JournalMood; icon: string; label: string }[] = [
                 <mat-icon (click)="removeTag($index)">close</mat-icon>
               </span>
             }
-            <input class="chip-input" placeholder="Add tag + Enter"
+            <input class="chip-input" [placeholder]="'JOURNAL.addTagPlaceholder' | translate"
               (keydown.enter)="addTag($event)" #tagInput>
           </div>
 
@@ -250,7 +250,7 @@ export class ReflectiveEditorComponent implements OnInit {
   }
 
   deleteEntry(): void {
-    if (!confirm('Delete this reflective entry?')) return;
+    if (!confirm(this.translate.instant('JOURNAL.confirmDeleteReflectiveEntry'))) return;
     this.saving.set(true);
     this.journal.deleteReflectiveEntry(this.entryId).subscribe({
       next: () => { this.router.navigate(['/journal/reflective']); },

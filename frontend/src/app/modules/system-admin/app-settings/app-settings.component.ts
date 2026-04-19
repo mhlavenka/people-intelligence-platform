@@ -12,7 +12,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ApiService } from '../../../core/api.service';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 interface AppSettings {
   passwordPolicy: {
@@ -311,8 +311,8 @@ const REFRESH_EXPIRY_OPTIONS = [
         <!-- Action bar -->
         <div class="action-bar">
           <button mat-stroked-button (click)="resetDefaults()" [disabled]="saving()"
-                  matTooltip="Reset all settings to factory defaults">
-            <mat-icon>restart_alt</mat-icon> Reset to Defaults
+                  [matTooltip]="'SYSADMIN.resetToDefaultsTooltip' | translate">
+            <mat-icon>restart_alt</mat-icon> {{ 'SYSADMIN.resetToDefaults' | translate }}
           </button>
           <button mat-raised-button color="primary" (click)="save()" [disabled]="saving() || !form.dirty">
             @if (saving()) { <mat-spinner diameter="18" /> }
@@ -391,6 +391,7 @@ export class AppSettingsComponent implements OnInit {
   private fb = inject(FormBuilder);
   private api = inject(ApiService);
   private snack = inject(MatSnackBar);
+  private translate = inject(TranslateService);
 
   form!: FormGroup;
   loading = signal(true);
@@ -467,7 +468,7 @@ export class AppSettingsComponent implements OnInit {
   }
 
   resetDefaults(): void {
-    if (!confirm('Reset all application settings to factory defaults? This cannot be undone.')) { return; }
+    if (!confirm(this.translate.instant('SYSADMIN.confirmResetDefaults'))) { return; }
     this.saving.set(true);
     this.api.post<AppSettings>('/system-admin/settings/reset', {}).subscribe({
       next: (s) => {
@@ -485,6 +486,6 @@ export class AppSettingsComponent implements OnInit {
   }
 
   formatDate(iso: string): string {
-    return new Date(iso).toLocaleString();
+    return new Date(iso).toLocaleString(localStorage.getItem('artes_language') || 'en');
   }
 }

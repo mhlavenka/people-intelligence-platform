@@ -502,11 +502,11 @@ const RADIUS_OPTIONS = [
             <form [formGroup]="billingForm" class="card-body">
               <mat-form-field appearance="outline" class="full-width">
                 <mat-label>{{ 'ADMIN.addressLine1' | translate }}</mat-label>
-                <input matInput formControlName="billingLine1" placeholder="Street address" />
+                <input matInput formControlName="billingLine1" [placeholder]="'ADMIN.placeholderStreetAddress' | translate" />
               </mat-form-field>
               <mat-form-field appearance="outline" class="full-width">
                 <mat-label>{{ 'ADMIN.addressLine2' | translate }}</mat-label>
-                <input matInput formControlName="billingLine2" placeholder="Suite, floor, etc. (optional)" />
+                <input matInput formControlName="billingLine2" [placeholder]="'ADMIN.placeholderSuiteFloor' | translate" />
               </mat-form-field>
               <div class="field-row">
                 <mat-form-field appearance="outline">
@@ -1057,6 +1057,7 @@ export class OrganizationSettingsComponent implements OnInit {
     private fb: FormBuilder,
     private snackBar: MatSnackBar,
     private themeService: ThemeService,
+    private translate: TranslateService,
   ) {}
 
   ngOnInit(): void {
@@ -1118,11 +1119,11 @@ export class OrganizationSettingsComponent implements OnInit {
       next: (updated) => {
         this.org.set(updated);
         this.savingProfile.set(false);
-        this.snackBar.open('Organization profile saved', 'Close', { duration: 2500 });
+        this.snackBar.open(this.translate.instant('ADMIN.orgProfileSaved'), this.translate.instant('COMMON.close'), { duration: 2500 });
       },
       error: () => {
         this.savingProfile.set(false);
-        this.snackBar.open('Save failed', 'Close', { duration: 2500 });
+        this.snackBar.open(this.translate.instant('ADMIN.settingsFailed'), this.translate.instant('COMMON.close'), { duration: 2500 });
       },
     });
   }
@@ -1145,11 +1146,11 @@ export class OrganizationSettingsComponent implements OnInit {
       next: (updated) => {
         this.org.set(updated);
         this.savingBilling.set(false);
-        this.snackBar.open('Billing details saved', 'Close', { duration: 2500 });
+        this.snackBar.open(this.translate.instant('ADMIN.billingDetailsSaved'), this.translate.instant('COMMON.close'), { duration: 2500 });
       },
       error: () => {
         this.savingBilling.set(false);
-        this.snackBar.open('Save failed', 'Close', { duration: 2500 });
+        this.snackBar.open(this.translate.instant('ADMIN.settingsFailed'), this.translate.instant('COMMON.close'), { duration: 2500 });
       },
     });
   }
@@ -1161,11 +1162,11 @@ export class OrganizationSettingsComponent implements OnInit {
         this.org.set(updated);
         this.themeService.apply(updated.theme);
         this.savingTheme.set(false);
-        this.snackBar.open('Theme saved', 'Close', { duration: 2500 });
+        this.snackBar.open(this.translate.instant('ADMIN.themeSaved'), this.translate.instant('COMMON.close'), { duration: 2500 });
       },
       error: () => {
         this.savingTheme.set(false);
-        this.snackBar.open('Save failed', 'Close', { duration: 2500 });
+        this.snackBar.open(this.translate.instant('ADMIN.settingsFailed'), this.translate.instant('COMMON.close'), { duration: 2500 });
       },
     });
   }
@@ -1174,7 +1175,7 @@ export class OrganizationSettingsComponent implements OnInit {
     const file = (event.target as HTMLInputElement).files?.[0];
     if (!file) return;
     if (file.size > 2 * 1024 * 1024) {
-      this.snackBar.open('Logo file must be under 2 MB', 'Close', { duration: 3000 });
+      this.snackBar.open(this.translate.instant('ADMIN.logoFileTooLarge'), this.translate.instant('COMMON.close'), { duration: 3000 });
       return;
     }
     const reader = new FileReader();
@@ -1183,8 +1184,8 @@ export class OrganizationSettingsComponent implements OnInit {
       this.logoPreview.set(dataUrl);
       this.savingLogo.set(true);
       this.api.put<Organization>('/organizations/me', { logoUrl: dataUrl }).subscribe({
-        next: (updated) => { this.org.set(updated); this.savingLogo.set(false); this.snackBar.open('Logo saved', 'Close', { duration: 2000 }); },
-        error: () => { this.savingLogo.set(false); this.snackBar.open('Logo save failed', 'Close', { duration: 2500 }); },
+        next: (updated) => { this.org.set(updated); this.savingLogo.set(false); this.snackBar.open(this.translate.instant('ADMIN.logoSaved'), this.translate.instant('COMMON.close'), { duration: 2000 }); },
+        error: () => { this.savingLogo.set(false); this.snackBar.open(this.translate.instant('ADMIN.logoSaveFailed'), this.translate.instant('COMMON.close'), { duration: 2500 }); },
       });
     };
     reader.readAsDataURL(file);
@@ -1193,8 +1194,8 @@ export class OrganizationSettingsComponent implements OnInit {
   removeLogo(): void {
     this.savingLogo.set(true);
     this.api.put<Organization>('/organizations/me', { logoUrl: null }).subscribe({
-      next: (updated) => { this.org.set(updated); this.logoPreview.set(null); this.savingLogo.set(false); this.snackBar.open('Logo removed', 'Close', { duration: 2000 }); },
-      error: () => { this.savingLogo.set(false); this.snackBar.open('Remove failed', 'Close', { duration: 2500 }); },
+      next: (updated) => { this.org.set(updated); this.logoPreview.set(null); this.savingLogo.set(false); this.snackBar.open(this.translate.instant('ADMIN.logoRemoved'), this.translate.instant('COMMON.close'), { duration: 2000 }); },
+      error: () => { this.savingLogo.set(false); this.snackBar.open(this.translate.instant('ADMIN.removeFailed'), this.translate.instant('COMMON.close'), { duration: 2500 }); },
     });
   }
 
@@ -1210,13 +1211,13 @@ export class OrganizationSettingsComponent implements OnInit {
         this.org.set(org);
         this.savingModules.set(false);
         this.snackBar.open(
-          `${ALL_MODULES.find((m) => m.key === key)?.label} ${updated.includes(key) ? 'enabled' : 'disabled'}`,
-          'Close', { duration: 2500 }
+          `${ALL_MODULES.find((m) => m.key === key)?.label} ${updated.includes(key) ? this.translate.instant('ADMIN.moduleEnabled') : this.translate.instant('ADMIN.moduleDisabled')}`,
+          this.translate.instant('COMMON.close'), { duration: 2500 }
         );
       },
       error: () => {
         this.savingModules.set(false);
-        this.snackBar.open('Update failed', 'Close', { duration: 2500 });
+        this.snackBar.open(this.translate.instant('ADMIN.updateFailed'), this.translate.instant('COMMON.close'), { duration: 2500 });
       },
     });
   }
@@ -1230,11 +1231,11 @@ export class OrganizationSettingsComponent implements OnInit {
       next: (org) => {
         this.org.set(org);
         this.savingModules.set(false);
-        this.snackBar.open('Default rate saved', 'Close', { duration: 2500 });
+        this.snackBar.open(this.translate.instant('ADMIN.defaultRateSaved'), this.translate.instant('COMMON.close'), { duration: 2500 });
       },
       error: () => {
         this.savingModules.set(false);
-        this.snackBar.open('Update failed', 'Close', { duration: 2500 });
+        this.snackBar.open(this.translate.instant('ADMIN.updateFailed'), this.translate.instant('COMMON.close'), { duration: 2500 });
       },
     });
   }
@@ -1245,11 +1246,11 @@ export class OrganizationSettingsComponent implements OnInit {
       next: (org) => {
         this.org.set(org);
         this.savingModules.set(false);
-        this.snackBar.open(`Coachee rebilling ${checked ? 'enabled' : 'disabled'}`, 'Close', { duration: 2500 });
+        this.snackBar.open(this.translate.instant(checked ? 'ADMIN.coacheeBillingOn' : 'ADMIN.coacheeBillingOff'), this.translate.instant('COMMON.close'), { duration: 2500 });
       },
       error: () => {
         this.savingModules.set(false);
-        this.snackBar.open('Update failed', 'Close', { duration: 2500 });
+        this.snackBar.open(this.translate.instant('ADMIN.updateFailed'), this.translate.instant('COMMON.close'), { duration: 2500 });
       },
     });
   }
@@ -1261,13 +1262,13 @@ export class OrganizationSettingsComponent implements OnInit {
         this.org.set(org);
         this.savingModules.set(false);
         this.snackBar.open(
-          checked ? 'Coachees can choose their own coach' : 'Coachees can no longer choose their coach',
-          'Close', { duration: 2500 },
+          this.translate.instant(checked ? 'ADMIN.coacheePickerOn' : 'ADMIN.coacheePickerOff'),
+          this.translate.instant('COMMON.close'), { duration: 2500 },
         );
       },
       error: () => {
         this.savingModules.set(false);
-        this.snackBar.open('Update failed', 'Close', { duration: 2500 });
+        this.snackBar.open(this.translate.instant('ADMIN.updateFailed'), this.translate.instant('COMMON.close'), { duration: 2500 });
       },
     });
   }
@@ -1277,7 +1278,7 @@ export class OrganizationSettingsComponent implements OnInit {
     if (!value) return;
     const current = this.departments();
     if (current.some((d) => d.toLowerCase() === value.toLowerCase())) {
-      this.snackBar.open('Department already exists', 'Close', { duration: 2000 });
+      this.snackBar.open(this.translate.instant('ADMIN.departmentExists'), this.translate.instant('COMMON.close'), { duration: 2000 });
       return;
     }
     const updated = [...current, value];
@@ -1297,11 +1298,11 @@ export class OrganizationSettingsComponent implements OnInit {
         this.org.set(org);
         this.departments.set(org.departments ?? []);
         this.savingDepts.set(false);
-        this.snackBar.open('Departments saved', 'Close', { duration: 2000 });
+        this.snackBar.open(this.translate.instant('ADMIN.departmentsSaved'), this.translate.instant('COMMON.close'), { duration: 2000 });
       },
       error: () => {
         this.savingDepts.set(false);
-        this.snackBar.open('Save failed', 'Close', { duration: 2500 });
+        this.snackBar.open(this.translate.instant('ADMIN.settingsFailed'), this.translate.instant('COMMON.close'), { duration: 2500 });
       },
     });
   }

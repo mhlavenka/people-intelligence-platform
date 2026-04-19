@@ -82,7 +82,7 @@ const COMMON_GAPS = [
       <mat-stepper orientation="vertical" [linear]="true" #stepper>
 
         <!-- Step 1: Coachee -->
-        <mat-step label="Select Coachee" [stepControl]="coacheeGroup">
+        <mat-step [label]="'SUCCESSION.selectCoachee' | translate" [stepControl]="coacheeGroup">
           <div class="step-body" [formGroup]="coacheeGroup">
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>{{ "SUCCESSION.coachee" | translate }}</mat-label>
@@ -112,21 +112,21 @@ const COMMON_GAPS = [
 
             <button mat-raised-button color="primary" matStepperNext
                     [disabled]="coacheeGroup.invalid" type="button">
-              Next →
+              {{ 'COMMON.next' | translate }} →
             </button>
           </div>
         </mat-step>
 
         <!-- Step 2: Goals & Gaps -->
-        <mat-step label="Goals & Competency Gaps" [stepControl]="goalsGroup">
+        <mat-step [label]="'SUCCESSION.goalsAndGaps' | translate" [stepControl]="goalsGroup">
           <div class="step-body" [formGroup]="goalsGroup">
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>{{ "SUCCESSION.developmentGoal" | translate }}</mat-label>
               <textarea matInput formControlName="goals" rows="3"
-                placeholder="e.g. Transition from individual contributor to people manager within 12 months"></textarea>
+                [placeholder]="'SUCCESSION.developmentGoalPlaceholder' | translate"></textarea>
             </mat-form-field>
 
-            <div class="field-label">Competency Gaps (select all that apply)</div>
+            <div class="field-label">{{ 'SUCCESSION.competencyGaps' | translate }}</div>
             <div class="chip-grid">
               @for (gap of commonGaps; track gap) {
                 <button
@@ -143,7 +143,7 @@ const COMMON_GAPS = [
             <mat-form-field appearance="outline" class="full-width" style="margin-top: 12px">
               <mat-label>{{ "SUCCESSION.addCustomGap" | translate }}</mat-label>
               <input matInput #customGapInput
-                placeholder="Type and press Enter"
+                [placeholder]="'COMMON.typeAndPressEnter' | translate"
                 (keydown.enter)="addCustomGap(customGapInput.value); customGapInput.value = ''" />
               <mat-hint>{{ "SUCCESSION.pressEnterToAdd" | translate }}</mat-hint>
             </mat-form-field>
@@ -161,17 +161,17 @@ const COMMON_GAPS = [
             }
 
             <div class="step-actions">
-              <button mat-button matStepperPrevious type="button">Back</button>
+              <button mat-button matStepperPrevious type="button">{{ 'COMMON.back' | translate }}</button>
               <button mat-raised-button color="primary" matStepperNext
-                      [disabled]="goalsGroup.invalid" type="button">Next →</button>
+                      [disabled]="goalsGroup.invalid" type="button">{{ 'COMMON.next' | translate }} →</button>
             </div>
           </div>
         </mat-step>
 
         <!-- Step 3: EQ-i Scores -->
-        <mat-step label="EQ-i Scores (optional)">
+        <mat-step [label]="'SUCCESSION.eqiScoresOptional' | translate">
           <div class="step-body">
-            <p class="step-hint">Enter scores from 1–130. Leave at 100 if not assessed.</p>
+            <p class="step-hint">{{ 'SUCCESSION.eqiScoresHint' | translate }}</p>
             <div class="eqi-grid">
               @for (dim of eqiDimensions; track dim) {
                 <div class="eqi-row">
@@ -187,49 +187,48 @@ const COMMON_GAPS = [
               }
             </div>
             <div class="step-actions">
-              <button mat-button matStepperPrevious type="button">Back</button>
+              <button mat-button matStepperPrevious type="button">{{ 'COMMON.back' | translate }}</button>
               <button mat-raised-button color="primary" matStepperNext type="button">
-                Review →
+                {{ 'SUCCESSION.reviewAndGenerate' | translate }} →
               </button>
             </div>
           </div>
         </mat-step>
 
         <!-- Step 4: Review -->
-        <mat-step label="Review & Generate">
+        <mat-step [label]="'SUCCESSION.reviewAndGenerate' | translate">
           <div class="step-body review-step">
             <div class="review-row">
-              <span>Coachee</span>
+              <span>{{ 'SUCCESSION.coachee' | translate }}</span>
               <strong>{{ selectedCoacheceName() }}</strong>
             </div>
             <div class="review-row">
-              <span>Goal</span>
+              <span>{{ 'SUCCESSION.goal' | translate }}</span>
               <strong>{{ goalsGroup.value.goals }}</strong>
             </div>
             <div class="review-row">
-              <span>Gaps</span>
+              <span>{{ 'SUCCESSION.competencyGapsLabel' | translate }}</span>
               <strong>{{ selectedGaps().join(', ') || '—' }}</strong>
             </div>
             <div class="review-row">
-              <span>EQ-i dimensions</span>
-              <strong>{{ eqiDimensions.length }} scored</strong>
+              <span>{{ 'SUCCESSION.eqiDimensions' | translate }}</span>
+              <strong>{{ eqiDimensions.length }} {{ 'SUCCESSION.scored' | translate }}</strong>
             </div>
 
             <p class="ai-note">
               <mat-icon>auto_awesome</mat-icon>
-              Claude AI will generate a full GROW-model IDP with milestones.
-              This takes about 10–15 seconds.
+              {{ 'SUCCESSION.aiNote' | translate }}
             </p>
 
             <div class="step-actions">
-              <button mat-button matStepperPrevious type="button">Back</button>
+              <button mat-button matStepperPrevious type="button">{{ 'COMMON.back' | translate }}</button>
               <button mat-raised-button color="primary"
                       (click)="generate()" [disabled]="generating()" type="button">
                 @if (generating()) {
                   <mat-spinner diameter="18" />
                   &nbsp; {{ "COMMON.generating" | translate }}
                 } @else {
-                  <mat-icon>auto_awesome</mat-icon> Generate IDP
+                  <mat-icon>auto_awesome</mat-icon> {{ 'SUCCESSION.generateIDP' | translate }}
                 }
               </button>
             </div>

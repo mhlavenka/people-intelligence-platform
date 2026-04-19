@@ -49,7 +49,7 @@ export interface SponsorInvoiceEditData {
         </div>
         @for (li of items; track li; let i = $index) {
           <div class="line-row">
-            <input class="col desc" [(ngModel)]="li.description" placeholder="Description" />
+            <input class="col desc" [(ngModel)]="li.description" [placeholder]="'COMMON.description' | translate" />
             <input class="col qty" type="number" min="0" step="1" [(ngModel)]="li.quantity" (input)="recalc()" />
             <input class="col price" type="number" min="0" step="0.01" [(ngModel)]="li.unitPriceDollars" (input)="recalc()" />
             <span class="col amt">{{ amountOf(li) | currency:data.currency }}</span>

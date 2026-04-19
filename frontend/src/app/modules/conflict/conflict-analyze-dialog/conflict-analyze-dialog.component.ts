@@ -201,7 +201,7 @@ export class ConflictAnalyzeDialogComponent implements OnInit {
 
     // Default analysis name to current month/year
     const now = new Date();
-    const label = now.toLocaleString('default', { month: 'long', year: 'numeric' });
+    const label = now.toLocaleString(localStorage.getItem('artes_language') || 'en', { month: 'long', year: 'numeric' });
     this.form.patchValue({ name: label });
   }
 

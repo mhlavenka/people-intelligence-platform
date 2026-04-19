@@ -4,6 +4,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { Sponsor, SponsorInvoice, SponsorService } from '../sponsor.service';
 import { TranslateModule } from '@ngx-translate/core';
 
@@ -23,13 +24,13 @@ interface FullInvoice extends SponsorInvoice {
   standalone: true,
   imports: [
     CommonModule, CurrencyPipe, DatePipe, RouterLink,
-    MatButtonModule, MatIconModule, MatProgressSpinnerModule,
+    MatButtonModule, MatIconModule, MatProgressSpinnerModule, MatTooltipModule,
     TranslateModule,
   ],
   template: `
     <div class="screen-toolbar no-print">
       <a mat-icon-button [routerLink]="['/billing/sponsors', sponsorId]"
-         matTooltip="Back to billing">
+         [matTooltip]="'SPONSOR.backToBilling' | translate">
         <mat-icon>arrow_back</mat-icon>
       </a>
       <span class="spacer"></span>

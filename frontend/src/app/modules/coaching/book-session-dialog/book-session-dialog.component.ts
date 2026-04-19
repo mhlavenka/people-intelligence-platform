@@ -62,7 +62,7 @@ export interface BookSessionData {
 
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>{{ 'COACHING.notesOptional' | translate }}</mat-label>
-          <textarea matInput [(ngModel)]="notes" rows="3" placeholder="Anything you'd like to discuss or prepare for..."></textarea>
+          <textarea matInput [(ngModel)]="notes" rows="3" [placeholder]="'COACHING.notesPlaceholder' | translate"></textarea>
         </mat-form-field>
       } @else {
         <div class="confirmation">

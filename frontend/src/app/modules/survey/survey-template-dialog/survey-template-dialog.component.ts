@@ -136,17 +136,17 @@ interface SurveyTemplate {
               </div>
 
               <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Description</mat-label>
+                <mat-label>{{ 'COMMON.description' | translate }}</mat-label>
                 <textarea matInput formControlName="description" rows="3"
-                  placeholder="Brief description of what this instrument measures and its validated use case…"></textarea>
-                <mat-hint>Shown on the intake cover page to respondents</mat-hint>
+                  [placeholder]="'SURVEY.descriptionPlaceholder' | translate"></textarea>
+                <mat-hint>{{ 'SURVEY.descriptionHint' | translate }}</mat-hint>
               </mat-form-field>
 
               <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Respondent Instructions</mat-label>
+                <mat-label>{{ 'SURVEY.respondentInstructions' | translate }}</mat-label>
                 <textarea matInput formControlName="instructions" rows="4"
-                  placeholder="Think about situations in which your wishes differ from those of another person…"></textarea>
-                <mat-hint>Displayed to the respondent before question 1</mat-hint>
+                  [placeholder]="'SURVEY.instructionsPlaceholder' | translate"></textarea>
+                <mat-hint>{{ 'SURVEY.instructionsHint' | translate }}</mat-hint>
               </mat-form-field>
 
               <div class="form-row">
@@ -331,9 +331,9 @@ interface SurveyTemplate {
                     </mat-form-field>
                   </div>
                   <mat-form-field appearance="outline" class="full-width">
-                    <mat-label>Below-threshold message</mat-label>
+                    <mat-label>{{ 'SURVEY.belowThresholdMessage' | translate }}</mat-label>
                     <textarea matInput formControlName="aggregationBelowMessage" rows="2"
-                      placeholder="Message shown when r(wg) is below threshold…"></textarea>
+                      [placeholder]="'SURVEY.belowThresholdPlaceholder' | translate"></textarea>
                   </mat-form-field>
                 </div>
               }
@@ -533,9 +533,9 @@ interface SurveyTemplate {
                                   </mat-form-field>
                                   <button mat-stroked-button type="button"
                                           class="gen-labels-btn"
-                                          matTooltip="Generate label keys from min/max"
+                                          [matTooltip]="'SURVEY.generateLabelsTooltip' | translate"
                                           (click)="generateLabelTemplate(i)">
-                                    <mat-icon>auto_fix_high</mat-icon> Generate labels
+                                    <mat-icon>auto_fix_high</mat-icon> {{ 'SURVEY.generateLabels' | translate }}
                                   </button>
                                 </div>
                                 <mat-form-field appearance="outline" class="full-width">
@@ -596,7 +596,7 @@ interface SurveyTemplate {
 
                     <button mat-icon-button type="button"
                             class="remove-btn"
-                            matTooltip="Remove question"
+                            [matTooltip]="'SURVEY.removeQuestion' | translate"
                             (click)="removeQuestion(i)"
                             [disabled]="questionsArray.length <= 1">
                       <mat-icon>close</mat-icon>

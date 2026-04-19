@@ -136,7 +136,7 @@ import {
                 <div class="card-footer">
                   <div class="slug-row">
                     <code class="slug-url">/book/{{ et.coachSlug }}</code>
-                    <button mat-icon-button (click)="copyLink(et)" matTooltip="Copy link" class="copy-btn">
+                    <button mat-icon-button (click)="copyLink(et)" [matTooltip]="'BOOKING.copyLink' | translate" class="copy-btn">
                       <mat-icon>content_copy</mat-icon>
                     </button>
                   </div>

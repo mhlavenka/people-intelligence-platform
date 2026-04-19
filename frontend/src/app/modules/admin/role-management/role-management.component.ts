@@ -393,6 +393,7 @@ export class RoleManagementComponent implements OnInit {
   private api = inject(ApiService);
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
+  private translate = inject(TranslateService);
 
   roles = ROLES;
   categories = CATEGORIES;
@@ -466,10 +467,10 @@ export class RoleManagementComponent implements OnInit {
       this.savingSystemRoles.set(false);
       this.systemRolesDirty.set(false);
       this.loadSystemRoles();
-      this.snackBar.open('System role permissions saved. Changes apply on next login.', 'OK', { duration: 4000 });
+      this.snackBar.open(this.translate.instant('ADMIN.systemRolePermsSaved'), this.translate.instant('COMMON.ok'), { duration: 4000 });
     }).catch(() => {
       this.savingSystemRoles.set(false);
-      this.snackBar.open('Failed to save', 'Dismiss', { duration: 3000 });
+      this.snackBar.open(this.translate.instant('ADMIN.settingsFailed'), this.translate.instant('COMMON.dismiss'), { duration: 3000 });
     });
   }
 

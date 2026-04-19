@@ -62,7 +62,7 @@ interface AuditEntry {
       @if (loading()) {
         <div class="loading-center"><mat-spinner diameter="36" /></div>
       } @else if (entries().length === 0) {
-        <app-empty-state icon="receipt_long" title="No imports" message="No imports recorded yet."></app-empty-state>
+        <app-empty-state icon="receipt_long" [title]="'EQIMPORT.noImports' | translate" [message]="'EQIMPORT.noImportsMsg' | translate"></app-empty-state>
       } @else {
         <table class="data-table">
           <thead>
@@ -92,7 +92,7 @@ interface AuditEntry {
                 <td><code>{{ e.importId | slice:0:8 }}...</code></td>
                 <td>
                   @if (e.scoreId && !e.erasedAt && e.privacyMode !== 'ANONYMIZED') {
-                    <button mat-icon-button matTooltip="Erase client data" class="erase-btn" (click)="eraseData(e)">
+                    <button mat-icon-button [matTooltip]="'EQ.eraseClientData' | translate" class="erase-btn" (click)="eraseData(e)">
                       <mat-icon>delete_forever</mat-icon>
                     </button>
                   }

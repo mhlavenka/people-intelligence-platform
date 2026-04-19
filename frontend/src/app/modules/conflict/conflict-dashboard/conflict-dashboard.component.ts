@@ -832,7 +832,7 @@ export class ConflictDashboardComponent implements OnInit {
     this.api.delete(`/succession/idps/${idp._id}`).subscribe({
       next: () => {
         this.conflictIdps.update((list) => list.filter((i) => i._id !== idp._id));
-        this.snackBar.open('Development plan deleted', 'OK', { duration: 3000 });
+        this.snackBar.open(this.translate.instant('CONFLICT.planDeleted'), this.translate.instant('COMMON.ok'), { duration: 3000 });
       },
     });
   }
@@ -849,7 +849,7 @@ export class ConflictDashboardComponent implements OnInit {
   }
 
 
-  constructor(private api: ApiService, private dialog: MatDialog, private snackBar: MatSnackBar, private router: Router) {}
+  constructor(private api: ApiService, private dialog: MatDialog, private snackBar: MatSnackBar, private router: Router, private translate: TranslateService) {}
 
   ngOnInit(): void {
     this.api.get<SurveyTemplate[]>('/surveys/templates').subscribe({
@@ -902,7 +902,7 @@ export class ConflictDashboardComponent implements OnInit {
       next: () => {
         this.analyses.update((list) => list.filter((a) => a._id !== analysis._id));
         this.updateStats(this.analyses());
-        this.snackBar.open('Analysis deleted', 'OK', { duration: 3000 });
+        this.snackBar.open(this.translate.instant('CONFLICT.analysisDeleted'), this.translate.instant('COMMON.ok'), { duration: 3000 });
       },
     });
   }

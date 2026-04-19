@@ -277,7 +277,7 @@ export class ConflictAnalysisComponent implements OnInit {
     { key: 'critical', label: 'Critical', count: 0 },
   ];
 
-  constructor(private api: ApiService, private dialog: MatDialog, private snackBar: MatSnackBar, private router: Router) {}
+  constructor(private api: ApiService, private dialog: MatDialog, private snackBar: MatSnackBar, private router: Router, private translate: TranslateService) {}
 
   ngOnInit(): void { this.loadAnalyses(); }
 
@@ -305,7 +305,7 @@ export class ConflictAnalysisComponent implements OnInit {
   deleteAnalysis(a: ConflictAnalysis): void {
     if (!confirm(`Delete analysis for "${a.departmentId || 'All Departments'}" (${a.name})?`)) return;
     this.api.delete(`/conflict/analyses/${a._id}`).subscribe({
-      next: () => { this.analyses.update((list) => list.filter((x) => x._id !== a._id)); this.snackBar.open('Analysis deleted', 'OK', { duration: 3000 }); },
+      next: () => { this.analyses.update((list) => list.filter((x) => x._id !== a._id)); this.snackBar.open(this.translate.instant('CONFLICT.analysisDeleted'), this.translate.instant('COMMON.ok'), { duration: 3000 }); },
     });
   }
 

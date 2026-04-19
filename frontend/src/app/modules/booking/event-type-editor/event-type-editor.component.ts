@@ -160,7 +160,7 @@ const DAY_SHORT_KEYS = ['COMMON.sundayShort', 'COMMON.mondayShort', 'COMMON.tues
               <mat-form-field appearance="outline" class="full-width">
                 <mat-label>{{ 'BOOKING.description' | translate }}</mat-label>
                 <textarea matInput [(ngModel)]="bookingPageDesc" rows="3"
-                          placeholder="Brief description shown on your booking page..."></textarea>
+                          [placeholder]="'BOOKING.descriptionPlaceholder' | translate"></textarea>
               </mat-form-field>
             </div>
           </section>

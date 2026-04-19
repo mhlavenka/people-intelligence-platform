@@ -96,7 +96,7 @@ interface BillingData {
 
         <!-- Engagements -->
         @if (data()!.engagements.length === 0) {
-          <app-empty-state icon="money_off" title="No billable engagements" message="This coachee has no engagements with rebilling enabled."></app-empty-state>
+          <app-empty-state icon="money_off" [title]="'COACHING.noBillableEngagements' | translate" [message]="'COACHING.noBillableEngagementsMsg' | translate"></app-empty-state>
         }
 
         @for (eng of data()!.engagements; track eng.engagementId) {

@@ -212,7 +212,7 @@ interface AvailablePlan {
                     <div class="card-header-actions">
                       <span class="status-badge" [class]="'status-' + inv.status">{{ inv.status | titlecase }}</span>
                       <button mat-icon-button class="pdf-btn" (click)="downloadPdf(inv)"
-                              matTooltip="Download PDF invoice" aria-label="Download invoice as PDF">
+                              [matTooltip]="'BILLING.downloadInvoice' | translate" [attr.aria-label]="'BILLING.downloadInvoice' | translate">
                         <mat-icon>picture_as_pdf</mat-icon>
                       </button>
                     </div>
@@ -377,7 +377,7 @@ interface AvailablePlan {
                   <h2 class="card-title">Payment History</h2>
                 </div>
                 @if (paidInvoices().length === 0) {
-                  <app-empty-state icon="receipt_long" title="No payment history" message="No payment history yet."></app-empty-state>
+                  <app-empty-state icon="receipt_long" [title]="'BILLING.noPaymentHistory' | translate" [message]="'BILLING.noPaymentHistoryMsg' | translate"></app-empty-state>
                 } @else {
                   <div class="history-table-wrapper">
                     <table class="history-table">
@@ -399,7 +399,7 @@ interface AvailablePlan {
                             <td class="col-paid">{{ inv.paidAt | date:'MMM d, y' }}</td>
                             <td class="col-actions">
                               <button mat-icon-button (click)="downloadPdf(inv)"
-                                      matTooltip="Download PDF invoice" aria-label="Download invoice as PDF"
+                                      [matTooltip]="'BILLING.downloadInvoice' | translate" [attr.aria-label]="'BILLING.downloadInvoice' | translate"
                                       class="receipt-btn">
                                 <mat-icon>picture_as_pdf</mat-icon>
                               </button>
@@ -1202,6 +1202,7 @@ export class BillingComponent implements OnInit {
   private api = inject(ApiService);
   private snackBar = inject(MatSnackBar);
   private route = inject(ActivatedRoute);
+  private translate = inject(TranslateService);
 
   conflictTiers = [
     { name: 'Starter',      planKey: 'starter',      limit: 'Up to 50 employees',   price: 'CAD $599/mo' },
@@ -1272,12 +1273,12 @@ export class BillingComponent implements OnInit {
       const payment = params.get('payment');
       if (payment === 'success') {
         this.snackBar.open(
-          'Payment successful! Your invoice will be updated shortly.',
-          'Dismiss',
+          this.translate.instant('BILLING.paymentSuccessful'),
+          this.translate.instant('COMMON.dismiss'),
           { duration: 6000, panelClass: ['snack-success'] }
         );
       } else if (payment === 'cancelled') {
-        this.snackBar.open('Payment was cancelled.', 'Dismiss', {
+        this.snackBar.open(this.translate.instant('BILLING.paymentCancelled'), this.translate.instant('COMMON.dismiss'), {
           duration: 4000,
           panelClass: ['snack-info'],
         });
@@ -1644,7 +1645,7 @@ export class BillingComponent implements OnInit {
 
     const win = window.open('', '_blank');
     if (!win) {
-      this.snackBar.open('Pop-up blocked — please allow pop-ups to download invoices', 'Dismiss', { duration: 5000 });
+      this.snackBar.open(this.translate.instant('BILLING.popupBlocked'), this.translate.instant('COMMON.dismiss'), { duration: 5000 });
       return;
     }
     win.document.write(html);

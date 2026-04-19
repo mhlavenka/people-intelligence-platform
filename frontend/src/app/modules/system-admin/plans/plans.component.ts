@@ -77,7 +77,7 @@ const MODULE_DEFS = [
 
         <!-- Plans list -->
         @if (plans().length === 0) {
-          <app-empty-state icon="sell" title="No plans yet" message="Create your first subscription plan."></app-empty-state>
+          <app-empty-state icon="sell" [title]="'SYSADMIN.noPlans' | translate" [message]="'SYSADMIN.noPlansMsg' | translate"></app-empty-state>
         } @else {
           <div class="plans-grid">
             @for (plan of sortedPlans(); track plan._id) {
@@ -91,11 +91,11 @@ const MODULE_DEFS = [
                     }
                   </div>
                   <div class="plan-actions">
-                    <button mat-icon-button matTooltip="Edit" (click)="openEdit(plan)">
+                    <button mat-icon-button [matTooltip]="'COMMON.edit' | translate" (click)="openEdit(plan)">
                       <mat-icon>edit</mat-icon>
                     </button>
                     @if (!isPlanInUse(plan.key)) {
-                      <button mat-icon-button matTooltip="Delete" class="delete-btn" (click)="deletePlan(plan)">
+                      <button mat-icon-button [matTooltip]="'COMMON.delete' | translate" class="delete-btn" (click)="deletePlan(plan)">
                         <mat-icon>delete_outline</mat-icon>
                       </button>
                     }
@@ -296,7 +296,7 @@ export class PlansComponent implements OnInit {
     [...this.plans()].sort((a, b) => a.sortOrder - b.sortOrder || a.priceMonthly - b.priceMonthly)
   );
 
-  constructor(private api: ApiService, private snackBar: MatSnackBar, private dialog: MatDialog) {}
+  constructor(private api: ApiService, private snackBar: MatSnackBar, private dialog: MatDialog, private translate: TranslateService) {}
 
   ngOnInit(): void { this.load(); }
 
@@ -350,9 +350,9 @@ export class PlansComponent implements OnInit {
       this.api.delete(`/plans/${plan._id}`).subscribe({
         next: () => {
           this.plans.update((list) => list.filter((p) => p._id !== plan._id));
-          this.snackBar.open('Plan deleted.', 'Dismiss', { duration: 3000 });
+          this.snackBar.open(this.translate.instant('SYSADMIN.planDeleted'), this.translate.instant('COMMON.dismiss'), { duration: 3000 });
         },
-        error: () => this.snackBar.open('Failed to delete plan.', 'Dismiss', { duration: 3000 }),
+        error: () => this.snackBar.open(this.translate.instant('SYSADMIN.planDeleteFailed'), this.translate.instant('COMMON.dismiss'), { duration: 3000 }),
       });
     });
   }

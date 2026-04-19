@@ -336,8 +336,8 @@ const COUNTRY_TAX_RATES: Record<string, number> = {
 
             <!-- Notes -->
             <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Notes</mat-label>
-              <textarea matInput [(ngModel)]="genNotes" rows="3" placeholder="Optional notes for this invoice…"></textarea>
+              <mat-label>{{ 'SYSADMIN.notes' | translate }}</mat-label>
+              <textarea matInput [(ngModel)]="genNotes" rows="3" [placeholder]="'SYSADMIN.invoiceNotesPlaceholder' | translate"></textarea>
             </mat-form-field>
 
             <!-- Preview result -->
@@ -403,7 +403,7 @@ const COUNTRY_TAX_RATES: Record<string, number> = {
         <mat-form-field appearance="outline" class="search-field">
           <mat-label>Search</mat-label>
           <mat-icon matPrefix>search</mat-icon>
-          <input matInput [(ngModel)]="searchQuery" (ngModelChange)="onFilterChange()" placeholder="Invoice # or organization name…" />
+          <input matInput [(ngModel)]="searchQuery" (ngModelChange)="onFilterChange()" [placeholder]="'SYSADMIN.invoiceSearchPlaceholder' | translate" />
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="status-select">
@@ -500,7 +500,7 @@ const COUNTRY_TAX_RATES: Record<string, number> = {
                   @if (canSend(invoice)) {
                     <button
                       mat-icon-button
-                      matTooltip="Send Invoice"
+                      [matTooltip]="'SYSADMIN.sendInvoice' | translate"
                       [disabled]="sending() === invoice._id"
                       (click)="sendInvoice(invoice)"
                     >
@@ -514,7 +514,7 @@ const COUNTRY_TAX_RATES: Record<string, number> = {
                   @if (canMarkPaid(invoice)) {
                     <button
                       mat-icon-button
-                      matTooltip="Mark as Paid"
+                      [matTooltip]="'SYSADMIN.markAsPaid' | translate"
                       (click)="markPaid(invoice)"
                     >
                       <mat-icon class="action-icon paid-icon">check_circle</mat-icon>
@@ -523,7 +523,7 @@ const COUNTRY_TAX_RATES: Record<string, number> = {
                   @if (canVoid(invoice)) {
                     <button
                       mat-icon-button
-                      matTooltip="Void Invoice"
+                      [matTooltip]="'SYSADMIN.voidInvoice' | translate"
                       (click)="voidInvoice(invoice)"
                     >
                       <mat-icon class="action-icon void-icon">cancel</mat-icon>

@@ -129,11 +129,11 @@ export interface OrgRow {
         <div class="section-label">Billing Address</div>
         <mat-form-field class="full-width">
           <mat-label>Address Line 1</mat-label>
-          <input matInput formControlName="billingAddressLine1" placeholder="Street address" />
+          <input matInput formControlName="billingAddressLine1" [placeholder]="'ADMIN.placeholderStreetAddress' | translate" />
         </mat-form-field>
         <mat-form-field class="full-width">
           <mat-label>Address Line 2</mat-label>
-          <input matInput formControlName="billingAddressLine2" placeholder="Suite, floor, etc. (optional)" />
+          <input matInput formControlName="billingAddressLine2" [placeholder]="'ADMIN.placeholderSuiteFloor' | translate" />
         </mat-form-field>
         <div class="form-row">
           <mat-form-field>
@@ -341,8 +341,8 @@ export interface OrgRow {
         }
 
         <mat-form-field class="full-width">
-          <mat-label>Internal Notes</mat-label>
-          <textarea matInput formControlName="notes" rows="3" placeholder="Admin notes (not visible to the org)"></textarea>
+          <mat-label>{{ 'SYSADMIN.internalNotes' | translate }}</mat-label>
+          <textarea matInput formControlName="notes" rows="3" [placeholder]="'SYSADMIN.adminNotesPlaceholder' | translate"></textarea>
         </mat-form-field>
 
       </form>
@@ -692,7 +692,7 @@ export class OrgEditDialogComponent implements OnInit {
 
   formatDate(iso: string): string {
     const d = new Date(iso);
-    return isNaN(d.getTime()) ? '' : d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+    return isNaN(d.getTime()) ? '' : d.toLocaleDateString(localStorage.getItem('artes_language') || 'en', { year: 'numeric', month: 'short', day: 'numeric' });
   }
 
   daysRemaining(): number | null {

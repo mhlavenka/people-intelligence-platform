@@ -147,7 +147,7 @@ const COMMON_TIMEZONES = [
             <p>{{ 'BOOKING.setWeeklyHours' | translate }}</p>
           </div>
           <button mat-stroked-button class="copy-btn" (click)="copyToAll()"
-                  matTooltip="Copy first enabled day's hours to all days">
+                  [matTooltip]="'BOOKING.copyFirstDayHours' | translate">
             <mat-icon>content_copy</mat-icon> {{ 'BOOKING.copyToAll' | translate }}
           </button>
         </div>
@@ -307,7 +307,7 @@ const COMMON_TIMEZONES = [
                         }
                       </div>
                       <button mat-icon-button (click)="removeDate(ex.date)"
-                              matTooltip="Remove exclusion" aria-label="Remove">
+                              [matTooltip]="'BOOKING.removeExclusion' | translate" [attr.aria-label]="'COMMON.remove' | translate">
                         <mat-icon>close</mat-icon>
                       </button>
                     </div>
@@ -776,7 +776,7 @@ export class BookingGlobalSettingsComponent implements OnInit, OnDestroy {
     const iso = this.toIso(d);
     const [y, m, day] = iso.split('-').map(Number);
     const dt = new Date(y, (m ?? 1) - 1, day ?? 1);
-    return dt.toLocaleDateString(undefined, {
+    return dt.toLocaleDateString(localStorage.getItem('artes_language') || 'en', {
       weekday: 'short', year: 'numeric', month: 'short', day: 'numeric',
     });
   }

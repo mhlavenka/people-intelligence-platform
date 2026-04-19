@@ -608,7 +608,7 @@ export class BookingDashboardComponent implements OnInit, AfterViewInit, OnDestr
       if (!info) { cell.removeAttribute('title'); return; }
 
       const fmt = (b: BookingRecord, label: string) => {
-        const t = new Date(b.startTime).toLocaleTimeString([], {
+        const t = new Date(b.startTime).toLocaleTimeString(localStorage.getItem('artes_language') || 'en', {
           hour: '2-digit', minute: '2-digit',
         });
         const type = b.eventTypeName ? ' (' + b.eventTypeName + ')' : '';

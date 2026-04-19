@@ -100,7 +100,7 @@ interface Stats {
         <mat-form-field appearance="outline" class="search-field">
           <mat-label>Search</mat-label>
           <mat-icon matPrefix>search</mat-icon>
-          <input matInput [(ngModel)]="search" (ngModelChange)="applyFilter()" placeholder="Name, slug or email…" />
+          <input matInput [(ngModel)]="search" (ngModelChange)="applyFilter()" [placeholder]="'SYSADMIN.orgSearchPlaceholder' | translate" />
         </mat-form-field>
 
         <mat-form-field appearance="outline">

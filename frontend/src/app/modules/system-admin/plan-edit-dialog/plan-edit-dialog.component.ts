@@ -75,8 +75,8 @@ const MODULE_DEFS = [
         </div>
 
         <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Description</mat-label>
-          <input matInput [(ngModel)]="form.description" placeholder="Short description" />
+          <mat-label>{{ 'COMMON.description' | translate }}</mat-label>
+          <input matInput [(ngModel)]="form.description" [placeholder]="'SYSADMIN.shortDescPlaceholder' | translate" />
         </mat-form-field>
 
         <div class="form-row">
@@ -133,9 +133,9 @@ const MODULE_DEFS = [
         </div>
 
         <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Features (one per line)</mat-label>
+          <mat-label>{{ 'SYSADMIN.featuresPerLine' | translate }}</mat-label>
           <textarea matInput [(ngModel)]="form.featuresRaw" rows="5"
-                    placeholder="Feature 1&#10;Feature 2"></textarea>
+                    [placeholder]="'SYSADMIN.featuresPlaceholder' | translate"></textarea>
         </mat-form-field>
 
         <mat-slide-toggle [(ngModel)]="form.isActive" color="primary">

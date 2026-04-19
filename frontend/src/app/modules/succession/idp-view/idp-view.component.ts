@@ -170,7 +170,7 @@ interface IDP {
                 }
                 @if (canManage() && idp.status === 'active') {
                   <button class="card-action-btn"
-                          matTooltip="Deactivate IDP"
+                          [matTooltip]="'SUCCESSION.deactivateIdp' | translate"
                           matTooltipPosition="above"
                           (click)="deactivateIdp(idp)">
                     <mat-icon>pause_circle_outline</mat-icon>
@@ -178,7 +178,7 @@ interface IDP {
                 }
                 @if (canDelete() && idp.status === 'draft') {
                   <button class="card-action-btn delete-btn"
-                          matTooltip="Delete IDP"
+                          [matTooltip]="'SUCCESSION.deleteIDP' | translate"
                           matTooltipPosition="above"
                           [disabled]="regeneratingId() === idp._id"
                           (click)="deleteIdp(idp)">
@@ -316,9 +316,9 @@ interface IDP {
                     }
 
                     <mat-form-field appearance="outline" class="journal-content-field">
-                      <mat-label>Your reflection</mat-label>
+                      <mat-label>{{ 'SUCCESSION.yourReflection' | translate }}</mat-label>
                       <textarea matInput [(ngModel)]="journalContent" rows="3"
-                                placeholder="Reflect on progress, challenges, or insights..."></textarea>
+                                [placeholder]="'SUCCESSION.reflectionPlaceholder' | translate"></textarea>
                     </mat-form-field>
 
                     <div class="journal-form-actions">
@@ -327,7 +327,7 @@ interface IDP {
                               (click)="saveJournalEntry(idp._id)">
                         @if (journalSaving()) { <mat-spinner diameter="16" /> }
                         @else { <mat-icon>save</mat-icon> }
-                        Save
+                        {{ 'COMMON.save' | translate }}
                       </button>
                     </div>
                   </div>
@@ -348,7 +348,7 @@ interface IDP {
                               <span class="entry-mood" [class]="moodClass(entry.mood)">{{ entry.mood }}/10</span>
                             }
                           </div>
-                          <button mat-icon-button class="entry-delete" matTooltip="Delete" (click)="deleteJournalEntry(entry)">
+                          <button mat-icon-button class="entry-delete" [matTooltip]="'COMMON.delete' | translate" (click)="deleteJournalEntry(entry)">
                             <mat-icon>delete_outline</mat-icon>
                           </button>
                         </div>
@@ -719,21 +719,21 @@ export class IDPViewComponent implements OnInit {
         this.journalMood = null;
         this.activeJournalIdpId.set(null);
         this.loadJournal();
-        this.snackBar.open('Journal entry saved', 'OK', { duration: 3000 });
+        this.snackBar.open(this.translate.instant('SUCCESSION.journalEntrySaved'), this.translate.instant('COMMON.ok'), { duration: 3000 });
       },
       error: () => {
         this.journalSaving.set(false);
-        this.snackBar.open('Failed to save entry', 'Dismiss', { duration: 3000 });
+        this.snackBar.open(this.translate.instant('SUCCESSION.journalSaveFailed'), this.translate.instant('COMMON.dismiss'), { duration: 3000 });
       },
     });
   }
 
   deleteJournalEntry(entry: JournalEntry): void {
-    if (!confirm('Delete this journal entry?')) return;
+    if (!confirm(this.translate.instant('SUCCESSION.confirmDeleteJournalEntry'))) return;
     this.api.delete(`/succession/journal/${entry._id}`).subscribe({
       next: () => {
         this.loadJournal();
-        this.snackBar.open('Entry deleted', 'OK', { duration: 3000 });
+        this.snackBar.open(this.translate.instant('SUCCESSION.entryDeleted'), this.translate.instant('COMMON.ok'), { duration: 3000 });
       },
     });
   }
@@ -809,6 +809,7 @@ export class IDPViewComponent implements OnInit {
     private api: ApiService,
     private dialog: MatDialog,
     private snackBar: MatSnackBar,
+    private translate: TranslateService,
   ) {}
 
 
@@ -848,22 +849,22 @@ export class IDPViewComponent implements OnInit {
         next: (updated) => {
           this.idps.update((list) => list.map((i) => (i._id === updated._id ? updated : i)));
           this.regeneratingId.set(null);
-          this.snackBar.open('IDP regenerated successfully', 'Close', { duration: 3000 });
+          this.snackBar.open(this.translate.instant('SUCCESSION.idpRegenerated'), this.translate.instant('COMMON.close'), { duration: 3000 });
         },
         error: (err) => {
           this.regeneratingId.set(null);
-          this.snackBar.open(err?.error?.error ?? 'Regeneration failed', 'Close', { duration: 4000 });
+          this.snackBar.open(err?.error?.error ?? this.translate.instant('SUCCESSION.regenerationFailed'), this.translate.instant('COMMON.close'), { duration: 4000 });
         },
       });
     });
   }
 
   deactivateIdp(idp: IDP): void {
-    if (!confirm('Deactivate this IDP? It will be marked as completed.')) return;
+    if (!confirm(this.translate.instant('SUCCESSION.confirmDeactivateIdp'))) return;
     this.api.put(`/succession/idps/${idp._id}/status`, { status: 'completed' }).subscribe({
       next: () => {
         this.idps.update((list) => list.map((i) => i._id === idp._id ? { ...i, status: 'completed' as const } : i));
-        this.snackBar.open('IDP deactivated', 'OK', { duration: 3000 });
+        this.snackBar.open(this.translate.instant('SUCCESSION.idpDeactivated'), this.translate.instant('COMMON.ok'), { duration: 3000 });
       },
     });
   }
@@ -887,9 +888,9 @@ export class IDPViewComponent implements OnInit {
       this.api.delete(`/succession/idps/${idp._id}`).subscribe({
         next: () => {
           this.idps.update((list) => list.filter((i) => i._id !== idp._id));
-          this.snackBar.open('IDP deleted', 'Close', { duration: 2500 });
+          this.snackBar.open(this.translate.instant('SUCCESSION.idpDeleted'), this.translate.instant('COMMON.close'), { duration: 2500 });
         },
-        error: () => this.snackBar.open('Delete failed', 'Close', { duration: 3000 }),
+        error: () => this.snackBar.open(this.translate.instant('COMMON.deleteFailed'), this.translate.instant('COMMON.close'), { duration: 3000 }),
       });
     });
   }

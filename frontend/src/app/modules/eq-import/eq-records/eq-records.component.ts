@@ -73,8 +73,8 @@ const COMPOSITE_LABELS: Record<string, string> = {
       @if (loading()) {
         <div class="loading-center"><mat-spinner diameter="36" /></div>
       } @else if (records().length === 0) {
-        <app-empty-state icon="psychology" title="No assessments imported yet" message="Import your first EQi 2.0 PDF report to get started.">
-          <a mat-raised-button color="primary" routerLink="/eq-import"><mat-icon>upload_file</mat-icon> Import Assessment</a>
+        <app-empty-state icon="psychology" [title]="'EQIMPORT.noAssessments' | translate" [message]="'EQIMPORT.noAssessmentsMsg' | translate">
+          <a mat-raised-button color="primary" routerLink="/eq-import"><mat-icon>upload_file</mat-icon> {{ 'EQIMPORT.importAssessment' | translate }}</a>
         </app-empty-state>
       } @else {
         <div class="stats-bar">
@@ -95,7 +95,7 @@ const COMPOSITE_LABELS: Record<string, string> = {
                 </div>
                 <span class="record-date">{{ rec.createdAt | date:'MMM d, y' }}</span>
                 @if (rec.privacyMode !== 'ANONYMIZED') {
-                  <button mat-icon-button class="delete-btn" matTooltip="Erase data" (click)="eraseRecord(rec)">
+                  <button mat-icon-button class="delete-btn" [matTooltip]="'EQ.eraseData' | translate" (click)="eraseRecord(rec)">
                     <mat-icon>delete_forever</mat-icon>
                   </button>
                 }

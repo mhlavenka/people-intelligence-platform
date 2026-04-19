@@ -116,7 +116,7 @@ interface NotificationDoc {
                   </div>
                   <textarea class="compose-textarea"
                             [(ngModel)]="composeContent"
-                            placeholder="Write your message…"
+                            [placeholder]="'HUB.writeMessage' | translate"
                             rows="5"></textarea>
                   <div class="compose-actions">
                     <button mat-stroked-button (click)="composing.set(false)">{{ 'COMMON.cancel' | translate }}</button>
@@ -188,7 +188,7 @@ interface NotificationDoc {
 
               <div class="thread-reply">
                 <textarea [(ngModel)]="replyContent"
-                          placeholder="Reply…"
+                          [placeholder]="'HUB.reply' | translate"
                           rows="3"
                           class="reply-textarea"
                           (keydown.ctrl.enter)="sendReply()"></textarea>

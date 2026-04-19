@@ -291,22 +291,22 @@ interface AssessmentResult {
 
           <mat-stepper orientation="vertical" [linear]="true" #stepper (selectionChange)="onStepChange($event.selectedIndex)">
             <!-- Role step -->
-            <mat-step label="Your Role" [stepControl]="roleGroup">
+            <mat-step [label]="'NEURO.yourRole' | translate" [stepControl]="roleGroup">
               <div class="step-content" [formGroup]="roleGroup">
-                <p class="step-description">Tell us about your role to contextualize the assessment.</p>
+                <p class="step-description">{{ 'NEURO.roleDescription' | translate }}</p>
                 <mat-form-field appearance="outline" class="full-width">
-                  <mat-label>Your Role</mat-label>
+                  <mat-label>{{ 'NEURO.yourRole' | translate }}</mat-label>
                   <mat-select formControlName="respondentRole">
-                    <mat-option value="hr_manager">HR Manager</mat-option>
-                    <mat-option value="executive">Executive / C-Suite</mat-option>
-                    <mat-option value="manager">People Manager</mat-option>
-                    <mat-option value="individual_contributor">Individual Contributor</mat-option>
-                    <mat-option value="dei_specialist">DEI Specialist</mat-option>
+                    <mat-option value="hr_manager">{{ 'NEURO.roleHrManager' | translate }}</mat-option>
+                    <mat-option value="executive">{{ 'NEURO.roleExecutive' | translate }}</mat-option>
+                    <mat-option value="manager">{{ 'NEURO.rolePeopleManager' | translate }}</mat-option>
+                    <mat-option value="individual_contributor">{{ 'NEURO.roleIndividualContributor' | translate }}</mat-option>
+                    <mat-option value="dei_specialist">{{ 'NEURO.roleDeiSpecialist' | translate }}</mat-option>
                   </mat-select>
                 </mat-form-field>
                 <button mat-raised-button color="primary" matStepperNext type="button"
                         [disabled]="roleGroup.invalid">
-                  Continue →
+                  {{ 'NEURO.continue' | translate }} →
                 </button>
               </div>
             </mat-step>
@@ -317,30 +317,30 @@ interface AssessmentResult {
                 <div class="step-content">
                   <p class="step-description">{{ dim.description }}</p>
                   <div class="score-question">
-                    <label>Rate your organization's current maturity in this dimension:</label>
+                    <label>{{ 'NEURO.rateMaturity' | translate }}</label>
                     <div class="slider-container">
-                      <span class="slider-label">Beginner</span>
+                      <span class="slider-label">{{ 'NEURO.beginner' | translate }}</span>
                       <mat-slider min="0" max="100" step="5" class="score-slider">
                         <input matSliderThumb [value]="dim.score" (valueChange)="updateScore(i, $event)" />
                       </mat-slider>
-                      <span class="slider-label">Advanced</span>
+                      <span class="slider-label">{{ 'NEURO.advanced' | translate }}</span>
                     </div>
                     <div class="score-display" [class]="scoreClass(dim.score)">
                       {{ dim.score }} / 100
                     </div>
                   </div>
                   <div class="step-actions">
-                    <button mat-button matStepperPrevious type="button">Back</button>
-                    <button mat-raised-button color="primary" matStepperNext type="button">Continue →</button>
+                    <button mat-button matStepperPrevious type="button">{{ 'COMMON.back' | translate }}</button>
+                    <button mat-raised-button color="primary" matStepperNext type="button">{{ 'NEURO.continue' | translate }} →</button>
                   </div>
                 </div>
               </mat-step>
             }
 
             <!-- Submit step -->
-            <mat-step label="Review & Submit">
+            <mat-step [label]="'NEURO.reviewSubmit' | translate">
               <div class="step-content">
-                <h3>Review Your Scores</h3>
+                <h3>{{ 'NEURO.reviewYourScores' | translate }}</h3>
                 @for (dim of dimensions; track dim.name) {
                   <div class="review-row">
                     <span>{{ dim.name }}</span>
@@ -348,10 +348,10 @@ interface AssessmentResult {
                   </div>
                 }
                 <div class="step-actions" style="margin-top: 24px;">
-                  <button mat-button matStepperPrevious type="button">Back</button>
+                  <button mat-button matStepperPrevious type="button">{{ 'COMMON.back' | translate }}</button>
                   <button mat-raised-button color="primary" (click)="submit()" [disabled]="submitting()">
                     @if (submitting()) { <mat-spinner diameter="18" /> }
-                    @else { Generate AI Analysis }
+                    @else { {{ 'NEURO.generateAIAnalysis' | translate }} }
                   </button>
                 </div>
               </div>

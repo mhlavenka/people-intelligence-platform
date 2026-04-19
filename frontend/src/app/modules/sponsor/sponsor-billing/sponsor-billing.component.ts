@@ -120,7 +120,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
                   <span class="inv-total">{{ (inv.total / 100) | currency:inv.currency }}</span>
                   <span class="muted">due {{ inv.dueDate | date:'mediumDate' }}</span>
                   <div class="inv-actions">
-                    <a mat-icon-button matTooltip="View / Print"
+                    <a mat-icon-button [matTooltip]="'SPONSOR.viewPrint' | translate"
                        [routerLink]="['/billing/sponsors', sponsorId, 'invoices', inv._id]">
                       <mat-icon>visibility</mat-icon>
                     </a>

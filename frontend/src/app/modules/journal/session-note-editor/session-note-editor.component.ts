@@ -110,7 +110,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
             <div class="tab-content">
               <mat-form-field appearance="outline" class="full-width">
                 <mat-label>{{ 'JOURNAL.openingState' | translate }}</mat-label>
-                <textarea matInput rows="3" [(ngModel)]="inSession.openingState" placeholder="How did the coachee present at the start?"></textarea>
+                <textarea matInput rows="3" [(ngModel)]="inSession.openingState" [placeholder]="'JOURNAL.openingStatePlaceholder' | translate"></textarea>
               </mat-form-field>
 
               <!-- Key Themes -->
@@ -122,13 +122,13 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
                     <mat-icon (click)="removeTheme($index)">close</mat-icon>
                   </span>
                 }
-                <input class="chip-input" placeholder="Add theme + Enter"
+                <input class="chip-input" [placeholder]="'JOURNAL.addThemePlaceholder' | translate"
                   (keydown.enter)="addTheme($event)" #themeInput>
               </div>
 
               <mat-form-field appearance="outline" class="full-width">
                 <mat-label>{{ 'JOURNAL.observations' | translate }}</mat-label>
-                <textarea matInput rows="8" [(ngModel)]="inSession.observations" placeholder="What did you observe during the session?"></textarea>
+                <textarea matInput rows="8" [(ngModel)]="inSession.observations" [placeholder]="'JOURNAL.observationsPlaceholder' | translate"></textarea>
               </mat-form-field>
 
               <!-- Notable Quotes -->
@@ -136,7 +136,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
               @for (q of inSession.notableQuotes; track $index) {
                 <div class="repeatable-row">
                   <mat-form-field appearance="outline" class="flex-grow">
-                    <input matInput [(ngModel)]="inSession.notableQuotes[$index]" placeholder="Quote...">
+                    <input matInput [(ngModel)]="inSession.notableQuotes[$index]" [placeholder]="'JOURNAL.quotePlaceholder' | translate">
                   </mat-form-field>
                   <button mat-icon-button (click)="removeQuote($index)"><mat-icon>remove_circle_outline</mat-icon></button>
                 </div>
@@ -145,11 +145,11 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
               <mat-form-field appearance="outline" class="full-width">
                 <mat-label>{{ 'JOURNAL.coachInterventions' | translate }}</mat-label>
-                <textarea matInput rows="4" [(ngModel)]="inSession.coachInterventions" placeholder="What coaching tools or interventions did you use?"></textarea>
+                <textarea matInput rows="4" [(ngModel)]="inSession.coachInterventions" [placeholder]="'JOURNAL.coachInterventionsPlaceholder' | translate"></textarea>
               </mat-form-field>
               <mat-form-field appearance="outline" class="full-width">
                 <mat-label>{{ 'JOURNAL.energyShifts' | translate }}</mat-label>
-                <textarea matInput rows="3" [(ngModel)]="inSession.energyShifts" placeholder="Were there notable shifts in energy or engagement?"></textarea>
+                <textarea matInput rows="3" [(ngModel)]="inSession.energyShifts" [placeholder]="'JOURNAL.energyShiftsPlaceholder' | translate"></textarea>
               </mat-form-field>
             </div>
           </mat-tab>

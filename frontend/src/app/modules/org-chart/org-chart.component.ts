@@ -206,20 +206,20 @@ const DEPT_PALETTE = [
         </div>
         <div class="header-actions">
           <div class="zoom-controls">
-            <button mat-icon-button (click)="zoomOut()" [disabled]="zoom() <= 0.4" matTooltip="Zoom out">
+            <button mat-icon-button (click)="zoomOut()" [disabled]="zoom() <= 0.4" [matTooltip]="'ORGCHART.zoomOut' | translate">
               <mat-icon>remove</mat-icon>
             </button>
             <span class="zoom-label">{{ (zoom() * 100) | number:'1.0-0' }}%</span>
-            <button mat-icon-button (click)="zoomIn()"  [disabled]="zoom() >= 1.6" matTooltip="Zoom in">
+            <button mat-icon-button (click)="zoomIn()"  [disabled]="zoom() >= 1.6" [matTooltip]="'ORGCHART.zoomIn' | translate">
               <mat-icon>add</mat-icon>
             </button>
-            <button mat-icon-button (click)="zoom.set(1)" matTooltip="Reset zoom">
+            <button mat-icon-button (click)="zoom.set(1)" [matTooltip]="'ORGCHART.resetZoom' | translate">
               <mat-icon>center_focus_strong</mat-icon>
             </button>
           </div>
           @if (hasChanges()) {
             <button mat-stroked-button (click)="discard()" [disabled]="saving()">
-              <mat-icon>undo</mat-icon> Discard
+              <mat-icon>undo</mat-icon> {{ 'ORGCHART.discard' | translate }}
             </button>
             <button mat-raised-button color="primary" (click)="save()" [disabled]="saving()">
               @if (saving()) {
@@ -269,7 +269,7 @@ const DEPT_PALETTE = [
                    (cdkDragEnded)="onDragEnded($event, node)">
 
                 <!-- drag handle -->
-                <div class="node-drag-handle" cdkDragHandle matTooltip="Drag to reassign">
+                <div class="node-drag-handle" cdkDragHandle [matTooltip]="'ORGCHART.dragToReassign' | translate">
                   <mat-icon>drag_indicator</mat-icon>
                 </div>
 
@@ -303,7 +303,7 @@ const DEPT_PALETTE = [
                 <!-- remove manager button -->
                 @if (node.managerId) {
                   <button class="node-unlink-btn"
-                          matTooltip="Remove from reporting line"
+                          [matTooltip]="'ORGCHART.removeFromReportingLine' | translate"
                           (click)="unlinkManager(node._id); $event.stopPropagation()">
                     <mat-icon>link_off</mat-icon>
                   </button>

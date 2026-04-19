@@ -218,7 +218,7 @@ const DEPARTMENTS = [
                     <textarea matInput rows="4"
                       [value]="answers()[q.id] || ''"
                       (input)="setAnswer(q.id, $any($event.target).value)"
-                      placeholder="Type your response here...">
+                      [placeholder]="'SURVEY.typeResponsePlaceholder' | translate">
                     </textarea>
                   </mat-form-field>
                 }
