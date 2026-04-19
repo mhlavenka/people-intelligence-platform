@@ -10,6 +10,7 @@ import { MatBadgeModule } from '@angular/material/badge';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDividerModule } from '@angular/material/divider';
+import { forkJoin } from 'rxjs';
 import { ApiService } from '../../core/api.service';
 import { AvatarComponent } from '../../shared/avatar/avatar.component';
 import { TranslateModule } from '@ngx-translate/core';
@@ -75,6 +76,58 @@ interface NotificationDoc {
       </div>
 
       <mat-tab-group [(selectedIndex)]="activeTab" class="hub-tabs">
+
+        <!-- ── Notifications ────────────────────────────────── -->
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon>notifications_none</mat-icon>
+            <span>{{ 'HUB.notifications' | translate }}</span>
+            @if (unreadNotifications() > 0) {
+              <span class="tab-badge">{{ unreadNotifications() }}</span>
+            }
+          </ng-template>
+
+          <div class="tab-content">
+            @if (loadingNotifications()) {
+              <div class="center-spinner"><mat-spinner diameter="32" /></div>
+            } @else {
+              @if (notifications().length > 0) {
+                <div class="notif-toolbar">
+                  <button mat-button (click)="markAllRead()" [disabled]="unreadNotifications() === 0">
+                    <mat-icon>done_all</mat-icon> {{ 'HUB.markAllRead' | translate }}
+                  </button>
+                </div>
+              }
+
+              @if (notifications().length === 0) {
+                <div class="empty-state">
+                  <mat-icon>notifications_none</mat-icon>
+                  <p>{{ 'HUB.noNotifications' | translate }}</p>
+                </div>
+              } @else {
+                <div class="notif-list">
+                  @for (n of notifications(); track n._id) {
+                    <button class="notif-item"
+                            [class.unread]="!n.isRead"
+                            (click)="openNotif(n)">
+                      <div class="notif-icon" [class]="n.type">
+                        <mat-icon>{{ notifIcon(n.type) }}</mat-icon>
+                      </div>
+                      <div class="notif-body">
+                        <div class="notif-title">{{ n.title }}</div>
+                        <div class="notif-text">{{ n.body }}</div>
+                        <div class="notif-time">{{ n.createdAt | date:'MMM d, h:mm a' }}</div>
+                      </div>
+                      @if (!n.isRead) {
+                        <div class="notif-dot"></div>
+                      }
+                    </button>
+                  }
+                </div>
+              }
+            }
+          </div>
+        </mat-tab>
 
         <!-- ── Messages ─────────────────────────────────────── -->
         <mat-tab>
@@ -199,58 +252,6 @@ interface NotificationDoc {
                   @else { <mat-icon>send</mat-icon> }
                 </button>
               </div>
-            }
-          </div>
-        </mat-tab>
-
-        <!-- ── Notifications ────────────────────────────────── -->
-        <mat-tab>
-          <ng-template mat-tab-label>
-            <mat-icon>notifications_none</mat-icon>
-            <span>{{ 'HUB.notifications' | translate }}</span>
-            @if (unreadNotifications() > 0) {
-              <span class="tab-badge">{{ unreadNotifications() }}</span>
-            }
-          </ng-template>
-
-          <div class="tab-content">
-            @if (loadingNotifications()) {
-              <div class="center-spinner"><mat-spinner diameter="32" /></div>
-            } @else {
-              @if (notifications().length > 0) {
-                <div class="notif-toolbar">
-                  <button mat-button (click)="markAllRead()" [disabled]="unreadNotifications() === 0">
-                    <mat-icon>done_all</mat-icon> {{ 'HUB.markAllRead' | translate }}
-                  </button>
-                </div>
-              }
-
-              @if (notifications().length === 0) {
-                <div class="empty-state">
-                  <mat-icon>notifications_none</mat-icon>
-                  <p>{{ 'HUB.noNotifications' | translate }}</p>
-                </div>
-              } @else {
-                <div class="notif-list">
-                  @for (n of notifications(); track n._id) {
-                    <button class="notif-item"
-                            [class.unread]="!n.isRead"
-                            (click)="openNotif(n)">
-                      <div class="notif-icon" [class]="n.type">
-                        <mat-icon>{{ notifIcon(n.type) }}</mat-icon>
-                      </div>
-                      <div class="notif-body">
-                        <div class="notif-title">{{ n.title }}</div>
-                        <div class="notif-text">{{ n.body }}</div>
-                        <div class="notif-time">{{ n.createdAt | date:'MMM d, h:mm a' }}</div>
-                      </div>
-                      @if (!n.isRead) {
-                        <div class="notif-dot"></div>
-                      }
-                    </button>
-                  }
-                </div>
-              }
             }
           </div>
         </mat-tab>
@@ -503,16 +504,27 @@ export class MessageHubDialogComponent implements OnInit {
       error: () => {},
     });
 
-    // inbox
-    this.api.get<Conversation[]>('/hub/messages').subscribe({
-      next: (list) => { this.conversations.set(list); this.loadingInbox.set(false); },
-      error: () => this.loadingInbox.set(false),
-    });
+    const inbox$ = this.api.get<Conversation[]>('/hub/messages');
+    const notif$ = this.api.get<NotificationDoc[]>('/hub/notifications');
 
-    // notifications
-    this.api.get<NotificationDoc[]>('/hub/notifications').subscribe({
-      next: (list) => { this.notifications.set(list); this.loadingNotifications.set(false); },
-      error: () => this.loadingNotifications.set(false),
+    forkJoin([inbox$, notif$]).subscribe({
+      next: ([msgs, notifs]) => {
+        this.conversations.set(msgs);
+        this.loadingInbox.set(false);
+        this.notifications.set(notifs);
+        this.loadingNotifications.set(false);
+
+        const hasUnreadNotifs = notifs.some((n) => !n.isRead);
+        const hasUnreadMsgs = msgs.some((c) => c.unreadCount > 0);
+        // Tab 0 = Notifications, Tab 1 = Messages
+        if (!hasUnreadNotifs && hasUnreadMsgs) {
+          this.activeTab = 1;
+        }
+      },
+      error: () => {
+        this.loadingInbox.set(false);
+        this.loadingNotifications.set(false);
+      },
     });
 
     // org users for compose

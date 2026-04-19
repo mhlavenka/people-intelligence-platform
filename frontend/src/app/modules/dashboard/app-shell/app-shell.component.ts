@@ -770,7 +770,7 @@ export class AppShellComponent implements OnInit, OnDestroy {
       },
       error: () => {},
     });
-    this.loadUnreadCount();
+    this.loadUnreadCount(true);
     this.authService.startActivityTracking();
     this.authService.scheduleTokenRefresh();
   }
@@ -779,9 +779,12 @@ export class AppShellComponent implements OnInit, OnDestroy {
     this.authService.stopActivityTracking();
   }
 
-  loadUnreadCount(): void {
+  loadUnreadCount(autoOpen = false): void {
     this.api.get<{ total: number }>('/hub/unread-count').subscribe({
-      next: (r) => this.unreadCount.set(r.total),
+      next: (r) => {
+        this.unreadCount.set(r.total);
+        if (autoOpen && r.total > 0) this.openHub();
+      },
       error: () => {},
     });
   }
