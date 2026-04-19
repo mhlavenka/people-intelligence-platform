@@ -566,6 +566,7 @@ export class CoachInterviewComponent implements OnInit {
       isAnonymous:   false,
       sessionFormat: this.sessionFormat(),
       targetName:    this.targetName(),
+      respondentLanguage: localStorage.getItem('artes_language') || 'en',
       responses,
     };
 

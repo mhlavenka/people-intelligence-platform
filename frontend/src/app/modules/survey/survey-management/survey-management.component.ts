@@ -513,7 +513,14 @@ export class SurveyManagementComponent implements OnInit {
       disableClose: true,
       data: template,
     });
-    ref.afterClosed().subscribe((result) => { if (result) this.loadTemplates(); });
+    ref.afterClosed().subscribe((result) => {
+      if (result?.openTemplate) {
+        this.loadTemplates();
+        setTimeout(() => this.openEditDialog(result.openTemplate), 200);
+      } else if (result) {
+        this.loadTemplates();
+      }
+    });
   }
 
   toggleActive(template: SurveyTemplate): void {

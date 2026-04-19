@@ -181,6 +181,9 @@ export interface ISurveyTemplate extends Document {
     // Rater configuration: 'self' = respondent scores themselves; 'multi_rater' = 360
     rater_type?: 'self' | 'multi_rater';
 
+    language?: string;
+    sourceTemplateId?: mongoose.Types.ObjectId;
+
     createdAt: Date;
     updatedAt: Date;
 }
@@ -340,6 +343,9 @@ const SurveyTemplateSchema = new Schema<ISurveyTemplate>(
 
         scoring:    { type: ScoringConfigSchema },
         rater_type: { type: String, enum: ['self', 'multi_rater'] },
+
+        language: { type: String, enum: ['en', 'fr', 'es'], default: 'en' },
+        sourceTemplateId: { type: Schema.Types.ObjectId, ref: 'SurveyTemplate' },
     },
     { timestamps: true }
 );
