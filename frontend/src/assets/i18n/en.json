@@ -1051,6 +1051,7 @@
     "instructions": "Instructions",
     "begin": "Begin",
     "yourAnswer": "Your answer",
+    "typeResponsePlaceholder": "Type your response here…",
     "surveyNotFound": "Survey not found.",
     "questionOf": "Question {{current}} of {{total}}",
     "notEnoughResponses": "Not enough responses yet",

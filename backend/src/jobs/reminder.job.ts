@@ -32,6 +32,11 @@ export function startReminderJob(): void {
         if (!coach) continue;
         const coachName = `${coach.firstName} ${coach.lastName}`;
 
+        const clientUser = booking.coacheeId
+          ? await User.findById(booking.coacheeId).select('preferredLanguage')
+          : null;
+        const language = clientUser?.preferredLanguage || 'en';
+
         // 24h reminder
         if (
           !sentTypes.includes('24h') &&
@@ -40,7 +45,7 @@ export function startReminderJob(): void {
         ) {
           try {
             const suppress = await shouldSuppressBookingEmail(booking);
-            if (!suppress) await sendReminder(booking, coachName, '24h');
+            if (!suppress) await sendReminder(booking, coachName, '24h', language);
             notifyBookingReminder({
               coacheeId: booking.coacheeId,
               engagementId: booking.engagementId,
@@ -65,7 +70,7 @@ export function startReminderJob(): void {
         ) {
           try {
             const suppress1h = await shouldSuppressBookingEmail(booking);
-            if (!suppress1h) await sendReminder(booking, coachName, '1h');
+            if (!suppress1h) await sendReminder(booking, coachName, '1h', language);
             notifyBookingReminder({
               coacheeId: booking.coacheeId,
               engagementId: booking.engagementId,
