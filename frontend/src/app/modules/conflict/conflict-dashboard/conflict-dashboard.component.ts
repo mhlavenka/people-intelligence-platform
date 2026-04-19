@@ -370,8 +370,8 @@ interface ConflictAnalysis {
         <div class="section-header">
           <div class="section-icon blue"><mat-icon>school</mat-icon></div>
           <div>
-            <h3>Knowledge &amp; Skill Building</h3>
-            <p>Structured learning paths to build conflict literacy, emotional intelligence, and leadership capability — drawing on tools available within this platform and leading external assessments.</p>
+            <h3>{{ 'CONFLICT.knowledgeSkillBuilding' | translate }}</h3>
+            <p>{{ 'CONFLICT.knowledgeSkillBuildingDesc' | translate }}</p>
           </div>
         </div>
 
@@ -379,15 +379,15 @@ interface ConflictAnalysis {
 
           <!-- In-platform -->
           <div class="edu-col">
-            <div class="edu-col-label"><mat-icon>layers</mat-icon> In-Platform Modules</div>
+            <div class="edu-col-label"><mat-icon>layers</mat-icon> {{ 'CONFLICT.inPlatformModules' | translate }}</div>
             @for (item of inPlatformPaths; track item.route) {
               <a class="edu-card internal" [routerLink]="item.route">
                 <div class="edu-icon" [style.background]="item.color + '18'" [style.color]="item.color">
                   <mat-icon>{{ item.icon }}</mat-icon>
                 </div>
                 <div class="edu-info">
-                  <strong>{{ item.title }}</strong>
-                  <span>{{ item.description }}</span>
+                  <strong>{{ item.titleKey | translate }}</strong>
+                  <span>{{ item.descKey | translate }}</span>
                 </div>
                 <mat-icon class="edu-arrow">chevron_right</mat-icon>
               </a>
@@ -396,15 +396,15 @@ interface ConflictAnalysis {
 
           <!-- External tools -->
           <div class="edu-col">
-            <div class="edu-col-label"><mat-icon>open_in_new</mat-icon> External Assessments &amp; Tools</div>
+            <div class="edu-col-label"><mat-icon>open_in_new</mat-icon> {{ 'CONFLICT.externalAssessments' | translate }}</div>
             @for (item of externalTools; track item.url) {
               <a class="edu-card external" [href]="item.url" target="_blank" rel="noopener">
                 <div class="edu-icon" [style.background]="item.color + '18'" [style.color]="item.color">
                   <mat-icon>{{ item.icon }}</mat-icon>
                 </div>
                 <div class="edu-info">
-                  <strong>{{ item.title }}</strong>
-                  <span>{{ item.description }}</span>
+                  <strong>{{ item.titleKey | translate }}</strong>
+                  <span>{{ item.descKey | translate }}</span>
                 </div>
                 <mat-icon class="edu-arrow">open_in_new</mat-icon>
               </a>
@@ -419,21 +419,21 @@ interface ConflictAnalysis {
         <div class="section-header">
           <div class="section-icon green"><mat-icon>handshake</mat-icon></div>
           <div>
-            <h3>Interest-Based Negotiation Toolkit</h3>
-            <p>Downloadable frameworks and guided exercises for self-directed conflict resolution, based on Helena's methodology.</p>
+            <h3>{{ 'CONFLICT.negotiationToolkit' | translate }}</h3>
+            <p>{{ 'CONFLICT.negotiationToolkitDesc' | translate }}</p>
           </div>
         </div>
         <div class="toolkit-grid">
-          @for (resource of toolkitResources; track resource.title) {
+          @for (resource of toolkitResources; track resource.titleKey) {
             <div class="toolkit-card">
               <div class="toolkit-icon" [style.background]="resource.color + '18'" [style.color]="resource.color">
                 <mat-icon>{{ resource.icon }}</mat-icon>
               </div>
               <div class="toolkit-info">
-                <strong>{{ resource.title }}</strong>
-                <span>{{ resource.description }}</span>
+                <strong>{{ resource.titleKey | translate }}</strong>
+                <span>{{ resource.descKey | translate }}</span>
               </div>
-              <button mat-icon-button [matTooltip]="'Download ' + resource.title" class="download-btn">
+              <button mat-icon-button [matTooltip]="('COMMON.download' | translate) + ' ' + (resource.titleKey | translate)" class="download-btn">
                 <mat-icon>download</mat-icon>
               </button>
             </div>
@@ -733,65 +733,23 @@ export class ConflictDashboardComponent implements OnInit {
   avgRiskScore = signal(0);
 
   toolkitResources = [
-    { title: 'Positions vs. Interests Framework', description: 'Identify underlying needs behind stated positions to find creative solutions both parties can accept.', icon: 'compare_arrows', color: '#3A9FD6' },
-    { title: 'Interest Mapping Worksheet', description: "Guided exercise to map each party's interests before entering a difficult conversation.", icon: 'account_tree', color: '#27C4A0' },
-    { title: 'Conflict Type Diagnostic', description: 'Determine whether conflict is interpersonal, structural, cultural, or positional to choose the right intervention.', icon: 'category', color: '#e86c3a' },
-    { title: 'Manager Conversation Planner', description: 'Step-by-step guide for preparing and facilitating a conflict conversation using GROW methodology.', icon: 'edit_note', color: '#7c3aed' },
+    { titleKey: 'CONFLICT.positionsFrameworkTitle', descKey: 'CONFLICT.positionsFrameworkDesc', icon: 'compare_arrows', color: '#3A9FD6' },
+    { titleKey: 'CONFLICT.interestMappingTitle', descKey: 'CONFLICT.interestMappingDesc', icon: 'account_tree', color: '#27C4A0' },
+    { titleKey: 'CONFLICT.conflictDiagnosticTitle', descKey: 'CONFLICT.conflictDiagnosticDesc', icon: 'category', color: '#e86c3a' },
+    { titleKey: 'CONFLICT.managerPlannerTitle', descKey: 'CONFLICT.managerPlannerDesc', icon: 'edit_note', color: '#7c3aed' },
   ];
 
   inPlatformPaths = [
-    {
-      route: '/neuroinclusion',
-      title: 'Neuro-Inclusion Assessment',
-      description: 'Identify neuroinclusion gaps that often underlie perceived conflict — communication style mismatches, sensory overload, and cognitive diversity barriers.',
-      icon: 'psychology',
-      color: '#27C4A0',
-    },
-    {
-      route: '/succession',
-      title: 'Leadership IDP (GROW Model)',
-      description: 'Build individual development plans using the GROW coaching model to strengthen self-awareness and conflict-resilient leadership behaviours.',
-      icon: 'trending_up',
-      color: '#3A9FD6',
-    },
-    {
-      route: '/coach/interview',
-      title: 'Coach-Led Interview',
-      description: 'Conduct structured one-to-one or group intake interviews to surface unspoken tensions before they escalate.',
-      icon: 'record_voice_over',
-      color: '#7c3aed',
-    },
+    { route: '/neuroinclusion', titleKey: 'CONFLICT.neuroInclusionTitle', descKey: 'CONFLICT.neuroInclusionDesc', icon: 'psychology', color: '#27C4A0' },
+    { route: '/succession', titleKey: 'CONFLICT.leadershipIDPTitle', descKey: 'CONFLICT.leadershipIDPDesc', icon: 'trending_up', color: '#3A9FD6' },
+    { route: '/coach/interview', titleKey: 'CONFLICT.coachInterviewTitle', descKey: 'CONFLICT.coachInterviewDesc', icon: 'record_voice_over', color: '#7c3aed' },
   ];
 
   externalTools = [
-    {
-      url: 'https://cad.storefront.mhs.com/collections/eq-i-2-0/',
-      title: 'MHS EQ-i 2.0',
-      description: "The world's leading emotional intelligence assessment. Measure self-awareness, empathy, and stress tolerance — core competencies for conflict-resilient teams.",
-      icon: 'insights',
-      color: '#e86c3a',
-    },
-    {
-      url: 'https://cad.storefront.mhs.com/collections/eq-360/',
-      title: 'MHS EQ 360',
-      description: 'Multi-rater emotional intelligence feedback to reveal blind spots and strengthen leadership effectiveness in high-conflict environments.',
-      icon: '360',
-      color: '#f0a500',
-    },
-    {
-      url: 'https://www.themyersbriggs.com/en-US/Products-and-Services/Myers-Briggs',
-      title: 'MBTI Assessment',
-      description: 'Understand personality type differences that drive communication friction and team conflict — foundational for mediation and coaching.',
-      icon: 'people_alt',
-      color: '#1B2A47',
-    },
-    {
-      url: 'https://www.viacharacter.org/',
-      title: 'VIA Character Strengths',
-      description: 'Free evidence-based strengths profiling. Reframe conflict conversations around what each person brings rather than what divides them.',
-      icon: 'star_outline',
-      color: '#27C4A0',
-    },
+    { url: 'https://cad.storefront.mhs.com/collections/eq-i-2-0/', titleKey: 'CONFLICT.eqi20Title', descKey: 'CONFLICT.eqi20Desc', icon: 'insights', color: '#e86c3a' },
+    { url: 'https://cad.storefront.mhs.com/collections/eq-360/', titleKey: 'CONFLICT.eq360Title', descKey: 'CONFLICT.eq360Desc', icon: '360', color: '#f0a500' },
+    { url: 'https://www.themyersbriggs.com/en-US/Products-and-Services/Myers-Briggs', titleKey: 'CONFLICT.mbtiTitle', descKey: 'CONFLICT.mbtiDesc', icon: 'people_alt', color: '#1B2A47' },
+    { url: 'https://www.viacharacter.org/', titleKey: 'CONFLICT.viaTitle', descKey: 'CONFLICT.viaDesc', icon: 'star_outline', color: '#27C4A0' },
   ];
 
   // ── Conflict IDPs ──────────────────────────────────────────────

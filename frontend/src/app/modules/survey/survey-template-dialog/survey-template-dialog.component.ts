@@ -119,18 +119,18 @@ interface SurveyTemplate {
               <mat-form-field appearance="outline" class="full-width">
                 <mat-label>{{ "SURVEY.templateTitleLabel" | translate }}</mat-label>
                 <input matInput formControlName="title"
-                  placeholder="e.g. Thomas-Kilmann Conflict Mode Instrument (TKI)" />
+                  [placeholder]="'SURVEY.titlePlaceholder' | translate" />
               </mat-form-field>
 
               <div class="form-row">
                 <mat-form-field appearance="outline" class="grow">
-                  <mat-label>Instrument ID</mat-label>
+                  <mat-label>{{ 'SURVEY.instrumentId' | translate }}</mat-label>
                   <input matInput formControlName="instrumentId"
-                    placeholder="e.g. TKI, ROCI-II, PSS-Edmondson, CDP-I, WCQ-deDreu" />
-                  <mat-hint>Standardised instrument identifier</mat-hint>
+                    [placeholder]="'SURVEY.instrumentIdPlaceholder' | translate" />
+                  <mat-hint>{{ 'SURVEY.instrumentIdHint' | translate }}</mat-hint>
                 </mat-form-field>
                 <mat-form-field appearance="outline" style="width:150px; flex-shrink:0">
-                  <mat-label>Version</mat-label>
+                  <mat-label>{{ 'SURVEY.version' | translate }}</mat-label>
                   <input matInput formControlName="instrumentVersion" placeholder="e.g. 2007" />
                 </mat-form-field>
               </div>
@@ -151,7 +151,7 @@ interface SurveyTemplate {
 
               <div class="form-row">
                 <mat-form-field appearance="outline" class="half-width">
-                  <mat-label>Module</mat-label>
+                  <mat-label>{{ 'SURVEY.moduleLabel' | translate }}</mat-label>
                   <mat-select formControlName="moduleType">
                     <mat-option value="conflict">{{ "SURVEY.conflictIntelligence" | translate }}</mat-option>
                     <mat-option value="neuroinclusion">{{ "SURVEY.neuroInclusionCompass" | translate }}</mat-option>
@@ -161,7 +161,7 @@ interface SurveyTemplate {
                 </mat-form-field>
 
                 <mat-form-field appearance="outline" class="half-width">
-                  <mat-label>Intake Type</mat-label>
+                  <mat-label>{{ 'SURVEY.intakeTypeLabel' | translate }}</mat-label>
                   <mat-select formControlName="intakeType" (selectionChange)="onIntakeTypeChange($event.value)">
                     <mat-option value="survey">{{ "SURVEY.surveyTypeSelfCompleted" | translate }}</mat-option>
                     <mat-option value="interview">{{ "SURVEY.interviewTypeCoachLed" | translate }}</mat-option>
@@ -172,12 +172,9 @@ interface SurveyTemplate {
 
               <div class="form-row">
                 <mat-form-field appearance="outline" class="half-width">
-                  <mat-label>Min responses to show results &amp; run AI</mat-label>
+                  <mat-label>{{ 'SURVEY.minResponsesLabel' | translate }}</mat-label>
                   <input matInput type="number" min="1" formControlName="minResponsesForAnalysis" />
-                  <mat-hint>
-                    Results and AI analysis are blocked until this many responses exist.
-                    Default: 5 for surveys (protects anonymity), 1 for interviews &amp; assessments.
-                  </mat-hint>
+                  <mat-hint>{{ 'SURVEY.minResponsesHint' | translate }}</mat-hint>
                 </mat-form-field>
               </div>
 
@@ -200,132 +197,132 @@ interface SurveyTemplate {
             <div class="tab-content">
 
               <!-- ── Scoring ─────────────────────────────────────────── -->
-              <div class="sub-section-label">Scoring</div>
+              <div class="sub-section-label">{{ 'SURVEY.scoring' | translate }}</div>
 
               <div class="form-row">
                 <mat-form-field appearance="outline" class="half-width">
-                  <mat-label>Scoring Method</mat-label>
+                  <mat-label>{{ 'SURVEY.scoringMethod' | translate }}</mat-label>
                   <mat-select formControlName="scoringMethod">
-                    <mat-option value="">— Not specified —</mat-option>
-                    <mat-option value="normative">Normative (ROCI-II, PSS, CDP, WCQ)</mat-option>
-                    <mat-option value="ipsative">Ipsative / Forced-choice (TKI)</mat-option>
+                    <mat-option value="">{{ 'SURVEY.notSpecified' | translate }}</mat-option>
+                    <mat-option value="normative">{{ 'SURVEY.scoringNormative' | translate }}</mat-option>
+                    <mat-option value="ipsative">{{ 'SURVEY.scoringIpsative' | translate }}</mat-option>
                   </mat-select>
-                  <mat-hint>Ipsative = fixed point total across subscales</mat-hint>
+                  <mat-hint>{{ 'SURVEY.scoringMethodHint' | translate }}</mat-hint>
                 </mat-form-field>
 
                 <mat-form-field appearance="outline" class="half-width">
-                  <mat-label>Rater Type</mat-label>
+                  <mat-label>{{ 'SURVEY.raterType' | translate }}</mat-label>
                   <mat-select formControlName="raterType">
-                    <mat-option value="">— Not specified —</mat-option>
-                    <mat-option value="self">Self-report</mat-option>
-                    <mat-option value="multi_rater">Multi-rater / 360</mat-option>
+                    <mat-option value="">{{ 'SURVEY.notSpecified' | translate }}</mat-option>
+                    <mat-option value="self">{{ 'SURVEY.raterSelfReport' | translate }}</mat-option>
+                    <mat-option value="multi_rater">{{ 'SURVEY.raterMulti360' | translate }}</mat-option>
                   </mat-select>
                 </mat-form-field>
               </div>
 
               <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Subscales (comma-separated)</mat-label>
+                <mat-label>{{ 'SURVEY.subscalesLabel' | translate }}</mat-label>
                 <input matInput formControlName="scoringSubscales"
                   placeholder="e.g. competing, collaborating, compromising, avoiding, accommodating" />
-                <mat-hint>Scoring buckets — must match subscale values on questions</mat-hint>
+                <mat-hint>{{ 'SURVEY.subscalesHint' | translate }}</mat-hint>
               </mat-form-field>
 
               <div class="form-row">
                 <mat-form-field appearance="outline" style="width:160px">
-                  <mat-label>Items per subscale</mat-label>
+                  <mat-label>{{ 'SURVEY.itemsPerSubscale' | translate }}</mat-label>
                   <input matInput type="number" formControlName="scoringItemsPerSubscale" min="1" />
                 </mat-form-field>
                 <mat-form-field appearance="outline" style="width:130px">
-                  <mat-label>Total items</mat-label>
+                  <mat-label>{{ 'SURVEY.totalItems' | translate }}</mat-label>
                   <input matInput type="number" formControlName="scoringTotalItems" min="1" />
                 </mat-form-field>
                 <mat-form-field appearance="outline" style="width:110px">
-                  <mat-label>Score min</mat-label>
+                  <mat-label>{{ 'SURVEY.scoreMin' | translate }}</mat-label>
                   <input matInput type="number" formControlName="scoringRangeMin" />
                 </mat-form-field>
                 <mat-form-field appearance="outline" style="width:110px">
-                  <mat-label>Score max</mat-label>
+                  <mat-label>{{ 'SURVEY.scoreMax' | translate }}</mat-label>
                   <input matInput type="number" formControlName="scoringRangeMax" />
                 </mat-form-field>
               </div>
 
               <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Reverse-scored item IDs (comma-separated)</mat-label>
+                <mat-label>{{ 'SURVEY.reverseScoredItemIds' | translate }}</mat-label>
                 <input matInput formControlName="reverseScoreItems"
                   placeholder="e.g. q1, q3, q5" />
-                <mat-hint>Item IDs where the engine applies reverse_score_formula before averaging (e.g. PSS)</mat-hint>
+                <mat-hint>{{ 'SURVEY.reverseScoredItemIdsHint' | translate }}</mat-hint>
               </mat-form-field>
 
               <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Scoring note</mat-label>
+                <mat-label>{{ 'SURVEY.scoringNote' | translate }}</mat-label>
                 <textarea matInput formControlName="scoringNote" rows="2"
-                  placeholder="e.g. Scores are relative. All subscale scores sum to 30."></textarea>
+                  [placeholder]="'SURVEY.scoringNotePlaceholder' | translate"></textarea>
               </mat-form-field>
 
               <mat-divider></mat-divider>
 
               <!-- ── Construct & Rater ───────────────────────────────── -->
-              <div class="sub-section-label" style="margin-top:16px">Construct &amp; Rater</div>
+              <div class="sub-section-label" style="margin-top:16px">{{ 'SURVEY.constructAndRater' | translate }}</div>
 
               <div class="form-row">
                 <mat-form-field appearance="outline" class="half-width">
-                  <mat-label>Level of Analysis</mat-label>
+                  <mat-label>{{ 'SURVEY.levelOfAnalysis' | translate }}</mat-label>
                   <mat-select formControlName="levelOfAnalysis">
-                    <mat-option value="">— Not specified —</mat-option>
-                    <mat-option value="individual">Individual</mat-option>
-                    <mat-option value="team">Team</mat-option>
+                    <mat-option value="">{{ 'SURVEY.notSpecified' | translate }}</mat-option>
+                    <mat-option value="individual">{{ 'SURVEY.levelIndividual' | translate }}</mat-option>
+                    <mat-option value="team">{{ 'SURVEY.levelTeam' | translate }}</mat-option>
                   </mat-select>
                 </mat-form-field>
 
                 <mat-form-field appearance="outline" class="half-width">
-                  <mat-label>Relationship Target</mat-label>
+                  <mat-label>{{ 'SURVEY.relationshipTarget' | translate }}</mat-label>
                   <mat-select formControlName="relationshipTarget">
-                    <mat-option value="">— Not applicable —</mat-option>
-                    <mat-option value="supervisor">Supervisor (upward)</mat-option>
-                    <mat-option value="subordinate">Subordinate (downward)</mat-option>
-                    <mat-option value="peer">Peer (lateral)</mat-option>
+                    <mat-option value="">{{ 'SURVEY.notApplicable' | translate }}</mat-option>
+                    <mat-option value="supervisor">{{ 'SURVEY.targetSupervisor' | translate }}</mat-option>
+                    <mat-option value="subordinate">{{ 'SURVEY.targetSubordinate' | translate }}</mat-option>
+                    <mat-option value="peer">{{ 'SURVEY.targetPeer' | translate }}</mat-option>
                   </mat-select>
-                  <mat-hint>ROCI-II: determines which norm table is applied</mat-hint>
+                  <mat-hint>{{ 'SURVEY.relationshipTargetHint' | translate }}</mat-hint>
                 </mat-form-field>
               </div>
 
               <div class="checkbox-row">
                 <mat-checkbox formControlName="singleConstruct" color="primary">
-                  Single-construct instrument
+                  {{ 'SURVEY.singleConstruct' | translate }}
                 </mat-checkbox>
                 <span class="checkbox-hint">
-                  A single aggregate score is the primary output (e.g. PSS). No subscale routing needed.
+                  {{ 'SURVEY.singleConstructHint' | translate }}
                 </span>
               </div>
 
               <!-- ── Team Aggregation (only when level = team) ───────── -->
               @if (form.get('levelOfAnalysis')?.value === 'team') {
                 <div class="inset-section">
-                  <div class="inset-label">Team Aggregation</div>
+                  <div class="inset-label">{{ 'SURVEY.teamAggregation' | translate }}</div>
                   <div class="form-row">
                     <mat-form-field appearance="outline" class="half-width">
-                      <mat-label>Aggregation Method</mat-label>
+                      <mat-label>{{ 'SURVEY.aggregationMethod' | translate }}</mat-label>
                       <mat-select formControlName="aggregationMethod">
-                        <mat-option value="team_mean">Team Mean</mat-option>
-                        <mat-option value="rwg">r(wg) — Within-group Agreement</mat-option>
-                        <mat-option value="icc1">ICC(1) — Intraclass Correlation</mat-option>
+                        <mat-option value="team_mean">{{ 'SURVEY.aggTeamMean' | translate }}</mat-option>
+                        <mat-option value="rwg">{{ 'SURVEY.aggRwg' | translate }}</mat-option>
+                        <mat-option value="icc1">{{ 'SURVEY.aggIcc1' | translate }}</mat-option>
                       </mat-select>
                     </mat-form-field>
                     <mat-form-field appearance="outline" style="width:190px">
-                      <mat-label>Min Respondents per Team</mat-label>
+                      <mat-label>{{ 'SURVEY.minRespondentsPerTeam' | translate }}</mat-label>
                       <input matInput type="number" formControlName="minRespondentsPerTeam" min="1" />
                     </mat-form-field>
                   </div>
 
                   <div class="form-row">
                     <mat-form-field appearance="outline" style="width:140px">
-                      <mat-label>r(wg) Minimum</mat-label>
+                      <mat-label>{{ 'SURVEY.rwgMinimum' | translate }}</mat-label>
                       <input matInput type="number" formControlName="aggregationRwgMin"
                         step="0.01" min="0" max="1" placeholder="e.g. 0.70" />
-                      <mat-hint>Aggregation gate (WCQ)</mat-hint>
+                      <mat-hint>{{ 'SURVEY.rwgMinimumHint' | translate }}</mat-hint>
                     </mat-form-field>
                     <mat-form-field appearance="outline" class="grow">
-                      <mat-label>Below-threshold action</mat-label>
+                      <mat-label>{{ 'SURVEY.belowThresholdAction' | translate }}</mat-label>
                       <input matInput formControlName="aggregationBelowAction"
                         placeholder="e.g. flag_for_individual_analysis" />
                     </mat-form-field>
@@ -341,18 +338,18 @@ interface SurveyTemplate {
               <!-- ── Rater Pool (only when rater_type = multi_rater) ─── -->
               @if (form.get('raterType')?.value === 'multi_rater') {
                 <div class="inset-section">
-                  <div class="inset-label">Rater Pool (360)</div>
+                  <div class="inset-label">{{ 'SURVEY.raterPool360' | translate }}</div>
                   <div class="form-row">
                     <mat-form-field appearance="outline" style="width:110px">
-                      <mat-label>Pool min</mat-label>
+                      <mat-label>{{ 'SURVEY.poolMin' | translate }}</mat-label>
                       <input matInput type="number" formControlName="raterPoolMin" min="1" />
                     </mat-form-field>
                     <mat-form-field appearance="outline" style="width:110px">
-                      <mat-label>Pool max</mat-label>
+                      <mat-label>{{ 'SURVEY.poolMax' | translate }}</mat-label>
                       <input matInput type="number" formControlName="raterPoolMax" />
                     </mat-form-field>
                     <mat-form-field appearance="outline" class="grow">
-                      <mat-label>Role types (comma-separated)</mat-label>
+                      <mat-label>{{ 'SURVEY.roleTypes' | translate }}</mat-label>
                       <input matInput formControlName="raterPoolRoleTypes"
                         placeholder="e.g. peer, manager, direct_report" />
                     </mat-form-field>
@@ -366,28 +363,28 @@ interface SurveyTemplate {
               <mat-expansion-panel class="advanced-panel" hideToggle style="margin-top:12px">
                 <mat-expansion-panel-header>
                   <mat-panel-title class="adv-title">
-                    <mat-icon>code</mat-icon> Advanced — Subscale Config &amp; Benchmarks (JSON)
+                    <mat-icon>code</mat-icon> {{ 'SURVEY.advancedJsonPanel' | translate }}
                   </mat-panel-title>
                 </mat-expansion-panel-header>
 
                 <div class="adv-json-section">
                   <div class="json-label">
-                    <span>Subscale Config</span>
-                    <span class="json-hint">Rich per-subscale metadata (CDP, WCQ). Keyed by subscale name.</span>
+                    <span>{{ 'SURVEY.subscaleConfig' | translate }}</span>
+                    <span class="json-hint">{{ 'SURVEY.subscaleConfigHint' | translate }}</span>
                   </div>
                   <mat-form-field appearance="outline" class="full-width">
-                    <mat-label>scoring.subscale_config (JSON)</mat-label>
+                    <mat-label>{{ 'SURVEY.subscaleConfigJsonLabel' | translate }}</mat-label>
                     <textarea matInput formControlName="subscaleConfigJson" rows="8"
                       class="mono"
                       placeholder='{&#10;  "integrating": { "items": ["q1","q2"], "item_count": 2, "description": "..." }&#10;}'></textarea>
                   </mat-form-field>
 
                   <div class="json-label" style="margin-top:8px">
-                    <span>Benchmarks</span>
-                    <span class="json-hint">Norm-referenced interpretive bands for coaching reports (PSS). Keyed by band name.</span>
+                    <span>{{ 'SURVEY.benchmarks' | translate }}</span>
+                    <span class="json-hint">{{ 'SURVEY.benchmarksHint' | translate }}</span>
                   </div>
                   <mat-form-field appearance="outline" class="full-width">
-                    <mat-label>scoring.benchmarks (JSON)</mat-label>
+                    <mat-label>{{ 'SURVEY.benchmarksJsonLabel' | translate }}</mat-label>
                     <textarea matInput formControlName="benchmarksJson" rows="8"
                       class="mono"
                       placeholder='{&#10;  "low": { "range": [1.0, 3.5], "label": "Unsafe", "interpretation": "..." }&#10;}'></textarea>
@@ -402,13 +399,13 @@ interface SurveyTemplate {
           <mat-tab>
             <ng-template mat-tab-label>
               <mat-icon class="tab-icon">quiz</mat-icon>
-              Questions <span class="tab-count">{{ questionsArray.length }}</span>
+              {{ 'SURVEY.tabQuestions' | translate }} <span class="tab-count">{{ questionsArray.length }}</span>
             </ng-template>
 
             <div class="tab-content questions-tab">
 
               <div class="questions-header">
-                <span class="qs-count">{{ questionsArray.length }} question{{ questionsArray.length !== 1 ? 's' : '' }}</span>
+                <span class="qs-count">{{ questionsArray.length }} {{ (questionsArray.length !== 1 ? 'SURVEY.questionsPlural' : 'SURVEY.questionSingular') | translate }}</span>
                 <button mat-stroked-button type="button" (click)="addQuestion()">
                   <mat-icon>add</mat-icon> {{ "SURVEY.addQuestion" | translate }}
                 </button>
@@ -424,35 +421,35 @@ interface SurveyTemplate {
 
                       <!-- Question text (required on all types) -->
                       <mat-form-field appearance="outline" class="full-width">
-                        <mat-label>Question text / stem</mat-label>
+                        <mat-label>{{ 'SURVEY.questionTextStem' | translate }}</mat-label>
                         <textarea matInput formControlName="text" rows="2"
-                          placeholder="e.g. When a conflict arises, how do you typically handle it?"></textarea>
-                        <mat-hint>For forced_choice: frames the behavioural dilemma; statements live in options below</mat-hint>
+                          [placeholder]="'SURVEY.questionTextPlaceholder' | translate"></textarea>
+                        <mat-hint>{{ 'SURVEY.questionTextHint' | translate }}</mat-hint>
                       </mat-form-field>
 
                       <!-- Type + Category -->
                       <div class="q-meta-row">
                         <mat-form-field appearance="outline">
-                          <mat-label>Type</mat-label>
+                          <mat-label>{{ 'COMMON.type' | translate }}</mat-label>
                           <mat-select formControlName="type">
-                            <mat-option value="scale">Scale (Likert)</mat-option>
-                            <mat-option value="boolean">Yes / No</mat-option>
-                            <mat-option value="text">Open Text</mat-option>
-                            <mat-option value="forced_choice">Forced Choice A/B (TKI-style)</mat-option>
+                            <mat-option value="scale">{{ 'SURVEY.typeScaleLikert' | translate }}</mat-option>
+                            <mat-option value="boolean">{{ 'SURVEY.typeYesNo' | translate }}</mat-option>
+                            <mat-option value="text">{{ 'SURVEY.typeOpenText' | translate }}</mat-option>
+                            <mat-option value="forced_choice">{{ 'SURVEY.typeForcedChoice' | translate }}</mat-option>
                           </mat-select>
                         </mat-form-field>
 
                         <mat-form-field appearance="outline">
-                          <mat-label>Category</mat-label>
+                          <mat-label>{{ 'SURVEY.category' | translate }}</mat-label>
                           <input matInput formControlName="category"
                             placeholder="e.g. conflict_mode" />
                         </mat-form-field>
 
                         <mat-form-field appearance="outline">
-                          <mat-label>Subscale</mat-label>
+                          <mat-label>{{ 'SURVEY.subscale' | translate }}</mat-label>
                           <input matInput formControlName="subscale"
                             placeholder="e.g. collaborating" />
-                          <mat-hint>Scoring bucket</mat-hint>
+                          <mat-hint>{{ 'SURVEY.scoringBucket' | translate }}</mat-hint>
                         </mat-form-field>
                       </div>
 
@@ -460,23 +457,23 @@ interface SurveyTemplate {
                       @if (q.get('type')?.value === 'forced_choice') {
                         <div class="fc-options">
                           <div class="fc-header">
-                            <span class="fc-option-label">Forced-choice options</span>
+                            <span class="fc-option-label">{{ 'SURVEY.forcedChoiceOptions' | translate }}</span>
                             <div class="fc-meta">
                               <mat-form-field appearance="outline" style="width:110px">
-                                <mat-label>Pair ID</mat-label>
+                                <mat-label>{{ 'SURVEY.pairId' | translate }}</mat-label>
                                 <input matInput type="number" formControlName="pairId" />
-                                <mat-hint>TKI item #</mat-hint>
+                                <mat-hint>{{ 'SURVEY.pairIdHint' | translate }}</mat-hint>
                               </mat-form-field>
                               <mat-form-field appearance="outline" style="width:180px">
-                                <mat-label>Scale descriptor</mat-label>
+                                <mat-label>{{ 'SURVEY.scaleDescriptor' | translate }}</mat-label>
                                 <input matInput formControlName="scaleDescriptor"
                                   placeholder="forced_choice_dyad" />
                               </mat-form-field>
                               <mat-form-field appearance="outline" class="grow">
-                                <mat-label>Modes contrasted (comma-sep)</mat-label>
+                                <mat-label>{{ 'SURVEY.modesContrasted' | translate }}</mat-label>
                                 <input matInput formControlName="modesContrasted"
                                   placeholder="e.g. competing, avoiding" />
-                                <mat-hint>TKI matrix validation helper</mat-hint>
+                                <mat-hint>{{ 'SURVEY.modesContrastedHint' | translate }}</mat-hint>
                               </mat-form-field>
                             </div>
                           </div>
@@ -484,11 +481,11 @@ interface SurveyTemplate {
                           <div class="fc-row">
                             <span class="fc-badge">A</span>
                             <mat-form-field appearance="outline" class="fc-text">
-                              <mat-label>Option A statement</mat-label>
+                              <mat-label>{{ 'SURVEY.optionAStatement' | translate }}</mat-label>
                               <textarea matInput formControlName="optionAText" rows="2"></textarea>
                             </mat-form-field>
                             <mat-form-field appearance="outline" style="width:160px">
-                              <mat-label>→ Subscale</mat-label>
+                              <mat-label>{{ 'SURVEY.toSubscale' | translate }}</mat-label>
                               <input matInput formControlName="optionASubscale"
                                 placeholder="e.g. competing" />
                             </mat-form-field>
@@ -496,11 +493,11 @@ interface SurveyTemplate {
                           <div class="fc-row">
                             <span class="fc-badge">B</span>
                             <mat-form-field appearance="outline" class="fc-text">
-                              <mat-label>Option B statement</mat-label>
+                              <mat-label>{{ 'SURVEY.optionBStatement' | translate }}</mat-label>
                               <textarea matInput formControlName="optionBText" rows="2"></textarea>
                             </mat-form-field>
                             <mat-form-field appearance="outline" style="width:160px">
-                              <mat-label>→ Subscale</mat-label>
+                              <mat-label>{{ 'SURVEY.toSubscale' | translate }}</mat-label>
                               <input matInput formControlName="optionBSubscale"
                                 placeholder="e.g. avoiding" />
                             </mat-form-field>
@@ -513,7 +510,7 @@ interface SurveyTemplate {
                         <mat-expansion-panel class="adv-q-panel" hideToggle>
                           <mat-expansion-panel-header>
                             <mat-panel-title class="adv-q-title">
-                              <mat-icon>tune</mat-icon> Scoring &amp; scale options
+                              <mat-icon>tune</mat-icon> {{ 'SURVEY.scoringAndScaleOptions' | translate }}
                             </mat-panel-title>
                           </mat-expansion-panel-header>
 
@@ -524,11 +521,11 @@ interface SurveyTemplate {
                               <div class="scale-range-block">
                                 <div class="form-row">
                                   <mat-form-field appearance="outline" style="width:110px">
-                                    <mat-label>Scale min</mat-label>
+                                    <mat-label>{{ 'SURVEY.scaleMin' | translate }}</mat-label>
                                     <input matInput type="number" formControlName="scaleMin" />
                                   </mat-form-field>
                                   <mat-form-field appearance="outline" style="width:110px">
-                                    <mat-label>Scale max</mat-label>
+                                    <mat-label>{{ 'SURVEY.scaleMax' | translate }}</mat-label>
                                     <input matInput type="number" formControlName="scaleMax" />
                                   </mat-form-field>
                                   <button mat-stroked-button type="button"
@@ -539,50 +536,50 @@ interface SurveyTemplate {
                                   </button>
                                 </div>
                                 <mat-form-field appearance="outline" class="full-width">
-                                  <mat-label>Scale labels (JSON — keyed by scale point)</mat-label>
+                                  <mat-label>{{ 'SURVEY.scaleLabelsJson' | translate }}</mat-label>
                                   <textarea matInput formControlName="scaleLabels" rows="4"
                                     class="mono"
                                     placeholder='{&#10;  "1": "Strongly Disagree",&#10;  "5": "Strongly Agree"&#10;}'></textarea>
-                                  <mat-hint>Keys are numeric strings matching scale points, e.g. "1", "2", …</mat-hint>
+                                  <mat-hint>{{ 'SURVEY.scaleLabelsHint' | translate }}</mat-hint>
                                 </mat-form-field>
                               </div>
 
                               <!-- Reverse scoring -->
                               <div class="checkbox-row">
                                 <mat-checkbox formControlName="reverseScored" color="primary">
-                                  Reverse-scored item
+                                  {{ 'SURVEY.reverseScoredItem' | translate }}
                                 </mat-checkbox>
                               </div>
                               @if (q.get('reverseScored')?.value) {
                                 <mat-form-field appearance="outline" class="full-width">
-                                  <mat-label>Reverse score formula</mat-label>
+                                  <mat-label>{{ 'SURVEY.reverseScoreFormula' | translate }}</mat-label>
                                   <input matInput formControlName="reverseScoreFormula"
                                     placeholder="max_plus_one_minus_raw" />
-                                  <mat-hint>Standard: (scale_range.max + 1) - raw</mat-hint>
+                                  <mat-hint>{{ 'SURVEY.reverseScoreFormulaHint' | translate }}</mat-hint>
                                 </mat-form-field>
                               }
                             }
 
                             <!-- Temporal anchor -->
                             <mat-form-field appearance="outline" class="full-width">
-                              <mat-label>Reference period</mat-label>
+                              <mat-label>{{ 'SURVEY.referencePeriod' | translate }}</mat-label>
                               <input matInput formControlName="referencePeriod"
                                 placeholder="e.g. past_month, past_quarter" />
-                              <mat-hint>Temporal anchor for frequency-based items (WCQ, ROCI-II)</mat-hint>
+                              <mat-hint>{{ 'SURVEY.referencePeriodHint' | translate }}</mat-hint>
                             </mat-form-field>
 
                             <!-- CDP fields -->
                             <div class="form-row">
                               <mat-form-field appearance="outline" class="half-width">
-                                <mat-label>Behaviour temperature (CDP)</mat-label>
+                                <mat-label>{{ 'SURVEY.behaviorTemperature' | translate }}</mat-label>
                                 <mat-select formControlName="behaviorTemperature">
                                   <mat-option value="">—</mat-option>
-                                  <mat-option value="hot">Hot — active / escalating</mat-option>
-                                  <mat-option value="cool">Cool — passive / de-escalating</mat-option>
+                                  <mat-option value="hot">{{ 'SURVEY.tempHot' | translate }}</mat-option>
+                                  <mat-option value="cool">{{ 'SURVEY.tempCool' | translate }}</mat-option>
                                 </mat-select>
                               </mat-form-field>
                               <mat-form-field appearance="outline" class="half-width">
-                                <mat-label>Behaviour cluster (CDP)</mat-label>
+                                <mat-label>{{ 'SURVEY.behaviorCluster' | translate }}</mat-label>
                                 <input matInput formControlName="behaviorCluster"
                                   placeholder="e.g. perspective_taking" />
                               </mat-form-field>

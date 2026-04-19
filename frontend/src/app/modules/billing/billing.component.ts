@@ -248,10 +248,10 @@ interface AvailablePlan {
                       <table class="line-items-table">
                         <thead>
                           <tr>
-                            <th class="col-desc">Description</th>
-                            <th class="col-qty">Qty</th>
-                            <th class="col-price">Unit Price</th>
-                            <th class="col-amount">Amount</th>
+                            <th class="col-desc">{{ 'BILLING.description' | translate }}</th>
+                            <th class="col-qty">{{ 'BILLING.qty' | translate }}</th>
+                            <th class="col-price">{{ 'BILLING.unitPrice' | translate }}</th>
+                            <th class="col-amount">{{ 'BILLING.amount' | translate }}</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -266,7 +266,7 @@ interface AvailablePlan {
                         </tbody>
                         <tfoot>
                           <tr class="subtotal-row">
-                            <td colspan="3" class="total-label">Subtotal</td>
+                            <td colspan="3" class="total-label">{{ 'BILLING.subtotal' | translate }}</td>
                             <td class="col-amount">{{ formatMoney(inv.subtotal) }}</td>
                           </tr>
                           @if (inv.taxBreakdown?.gst) {
@@ -295,12 +295,12 @@ interface AvailablePlan {
                           }
                           @if (inv.tax > 0 && !inv.taxBreakdown) {
                             <tr class="tax-row">
-                              <td colspan="3" class="total-label">Tax</td>
+                              <td colspan="3" class="total-label">{{ 'BILLING.tax' | translate }}</td>
                               <td class="col-amount">{{ formatMoney(inv.tax) }}</td>
                             </tr>
                           }
                           <tr class="grand-total-row">
-                            <td colspan="3" class="total-label grand-label">Total</td>
+                            <td colspan="3" class="total-label grand-label">{{ 'BILLING.total' | translate }}</td>
                             <td class="col-amount grand-amount">{{ formatMoney(inv.total) }}</td>
                           </tr>
                         </tfoot>
@@ -342,7 +342,7 @@ interface AvailablePlan {
                 </div>
                 <section class="card outstanding-card">
                   <div class="card-header">
-                    <h2 class="card-title">Outstanding Invoices</h2>
+                    <h2 class="card-title">{{ 'BILLING.outstandingInvoices' | translate }}</h2>
                   </div>
                   <div class="outstanding-list">
                     @for (inv of outstandingInvoices(); track inv._id) {
@@ -361,7 +361,7 @@ interface AvailablePlan {
                             } @else {
                               <mat-icon>payment</mat-icon>
                             }
-                            Pay
+                            {{ 'BILLING.pay' | translate }}
                           </button>
                         </div>
                       </div>
@@ -374,7 +374,7 @@ interface AvailablePlan {
               <!-- Payment History -->
               <section class="card history-card">
                 <div class="card-header">
-                  <h2 class="card-title">Payment History</h2>
+                  <h2 class="card-title">{{ 'BILLING.paymentHistory' | translate }}</h2>
                 </div>
                 @if (paidInvoices().length === 0) {
                   <app-empty-state icon="receipt_long" [title]="'BILLING.noPaymentHistory' | translate" [message]="'BILLING.noPaymentHistoryMsg' | translate"></app-empty-state>
@@ -383,11 +383,11 @@ interface AvailablePlan {
                     <table class="history-table">
                       <thead>
                         <tr>
-                          <th class="col-inv">Invoice #</th>
-                          <th class="col-period">Period</th>
-                          <th class="col-amt">Amount</th>
-                          <th class="col-paid">Paid Date</th>
-                          <th class="col-actions">Actions</th>
+                          <th class="col-inv">{{ 'BILLING.invoiceNumber' | translate }}</th>
+                          <th class="col-period">{{ 'BILLING.period' | translate }}</th>
+                          <th class="col-amt">{{ 'BILLING.amount' | translate }}</th>
+                          <th class="col-paid">{{ 'BILLING.paidDate' | translate }}</th>
+                          <th class="col-actions">{{ 'COMMON.actions' | translate }}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -418,15 +418,15 @@ interface AvailablePlan {
             <div class="billing-sidebar">
               <section class="card tiers-card">
                 <div class="card-header">
-                  <h2 class="card-title">Available Plans</h2>
-                  <span class="bundle-tag">Bundle saves 25%</span>
+                  <h2 class="card-title">{{ 'BILLING.availablePlans' | translate }}</h2>
+                  <span class="bundle-tag">{{ 'BILLING.bundleSaves' | translate }}</span>
                 </div>
                 <div class="tiers-body">
 
                   <div class="tier-module">
                     <div class="tier-module-label">
                       <mat-icon class="tier-mod-icon" style="color:#e86c3a">bolt</mat-icon>
-                      Conflict Intelligence™
+                      {{ 'CONFLICT.title' | translate }}
                     </div>
                     <div class="tier-row-list">
                       @for (t of conflictTiers; track t.name) {
@@ -434,7 +434,7 @@ interface AvailablePlan {
                           <div class="tier-name-col">
                             <span class="tier-name">{{ t.name }}</span>
                             @if ((org()?.plan ?? '') === t.planKey) {
-                              <span class="current-chip">Current</span>
+                              <span class="current-chip">{{ 'BILLING.current' | translate }}</span>
                             }
                           </div>
                           <div class="tier-price">{{ t.price }}</div>
@@ -446,7 +446,7 @@ interface AvailablePlan {
                   <div class="tier-module">
                     <div class="tier-module-label">
                       <mat-icon class="tier-mod-icon" style="color:#27C4A0">psychology</mat-icon>
-                      Neuro-Inclusion Compass™
+                      {{ 'NEURO.title' | translate }}
                     </div>
                     <div class="tier-row-list">
                       @for (t of neuroinclTiers; track t.name) {
@@ -461,7 +461,7 @@ interface AvailablePlan {
                   <div class="tier-module">
                     <div class="tier-module-label">
                       <mat-icon class="tier-mod-icon" style="color:var(--artes-accent)">emoji_events</mat-icon>
-                      Leadership & Succession Hub™
+                      {{ 'SUCCESSION.title' | translate }}
                     </div>
                     <div class="tier-row-list">
                       @for (t of successionTiers; track t.name) {
@@ -476,8 +476,8 @@ interface AvailablePlan {
                   <div class="bundle-row">
                     <mat-icon class="bundle-icon">auto_awesome</mat-icon>
                     <div class="bundle-info">
-                      <strong>All-Platform Bundle</strong>
-                      <span>All three modules · 2 Helena coaching days/year</span>
+                      <strong>{{ 'BILLING.bundleTitle' | translate }}</strong>
+                      <span>{{ 'BILLING.bundleDesc' | translate }}</span>
                     </div>
                     <div class="bundle-price">CAD $24,000<span class="bundle-per">/yr</span></div>
                   </div>

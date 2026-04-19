@@ -34,174 +34,174 @@ import { TranslateModule } from '@ngx-translate/core';
         <article class="document">
 
           <section>
-            <h2>1. Overview</h2>
-            <p>HeadSoft Technology ("we", "us", "our") operates the ARTES platform in partnership with Helena Coaching. This Privacy Statement explains how we collect, use, store, and protect personal data when you use the ARTES platform ("Platform").</p>
-            <p>We are committed to protecting your privacy and processing personal data in compliance with the General Data Protection Regulation (GDPR), the Czech Data Protection Act, and other applicable data protection legislation.</p>
+            <h2>{{ "LEGAL.privacy.s1Title" | translate }}</h2>
+            <p>{{ "LEGAL.privacy.s1p1" | translate }}</p>
+            <p>{{ "LEGAL.privacy.s1p2" | translate }}</p>
           </section>
 
           <section>
-            <h2>2. Data Controller and Processor</h2>
+            <h2>{{ "LEGAL.privacy.s2Title" | translate }}</h2>
             <div class="info-box">
-              <p><strong>Data Controller:</strong> Your Organisation (the entity that subscribed to ARTES) determines the purposes and means of processing personal data.</p>
-              <p><strong>Data Processor:</strong> HeadSoft Technology processes personal data on behalf of your Organisation, in accordance with a Data Processing Agreement.</p>
+              <p [innerHTML]="'LEGAL.privacy.s2controller' | translate"></p>
+              <p [innerHTML]="'LEGAL.privacy.s2processor' | translate"></p>
             </div>
-            <p>For personal data related to your ARTES account and platform usage, HeadSoft Technology acts as the Data Controller.</p>
+            <p>{{ "LEGAL.privacy.s2p1" | translate }}</p>
           </section>
 
           <section>
-            <h2>3. Data We Collect</h2>
+            <h2>{{ "LEGAL.privacy.s3Title" | translate }}</h2>
 
-            <h3>3.1 Account Data</h3>
-            <p>When your Organisation creates your account, we collect:</p>
+            <h3>{{ "LEGAL.privacy.s3h1" | translate }}</h3>
+            <p>{{ "LEGAL.privacy.s3h1intro" | translate }}</p>
             <ul>
-              <li>Full name, email address, department, and role within the organisation</li>
-              <li>Hashed password (never stored in plain text)</li>
-              <li>Profile picture and bio (optional)</li>
-              <li>Two-factor authentication configuration (optional)</li>
-              <li>Passkey/WebAuthn credentials (optional)</li>
+              <li>{{ "LEGAL.privacy.s3h1li1" | translate }}</li>
+              <li>{{ "LEGAL.privacy.s3h1li2" | translate }}</li>
+              <li>{{ "LEGAL.privacy.s3h1li3" | translate }}</li>
+              <li>{{ "LEGAL.privacy.s3h1li4" | translate }}</li>
+              <li>{{ "LEGAL.privacy.s3h1li5" | translate }}</li>
             </ul>
 
-            <h3>3.2 Survey and Assessment Data</h3>
+            <h3>{{ "LEGAL.privacy.s3h2" | translate }}</h3>
             <ul>
-              <li>Responses to organisational surveys (conflict assessment, neuroinclusion, coaching intake)</li>
-              <li>Anonymous survey responses are linked only by a submission token — we cannot identify the respondent</li>
-              <li>Coach-led interview responses, including session format and target participant names</li>
+              <li>{{ "LEGAL.privacy.s3h2li1" | translate }}</li>
+              <li>{{ "LEGAL.privacy.s3h2li2" | translate }}</li>
+              <li>{{ "LEGAL.privacy.s3h2li3" | translate }}</li>
             </ul>
 
-            <h3>3.3 Coaching Data</h3>
+            <h3>{{ "LEGAL.privacy.s3h3" | translate }}</h3>
             <ul>
-              <li>Coaching engagement records (coach-coachee pairings, session history)</li>
-              <li>Individual Development Plans (IDPs) including goals, milestones, and progress notes</li>
-              <li>Session notes, journal entries, and pre/post-session form responses</li>
-              <li>Booking information (session times, contact details, topics)</li>
+              <li>{{ "LEGAL.privacy.s3h3li1" | translate }}</li>
+              <li>{{ "LEGAL.privacy.s3h3li2" | translate }}</li>
+              <li>{{ "LEGAL.privacy.s3h3li3" | translate }}</li>
+              <li>{{ "LEGAL.privacy.s3h3li4" | translate }}</li>
             </ul>
 
-            <h3>3.4 AI-Processed Data</h3>
+            <h3>{{ "LEGAL.privacy.s3h4" | translate }}</h3>
             <ul>
-              <li>Aggregated survey responses submitted for AI analysis (conflict risk, neuroinclusion gaps)</li>
-              <li>AI-generated outputs: narratives, risk assessments, development plans, manager scripts</li>
+              <li>{{ "LEGAL.privacy.s3h4li1" | translate }}</li>
+              <li>{{ "LEGAL.privacy.s3h4li2" | translate }}</li>
             </ul>
 
-            <h3>3.5 Technical Data</h3>
+            <h3>{{ "LEGAL.privacy.s3h5" | translate }}</h3>
             <ul>
-              <li>IP address, browser type, device information (for security and access logging)</li>
-              <li>Authentication tokens (JWT) — short-lived, automatically rotated</li>
-              <li>Calendar OAuth tokens (Google Calendar, Microsoft 365) — stored encrypted</li>
+              <li>{{ "LEGAL.privacy.s3h5li1" | translate }}</li>
+              <li>{{ "LEGAL.privacy.s3h5li2" | translate }}</li>
+              <li>{{ "LEGAL.privacy.s3h5li3" | translate }}</li>
             </ul>
           </section>
 
           <section>
-            <h2>4. How We Use Your Data</h2>
+            <h2>{{ "LEGAL.privacy.s4Title" | translate }}</h2>
             <table class="data-table">
               <thead>
-                <tr><th>Purpose</th><th>Legal Basis (GDPR)</th></tr>
+                <tr><th>{{ "LEGAL.privacy.s4thPurpose" | translate }}</th><th>{{ "LEGAL.privacy.s4thLegal" | translate }}</th></tr>
               </thead>
               <tbody>
-                <tr><td>Providing the Platform and its features</td><td>Contract performance (Art. 6(1)(b))</td></tr>
-                <tr><td>User authentication and access control</td><td>Contract performance</td></tr>
-                <tr><td>AI-powered analysis and insights</td><td>Legitimate interest (Art. 6(1)(f))</td></tr>
-                <tr><td>Email notifications (booking confirmations, reminders)</td><td>Contract performance</td></tr>
-                <tr><td>Calendar synchronisation (Google/Microsoft)</td><td>Consent (Art. 6(1)(a))</td></tr>
-                <tr><td>Payment processing via Stripe</td><td>Contract performance</td></tr>
-                <tr><td>Security monitoring and abuse prevention</td><td>Legitimate interest</td></tr>
-                <tr><td>Platform improvement and analytics</td><td>Legitimate interest</td></tr>
+                <tr><td>{{ "LEGAL.privacy.s4r1purpose" | translate }}</td><td>{{ "LEGAL.privacy.s4r1legal" | translate }}</td></tr>
+                <tr><td>{{ "LEGAL.privacy.s4r2purpose" | translate }}</td><td>{{ "LEGAL.privacy.s4r2legal" | translate }}</td></tr>
+                <tr><td>{{ "LEGAL.privacy.s4r3purpose" | translate }}</td><td>{{ "LEGAL.privacy.s4r3legal" | translate }}</td></tr>
+                <tr><td>{{ "LEGAL.privacy.s4r4purpose" | translate }}</td><td>{{ "LEGAL.privacy.s4r4legal" | translate }}</td></tr>
+                <tr><td>{{ "LEGAL.privacy.s4r5purpose" | translate }}</td><td>{{ "LEGAL.privacy.s4r5legal" | translate }}</td></tr>
+                <tr><td>{{ "LEGAL.privacy.s4r6purpose" | translate }}</td><td>{{ "LEGAL.privacy.s4r6legal" | translate }}</td></tr>
+                <tr><td>{{ "LEGAL.privacy.s4r7purpose" | translate }}</td><td>{{ "LEGAL.privacy.s4r7legal" | translate }}</td></tr>
+                <tr><td>{{ "LEGAL.privacy.s4r8purpose" | translate }}</td><td>{{ "LEGAL.privacy.s4r8legal" | translate }}</td></tr>
               </tbody>
             </table>
           </section>
 
           <section>
-            <h2>5. AI Data Processing</h2>
-            <p>5.1. The Platform uses Anthropic's Claude AI to generate analyses. Your data is sent to Anthropic's API for processing when you explicitly request an AI analysis.</p>
-            <p>5.2. <strong>We do not use your data to train AI models.</strong> Anthropic's API usage terms confirm that data submitted via the API is not used for model training.</p>
-            <p>5.3. AI processing is triggered only by explicit user action (e.g., clicking "Analyse" or "Generate IDP"). Data is not continuously or passively processed by AI.</p>
-            <p>5.4. AI-generated outputs are stored within your Organisation's data and subject to the same access controls and retention policies.</p>
+            <h2>{{ "LEGAL.privacy.s5Title" | translate }}</h2>
+            <p>{{ "LEGAL.privacy.s5p1" | translate }}</p>
+            <p [innerHTML]="'LEGAL.privacy.s5p2' | translate"></p>
+            <p>{{ "LEGAL.privacy.s5p3" | translate }}</p>
+            <p>{{ "LEGAL.privacy.s5p4" | translate }}</p>
           </section>
 
           <section>
-            <h2>6. Data Sharing</h2>
-            <p>We do not sell your personal data. We share data only with:</p>
+            <h2>{{ "LEGAL.privacy.s6Title" | translate }}</h2>
+            <p>{{ "LEGAL.privacy.s6p1" | translate }}</p>
             <ul>
-              <li><strong>Anthropic (Claude AI):</strong> Aggregated survey data and coaching context, only when AI analysis is explicitly requested.</li>
-              <li><strong>Amazon Web Services (AWS):</strong> Infrastructure hosting (EC2, SES for email). Data is processed within AWS's security framework.</li>
-              <li><strong>MongoDB Atlas:</strong> Database hosting with encryption at rest and in transit.</li>
-              <li><strong>Stripe:</strong> Payment processing. We do not store credit card numbers.</li>
-              <li><strong>Google / Microsoft:</strong> Calendar data, only when you explicitly connect your calendar via OAuth.</li>
+              <li [innerHTML]="'LEGAL.privacy.s6li1' | translate"></li>
+              <li [innerHTML]="'LEGAL.privacy.s6li2' | translate"></li>
+              <li [innerHTML]="'LEGAL.privacy.s6li3' | translate"></li>
+              <li [innerHTML]="'LEGAL.privacy.s6li4' | translate"></li>
+              <li [innerHTML]="'LEGAL.privacy.s6li5' | translate"></li>
             </ul>
           </section>
 
           <section>
-            <h2>7. Data Security</h2>
+            <h2>{{ "LEGAL.privacy.s7Title" | translate }}</h2>
             <ul>
-              <li><strong>Encryption:</strong> All data in transit is encrypted via TLS/HTTPS. Database connections use TLS. OAuth tokens are stored with select: false (excluded from default queries).</li>
-              <li><strong>Authentication:</strong> JWT tokens with 15-minute expiry and 7-day refresh tokens. Optional two-factor authentication (TOTP) and passkey/WebAuthn support.</li>
-              <li><strong>Multi-tenancy:</strong> Strict data segregation between organisations via organisationId filtering on every database query. A tenant filter plugin enforces this at the database layer.</li>
-              <li><strong>Access control:</strong> Role-based access control (RBAC) with six distinct role levels. Permissions are enforced both in the API and the user interface.</li>
-              <li><strong>Password security:</strong> Passwords are hashed using bcrypt. Plain-text passwords are never stored or logged.</li>
-              <li><strong>Rate limiting:</strong> API endpoints are rate-limited to prevent abuse.</li>
+              <li [innerHTML]="'LEGAL.privacy.s7li1' | translate"></li>
+              <li [innerHTML]="'LEGAL.privacy.s7li2' | translate"></li>
+              <li [innerHTML]="'LEGAL.privacy.s7li3' | translate"></li>
+              <li [innerHTML]="'LEGAL.privacy.s7li4' | translate"></li>
+              <li [innerHTML]="'LEGAL.privacy.s7li5' | translate"></li>
+              <li [innerHTML]="'LEGAL.privacy.s7li6' | translate"></li>
             </ul>
           </section>
 
           <section>
-            <h2>8. Data Anonymisation</h2>
-            <p>8.1. Survey responses can be submitted anonymously via public links. Anonymous responses are linked only by an irreversible submission token.</p>
-            <p>8.2. AI analysis requires a minimum of <strong>5 survey responses</strong> before aggregated results are generated. This prevents statistical de-anonymisation of individual respondents.</p>
-            <p>8.3. Conflict analyses, neuroinclusion assessments, and other AI outputs are based on aggregated data and do not identify individual respondents.</p>
+            <h2>{{ "LEGAL.privacy.s8Title" | translate }}</h2>
+            <p>{{ "LEGAL.privacy.s8p1" | translate }}</p>
+            <p [innerHTML]="'LEGAL.privacy.s8p2' | translate"></p>
+            <p>{{ "LEGAL.privacy.s8p3" | translate }}</p>
           </section>
 
           <section>
-            <h2>9. Data Retention</h2>
+            <h2>{{ "LEGAL.privacy.s9Title" | translate }}</h2>
             <ul>
-              <li><strong>Active accounts:</strong> Data is retained for the duration of the Organisation's subscription.</li>
-              <li><strong>After termination:</strong> Data is retained for 30 days to allow export, then permanently deleted.</li>
-              <li><strong>Authentication logs:</strong> Retained for 90 days for security purposes.</li>
-              <li><strong>Backup data:</strong> Encrypted backups are retained for 30 days, then purged.</li>
+              <li [innerHTML]="'LEGAL.privacy.s9li1' | translate"></li>
+              <li [innerHTML]="'LEGAL.privacy.s9li2' | translate"></li>
+              <li [innerHTML]="'LEGAL.privacy.s9li3' | translate"></li>
+              <li [innerHTML]="'LEGAL.privacy.s9li4' | translate"></li>
             </ul>
           </section>
 
           <section>
-            <h2>10. Your Rights (GDPR)</h2>
-            <p>As a data subject, you have the right to:</p>
+            <h2>{{ "LEGAL.privacy.s10Title" | translate }}</h2>
+            <p>{{ "LEGAL.privacy.s10p1" | translate }}</p>
             <ul>
-              <li><strong>Access:</strong> Request a copy of your personal data held on the Platform.</li>
-              <li><strong>Rectification:</strong> Request correction of inaccurate personal data.</li>
-              <li><strong>Erasure:</strong> Request deletion of your personal data ("right to be forgotten").</li>
-              <li><strong>Restriction:</strong> Request limitation of processing in certain circumstances.</li>
-              <li><strong>Data portability:</strong> Receive your data in a structured, machine-readable format.</li>
-              <li><strong>Object:</strong> Object to processing based on legitimate interest.</li>
-              <li><strong>Withdraw consent:</strong> Withdraw consent for calendar integrations at any time via the Platform settings.</li>
+              <li [innerHTML]="'LEGAL.privacy.s10li1' | translate"></li>
+              <li [innerHTML]="'LEGAL.privacy.s10li2' | translate"></li>
+              <li [innerHTML]="'LEGAL.privacy.s10li3' | translate"></li>
+              <li [innerHTML]="'LEGAL.privacy.s10li4' | translate"></li>
+              <li [innerHTML]="'LEGAL.privacy.s10li5' | translate"></li>
+              <li [innerHTML]="'LEGAL.privacy.s10li6' | translate"></li>
+              <li [innerHTML]="'LEGAL.privacy.s10li7' | translate"></li>
             </ul>
-            <p>To exercise these rights, contact your Organisation's administrator or email us directly. We will respond within 30 days.</p>
+            <p>{{ "LEGAL.privacy.s10p2" | translate }}</p>
           </section>
 
           <section>
-            <h2>11. International Data Transfers</h2>
-            <p>The Platform is hosted on AWS infrastructure. Data may be processed in regions where AWS and our sub-processors operate. Where data is transferred outside the European Economic Area, we ensure appropriate safeguards are in place, including Standard Contractual Clauses (SCCs).</p>
+            <h2>{{ "LEGAL.privacy.s11Title" | translate }}</h2>
+            <p>{{ "LEGAL.privacy.s11p1" | translate }}</p>
           </section>
 
           <section>
-            <h2>12. Cookies</h2>
-            <p>The Platform uses only essential cookies and local storage for authentication (JWT tokens) and user preferences (language, timezone, UI settings). We do not use tracking cookies, analytics cookies, or advertising cookies.</p>
+            <h2>{{ "LEGAL.privacy.s12Title" | translate }}</h2>
+            <p>{{ "LEGAL.privacy.s12p1" | translate }}</p>
           </section>
 
           <section>
-            <h2>13. Children's Privacy</h2>
-            <p>The Platform is designed for professional use and is not directed at individuals under 16 years of age. We do not knowingly collect personal data from children.</p>
+            <h2>{{ "LEGAL.privacy.s13Title" | translate }}</h2>
+            <p>{{ "LEGAL.privacy.s13p1" | translate }}</p>
           </section>
 
           <section>
-            <h2>14. Changes to This Statement</h2>
-            <p>We may update this Privacy Statement periodically. We will notify Organisation administrators of material changes at least 30 days before they take effect. The "Last updated" date above reflects the most recent revision.</p>
+            <h2>{{ "LEGAL.privacy.s14Title" | translate }}</h2>
+            <p>{{ "LEGAL.privacy.s14p1" | translate }}</p>
           </section>
 
           <section>
-            <h2>15. Contact</h2>
-            <p>For privacy-related enquiries, data subject requests, or complaints:</p>
+            <h2>{{ "LEGAL.privacy.s15Title" | translate }}</h2>
+            <p>{{ "LEGAL.privacy.s15p1" | translate }}</p>
             <div class="contact-card">
-              <p><strong>HeadSoft Technology — Data Protection</strong></p>
-              <p>Email: <a href="mailto:privacy@helenacoaching.com">privacy&#64;helenacoaching.com</a></p>
-              <p>Platform: <a href="https://artes.helenacoaching.com">artes.helenacoaching.com</a></p>
+              <p><strong>{{ "LEGAL.privacy.s15company" | translate }}</strong></p>
+              <p>{{ "LEGAL.privacy.s15email" | translate }} <a href="mailto:privacy@helenacoaching.com">privacy&#64;helenacoaching.com</a></p>
+              <p>{{ "LEGAL.privacy.s15platform" | translate }} <a href="https://artes.helenacoaching.com">artes.helenacoaching.com</a></p>
             </div>
-            <p style="margin-top: 12px;">You also have the right to lodge a complaint with your local data protection authority. In the Czech Republic, this is the Office for Personal Data Protection (<a href="https://www.uoou.cz" target="_blank">www.uoou.cz</a>).</p>
+            <p style="margin-top: 12px;" [innerHTML]="'LEGAL.privacy.s15authority' | translate"></p>
           </section>
 
         </article>
@@ -211,8 +211,8 @@ import { TranslateModule } from '@ngx-translate/core';
         <div class="footer-inner">
           <span>&copy; 2026 HeadSoft Technology &times; Helena Coaching. All rights reserved.</span>
           <div class="footer-links">
-            <a routerLink="/termsofservice">Terms of Service</a>
-            <a routerLink="/privacystatement">Privacy Statement</a>
+            <a routerLink="/termsofservice">{{ "LEGAL.footerTerms" | translate }}</a>
+            <a routerLink="/privacystatement">{{ "LEGAL.footerPrivacy" | translate }}</a>
           </div>
         </div>
       </footer>

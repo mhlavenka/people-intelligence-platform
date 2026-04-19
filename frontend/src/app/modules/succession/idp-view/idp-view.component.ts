@@ -78,7 +78,7 @@ interface IDP {
       <div class="page-header">
         <div>
           <h1>{{ "SUCCESSION.title" | translate }}</h1>
-          <p>Scalable succession planning and leadership coaching — from founders and family businesses to growing organizations</p>
+          <p>{{ 'SUCCESSION.subtitle' | translate }}</p>
         </div>
         @if (canManage()) {
           <button mat-raised-button color="primary" (click)="generateNew()">
@@ -134,12 +134,12 @@ interface IDP {
           <mat-icon>psychology_alt</mat-icon>
           <h3>{{ "SUCCESSION.noIDPsTitle" | translate }}</h3>
           @if (canManage()) {
-            <p>Generate your first AI-powered IDP using the GROW model.</p>
+            <p>{{ 'SUCCESSION.noIDPsManage' | translate }}</p>
             <button mat-raised-button color="primary" (click)="generateNew()">
-              <mat-icon>auto_awesome</mat-icon> Generate First IDP
+              <mat-icon>auto_awesome</mat-icon> {{ 'SUCCESSION.generateFirstIDP' | translate }}
             </button>
           } @else {
-            <p>No development plan has been created for you yet. Contact your coach or HR manager.</p>
+            <p>{{ 'SUCCESSION.noIDPsView' | translate }}</p>
           }
         </div>
       } @else {
@@ -157,7 +157,7 @@ interface IDP {
                 <span class="idp-date">{{ idp.createdAt | date:'MMM d, y' }}</span>
                 @if (canManage() && idp.status === 'draft') {
                   <button class="card-action-btn"
-                          [matTooltip]="'Regenerate IDP'"
+                          [matTooltip]="'SUCCESSION.regenerateIdp' | translate"
                           matTooltipPosition="above"
                           [disabled]="regeneratingId() === idp._id"
                           (click)="regenerate(idp)">
@@ -192,7 +192,7 @@ interface IDP {
                 <mat-expansion-panel class="grow-panel goal-panel">
                   <mat-expansion-panel-header>
                     <mat-panel-title>
-                      <mat-icon>flag</mat-icon> Goal
+                      <mat-icon>flag</mat-icon> {{ 'SUCCESSION.goal' | translate }}
                     </mat-panel-title>
                   </mat-expansion-panel-header>
                   <p>{{ idp.goal }}</p>
@@ -201,7 +201,7 @@ interface IDP {
                 <mat-expansion-panel class="grow-panel reality-panel">
                   <mat-expansion-panel-header>
                     <mat-panel-title>
-                      <mat-icon>explore</mat-icon> Reality
+                      <mat-icon>explore</mat-icon> {{ 'SUCCESSION.reality' | translate }}
                     </mat-panel-title>
                   </mat-expansion-panel-header>
                   <p>{{ idp.currentReality }}</p>
@@ -210,7 +210,7 @@ interface IDP {
                 <mat-expansion-panel class="grow-panel options-panel">
                   <mat-expansion-panel-header>
                     <mat-panel-title>
-                      <mat-icon>lightbulb</mat-icon> Options ({{ idp.options.length }})
+                      <mat-icon>lightbulb</mat-icon> {{ 'SUCCESSION.options' | translate }} ({{ idp.options.length }})
                     </mat-panel-title>
                   </mat-expansion-panel-header>
                   <ul>
@@ -223,7 +223,7 @@ interface IDP {
                 <mat-expansion-panel class="grow-panel will-panel">
                   <mat-expansion-panel-header>
                     <mat-panel-title>
-                      <mat-icon>bolt</mat-icon> Will Do ({{ idp.willDoActions.length }})
+                      <mat-icon>bolt</mat-icon> {{ 'SUCCESSION.willDo' | translate }} ({{ idp.willDoActions.length }})
                     </mat-panel-title>
                   </mat-expansion-panel-header>
                   <ul>
@@ -236,7 +236,7 @@ interface IDP {
 
               <!-- Milestone timeline -->
               <div class="milestone-section">
-                <h4>Milestones</h4>
+                <h4>{{ 'SUCCESSION.milestones' | translate }}</h4>
                 <div class="milestone-timeline">
                   @for (ms of idp.milestones; track ms._id) {
                     <div class="milestone-item" [class]="ms.status">
@@ -247,7 +247,7 @@ interface IDP {
                       </div>
                       <div class="ms-actions">
                         @if (ms.status !== 'completed' && canManage()) {
-                          <button mat-icon-button [matTooltip]="'Mark complete'" (click)="updateMilestone(idp._id, ms._id, 'completed')">
+                          <button mat-icon-button [matTooltip]="'SUCCESSION.markComplete' | translate" (click)="updateMilestone(idp._id, ms._id, 'completed')">
                             <mat-icon>check_circle_outline</mat-icon>
                           </button>
                         }
@@ -260,7 +260,7 @@ interface IDP {
               <!-- Competency gaps -->
               @if (idp.competencyGaps.length) {
                 <div class="gaps-section">
-                  <h4>Competency Gaps</h4>
+                  <h4>{{ 'SUCCESSION.competencyGapsLabel' | translate }}</h4>
                   <mat-chip-set>
                     @for (gap of idp.competencyGaps; track gap) {
                       <mat-chip>{{ gap }}</mat-chip>
@@ -273,11 +273,11 @@ interface IDP {
               <div class="journal-inline">
                 <div class="journal-inline-header">
                   <mat-icon class="journal-icon">book</mat-icon>
-                  <span class="journal-title">Coaching Journal</span>
+                  <span class="journal-title">{{ 'SUCCESSION.coachingJournal' | translate }}</span>
                   <span class="journal-count">{{ getEntries(idp._id).length }}</span>
                   <button mat-stroked-button class="journal-add-btn" (click)="toggleJournalForm(idp._id)">
                     <mat-icon>{{ activeJournalIdpId() === idp._id ? 'close' : 'add' }}</mat-icon>
-                    {{ activeJournalIdpId() === idp._id ? 'Cancel' : 'Add Entry' }}
+                    {{ activeJournalIdpId() === idp._id ? ('COMMON.cancel' | translate) : ('SUCCESSION.addNote' | translate) }}
                   </button>
                 </div>
 
@@ -285,7 +285,7 @@ interface IDP {
                 @if (activeJournalIdpId() === idp._id) {
                   <div class="journal-form">
                     <mat-form-field appearance="outline" class="journal-mood-field">
-                      <mat-label>Mood / Energy</mat-label>
+                      <mat-label>{{ 'SUCCESSION.moodEnergy' | translate }}</mat-label>
                       <mat-select [(ngModel)]="journalMood">
                         @for (n of moodOptions; track n) {
                           <mat-option [value]="n">{{ n }} / 10</mat-option>
@@ -295,7 +295,7 @@ interface IDP {
 
                     @if (!journalContent) {
                       <div class="journal-prompts">
-                        <p class="prompts-label">Pick a prompt or write freely:</p>
+                        <p class="prompts-label">{{ 'SUCCESSION.pickPrompt' | translate }}</p>
                         <div class="prompts-grid">
                           @for (prompt of journalPrompts; track prompt) {
                             <button class="prompt-card" (click)="journalPrompt = prompt; journalContent = ''">
@@ -374,28 +374,28 @@ interface IDP {
             <div class="section-header-left">
               <div class="section-icon orange"><mat-icon>video_call</mat-icon></div>
               <div>
-                <h3>Helena Coaching Integration</h3>
-                <p>Book coaching sessions, EQi-2.0 debriefs, and stakeholder alignment workshops directly through the platform. Helena's availability is synced and sessions are linked to your active IDPs.</p>
+                <h3>{{ 'SUCCESSION.helenaIntegrationTitle' | translate }}</h3>
+                <p>{{ 'SUCCESSION.helenaIntegrationDesc' | translate }}</p>
               </div>
             </div>
           </div>
           <div class="helena-services">
-            @for (service of helenaServices; track service.title) {
+            @for (service of helenaServices; track service.titleKey) {
               <div class="helena-service-card">
                 <div class="service-icon" [style.background]="service.color + '15'" [style.color]="service.color">
                   <mat-icon>{{ service.icon }}</mat-icon>
                 </div>
                 <div class="service-info">
-                  <strong>{{ service.title }}</strong>
-                  <span>{{ service.description }}</span>
+                  <strong>{{ service.titleKey | translate }}</strong>
+                  <span>{{ service.descKey | translate }}</span>
                   <div class="service-meta">
-                    <span class="service-duration"><mat-icon>schedule</mat-icon> {{ service.duration }}</span>
+                    <span class="service-duration"><mat-icon>schedule</mat-icon> {{ service.durationKey | translate }}</span>
                     <span class="service-price">{{ service.price }}</span>
                   </div>
                 </div>
-                <a [href]="'mailto:helena@helenacoaching.com?subject=Booking%20Request:%20' + service.title"
+                <a [href]="'mailto:helena@helenacoaching.com?subject=Booking%20Request:%20' + (service.titleKey | translate)"
                    mat-stroked-button class="book-btn">
-                  Book
+                  {{ 'SUCCESSION.book' | translate }}
                 </a>
               </div>
             }
@@ -665,14 +665,16 @@ export class IDPViewComponent implements OnInit {
   journalMood: number | null = null;
   moodOptions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
-  journalPrompts = [
-    'What progress have you made toward your goal since your last session?',
-    'What obstacles are you encountering — and what\'s really driving them?',
-    'Which of your GROW options have you acted on, and what did you learn?',
-    'What support do you need from your manager or mentor right now?',
-    'On a scale of 1–10, how confident are you in achieving your 90-day milestone?',
-    'What would "success" look like at your next coaching session?',
-  ];
+  get journalPrompts(): string[] {
+    return [
+      this.translate.instant('SUCCESSION.prompt1'),
+      this.translate.instant('SUCCESSION.prompt2'),
+      this.translate.instant('SUCCESSION.prompt3'),
+      this.translate.instant('SUCCESSION.prompt4'),
+      this.translate.instant('SUCCESSION.prompt5'),
+      this.translate.instant('SUCCESSION.prompt6'),
+    ];
+  }
 
   getEntries(idpId: string): JournalEntry[] {
     return this.journalMap()[idpId] ?? [];
@@ -749,38 +751,10 @@ export class IDPViewComponent implements OnInit {
   }
 
   helenaServices = [
-    {
-      title: 'EQi-2.0 Leadership Assessment & Debrief',
-      description: 'Full emotional intelligence assessment with a 60-min debrief session. Results integrated directly into your IDP competency framework.',
-      icon: 'psychology',
-      color: '#3A9FD6',
-      duration: '60 min debrief',
-      price: 'CAD $1,200',
-    },
-    {
-      title: 'GROW Coaching Session',
-      description: 'Individual coaching session using the GROW model, aligned to your active IDP goals and milestones.',
-      icon: 'emoji_people',
-      color: '#27C4A0',
-      duration: '60 min',
-      price: 'CAD $350/session',
-    },
-    {
-      title: 'Stakeholder Alignment Workshop',
-      description: 'Facilitated 90-min session with the coachee, manager, and HR to align on IDP goals, success criteria, and organizational support.',
-      icon: 'groups',
-      color: '#e86c3a',
-      duration: '90 min',
-      price: 'CAD $650',
-    },
-    {
-      title: 'Succession Planning Strategy Day',
-      description: 'Full-day facilitated session with leadership team to map bench strength, identify critical roles, and build organizational succession strategy.',
-      icon: 'corporate_fare',
-      color: '#7c3aed',
-      duration: 'Full day',
-      price: 'CAD $3,200',
-    },
+    { titleKey: 'SUCCESSION.svcEqiTitle', descKey: 'SUCCESSION.svcEqiDesc', icon: 'psychology', color: '#3A9FD6', durationKey: 'SUCCESSION.svcEqiDuration', price: 'CAD $1,200' },
+    { titleKey: 'SUCCESSION.svcGrowTitle', descKey: 'SUCCESSION.svcGrowDesc', icon: 'emoji_people', color: '#27C4A0', durationKey: 'SUCCESSION.svcGrowDuration', price: 'CAD $350/session' },
+    { titleKey: 'SUCCESSION.svcStakeholderTitle', descKey: 'SUCCESSION.svcStakeholderDesc', icon: 'groups', color: '#e86c3a', durationKey: 'SUCCESSION.svcStakeholderDuration', price: 'CAD $650' },
+    { titleKey: 'SUCCESSION.svcStrategyTitle', descKey: 'SUCCESSION.svcStrategyDesc', icon: 'corporate_fare', color: '#7c3aed', durationKey: 'SUCCESSION.svcStrategyDuration', price: 'CAD $3,200' },
   ];
 
   scorecardMetrics(idps: IDP[]): Array<{ label: string; value: string; sub?: string; color: string }> {
@@ -797,11 +771,11 @@ export class IDPViewComponent implements OnInit {
     const allGaps = new Set(idps.flatMap((i) => i.competencyGaps));
 
     return [
-      { label: 'Active Plans',         value: String(active),    color: '#3A9FD6' },
-      { label: 'Completed Plans',       value: String(completed), sub: `of ${total} total`, color: '#27C4A0' },
-      { label: 'Milestone Completion',  value: `${milestoneRate}%`, sub: `${doneMilestones} of ${allMilestones.length}`, color: milestoneRate >= 70 ? '#27C4A0' : milestoneRate >= 40 ? '#f0a500' : '#e53e3e' },
-      { label: 'Competency Gaps Tracked', value: String(allGaps.size), color: '#e86c3a' },
-      { label: 'Bench Readiness',       value: total >= 3 ? 'Strong' : total >= 1 ? 'Building' : 'Gaps', color: total >= 3 ? '#27C4A0' : '#f0a500' },
+      { label: this.translate.instant('SUCCESSION.scActivePlans'),         value: String(active),    color: '#3A9FD6' },
+      { label: this.translate.instant('SUCCESSION.scCompletedPlans'),       value: String(completed), sub: this.translate.instant('SUCCESSION.scOfTotal', { total }), color: '#27C4A0' },
+      { label: this.translate.instant('SUCCESSION.scMilestoneCompletion'),  value: `${milestoneRate}%`, sub: this.translate.instant('SUCCESSION.scMilestoneOf', { done: doneMilestones, total: allMilestones.length }), color: milestoneRate >= 70 ? '#27C4A0' : milestoneRate >= 40 ? '#f0a500' : '#e53e3e' },
+      { label: this.translate.instant('SUCCESSION.scGapsTracked'), value: String(allGaps.size), color: '#e86c3a' },
+      { label: this.translate.instant('SUCCESSION.scBenchReadiness'),       value: total >= 3 ? this.translate.instant('SUCCESSION.scStrong') : total >= 1 ? this.translate.instant('SUCCESSION.scBuilding') : this.translate.instant('SUCCESSION.scGaps'), color: total >= 3 ? '#27C4A0' : '#f0a500' },
     ];
   }
 
@@ -835,9 +809,9 @@ export class IDPViewComponent implements OnInit {
     const ref = this.dialog.open(ConfirmDialogComponent, {
       width: '420px',
       data: {
-        title: 'Regenerate IDP',
-        message: 'The current GROW content and milestones will be replaced with a new AI-generated plan.',
-        confirmLabel: 'Regenerate',
+        title: this.translate.instant('SUCCESSION.regenerateIdp'),
+        message: this.translate.instant('SUCCESSION.regenerateIdpMessage'),
+        confirmLabel: this.translate.instant('SUCCESSION.regenerateIdp'),
         confirmColor: 'primary',
         icon: 'auto_awesome',
       },
@@ -872,13 +846,13 @@ export class IDPViewComponent implements OnInit {
   deleteIdp(idp: IDP): void {
     const coacheeName = this.isPopulatedCoachee(idp.coacheeId)
       ? `${idp.coacheeId.firstName} ${idp.coacheeId.lastName}`
-      : 'this coachee';
+      : this.translate.instant('SUCCESSION.thisCoachee');
     const ref = this.dialog.open(ConfirmDialogComponent, {
       width: '420px',
       data: {
-        title: 'Delete IDP',
-        message: `Delete the development plan for ${coacheeName}? This cannot be undone.`,
-        confirmLabel: 'Delete',
+        title: this.translate.instant('SUCCESSION.deleteIDP'),
+        message: this.translate.instant('SUCCESSION.deleteIdpMessage', { name: coacheeName }),
+        confirmLabel: this.translate.instant('COMMON.delete'),
         confirmColor: 'warn',
         icon: 'delete_outline',
       },

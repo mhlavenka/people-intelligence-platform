@@ -11,7 +11,7 @@ import { MatSliderModule } from '@angular/material/slider';
 import { MatSelectModule } from '@angular/material/select';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ApiService } from '../../../core/api.service';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 interface Dimension {
   name: string;
@@ -29,6 +29,28 @@ const DIMENSIONS: Omit<Dimension, 'score'>[] = [
   { name: 'Learning & Development', description: 'Accessible training content, multiple learning modalities, and growth opportunities that do not disadvantage neurodivergent employees' },
   { name: 'Workflow Design & Task Structure', description: 'How work is structured, sequenced, and communicated — supporting executive function, reducing ambiguity, and enabling deep focus' },
 ];
+
+const DIM_NAME_KEYS: Record<string, string> = {
+  'Awareness & Culture': 'NEURO.dimAwarenessCulture',
+  'Recruitment & Onboarding': 'NEURO.dimRecruitmentOnboarding',
+  'Workspace & Physical Environment': 'NEURO.dimWorkspaceEnvironment',
+  'Communication & Collaboration': 'NEURO.dimCommunicationCollaboration',
+  'Leadership & Management': 'NEURO.dimLeadershipManagement',
+  'Policy & Accommodation Process': 'NEURO.dimPolicyAccommodation',
+  'Learning & Development': 'NEURO.dimLearningDevelopment',
+  'Workflow Design & Task Structure': 'NEURO.dimWorkflowTaskStructure',
+};
+
+const DIM_DESC_KEYS: Record<string, string> = {
+  'Awareness & Culture': 'NEURO.dimAwarenessCultureDesc',
+  'Recruitment & Onboarding': 'NEURO.dimRecruitmentOnboardingDesc',
+  'Workspace & Physical Environment': 'NEURO.dimWorkspaceEnvironmentDesc',
+  'Communication & Collaboration': 'NEURO.dimCommunicationCollaborationDesc',
+  'Leadership & Management': 'NEURO.dimLeadershipManagementDesc',
+  'Policy & Accommodation Process': 'NEURO.dimPolicyAccommodationDesc',
+  'Learning & Development': 'NEURO.dimLearningDevelopmentDesc',
+  'Workflow Design & Task Structure': 'NEURO.dimWorkflowTaskStructureDesc',
+};
 
 interface AssessmentResult {
   overallMaturityScore: number;
@@ -108,7 +130,7 @@ interface AssessmentResult {
               <h2>{{ "NEURO.assessmentComplete" | translate }}</h2>
               <p class="maturity-level">{{ 'NEURO.maturityLevel' | translate }} <strong>{{ maturityLabel() }}</strong></p>
               @if (completedAt()) {
-                <p class="completed-date">Completed {{ completedAt() | date:'MMM d, y' }}</p>
+                <p class="completed-date">{{ 'NEURO.completedOn' | translate }} {{ completedAt() | date:'MMM d, y' }}</p>
               }
             </div>
           </div>
@@ -116,7 +138,7 @@ interface AssessmentResult {
           <div class="dimension-results">
             @for (dim of scoredDimensions(); track dim.name) {
               <div class="dim-result">
-                <span class="dim-name">{{ dim.name }}</span>
+                <span class="dim-name">{{ dimName(dim.name) }}</span>
                 <div class="dim-bar">
                   <div class="dim-fill" [style.width.%]="dim.score" [class]="scoreClass(dim.score)"></div>
                 </div>
@@ -210,43 +232,43 @@ interface AssessmentResult {
                 <mat-icon>assignment_turned_in</mat-icon>
               </div>
               <div>
-                <h3>Accommodation Request Workflow</h3>
-                <p>Structured intake and response process for employee accommodation needs. Ensures legally compliant, consistent, and person-centred responses across your organization.</p>
+                <h3>{{ 'NEURO.accommodationTitle' | translate }}</h3>
+                <p>{{ 'NEURO.accommodationDesc' | translate }}</p>
               </div>
             </div>
             <div class="accommodation-steps">
               <div class="accom-step">
                 <div class="accom-step-num">1</div>
                 <div class="accom-step-body">
-                  <strong>Employee Submits Request</strong>
-                  <span>Confidential intake form capturing the employee's needs, preferred accommodations, and any supporting documentation.</span>
+                  <strong>{{ 'NEURO.accomStep1Title' | translate }}</strong>
+                  <span>{{ 'NEURO.accomStep1Desc' | translate }}</span>
                 </div>
               </div>
               <div class="accom-step">
                 <div class="accom-step-num">2</div>
                 <div class="accom-step-body">
-                  <strong>HR Review & Assessment</strong>
-                  <span>HR reviews the request within 5 business days. AI generates a draft accommodation plan for HR to review and adapt.</span>
+                  <strong>{{ 'NEURO.accomStep2Title' | translate }}</strong>
+                  <span>{{ 'NEURO.accomStep2Desc' | translate }}</span>
                 </div>
               </div>
               <div class="accom-step">
                 <div class="accom-step-num">3</div>
                 <div class="accom-step-body">
-                  <strong>Implementation & Agreement</strong>
-                  <span>Accommodation plan is confirmed with the employee, manager, and HR — all parties receive a copy.</span>
+                  <strong>{{ 'NEURO.accomStep3Title' | translate }}</strong>
+                  <span>{{ 'NEURO.accomStep3Desc' | translate }}</span>
                 </div>
               </div>
               <div class="accom-step">
                 <div class="accom-step-num">4</div>
                 <div class="accom-step-body">
-                  <strong>90-Day Check-in</strong>
-                  <span>Automated follow-up survey to evaluate accommodation effectiveness and adjust as needed.</span>
+                  <strong>{{ 'NEURO.accomStep4Title' | translate }}</strong>
+                  <span>{{ 'NEURO.accomStep4Desc' | translate }}</span>
                 </div>
               </div>
             </div>
             <button mat-raised-button color="primary" class="accom-btn" disabled>
-              <mat-icon>add</mat-icon> Submit Accommodation Request
-              <span class="coming-soon">Coming soon</span>
+              <mat-icon>add</mat-icon> {{ 'NEURO.submitAccommodation' | translate }}
+              <span class="coming-soon">{{ 'COMMON.comingSoon' | translate }}</span>
             </button>
           </div>
 
@@ -257,19 +279,19 @@ interface AssessmentResult {
                 <mat-icon>school</mat-icon>
               </div>
               <div>
-                <h3>Manager Training Modules</h3>
-                <p>Microlearning content on supporting neurodivergent employees — practical, evidence-based, and designed for people managers without clinical backgrounds.</p>
+                <h3>{{ 'NEURO.trainingTitle' | translate }}</h3>
+                <p>{{ 'NEURO.trainingDesc' | translate }}</p>
               </div>
             </div>
             <div class="training-grid">
-              @for (module of trainingModules; track module.title) {
+              @for (module of trainingModules; track module.titleKey) {
                 <div class="training-card">
                   <div class="training-icon" [style.background]="module.color + '18'" [style.color]="module.color">
                     <mat-icon>{{ module.icon }}</mat-icon>
                   </div>
                   <div class="training-info">
-                    <strong>{{ module.title }}</strong>
-                    <span>{{ module.description }}</span>
+                    <strong>{{ module.titleKey | translate }}</strong>
+                    <span>{{ module.descKey | translate }}</span>
                     <div class="training-meta">
                       <span class="training-duration"><mat-icon>schedule</mat-icon> {{ module.duration }}</span>
                       <span class="training-badge" [style.color]="module.color" [style.border-color]="module.color">{{ module.badge }}</span>
@@ -285,7 +307,7 @@ interface AssessmentResult {
         <!-- Assessment form -->
         <div class="assessment-card">
           <div class="progress-header">
-            <span>Step {{ currentStep() + 1 }} of {{ totalSteps }}</span>
+            <span>{{ 'NEURO.stepOf' | translate:{ current: currentStep() + 1, total: totalSteps } }}</span>
             <mat-progress-bar mode="determinate" [value]="progress()"></mat-progress-bar>
           </div>
 
@@ -313,9 +335,9 @@ interface AssessmentResult {
 
             <!-- Dimension steps -->
             @for (dim of dimensions; track dim.name; let i = $index) {
-              <mat-step [label]="dim.name">
+              <mat-step [label]="dimName(dim.name)">
                 <div class="step-content">
-                  <p class="step-description">{{ dim.description }}</p>
+                  <p class="step-description">{{ dimDesc(dim.name) }}</p>
                   <div class="score-question">
                     <label>{{ 'NEURO.rateMaturity' | translate }}</label>
                     <div class="slider-container">
@@ -343,7 +365,7 @@ interface AssessmentResult {
                 <h3>{{ 'NEURO.reviewYourScores' | translate }}</h3>
                 @for (dim of dimensions; track dim.name) {
                   <div class="review-row">
-                    <span>{{ dim.name }}</span>
+                    <span>{{ dimName(dim.name) }}</span>
                     <span class="review-score" [class]="scoreClass(dim.score)">{{ dim.score }}</span>
                   </div>
                 }
@@ -662,54 +684,12 @@ export class NeuroinclustionAssessmentComponent implements OnInit {
   totalSteps = DIMENSIONS.length + 2; // role + dimensions + review
 
   trainingModules = [
-    {
-      title: 'Understanding ADHD at Work',
-      description: 'Practical strategies for supporting employees with ADHD — task structure, deadline flexibility, and reducing distraction.',
-      icon: 'bolt',
-      color: '#f0a500',
-      duration: '15 min',
-      badge: 'ADHD',
-    },
-    {
-      title: 'Autism Spectrum in the Workplace',
-      description: 'Sensory considerations, communication preferences, social expectations, and creating predictable environments.',
-      icon: 'hub',
-      color: '#3A9FD6',
-      duration: '20 min',
-      badge: 'Autism',
-    },
-    {
-      title: 'Dyslexia & Dyscalculia Support',
-      description: 'Reading and numeracy accommodations, alternative formats, assistive technology, and assessment adjustments.',
-      icon: 'text_fields',
-      color: '#27C4A0',
-      duration: '12 min',
-      badge: 'Dyslexia',
-    },
-    {
-      title: 'Sensory Sensitivities & Environment',
-      description: 'How to identify sensory triggers, adapt physical workspaces, and support employees with sensory processing differences.',
-      icon: 'sensors',
-      color: '#7c3aed',
-      duration: '10 min',
-      badge: 'Sensory',
-    },
-    {
-      title: 'Inclusive Communication Practices',
-      description: 'Clear, direct communication; written vs. verbal preferences; meeting structure; and reducing ambiguity.',
-      icon: 'forum',
-      color: '#e86c3a',
-      duration: '18 min',
-      badge: 'Communication',
-    },
-    {
-      title: 'Executive Function & Task Design',
-      description: 'Structuring work to support planning, prioritization, and task initiation — for managers and team leads.',
-      icon: 'checklist',
-      color: '#1B2A47',
-      duration: '14 min',
-      badge: 'Workflow',
-    },
+    { titleKey: 'NEURO.trainAdhd', descKey: 'NEURO.trainAdhdDesc', icon: 'bolt', color: '#f0a500', duration: '15 min', badge: 'ADHD' },
+    { titleKey: 'NEURO.trainAutism', descKey: 'NEURO.trainAutismDesc', icon: 'hub', color: '#3A9FD6', duration: '20 min', badge: 'Autism' },
+    { titleKey: 'NEURO.trainDyslexia', descKey: 'NEURO.trainDyslexiaDesc', icon: 'text_fields', color: '#27C4A0', duration: '12 min', badge: 'Dyslexia' },
+    { titleKey: 'NEURO.trainSensory', descKey: 'NEURO.trainSensoryDesc', icon: 'sensors', color: '#7c3aed', duration: '10 min', badge: 'Sensory' },
+    { titleKey: 'NEURO.trainCommunication', descKey: 'NEURO.trainCommunicationDesc', icon: 'forum', color: '#e86c3a', duration: '18 min', badge: 'Communication' },
+    { titleKey: 'NEURO.trainExecFunction', descKey: 'NEURO.trainExecFunctionDesc', icon: 'checklist', color: '#1B2A47', duration: '14 min', badge: 'Workflow' },
   ];
   currentStep = signal(0);
   submitting  = signal(false);
@@ -725,7 +705,7 @@ export class NeuroinclustionAssessmentComponent implements OnInit {
 
   roleGroup: FormGroup;
 
-  constructor(private fb: FormBuilder, private api: ApiService) {
+  constructor(private fb: FormBuilder, private api: ApiService, private translate: TranslateService) {
     this.roleGroup = this.fb.group({
       respondentRole: ['', Validators.required],
     });
@@ -803,6 +783,16 @@ export class NeuroinclustionAssessmentComponent implements OnInit {
     }).filter(Boolean);
   }
 
+  dimName(name: string): string {
+    const key = DIM_NAME_KEYS[name];
+    return key ? this.translate.instant(key) : name;
+  }
+
+  dimDesc(name: string): string {
+    const key = DIM_DESC_KEYS[name];
+    return key ? this.translate.instant(key) : name;
+  }
+
   progress = () => Math.round((this.currentStep() / (this.totalSteps - 1)) * 100);
 
   onStepChange(index: number): void {
@@ -835,10 +825,10 @@ export class NeuroinclustionAssessmentComponent implements OnInit {
 
   maturityLabel(): string {
     const s = this.overallScore();
-    if (s >= 75) return 'Advanced';
-    if (s >= 50) return 'Developing';
-    if (s >= 25) return 'Emerging';
-    return 'Beginning';
+    if (s >= 75) return this.translate.instant('NEURO.maturityAdvanced');
+    if (s >= 50) return this.translate.instant('NEURO.maturityDeveloping');
+    if (s >= 25) return this.translate.instant('NEURO.maturityEmerging');
+    return this.translate.instant('NEURO.maturityBeginning');
   }
 
   submit(): void {

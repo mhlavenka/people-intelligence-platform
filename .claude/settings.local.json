@@ -44,7 +44,8 @@
       "Bash(grep -rn 'matTooltip=\"[A-Z]' frontend/src/app/ --include=\"*.component.ts\")",
       "Bash(grep -rn \"snackBar\\\\.open\\('[A-Z]\" frontend/src/app/ --include=\"*.component.ts\")",
       "Bash(grep -rn \"confirm\\('\" frontend/src/app/ --include=\"*.component.ts\")",
-      "Bash(grep -rn 'app-empty-state.*title=\"' frontend/src/app/ --include=\"*.component.ts\")"
+      "Bash(grep -rn 'app-empty-state.*title=\"' frontend/src/app/ --include=\"*.component.ts\")",
+      "Bash(node ../scripts/check-translations.js)"
     ]
   }
 }
