@@ -39,6 +39,7 @@ interface Organization {
   coachingRebill?: boolean;
   defaultCoachRate?: number;
   coacheeCanChooseCoach?: boolean;
+  defaultLanguage?: string;
   theme?: OrgTheme;
   logoUrl?: string;
   createdAt: string;
@@ -247,10 +248,21 @@ const RADIUS_OPTIONS = [
                 </mat-form-field>
               </div>
 
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label>{{ 'ADMIN.billingEmail' | translate }}</mat-label>
-                <input matInput formControlName="billingEmail" type="email" />
-              </mat-form-field>
+              <div class="field-row">
+                <mat-form-field appearance="outline">
+                  <mat-label>{{ 'ADMIN.billingEmail' | translate }}</mat-label>
+                  <input matInput formControlName="billingEmail" type="email" />
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>{{ 'ADMIN.defaultLanguage' | translate }}</mat-label>
+                  <mat-select formControlName="defaultLanguage">
+                    <mat-option value="en">English</mat-option>
+                    <mat-option value="fr">Français</mat-option>
+                    <mat-option value="es">Español</mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
 
               <div class="readonly-row">
                 <div class="readonly-field">
@@ -1077,10 +1089,11 @@ export class OrganizationSettingsComponent implements OnInit {
           error: () => this.planModules.set(null),
         });
         this.form = this.fb.group({
-          name:          [org.name,          Validators.required],
-          billingEmail:  [org.billingEmail,   [Validators.required, Validators.email]],
-          industry:      [org.industry  ?? ''],
-          employeeCount: [org.employeeCount ?? ''],
+          name:            [org.name,                Validators.required],
+          billingEmail:    [org.billingEmail,         [Validators.required, Validators.email]],
+          industry:        [org.industry  ?? ''],
+          employeeCount:   [org.employeeCount ?? ''],
+          defaultLanguage: [org.defaultLanguage ?? 'en'],
         });
         const addr = org.billingAddress ?? {};
         this.billingForm = this.fb.group({

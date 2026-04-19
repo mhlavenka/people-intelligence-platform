@@ -33,7 +33,14 @@ interface SurveyTemplate {
   description?: string;
   instructions?: string;
   moduleType: string;
+  language?: string;
   questions: Question[];
+}
+
+interface TranslationRef {
+  _id: string;
+  title: string;
+  language: string;
 }
 
 const DEPARTMENTS = [
@@ -102,9 +109,21 @@ const DEPARTMENTS = [
 
           <!-- Survey header -->
           <div class="survey-header">
-            <div class="module-badge" [class]="template()!.moduleType">
-              <mat-icon>{{ moduleIcon() }}</mat-icon>
-              {{ moduleLabel() }}
+            <div class="header-top-row">
+              <div class="module-badge" [class]="template()!.moduleType">
+                <mat-icon>{{ moduleIcon() }}</mat-icon>
+                {{ moduleLabel() }}
+              </div>
+              @if (availableLanguages().length > 1) {
+                <div class="lang-switcher">
+                  @for (l of availableLanguages(); track l.id) {
+                    <button class="lang-btn" [class.active]="currentLang() === l.language"
+                            (click)="switchLanguage(l.id, l.language)">
+                      {{ l.label }}
+                    </button>
+                  }
+                </div>
+              }
             </div>
             <h1>{{ template()!.title }}</h1>
             @if (template()!.description && phase() === 'dept') {
@@ -309,10 +328,25 @@ const DEPARTMENTS = [
     .survey-header {
       margin-bottom: 36px;
 
+      .header-top-row {
+        display: flex; align-items: center; justify-content: space-between;
+        flex-wrap: wrap; gap: 8px; margin-bottom: 4px;
+      }
+      .lang-switcher {
+        display: flex; gap: 4px;
+      }
+      .lang-btn {
+        padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 500;
+        border: 1px solid #dce6f0; background: white; color: #5a6a7e; cursor: pointer;
+        transition: all 0.12s;
+        &:hover { border-color: var(--artes-accent); color: var(--artes-accent); }
+        &.active { background: var(--artes-accent); color: white; border-color: var(--artes-accent); }
+      }
+
       .module-badge {
         display: inline-flex; align-items: center; gap: 6px;
         padding: 4px 12px; border-radius: 999px; font-size: 12px;
-        font-weight: 600; text-transform: uppercase; margin-bottom: 12px;
+        font-weight: 600; text-transform: uppercase;
         &.conflict      { background: rgba(232,108,58,0.12); color: #c04a14; mat-icon { font-size: 16px; } }
         &.neuroinclusion{ background: rgba(39,196,160,0.12); color: #1a9678; mat-icon { font-size: 16px; } }
         &.succession    { background: rgba(58,159,214,0.12); color: #2080b0; mat-icon { font-size: 16px; } }
@@ -470,6 +504,10 @@ export class SurveyTakeComponent implements OnInit {
   selectedDept = '';
   departments = DEPARTMENTS;
 
+  availableLanguages = signal<{ id: string; language: string; label: string }[]>([]);
+  currentLang = signal('en');
+  private originalTemplateId = '';
+
   currentQuestion = () => {
     const t = this.template();
     const i = this.currentIndex();
@@ -559,18 +597,60 @@ export class SurveyTakeComponent implements OnInit {
   private loadTemplate(id: string): void {
     this.api.get<SurveyTemplate>(`/surveys/templates/${id}`).subscribe({
       next: (t) => {
+        this.originalTemplateId = id;
+        this.currentLang.set(t.language || 'en');
         this.template.set(t);
-        this.loading.set(false);
-        // Session-linked intakes skip the anonymous-dept step — the response is
-        // tied to the coachee via their auth + the sessionId.
         if (this.sessionId) {
           this.phase.set(t.instructions ? 'instructions' : 'questions');
         }
+        this.loadTranslationsAndAutoSwitch(id, t.language || 'en');
       },
       error: (err) => {
         if (err.status === 410) { this.surveyInactive.set(true); }
         this.loading.set(false);
       },
+    });
+  }
+
+  private loadTranslationsAndAutoSwitch(templateId: string, templateLang: string): void {
+    const langLabels: Record<string, string> = { en: 'English', fr: 'Français', es: 'Español' };
+
+    this.api.get<TranslationRef[]>(`/surveys/templates/${templateId}/translations`).subscribe({
+      next: (siblings) => {
+        const all = [
+          { id: templateId, language: templateLang, label: langLabels[templateLang] || templateLang },
+          ...siblings.map((s) => ({ id: s._id, language: s.language, label: langLabels[s.language] || s.language })),
+        ];
+        this.availableLanguages.set(all);
+
+        const userLang = localStorage.getItem('artes_language') || 'en';
+        if (userLang !== templateLang) {
+          const match = siblings.find((s) => s.language === userLang);
+          if (match) {
+            this.switchLanguage(match._id, match.language);
+            return;
+          }
+        }
+        this.loading.set(false);
+      },
+      error: () => this.loading.set(false),
+    });
+  }
+
+  switchLanguage(templateId: string, lang: string): void {
+    this.loading.set(true);
+    this.api.get<SurveyTemplate>(`/surveys/templates/${templateId}`).subscribe({
+      next: (t) => {
+        this.template.set(t);
+        this.currentLang.set(lang);
+        this.currentIndex.set(0);
+        this.answers.set({});
+        this.loading.set(false);
+        if (this.sessionId) {
+          this.phase.set(t.instructions ? 'instructions' : 'questions');
+        }
+      },
+      error: () => this.loading.set(false),
     });
   }
 
@@ -621,6 +701,7 @@ export class SurveyTakeComponent implements OnInit {
     const body: Record<string, unknown> = {
       templateId: t._id,
       responses,
+      respondentLanguage: localStorage.getItem('artes_language') || 'en',
     };
     if (this.sessionId) {
       body['sessionId'] = this.sessionId;

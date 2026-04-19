@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
@@ -745,6 +745,7 @@ export class LoginComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private api: ApiService,
     private router: Router,
+    private route: ActivatedRoute,
     public translate: TranslateService,
     private recaptcha: RecaptchaService,
   ) {
@@ -813,6 +814,11 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.startCarousel();
   }
 
+  private navigateAfterLogin(): void {
+    const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+    this.router.navigateByUrl(returnUrl || '/dashboard');
+  }
+
   switchLang(lang: string): void {
     this.translate.use(lang);
     localStorage.setItem('artes_language', lang);
@@ -833,7 +839,7 @@ export class LoginComponent implements OnInit, OnDestroy {
               this.tempToken = res.tempToken!;
               this.twoFactorStep.set(true);
             } else {
-              this.router.navigate(['/dashboard']);
+              this.navigateAfterLogin();
             }
           },
           error: (err) => {
@@ -855,7 +861,7 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.error.set('');
 
     this.authService.verify2fa(this.tempToken, this.otpForm.value.otp).subscribe({
-      next: () => this.router.navigate(['/dashboard']),
+      next: () => this.navigateAfterLogin(),
       error: (err) => {
         this.error.set(err.error?.error || this.translate.instant('AUTH.verificationFailed'));
         this.loading.set(false);

@@ -16,6 +16,7 @@ export interface ISurveyResponse extends Document {
   sessionId?: mongoose.Types.ObjectId;    // linked CoachingSession when this response is a pre-session intake
   submissionToken: string;               // SHA-256(userId + templateId [+ sessionId]) — used for dedup
   departmentId?: string;
+  respondentLanguage?: string;
   responses: IResponseItem[];
   submittedAt: Date;
   isAnonymous: boolean;
@@ -47,6 +48,7 @@ const SurveyResponseSchema = new Schema<ISurveyResponse>(
     sessionId: { type: Schema.Types.ObjectId, ref: 'CoachingSession', index: true },
     submissionToken: { type: String, required: true },          // one-way hash, always present
     departmentId: { type: String },
+    respondentLanguage: { type: String, enum: ['en', 'fr', 'es'] },
     responses: [ResponseItemSchema],
     submittedAt: { type: Date, default: Date.now },
     isAnonymous: { type: Boolean, default: true },

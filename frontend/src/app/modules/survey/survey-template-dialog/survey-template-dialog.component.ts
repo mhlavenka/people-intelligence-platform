@@ -53,6 +53,7 @@ interface SurveyTemplate {
     note?: string;
   };
   rater_type?: string;
+  language?: string;
   questions: {
     id: string;
     text: string;
@@ -170,13 +171,56 @@ interface SurveyTemplate {
                 </mat-form-field>
               </div>
 
-              <div class="form-row">
+              <div class="form-row form-row-with-hint">
                 <mat-form-field appearance="outline" class="half-width">
                   <mat-label>{{ 'SURVEY.minResponsesLabel' | translate }}</mat-label>
                   <input matInput type="number" min="1" formControlName="minResponsesForAnalysis" />
                   <mat-hint>{{ 'SURVEY.minResponsesHint' | translate }}</mat-hint>
                 </mat-form-field>
+
+                <mat-form-field appearance="outline" class="half-width">
+                  <mat-label>{{ 'SURVEY.intakeLanguage' | translate }}</mat-label>
+                  <mat-select formControlName="language">
+                    <mat-option value="en">English</mat-option>
+                    <mat-option value="fr">Français</mat-option>
+                    <mat-option value="es">Español</mat-option>
+                  </mat-select>
+                </mat-form-field>
               </div>
+
+              @if (isEdit()) {
+                @if (siblingTranslations().length > 0) {
+                  <div class="lang-nav">
+                    <span class="lang-nav-label">{{ 'SURVEY.otherLanguages' | translate }}:</span>
+                    @for (t of siblingTranslations(); track t._id) {
+                      <button mat-stroked-button type="button" class="lang-nav-btn"
+                              (click)="openTranslation(t._id)">
+                        {{ langLabel(t.language) }}
+                      </button>
+                    }
+                  </div>
+                }
+
+                @if (availableTranslateLangs().length > 0) {
+                  <div class="translate-row">
+                    <mat-form-field appearance="outline" class="translate-lang-select">
+                      <mat-label>{{ 'SURVEY.translateTo' | translate }}</mat-label>
+                      <mat-select [(value)]="translateTargetLang">
+                        @for (lang of availableTranslateLangs(); track lang.value) {
+                          <mat-option [value]="lang.value">{{ lang.label }}</mat-option>
+                        }
+                      </mat-select>
+                    </mat-form-field>
+                    <button mat-stroked-button type="button"
+                            (click)="translateIntake()"
+                            [disabled]="translating() || !translateTargetLang">
+                      @if (translating()) { <mat-spinner diameter="16" /> }
+                      @else { <mat-icon>translate</mat-icon> }
+                      {{ 'SURVEY.translateIntake' | translate }}
+                    </button>
+                  </div>
+                }
+              }
 
               <div class="toggle-row">
                 <mat-slide-toggle formControlName="isActive" color="primary">
@@ -672,12 +716,28 @@ interface SurveyTemplate {
     .half-width { flex: 1; min-width: 0; }
     .grow { flex: 1; min-width: 0; }
     .form-row { display: flex; gap: 12px; align-items: flex-start; flex-wrap: wrap; }
+    .form-row-with-hint { margin-bottom: 35px; }
 
     /* Toggle */
     .toggle-row {
       display: flex; align-items: center; gap: 12px; padding: 6px 0;
     }
     .toggle-hint { font-size: 12px; color: #9aa5b4; }
+
+    .translate-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 2px 0; flex-shrink: 0;
+      button {
+        display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+        mat-spinner { display: inline-block; }
+      }
+    }
+    .translate-lang-select { width: 160px; flex-shrink: 0; }
+    .lang-nav {
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 2px 0;
+    }
+    .lang-nav-label { font-size: 12px; color: #5a6a7e; font-weight: 600; }
+    .lang-nav-btn { font-size: 13px; min-width: unset; padding: 0 12px; }
 
     /* Sub-section labels */
     .sub-section-label {
@@ -796,7 +856,18 @@ export class SurveyTemplateDialogComponent implements OnInit {
 
   form!: FormGroup;
   saving = signal(false);
+  translating = signal(false);
+  translateTargetLang = '';
   error = signal('');
+
+  siblingTranslations = signal<{ _id: string; title: string; language: string }[]>([]);
+  availableTranslateLangs = signal<{ value: string; label: string }[]>([]);
+
+  private readonly ALL_LANGS = [
+    { value: 'en', label: 'English' },
+    { value: 'fr', label: 'Français' },
+    { value: 'es', label: 'Español' },
+  ];
 
   isEdit = () => !!this.existingData;
 
@@ -817,6 +888,7 @@ export class SurveyTemplateDialogComponent implements OnInit {
       moduleType:        [d?.moduleType ?? 'conflict', Validators.required],
       intakeType:        [d?.intakeType ?? 'survey', Validators.required],
       isActive:          [d?.isActive ?? true],
+      language:          [d?.language ?? 'en'],
       minResponsesForAnalysis: [
         d?.minResponsesForAnalysis
           ?? (d?.intakeType && d.intakeType !== 'survey' ? 1 : 5),
@@ -866,6 +938,25 @@ export class SurveyTemplateDialogComponent implements OnInit {
       this.addQuestion();
       this.addQuestion();
     }
+
+    if (d?._id) {
+      this.loadTranslations(d._id, d.language || 'en');
+    }
+  }
+
+  private loadTranslations(templateId: string, currentLang: string): void {
+    this.api.get<{ _id: string; title: string; language: string }[]>(
+      `/surveys/templates/${templateId}/translations`
+    ).subscribe({
+      next: (siblings) => {
+        this.siblingTranslations.set(siblings);
+        const takenLangs = new Set([currentLang, ...siblings.map((s) => s.language)]);
+        this.availableTranslateLangs.set(
+          this.ALL_LANGS.filter((l) => !takenLangs.has(l.value))
+        );
+      },
+      error: () => {},
+    });
   }
 
   addQuestion(data?: SurveyTemplate['questions'][0]): void {
@@ -931,6 +1022,36 @@ export class SurveyTemplateDialogComponent implements OnInit {
     }
   }
 
+  langLabel(code: string): string {
+    return this.ALL_LANGS.find((l) => l.value === code)?.label || code;
+  }
+
+  openTranslation(templateId: string): void {
+    this.api.get<SurveyTemplate>(`/surveys/templates/${templateId}`).subscribe({
+      next: (template) => {
+        this.dialogRef.close({ openTemplate: template });
+      },
+    });
+  }
+
+  translateIntake(): void {
+    if (!this.translateTargetLang || !this.existingData) return;
+    this.translating.set(true);
+    this.error.set('');
+    this.api.post<SurveyTemplate>(`/surveys/templates/${this.existingData._id}/translate`, {
+      targetLanguage: this.translateTargetLang,
+    }).subscribe({
+      next: () => {
+        this.translating.set(false);
+        this.dialogRef.close('translated');
+      },
+      error: (err) => {
+        this.translating.set(false);
+        this.error.set(err.error?.error || this.translate.instant('SURVEY.translateFailed'));
+      },
+    });
+  }
+
   save(): void {
     if (this.form.invalid) { this.form.markAllAsTouched(); return; }
     this.saving.set(true);
@@ -986,6 +1107,7 @@ export class SurveyTemplateDialogComponent implements OnInit {
       moduleType: v.moduleType,
       intakeType: v.intakeType,
       isActive:   v.isActive,
+      language:   v.language || 'en',
       minResponsesForAnalysis: Number(v.minResponsesForAnalysis) || 1,
       questions,
     };
