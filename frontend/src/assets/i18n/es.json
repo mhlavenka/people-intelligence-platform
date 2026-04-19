@@ -1194,7 +1194,10 @@
     "behaviorTemperature": "Temperatura conductual (CDP)",
     "tempHot": "Caliente — activo / en escalada",
     "tempCool": "Frío — pasivo / en desescalada",
-    "behaviorCluster": "Clúster conductual (CDP)"
+    "behaviorCluster": "Clúster conductual (CDP)",
+    "descriptionHint": "Una breve descripción mostrada a coaches y administradores",
+    "respondentInstructions": "Instrucciones para el encuestado",
+    "instructionsHint": "Mostradas a los encuestados antes de comenzar. Admite formato básico."
   },
   "EQ": {
     "importWizard": "Asistente de importación EQi",

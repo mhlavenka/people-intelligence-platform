@@ -1194,7 +1194,10 @@
     "behaviorTemperature": "Température comportementale (CDP)",
     "tempHot": "Chaud — actif / en escalade",
     "tempCool": "Froid — passif / en désescalade",
-    "behaviorCluster": "Cluster comportemental (CDP)"
+    "behaviorCluster": "Cluster comportemental (CDP)",
+    "descriptionHint": "Une brève description affichée aux coachs et administrateurs",
+    "respondentInstructions": "Instructions pour le répondant",
+    "instructionsHint": "Affichées aux répondants avant de commencer. Prend en charge le formatage de base."
   },
   "EQ": {
     "importWizard": "Assistant d’import EQi",

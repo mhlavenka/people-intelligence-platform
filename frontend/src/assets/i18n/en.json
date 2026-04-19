@@ -1194,7 +1194,10 @@
     "behaviorTemperature": "Behaviour temperature (CDP)",
     "tempHot": "Hot — active / escalating",
     "tempCool": "Cool — passive / de-escalating",
-    "behaviorCluster": "Behaviour cluster (CDP)"
+    "behaviorCluster": "Behaviour cluster (CDP)",
+    "descriptionHint": "A brief description shown to coaches and admins",
+    "respondentInstructions": "Respondent Instructions",
+    "instructionsHint": "Shown to respondents before they begin. Supports basic formatting."
   },
   "EQ": {
     "importWizard": "EQi Import Wizard",
@@ -1404,7 +1407,6 @@
     "settingsFailed": "Failed to save settings",
     "profile": "Profile",
     "signOut": "Sign out",
-    "editOrganization": "Edit Organization",
     "newOrganizationDialog": "New Organization",
     "orgName": "Organization Name",
     "slug": "Slug",
