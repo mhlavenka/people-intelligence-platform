@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, NgZone } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { environment } from '../../environments/environment';
 
@@ -11,6 +11,8 @@ declare const grecaptcha: {
 export class RecaptchaService {
   private loaded = false;
   private loading: Promise<void> | null = null;
+
+  constructor(private zone: NgZone) {}
 
   private loadScript(): Promise<void> {
     if (this.loaded) return Promise.resolve();
@@ -37,13 +39,15 @@ export class RecaptchaService {
             grecaptcha
               .execute(environment.recaptchaSiteKey, { action })
               .then((token) => {
-                subscriber.next(token);
-                subscriber.complete();
+                this.zone.run(() => {
+                  subscriber.next(token);
+                  subscriber.complete();
+                });
               })
-              .catch((err) => subscriber.error(err));
+              .catch((err) => this.zone.run(() => subscriber.error(err)));
           });
         })
-        .catch((err) => subscriber.error(err));
+        .catch((err) => this.zone.run(() => subscriber.error(err)));
     });
   }
 }
