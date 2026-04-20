@@ -69,6 +69,7 @@ testem.log
 /android/app/build/
 /android/.gradle/
 /android/build/
+/android/app/google-services.json
 *.apk
 *.aab
 

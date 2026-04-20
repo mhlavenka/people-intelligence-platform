@@ -91,6 +91,10 @@ interface Booking {
       } @else if (bookings().length === 0) {
         <div class="empty-state">
           <p>{{ 'BOOKINGS.EMPTY' | translate }}</p>
+          <ion-button (click)="newBooking()">
+            <ion-icon name="add-outline" slot="start"></ion-icon>
+            Book a Session
+          </ion-button>
         </div>
       } @else {
         <ion-list>

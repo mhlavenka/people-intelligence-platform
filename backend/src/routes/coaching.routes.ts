@@ -210,7 +210,7 @@ router.get('/engagements', async (req: AuthRequest, res: Response, next: NextFun
     const filter = scopeCoachingFilter(req);
     const engagements = await CoachingEngagement.find(filter)
       .populate('coacheeId', 'firstName lastName email department profilePicture')
-      .populate('coachId', 'firstName lastName email profilePicture')
+      .populate('coachId', 'firstName lastName email profilePicture publicSlug')
       .populate('sponsorId', 'name email organization')
       .sort({ createdAt: -1 });
     console.info(
