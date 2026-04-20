@@ -36,7 +36,7 @@ async function trackLoginSession(req: Request, userId: string, organizationId: s
     const device = parseDevice(ua);
 
     await LoginSession.findOneAndUpdate(
-      { tokenHash },
+      { userId, device, ip },
       { userId, organizationId, tokenHash, device, ip, lastActiveAt: new Date() },
       { upsert: true },
     );

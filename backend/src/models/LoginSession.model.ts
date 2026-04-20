@@ -23,9 +23,9 @@ const LoginSessionSchema = new Schema<ILoginSession>(
   { timestamps: true }
 );
 
-LoginSessionSchema.index({ userId: 1 });
+LoginSessionSchema.index({ userId: 1, device: 1, ip: 1 });
 LoginSessionSchema.index({ organizationId: 1 });
-LoginSessionSchema.index({ tokenHash: 1 }, { unique: true });
+LoginSessionSchema.index({ tokenHash: 1 });
 LoginSessionSchema.index({ lastActiveAt: 1 }, { expireAfterSeconds: 7 * 24 * 60 * 60 });
 
 export const LoginSession = mongoose.model<ILoginSession>('LoginSession', LoginSessionSchema);
