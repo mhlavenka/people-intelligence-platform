@@ -189,12 +189,17 @@ export class LoginPage implements OnInit {
       return;
     }
 
-    const success = await this.auth.tryBiometricLogin();
-    if (success) {
-      await this.onLoginSuccess();
-    } else {
-      this.biometricAvailable.set(true);
+    const hasSession = await this.auth.hasStoredSession();
+    if (hasSession) {
+      const success = await this.auth.tryBiometricLogin();
+      if (success) {
+        await this.onLoginSuccess();
+        return;
+      }
     }
+
+    const biometricReady = await this.auth.hasStoredSession();
+    this.biometricAvailable.set(biometricReady);
   }
 
   login() {
@@ -236,13 +241,20 @@ export class LoginPage implements OnInit {
 
   async biometricLogin() {
     this.loading.set(true);
+    const hasToken = await this.auth.hasStoredSession();
+    if (!hasToken) {
+      this.loading.set(false);
+      this.error.set('Sign in with password first to enable biometric login.');
+      return;
+    }
+
     const success = await this.auth.tryBiometricLogin();
     this.loading.set(false);
 
     if (success) {
       await this.onLoginSuccess();
     } else {
-      this.error.set('Biometric login failed. Please sign in manually.');
+      this.error.set('Biometric verification failed. Please sign in manually.');
     }
   }
 

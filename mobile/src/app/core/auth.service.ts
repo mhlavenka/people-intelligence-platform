@@ -86,6 +86,10 @@ export class AuthService {
     );
   }
 
+  async hasStoredSession(): Promise<boolean> {
+    return this.hasStoredRefreshToken();
+  }
+
   async tryBiometricLogin(): Promise<boolean> {
     const available = await this.biometric.isAvailable();
     if (!available) return false;
