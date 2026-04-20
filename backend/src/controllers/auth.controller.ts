@@ -200,11 +200,12 @@ export async function refresh(req: Request, res: Response, next: NextFunction): 
     }
 
     const decoded = jwt.verify(refreshToken, config.jwt.refreshSecret) as TokenPayload;
-    const tokens = generateTokens(decoded);
-    res.json(tokens);
-  } catch {
+    const { iat, exp, ...cleanPayload } = decoded as TokenPayload & { iat?: number; exp?: number };
+    const tokens = generateTokens(cleanPayload);
+    res.json({ ...tokens, user: cleanPayload });
+  } catch (err) {
+    console.error('[Refresh] Token verification failed:', (err as Error).message);
     res.status(401).json({ error: t(req, 'errors.invalidRefreshToken') });
-    next;
   }
 }
 
