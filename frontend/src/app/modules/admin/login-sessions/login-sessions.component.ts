@@ -8,6 +8,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { TranslateModule } from '@ngx-translate/core';
 import { ApiService } from '../../../core/api.service';
+import { AuthService } from '../../../core/auth.service';
 
 interface OrgLoginSession {
   _id: string;
@@ -59,7 +60,12 @@ interface OrgLoginSession {
           <th mat-header-cell *matHeaderCellDef>User</th>
           <td mat-cell *matCellDef="let s">
             <div class="user-cell">
-              <strong>{{ s.user.firstName }} {{ s.user.lastName }}</strong>
+              <strong>
+                {{ s.user.firstName }} {{ s.user.lastName }}
+                @if (isMe(s)) {
+                  <span class="you-badge">You</span>
+                }
+              </strong>
               <span class="email">{{ s.user.email }}</span>
             </div>
           </td>
@@ -83,9 +89,11 @@ interface OrgLoginSession {
         <ng-container matColumnDef="actions">
           <th mat-header-cell *matHeaderCellDef></th>
           <td mat-cell *matCellDef="let s">
-            <button mat-icon-button color="warn" matTooltip="Revoke session" (click)="revoke(s._id)">
-              <mat-icon>block</mat-icon>
-            </button>
+            @if (!isMe(s)) {
+              <button mat-icon-button color="warn" matTooltip="Revoke session" (click)="revoke(s._id)">
+                <mat-icon>block</mat-icon>
+              </button>
+            }
           </td>
         </ng-container>
 
@@ -107,11 +115,17 @@ interface OrgLoginSession {
     .sessions-table { width: 100%; }
     .user-cell { display: flex; flex-direction: column; }
     .email { font-size: 12px; color: #8fa4c0; }
+    .you-badge {
+      display: inline-block; background: #3A9FD6; color: #fff;
+      font-size: 10px; font-weight: 600; padding: 2px 6px;
+      border-radius: 4px; margin-left: 6px; vertical-align: middle;
+    }
   `],
 })
 export class LoginSessionsAdminComponent implements OnInit {
   private api = inject(ApiService);
   private snackBar = inject(MatSnackBar);
+  private auth = inject(AuthService);
 
   sessions = signal<OrgLoginSession[]>([]);
   loading = signal(true);
@@ -120,6 +134,10 @@ export class LoginSessionsAdminComponent implements OnInit {
 
   ngOnInit() {
     this.loadSessions();
+  }
+
+  isMe(session: OrgLoginSession): boolean {
+    return session.user._id === this.auth.currentUser()?.id;
   }
 
   cleanStale() {
