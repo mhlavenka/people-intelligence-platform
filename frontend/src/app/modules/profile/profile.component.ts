@@ -15,6 +15,7 @@ import { ApiService } from '../../core/api.service';
 import { AuthService } from '../../core/auth.service';
 import { ConfirmDialogComponent } from '../../shared/confirm-dialog/confirm-dialog.component';
 import { PasskeyLabelDialogComponent } from './passkey-label-dialog.component';
+import { LoginSessionsDialogComponent } from './login-sessions-dialog.component';
 import { environment } from '../../../environments/environment';
 
 interface PasskeyInfo {
@@ -431,7 +432,7 @@ function passwordMatchValidator(control: AbstractControl): ValidationErrors | nu
                     <div class="toggle-label">{{ 'PROFILE.activeSessions' | translate }}</div>
                     <div class="toggle-desc">{{ 'PROFILE.activeSessionsDesc' | translate }}</div>
                   </div>
-                  <button mat-stroked-button disabled>{{ 'COMMON.comingSoon' | translate }}</button>
+                  <button mat-stroked-button (click)="openLoginSessions()">{{ 'COMMON.view' | translate }}</button>
                 </div>
 
                 <mat-divider />
@@ -952,5 +953,9 @@ export class ProfileComponent implements OnInit {
         },
       });
     });
+  }
+
+  openLoginSessions() {
+    this.dialog.open(LoginSessionsDialogComponent, { width: '500px' });
   }
 }

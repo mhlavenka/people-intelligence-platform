@@ -400,6 +400,14 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'admin/login-sessions',
+        canActivate: [roleGuard([...ADMIN_HR])],
+        loadComponent: () =>
+          import('./modules/admin/login-sessions/login-sessions.component').then(
+            (m) => m.LoginSessionsAdminComponent
+          ),
+      },
+      {
         path: 'admin/activity',
         canActivate: [roleGuard([...ADMIN_HR])],
         loadComponent: () =>

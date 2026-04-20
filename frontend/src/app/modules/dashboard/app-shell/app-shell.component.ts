@@ -677,6 +677,7 @@ export class AppShellComponent implements OnInit, OnDestroy {
         { label: 'NAV.users',             icon: 'group',               route: '/admin/users',          roles: ['admin', 'hr_manager'] },
         { label: 'NAV.rolePermissions',   icon: 'policy',              route: '/admin/roles',          roles: ['admin', 'hr_manager'] },
         { label: 'NAV.activityLog',      icon: 'history',             route: '/admin/activity',       roles: ['admin', 'hr_manager'] },
+        { label: 'NAV.loginSessions',    icon: 'devices',             route: '/admin/login-sessions', roles: ['admin', 'hr_manager'] },
         { label: 'NAV.billing',           icon: 'receipt_long',        route: '/billing',              roles: ['admin'] },
       ],
     },

@@ -9,8 +9,10 @@ function t(req: Request, key: string): string {
 }
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { authenticator } = require('otplib') as typeof import('otplib');
+import crypto from 'crypto';
 import { Organization } from '../models/Organization.model';
 import { User, IUser } from '../models/User.model';
+import { LoginSession } from '../models/LoginSession.model';
 import { CustomRole } from '../models/CustomRole.model';
 import { SystemRoleOverride } from '../models/SystemRoleOverride.model';
 import { SYSTEM_ROLE_PERMISSIONS } from '../config/permissions';
@@ -24,6 +26,33 @@ interface TokenPayload {
   permissions?: string[];
   customRoleId?: string;
   customRoleName?: string;
+}
+
+async function trackLoginSession(req: Request, userId: string, organizationId: string, accessToken: string): Promise<void> {
+  try {
+    const tokenHash = crypto.createHash('sha256').update(accessToken).digest('hex');
+    const ua = req.headers['user-agent'] || 'Unknown device';
+    const ip = req.ip || req.headers['x-forwarded-for']?.toString() || '';
+    const device = parseDevice(ua);
+
+    await LoginSession.findOneAndUpdate(
+      { tokenHash },
+      { userId, organizationId, tokenHash, device, ip, lastActiveAt: new Date() },
+      { upsert: true },
+    );
+  } catch (err) {
+    console.error('[LoginSession] Failed to track session:', err);
+  }
+}
+
+function parseDevice(ua: string): string {
+  if (ua.includes('Capacitor') || ua.includes('Android')) return 'ARTES Mobile (Android)';
+  if (ua.includes('iPhone') || ua.includes('iPad')) return 'ARTES Mobile (iOS)';
+  if (ua.includes('Chrome')) return 'Chrome Browser';
+  if (ua.includes('Firefox')) return 'Firefox Browser';
+  if (ua.includes('Safari')) return 'Safari Browser';
+  if (ua.includes('Edge')) return 'Edge Browser';
+  return ua.substring(0, 80);
 }
 
 export function generateTokens(payload: TokenPayload): { accessToken: string; refreshToken: string } {
@@ -168,6 +197,8 @@ export async function login(req: Request, res: Response, next: NextFunction): Pr
     const payload = await buildPayload(user);
     const tokens = generateTokens(payload);
 
+    trackLoginSession(req, user._id.toString(), user.organizationId.toString(), tokens.accessToken);
+
     res.json({
       ...tokens,
       user: {
@@ -202,6 +233,9 @@ export async function refresh(req: Request, res: Response, next: NextFunction): 
     const decoded = jwt.verify(refreshToken, config.jwt.refreshSecret) as TokenPayload;
     const { iat, exp, ...cleanPayload } = decoded as TokenPayload & { iat?: number; exp?: number };
     const tokens = generateTokens(cleanPayload);
+
+    trackLoginSession(req, cleanPayload.userId, cleanPayload.organizationId, tokens.accessToken);
+
     res.json({ ...tokens, user: cleanPayload });
   } catch (err) {
     console.error('[Refresh] Token verification failed:', (err as Error).message);
