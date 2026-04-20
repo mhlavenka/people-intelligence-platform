@@ -1370,7 +1370,9 @@
     "invoiceDateLabel": "Invoice date",
     "periodLabel": "Period",
     "totalDue": "Total due",
-    "generated": "Generated"
+    "generated": "Generated",
+    "backToBilling": "Back to billing",
+    "viewPrint": "View / Print"
   },
   "SYSADMIN": {
     "systemAdmin": "System Administration",
@@ -1782,7 +1784,9 @@
     "bundleSaves": "Bundle saves 25%",
     "current": "Current",
     "bundleTitle": "All-Platform Bundle",
-    "bundleDesc": "All three modules · 2 Helena coaching days/year"
+    "bundleDesc": "All three modules · 2 Helena coaching days/year",
+    "noPaymentHistory": "No payment history",
+    "noPaymentHistoryMsg": "Payments will appear here once invoices are paid."
   },
   "HUB": {
     "title": "Message Hub",
@@ -1851,7 +1855,9 @@
     "zoomIn": "Zoom in",
     "zoomOut": "Zoom out",
     "resetZoom": "Reset zoom",
-    "fitToScreen": "Fit to screen"
+    "fitToScreen": "Fit to screen",
+    "dragToReassign": "Drag to reassign",
+    "removeFromReportingLine": "Remove from reporting line"
   },
   "BOOKING": {
     "availability": "Availability",

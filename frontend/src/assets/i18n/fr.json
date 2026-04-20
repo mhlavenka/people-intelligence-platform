@@ -1370,7 +1370,9 @@
     "invoiceDateLabel": "Date de facture",
     "periodLabel": "Période",
     "totalDue": "Total dû",
-    "generated": "Généré"
+    "generated": "Généré",
+    "backToBilling": "Retour à la facturation",
+    "viewPrint": "Voir / Imprimer"
   },
   "SYSADMIN": {
     "systemAdmin": "Administration système",
@@ -1782,7 +1784,9 @@
     "bundleSaves": "Le forfait économise 25 %",
     "current": "Actuel",
     "bundleTitle": "Forfait plateforme complète",
-    "bundleDesc": "Les trois modules · 2 journées de coaching Helena/an"
+    "bundleDesc": "Les trois modules · 2 journées de coaching Helena/an",
+    "noPaymentHistory": "Aucun historique de paiement",
+    "noPaymentHistoryMsg": "Les paiements apparaîtront ici une fois les factures réglées."
   },
   "HUB": {
     "title": "Centre de messages",
@@ -1851,7 +1855,9 @@
     "zoomIn": "Zoom avant",
     "zoomOut": "Zoom arrière",
     "resetZoom": "Réinitialiser le zoom",
-    "fitToScreen": "Ajuster à l’écran"
+    "fitToScreen": "Ajuster à l’écran",
+    "dragToReassign": "Glisser pour réaffecter",
+    "removeFromReportingLine": "Retirer de la ligne hiérarchique"
   },
   "BOOKING": {
     "availability": "Disponibilité",
