@@ -230,6 +230,7 @@ export class AuthService {
     this.stopActivityTracking();
     if (this.refreshTimer) { clearTimeout(this.refreshTimer); this.refreshTimer = null; }
     this.inactivityWarning.set(false);
+    this.http.post(`${environment.apiUrl}/auth/logout`, {}).subscribe({ error: () => {} });
     localStorage.removeItem(this.TOKEN_KEY);
     localStorage.removeItem(this.REFRESH_KEY);
     localStorage.removeItem(this.USER_KEY);

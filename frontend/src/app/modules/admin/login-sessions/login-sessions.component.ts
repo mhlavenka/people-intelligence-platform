@@ -28,11 +28,25 @@ interface OrgLoginSession {
   template: `
     <div class="sessions-page">
     <div class="page-header">
-      <h2>
-        <mat-icon>devices</mat-icon>
-        Active Login Sessions
-      </h2>
-      <p class="subtitle">All active sessions across the organization. Revoke sessions to force users to re-authenticate.</p>
+      <div class="header-row">
+        <h2>
+          <mat-icon>devices</mat-icon>
+          Active Login Sessions
+        </h2>
+        <div class="header-actions">
+          <button mat-stroked-button (click)="loadSessions()" [disabled]="loading()">
+            <mat-icon>refresh</mat-icon> Refresh
+          </button>
+          <button mat-stroked-button color="warn" (click)="cleanStale()" [disabled]="cleaning()">
+            @if (cleaning()) {
+              <mat-spinner diameter="18"></mat-spinner>
+            } @else {
+              <mat-icon>cleaning_services</mat-icon> Clean Stale
+            }
+          </button>
+        </div>
+      </div>
+      <p class="subtitle">All active sessions across the organization. Revoke sessions to force re-authentication. Stale = inactive for 1+ hour.</p>
     </div>
 
     @if (loading()) {
@@ -84,6 +98,8 @@ interface OrgLoginSession {
   styles: [`
     .sessions-page { padding: 32px; width: 100%; max-width: 100%; box-sizing: border-box; }
     .page-header { margin-bottom: 24px; }
+    .header-row { display: flex; align-items: center; justify-content: space-between; }
+    .header-actions { display: flex; gap: 8px; }
     .page-header h2 { display: flex; align-items: center; gap: 8px; margin: 0; }
     .subtitle { color: #8fa4c0; font-size: 14px; margin: 4px 0 0; }
     .loading-center { display: flex; justify-content: center; padding: 48px; }
@@ -99,10 +115,26 @@ export class LoginSessionsAdminComponent implements OnInit {
 
   sessions = signal<OrgLoginSession[]>([]);
   loading = signal(true);
+  cleaning = signal(false);
   displayedColumns = ['user', 'device', 'ip', 'lastActive', 'actions'];
 
   ngOnInit() {
     this.loadSessions();
+  }
+
+  cleanStale() {
+    this.cleaning.set(true);
+    this.api.delete<{ message: string }>('/auth/sessions/org/stale').subscribe({
+      next: (res) => {
+        this.cleaning.set(false);
+        this.snackBar.open(res.message, 'OK', { duration: 3000 });
+        this.loadSessions();
+      },
+      error: () => {
+        this.cleaning.set(false);
+        this.snackBar.open('Failed to clean stale sessions', 'OK', { duration: 3000 });
+      },
+    });
   }
 
   revoke(id: string) {
@@ -115,7 +147,7 @@ export class LoginSessionsAdminComponent implements OnInit {
     });
   }
 
-  private loadSessions() {
+  loadSessions() {
     this.loading.set(true);
     this.api.get<OrgLoginSession[]>('/auth/sessions/org').subscribe({
       next: (sessions) => { this.sessions.set(sessions); this.loading.set(false); },

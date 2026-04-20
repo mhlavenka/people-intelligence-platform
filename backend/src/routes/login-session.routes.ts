@@ -89,6 +89,20 @@ router.get('/org', requireRole('admin', 'hr_manager'), async (req: AuthRequest, 
   }
 });
 
+// DELETE /api/auth/sessions/org/stale — admin: remove sessions inactive for 1+ hour
+router.delete('/org/stale', requireRole('admin', 'hr_manager'), async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const cutoff = new Date(Date.now() - 60 * 60 * 1000);
+    const result = await LoginSession.deleteMany({
+      organizationId: req.user!.organizationId,
+      lastActiveAt: { $lt: cutoff },
+    });
+    res.json({ message: `${result.deletedCount} stale session(s) removed` });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // DELETE /api/auth/sessions/org/:id — admin: revoke any session in org
 router.delete('/org/:id', requireRole('admin', 'hr_manager'), async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
