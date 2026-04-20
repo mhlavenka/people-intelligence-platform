@@ -106,6 +106,7 @@ export class AuthService {
   }
 
   logout(): void {
+    this.api.post('/auth/logout').subscribe({ error: () => {} });
     this.clearSession();
     this.router.navigate(['/auth']);
   }
