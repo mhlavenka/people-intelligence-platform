@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "704096755301",
+    "project_id": "artes-cfdb3",
+    "storage_bucket": "artes-cfdb3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:704096755301:android:4dd9d082b1adab5ecfb08c",
+        "android_client_info": {
+          "package_name": "com.headsoft.artes"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD4tnNviT-RJKMwsYyBdZSjGRu9u1YlDTs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

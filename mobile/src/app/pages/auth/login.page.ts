@@ -247,8 +247,7 @@ export class LoginPage implements OnInit {
   }
 
   private async onLoginSuccess() {
-    // Push registration disabled until google-services.json is configured
-    // await this.push.register();
+    await this.push.register();
     this.router.navigate(['/tabs']);
   }
 }
