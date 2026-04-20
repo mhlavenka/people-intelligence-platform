@@ -20,7 +20,9 @@ import {
   IonItemSliding,
   IonItemOptions,
   IonItemOption,
+  ActionSheetController,
 } from '@ionic/angular/standalone';
+import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { addIcons } from 'ionicons';
 import { addOutline, closeOutline } from 'ionicons/icons';
 import { TranslateModule } from '@ngx-translate/core';
@@ -144,6 +146,7 @@ interface Booking {
 export class BookingListPage implements OnInit {
   private api = inject(ApiService);
   private router = inject(Router);
+  private actionSheet = inject(ActionSheetController);
 
   bookings = signal<Booking[]>([]);
   loading = signal(true);
@@ -164,10 +167,24 @@ export class BookingListPage implements OnInit {
     this.router.navigate(['/tabs/bookings/new']);
   }
 
-  cancelBooking(id: string) {
-    this.api.delete(`/booking/bookings/${id}`).subscribe({
-      next: () => this.loadBookings(),
+  async cancelBooking(id: string) {
+    const sheet = await this.actionSheet.create({
+      header: 'Cancel this booking?',
+      buttons: [
+        {
+          text: 'Cancel Booking',
+          role: 'destructive',
+          handler: () => {
+            Haptics.impact({ style: ImpactStyle.Medium });
+            this.api.delete(`/booking/bookings/${id}`).subscribe({
+              next: () => this.loadBookings(),
+            });
+          },
+        },
+        { text: 'Keep Booking', role: 'cancel' },
+      ],
     });
+    await sheet.present();
   }
 
   private loadBookings(onComplete?: () => void) {

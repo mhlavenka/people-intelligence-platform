@@ -1,4 +1,5 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
+import { Router } from '@angular/router';
 import {
   IonTabs,
   IonTabBar,
@@ -14,14 +15,19 @@ import {
   clipboardOutline,
   trophyOutline,
   notificationsOutline,
+  personCircleOutline,
 } from 'ionicons/icons';
+import { OfflineBannerComponent } from '../shared/components/offline-banner.component';
 import { ApiService } from '../core/api.service';
+import { OfflineService } from '../core/offline.service';
+import { ConnectivityService } from '../core/connectivity.service';
 
 @Component({
   selector: 'app-tabs',
   standalone: true,
-  imports: [IonTabs, IonTabBar, IonTabButton, IonIcon, IonLabel, IonBadge],
+  imports: [IonTabs, IonTabBar, IonTabButton, IonIcon, IonLabel, IonBadge, OfflineBannerComponent],
   template: `
+    <app-offline-banner />
     <ion-tabs>
       <ion-tab-bar slot="bottom">
         <ion-tab-button tab="sessions">
@@ -68,6 +74,10 @@ import { ApiService } from '../core/api.service';
 })
 export class TabsPage implements OnInit {
   private api = inject(ApiService);
+  private offline = inject(OfflineService);
+  private connectivity = inject(ConnectivityService);
+  private router = inject(Router);
+
   unreadCount = signal(0);
 
   constructor() {
@@ -77,11 +87,20 @@ export class TabsPage implements OnInit {
       clipboardOutline,
       trophyOutline,
       notificationsOutline,
+      personCircleOutline,
     });
   }
 
   ngOnInit() {
     this.loadUnreadCount();
+    this.offline.syncQueue();
+
+    // Re-sync queued mutations when coming back online
+    const checkOnline = setInterval(() => {
+      if (this.connectivity.isOnline()) {
+        this.offline.syncQueue();
+      }
+    }, 30_000);
   }
 
   private loadUnreadCount() {

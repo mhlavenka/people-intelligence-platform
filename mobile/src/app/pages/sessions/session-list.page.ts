@@ -1,5 +1,5 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import {
@@ -18,9 +18,11 @@ import {
   IonSegmentButton,
   IonNote,
   IonIcon,
+  IonButtons,
+  IonButton,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { videocamOutline, callOutline, personOutline } from 'ionicons/icons';
+import { videocamOutline, callOutline, personOutline, personCircleOutline } from 'ionicons/icons';
 import { TranslateModule } from '@ngx-translate/core';
 import { ApiService } from '../../core/api.service';
 
@@ -56,12 +58,20 @@ interface Session {
     IonSegmentButton,
     IonNote,
     IonIcon,
+    IonButtons,
+    IonButton,
+    RouterLink,
     TranslateModule,
   ],
   template: `
     <ion-header>
       <ion-toolbar color="primary">
         <ion-title>{{ 'SESSIONS.TITLE' | translate }}</ion-title>
+        <ion-buttons slot="end">
+          <ion-button routerLink="/tabs/profile">
+            <ion-icon name="person-circle-outline" slot="icon-only"></ion-icon>
+          </ion-button>
+        </ion-buttons>
       </ion-toolbar>
       <ion-toolbar>
         <ion-segment [(ngModel)]="segment" (ionChange)="segmentChanged()">
@@ -141,7 +151,7 @@ export class SessionListPage implements OnInit {
   segment = 'upcoming';
 
   constructor() {
-    addIcons({ videocamOutline, callOutline, personOutline });
+    addIcons({ videocamOutline, callOutline, personOutline, personCircleOutline });
   }
 
   ngOnInit() {

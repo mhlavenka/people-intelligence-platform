@@ -55,6 +55,11 @@ export const routes: Routes = [
             (m) => m.NotificationListPage
           ),
       },
+      {
+        path: 'profile',
+        loadComponent: () =>
+          import('./pages/profile/profile.page').then((m) => m.ProfilePage),
+      },
       { path: '', redirectTo: 'sessions', pathMatch: 'full' },
     ],
   },

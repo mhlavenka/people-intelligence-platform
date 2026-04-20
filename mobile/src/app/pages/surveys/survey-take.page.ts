@@ -1,6 +1,7 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { Haptics, NotificationType } from '@capacitor/haptics';
 import {
   IonContent,
   IonHeader,
@@ -26,6 +27,8 @@ import {
 } from '@ionic/angular/standalone';
 import { TranslateModule } from '@ngx-translate/core';
 import { ApiService } from '../../core/api.service';
+import { OfflineService } from '../../core/offline.service';
+import { ConnectivityService } from '../../core/connectivity.service';
 
 interface Question {
   id: string;
@@ -204,6 +207,8 @@ export class SurveyTakePage implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private api = inject(ApiService);
+  private offline = inject(OfflineService);
+  private connectivity = inject(ConnectivityService);
 
   template = signal<SurveyTemplate | null>(null);
   loading = signal(true);
@@ -250,7 +255,7 @@ export class SurveyTakePage implements OnInit {
     this.loadAnswer();
   }
 
-  submit() {
+  async submit() {
     this.saveAnswer();
     this.submitting.set(true);
 
@@ -259,19 +264,28 @@ export class SurveyTakePage implements OnInit {
       value,
     }));
 
-    this.api
-      .post('/surveys/respond', {
-        templateId: this.template()!._id,
-        isAnonymous: true,
-        responses,
-      })
-      .subscribe({
-        next: () => {
-          this.submitting.set(false);
-          this.submitted.set(true);
-        },
-        error: () => this.submitting.set(false),
-      });
+    const body = {
+      templateId: this.template()!._id,
+      isAnonymous: true,
+      responses,
+    };
+
+    if (!this.connectivity.isOnline()) {
+      await this.offline.queueRequest('post', '/surveys/respond', body);
+      this.submitting.set(false);
+      this.submitted.set(true);
+      Haptics.notification({ type: NotificationType.Success });
+      return;
+    }
+
+    this.api.post('/surveys/respond', body).subscribe({
+      next: () => {
+        this.submitting.set(false);
+        this.submitted.set(true);
+        Haptics.notification({ type: NotificationType.Success });
+      },
+      error: () => this.submitting.set(false),
+    });
   }
 
   goBack() {
