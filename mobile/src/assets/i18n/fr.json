@@ -1,0 +1,47 @@
+{
+  "LOGIN": {
+    "SUBTITLE": "Plateforme d'Intelligence Humaine",
+    "SIGN_IN": "Se connecter",
+    "BIOMETRIC": "Utiliser la biométrie",
+    "VERIFY": "Vérifier"
+  },
+  "SESSIONS": {
+    "TITLE": "Séances",
+    "UPCOMING": "À venir",
+    "PAST": "Passées",
+    "EMPTY": "Aucune séance pour le moment",
+    "DETAIL": "Détails de la séance",
+    "SHARED_NOTES": "Notes partagées",
+    "LOADING": "Chargement..."
+  },
+  "BOOKINGS": {
+    "TITLE": "Réservations",
+    "EMPTY": "Aucune réservation à venir",
+    "NEW": "Nouvelle réservation",
+    "SELECT_DATE": "Sélectionnez une date",
+    "SELECT_TIME": "Choisissez un horaire",
+    "NO_SLOTS": "Aucun créneau disponible pour cette date",
+    "CONTINUE": "Continuer",
+    "CONFIRM": "Confirmer la réservation",
+    "CANCELLED": "Réservation annulée"
+  },
+  "SURVEYS": {
+    "TITLE": "Sondages",
+    "EMPTY": "Aucun sondage disponible",
+    "LOADING": "Chargement...",
+    "SUBMITTED": "Merci ! Votre réponse a été soumise.",
+    "BACK": "Retour aux sondages",
+    "PREV": "Précédent",
+    "NEXT": "Suivant",
+    "SUBMIT": "Soumettre"
+  },
+  "IDP": {
+    "TITLE": "Mon Plan de Développement",
+    "EMPTY": "Aucun plan de développement créé. Demandez à votre coach d'en générer un.",
+    "GOALS": "Objectifs"
+  },
+  "NOTIFICATIONS": {
+    "TITLE": "Notifications",
+    "EMPTY": "Tout est à jour ! Aucune notification."
+  }
+}

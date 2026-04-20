@@ -1,0 +1,47 @@
+{
+  "LOGIN": {
+    "SUBTITLE": "People Intelligence Platform",
+    "SIGN_IN": "Sign In",
+    "BIOMETRIC": "Use Biometric",
+    "VERIFY": "Verify"
+  },
+  "SESSIONS": {
+    "TITLE": "Sessions",
+    "UPCOMING": "Upcoming",
+    "PAST": "Past",
+    "EMPTY": "No sessions yet",
+    "DETAIL": "Session Details",
+    "SHARED_NOTES": "Shared Notes",
+    "LOADING": "Loading..."
+  },
+  "BOOKINGS": {
+    "TITLE": "Bookings",
+    "EMPTY": "No upcoming bookings",
+    "NEW": "New Booking",
+    "SELECT_DATE": "Select a date",
+    "SELECT_TIME": "Choose a time",
+    "NO_SLOTS": "No available slots for this date",
+    "CONTINUE": "Continue",
+    "CONFIRM": "Confirm Booking",
+    "CANCELLED": "Booking cancelled"
+  },
+  "SURVEYS": {
+    "TITLE": "Surveys",
+    "EMPTY": "No surveys available",
+    "LOADING": "Loading...",
+    "SUBMITTED": "Thank you! Your response has been submitted.",
+    "BACK": "Back to Surveys",
+    "PREV": "Previous",
+    "NEXT": "Next",
+    "SUBMIT": "Submit"
+  },
+  "IDP": {
+    "TITLE": "My Development Plan",
+    "EMPTY": "No development plan created yet. Ask your coach to generate one.",
+    "GOALS": "Goals"
+  },
+  "NOTIFICATIONS": {
+    "TITLE": "Notifications",
+    "EMPTY": "All caught up! No notifications."
+  }
+}

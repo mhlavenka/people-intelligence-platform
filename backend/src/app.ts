@@ -35,6 +35,7 @@ import calendarRoutes, { calendarCallbackRouter } from './routes/calendar.routes
 import bookingRoutes, { publicBookingRouter, publicCoachRouter } from './routes/booking.routes';
 import sponsorRoutes from './routes/sponsor.routes';
 import journalRoutes from './routes/journal.routes';
+import pushRoutes from './routes/push.routes';
 import { webhookRouter } from './routes/webhook.routes';
 import { startReminderJob } from './jobs/reminder.job';
 import { startWebhookRenewalJob } from './jobs/webhookRenewal.job';
@@ -104,6 +105,7 @@ app.use('/api/public/booking', publicBookingRouter);
 app.use('/api/public/coach', publicCoachRouter);
 app.use('/api/booking', bookingRoutes);
 app.use('/api/sponsors', sponsorRoutes);
+app.use('/api/push', pushRoutes);
 app.use('/api/webhooks', webhookRouter); // public — Google push notifications (no auth)
 
 // 404 and error handlers (must be last)

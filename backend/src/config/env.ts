@@ -59,4 +59,5 @@ export const config = {
     rpId: process.env['WEBAUTHN_RP_ID'] || new URL(process.env['FRONTEND_URL'] || 'http://localhost:4200').hostname,
     origin: process.env['WEBAUTHN_ORIGIN'] || process.env['FRONTEND_URL'] || 'http://localhost:4200',
   },
+  FIREBASE_SERVICE_ACCOUNT: process.env['FIREBASE_SERVICE_ACCOUNT'] || '',
 };

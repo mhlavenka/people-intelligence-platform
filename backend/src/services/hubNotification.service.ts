@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import { Notification } from '../models/Notification.model';
 import { User, INotificationPreferences } from '../models/User.model';
+import { sendPushToUser } from './push.service';
 
 export type NotificationCategory = keyof INotificationPreferences;
 
@@ -42,6 +43,12 @@ export async function createHubNotification(params: HubNotifyParams): Promise<vo
       body: params.body,
       link: params.link,
     });
+
+    sendPushToUser(String(params.userId), {
+      title: params.title,
+      body: params.body,
+      route: params.link ? `/tabs${params.link}` : undefined,
+    }).catch(() => {});
   } catch (err) {
     console.error('[HubNotification] Failed to create notification:', err);
   }
