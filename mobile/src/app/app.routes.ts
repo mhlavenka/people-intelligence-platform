@@ -24,6 +24,11 @@ export const routes: Routes = [
           import('./pages/sessions/session-detail.page').then((m) => m.SessionDetailPage),
       },
       {
+        path: 'sessions/:sessionId/intake/:templateId',
+        loadComponent: () =>
+          import('./pages/sessions/session-intake.page').then((m) => m.SessionIntakePage),
+      },
+      {
         path: 'surveys',
         loadComponent: () =>
           import('./pages/surveys/survey-list.page').then((m) => m.SurveyListPage),

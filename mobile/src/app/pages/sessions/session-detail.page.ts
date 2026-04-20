@@ -1,5 +1,5 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { DatePipe, TitleCasePipe } from '@angular/common';
 import {
   IonContent,
@@ -16,9 +16,10 @@ import {
   IonLabel,
   IonSkeletonText,
   IonIcon,
+  IonButton,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { timeOutline, personOutline, documentTextOutline } from 'ionicons/icons';
+import { timeOutline, personOutline, documentTextOutline, createOutline, checkmarkCircleOutline } from 'ionicons/icons';
 import { TranslateModule } from '@ngx-translate/core';
 import { ApiService } from '../../core/api.service';
 
@@ -34,6 +35,10 @@ interface SessionDetail {
   growFocus?: string[];
   preSessionRating?: number;
   postSessionRating?: number;
+  preSessionIntakeTemplateId?: { _id: string; title: string } | string;
+  postSessionIntakeTemplateId?: { _id: string; title: string } | string;
+  preSessionIntakeCompleted?: boolean;
+  postSessionIntakeCompleted?: boolean;
 }
 
 @Component({
@@ -56,6 +61,7 @@ interface SessionDetail {
     IonLabel,
     IonSkeletonText,
     IonIcon,
+    IonButton,
     TranslateModule,
   ],
   template: `
@@ -116,6 +122,30 @@ interface SessionDetail {
           </ion-card-content>
         </ion-card>
 
+        @if (hasPreIntake()) {
+          <ion-button
+            expand="block"
+            [fill]="session()!.preSessionIntakeCompleted ? 'outline' : 'solid'"
+            [color]="session()!.preSessionIntakeCompleted ? 'medium' : 'primary'"
+            (click)="openIntake('pre')"
+          >
+            <ion-icon [name]="session()!.preSessionIntakeCompleted ? 'checkmark-circle-outline' : 'create-outline'" slot="start"></ion-icon>
+            {{ session()!.preSessionIntakeCompleted ? 'Pre-Session Form Completed' : 'Complete Pre-Session Form' }}
+          </ion-button>
+        }
+
+        @if (hasPostIntake()) {
+          <ion-button
+            expand="block"
+            [fill]="session()!.postSessionIntakeCompleted ? 'outline' : 'solid'"
+            [color]="session()!.postSessionIntakeCompleted ? 'medium' : 'secondary'"
+            (click)="openIntake('post')"
+          >
+            <ion-icon [name]="session()!.postSessionIntakeCompleted ? 'checkmark-circle-outline' : 'create-outline'" slot="start"></ion-icon>
+            {{ session()!.postSessionIntakeCompleted ? 'Post-Session Reflection Completed' : 'Complete Post-Session Reflection' }}
+          </ion-button>
+        }
+
         @if (session()!.sharedNotes) {
           <ion-card>
             <ion-card-header>
@@ -155,13 +185,14 @@ interface SessionDetail {
 })
 export class SessionDetailPage implements OnInit {
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
   private api = inject(ApiService);
 
   session = signal<SessionDetail | null>(null);
   loading = signal(true);
 
   constructor() {
-    addIcons({ timeOutline, personOutline, documentTextOutline });
+    addIcons({ timeOutline, personOutline, documentTextOutline, createOutline, checkmarkCircleOutline });
   }
 
   ngOnInit() {
@@ -175,5 +206,26 @@ export class SessionDetailPage implements OnInit {
         error: () => this.loading.set(false),
       });
     }
+  }
+
+  hasPreIntake(): boolean {
+    const s = this.session();
+    return !!s?.preSessionIntakeTemplateId;
+  }
+
+  hasPostIntake(): boolean {
+    const s = this.session();
+    return !!s?.postSessionIntakeTemplateId;
+  }
+
+  openIntake(type: 'pre' | 'post') {
+    const s = this.session();
+    if (!s) return;
+    const templateRef = type === 'pre' ? s.preSessionIntakeTemplateId : s.postSessionIntakeTemplateId;
+    const templateId = typeof templateRef === 'string' ? templateRef : templateRef?._id;
+    if (!templateId) return;
+    this.router.navigate(['/tabs/sessions', s._id, 'intake', templateId], {
+      queryParams: { type },
+    });
   }
 }

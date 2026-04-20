@@ -26,9 +26,10 @@ import {
   IonIcon,
   IonSkeletonText,
   IonNote,
+  IonChip,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { personOutline, timeOutline, checkmarkCircleOutline } from 'ionicons/icons';
+import { personOutline, timeOutline, checkmarkCircleOutline, videocamOutline } from 'ionicons/icons';
 import { TranslateModule } from '@ngx-translate/core';
 import { ApiService } from '../../core/api.service';
 import { AuthService } from '../../core/auth.service';
@@ -42,12 +43,20 @@ interface Coach {
   publicSlug?: string;
 }
 
+interface EventType {
+  _id: string;
+  name: string;
+  color: string;
+  coachSlug: string;
+  duration: number;
+  title: string;
+  description: string;
+  googleMeetEnabled: boolean;
+}
+
 interface CoachPublicInfo {
-  coachName: string;
-  appointmentDuration: number;
-  timezone: string;
-  bookingPageTitle?: string;
-  bookingPageDesc?: string;
+  coach: { firstName: string; lastName: string; slug: string };
+  eventTypes: EventType[];
 }
 
 interface AvailableSlot {
@@ -63,29 +72,10 @@ interface AvailableSlot {
   standalone: true,
   imports: [
     FormsModule,
-    IonContent,
-    IonHeader,
-    IonToolbar,
-    IonTitle,
-    IonButtons,
-    IonBackButton,
-    IonList,
-    IonItem,
-    IonLabel,
-    IonButton,
-    IonInput,
-    IonDatetime,
-    IonSpinner,
-    IonCard,
-    IonCardContent,
-    IonCardHeader,
-    IonCardTitle,
-    IonRadioGroup,
-    IonRadio,
-    IonAvatar,
-    IonIcon,
-    IonSkeletonText,
-    IonNote,
+    IonContent, IonHeader, IonToolbar, IonTitle, IonButtons, IonBackButton,
+    IonList, IonItem, IonLabel, IonButton, IonInput, IonDatetime, IonSpinner,
+    IonCard, IonCardContent, IonCardHeader, IonCardTitle,
+    IonRadioGroup, IonRadio, IonAvatar, IonIcon, IonSkeletonText, IonNote, IonChip,
     TranslateModule,
   ],
   template: `
@@ -99,6 +89,7 @@ interface AvailableSlot {
     </ion-header>
 
     <ion-content class="ion-padding">
+
       <!-- Step 1: Coach Selection -->
       @if (step() === 'coach') {
         <h3>Select your coach</h3>
@@ -106,20 +97,14 @@ interface AvailableSlot {
           <ion-list>
             @for (i of [1, 2]; track i) {
               <ion-item>
-                <ion-avatar slot="start">
-                  <ion-skeleton-text [animated]="true"></ion-skeleton-text>
-                </ion-avatar>
-                <ion-label>
-                  <ion-skeleton-text [animated]="true" style="width: 60%"></ion-skeleton-text>
-                </ion-label>
+                <ion-avatar slot="start"><ion-skeleton-text [animated]="true"></ion-skeleton-text></ion-avatar>
+                <ion-label><ion-skeleton-text [animated]="true" style="width: 60%"></ion-skeleton-text></ion-label>
               </ion-item>
             }
           </ion-list>
         } @else if (coaches().length === 0) {
           <ion-card>
-            <ion-card-content>
-              <p>No coaches available for booking. Please contact your organization.</p>
-            </ion-card-content>
+            <ion-card-content>No coaches available for booking.</ion-card-content>
           </ion-card>
         } @else {
           <ion-list>
@@ -138,18 +123,45 @@ interface AvailableSlot {
         }
       }
 
-      <!-- Step 2: Date Selection -->
-      @if (step() === 'date') {
-        <ion-card>
-          <ion-card-content>
-            <ion-icon name="person-outline"></ion-icon>
-            <strong>{{ selectedCoach()?.firstName }} {{ selectedCoach()?.lastName }}</strong>
-            @if (coachPublicInfo()) {
-              <ion-note> &middot; {{ coachPublicInfo()!.appointmentDuration }} min</ion-note>
+      <!-- Step 2: Event Type Selection -->
+      @if (step() === 'eventType') {
+        <h3>What would you like to book?</h3>
+        @if (loadingEventTypes()) {
+          <ion-spinner></ion-spinner>
+        } @else if (eventTypes().length === 0) {
+          <ion-card>
+            <ion-card-content>This coach has no event types available.</ion-card-content>
+          </ion-card>
+        } @else {
+          <ion-list>
+            @for (et of eventTypes(); track et._id) {
+              <ion-item button (click)="selectEventType(et)" detail>
+                <div class="et-color" [style.background]="et.color" slot="start"></div>
+                <ion-label>
+                  <h2>{{ et.title || et.name }}</h2>
+                  @if (et.description) {
+                    <p>{{ et.description }}</p>
+                  }
+                  <ion-note>
+                    <ion-icon name="time-outline"></ion-icon> {{ et.duration }} min
+                    @if (et.googleMeetEnabled) {
+                      &nbsp;&middot;&nbsp; <ion-icon name="videocam-outline"></ion-icon> Google Meet
+                    }
+                  </ion-note>
+                </ion-label>
+              </ion-item>
             }
-          </ion-card-content>
-        </ion-card>
+          </ion-list>
+        }
+      }
 
+      <!-- Step 3: Date Selection -->
+      @if (step() === 'date') {
+        <ion-chip>
+          {{ selectedCoach()?.firstName }} {{ selectedCoach()?.lastName }}
+          &middot; {{ selectedEventType()?.title || selectedEventType()?.name }}
+          &middot; {{ selectedEventType()?.duration }} min
+        </ion-chip>
         <h3>{{ 'BOOKINGS.SELECT_DATE' | translate }}</h3>
         <ion-datetime
           presentation="date"
@@ -158,13 +170,11 @@ interface AvailableSlot {
         ></ion-datetime>
       }
 
-      <!-- Step 3: Time Slot -->
+      <!-- Step 4: Time Slot -->
       @if (step() === 'slot') {
         <h3>{{ 'BOOKINGS.SELECT_TIME' | translate }}</h3>
         @if (loadingSlots()) {
-          <div class="spinner-center">
-            <ion-spinner></ion-spinner>
-          </div>
+          <div class="spinner-center"><ion-spinner></ion-spinner></div>
         } @else if (slots().length === 0) {
           <ion-card>
             <ion-card-content>
@@ -189,7 +199,7 @@ interface AvailableSlot {
         }
       }
 
-      <!-- Step 4: Confirmation -->
+      <!-- Step 5: Confirmation -->
       @if (step() === 'confirm') {
         <ion-card>
           <ion-card-header>
@@ -197,8 +207,9 @@ interface AvailableSlot {
           </ion-card-header>
           <ion-card-content>
             <p><strong>Coach:</strong> {{ selectedCoach()?.firstName }} {{ selectedCoach()?.lastName }}</p>
+            <p><strong>Type:</strong> {{ selectedEventType()?.title || selectedEventType()?.name }}</p>
             <p><strong>Time:</strong> {{ selectedSlot?.label }}</p>
-            <p><strong>Duration:</strong> {{ coachPublicInfo()?.appointmentDuration }} min</p>
+            <p><strong>Duration:</strong> {{ selectedEventType()?.duration }} min</p>
           </ion-card-content>
         </ion-card>
 
@@ -209,11 +220,7 @@ interface AvailableSlot {
           fill="outline"
         ></ion-input>
 
-        <ion-button
-          expand="block"
-          (click)="confirmBooking()"
-          [disabled]="submitting()"
-        >
+        <ion-button expand="block" (click)="confirmBooking()" [disabled]="submitting()">
           @if (submitting()) {
             <ion-spinner name="crescent"></ion-spinner>
           } @else {
@@ -224,40 +231,28 @@ interface AvailableSlot {
       }
     </ion-content>
   `,
-  styles: [
-    `
-      h3 {
-        margin: 16px 0;
-        font-weight: 600;
-      }
-      ion-input {
-        margin: 16px 0;
-      }
-      ion-button {
-        margin-top: 16px;
-      }
-      .spinner-center {
-        display: flex;
-        justify-content: center;
-        padding: 32px;
-      }
-      ion-card-content ion-icon {
-        vertical-align: middle;
-        margin-right: 4px;
-      }
-    `,
-  ],
+  styles: [`
+    h3 { margin: 16px 0; font-weight: 600; }
+    ion-input { margin: 16px 0; }
+    ion-button { margin-top: 16px; }
+    .spinner-center { display: flex; justify-content: center; padding: 32px; }
+    .et-color { width: 12px; height: 40px; border-radius: 4px; margin-right: 12px; }
+    ion-note ion-icon { vertical-align: middle; font-size: 14px; }
+    ion-chip { margin: 8px 0 0; }
+  `],
 })
 export class BookingNewPage implements OnInit {
   private api = inject(ApiService);
   private auth = inject(AuthService);
   private router = inject(Router);
 
-  step = signal<'coach' | 'date' | 'slot' | 'confirm'>('coach');
+  step = signal<'coach' | 'eventType' | 'date' | 'slot' | 'confirm'>('coach');
   coaches = signal<Coach[]>([]);
   loadingCoaches = signal(true);
   selectedCoach = signal<Coach | null>(null);
-  coachPublicInfo = signal<CoachPublicInfo | null>(null);
+  eventTypes = signal<EventType[]>([]);
+  loadingEventTypes = signal(false);
+  selectedEventType = signal<EventType | null>(null);
   slots = signal<AvailableSlot[]>([]);
   loadingSlots = signal(false);
   submitting = signal(false);
@@ -266,11 +261,10 @@ export class BookingNewPage implements OnInit {
   topic = '';
   minDate = new Date().toISOString();
 
-  private coachSlug = '';
   private selectedDate = '';
 
   constructor() {
-    addIcons({ personOutline, timeOutline, checkmarkCircleOutline });
+    addIcons({ personOutline, timeOutline, checkmarkCircleOutline, videocamOutline });
   }
 
   ngOnInit() {
@@ -279,19 +273,31 @@ export class BookingNewPage implements OnInit {
 
   selectCoach(coach: Coach) {
     this.selectedCoach.set(coach);
-    this.coachSlug = coach.publicSlug || '';
-
-    if (this.coachSlug) {
-      this.api.get<CoachPublicInfo>(`/public/booking/${this.coachSlug}`).subscribe({
-        next: (info) => {
-          this.coachPublicInfo.set(info);
-          this.step.set('date');
-        },
-        error: () => this.step.set('date'),
-      });
-    } else {
+    if (!coach.publicSlug) {
       this.step.set('date');
+      return;
     }
+    this.loadingEventTypes.set(true);
+    this.step.set('eventType');
+
+    this.api.get<CoachPublicInfo>(`/public/coach/${coach.publicSlug}`).subscribe({
+      next: (info) => {
+        this.eventTypes.set(info.eventTypes || []);
+        this.loadingEventTypes.set(false);
+        if (info.eventTypes?.length === 1) {
+          this.selectEventType(info.eventTypes[0]);
+        }
+      },
+      error: () => {
+        this.loadingEventTypes.set(false);
+        this.step.set('date');
+      },
+    });
+  }
+
+  selectEventType(et: EventType) {
+    this.selectedEventType.set(et);
+    this.step.set('date');
   }
 
   onDateSelect(event: any) {
@@ -302,12 +308,12 @@ export class BookingNewPage implements OnInit {
 
   confirmBooking() {
     if (!this.selectedSlot) return;
-
     this.submitting.set(true);
     const user = this.auth.currentUser();
+    const slug = this.selectedEventType()?.coachSlug || this.selectedCoach()?.publicSlug || '';
 
     this.api
-      .post(`/public/booking/${this.coachSlug}`, {
+      .post(`/public/booking/${slug}`, {
         startTime: this.selectedSlot.startUtc,
         endTime: this.selectedSlot.endUtc,
         clientName: `${user?.firstName} ${user?.lastName}`,
@@ -327,7 +333,6 @@ export class BookingNewPage implements OnInit {
 
   private loadCoaches() {
     this.loadingCoaches.set(true);
-    // Get coaches from engagements — the coachee sees their assigned coaches
     this.api.get<any[]>('/coaching/engagements').subscribe({
       next: (engagements) => {
         const coachMap = new Map<string, Coach>();
@@ -341,8 +346,6 @@ export class BookingNewPage implements OnInit {
         }
         this.coaches.set(Array.from(coachMap.values()));
         this.loadingCoaches.set(false);
-
-        // If only one coach, auto-select
         if (coachMap.size === 1) {
           this.selectCoach(Array.from(coachMap.values())[0]);
         }
@@ -352,22 +355,20 @@ export class BookingNewPage implements OnInit {
   }
 
   private loadSlots() {
-    if (!this.coachSlug || !this.selectedDate) return;
+    const slug = this.selectedEventType()?.coachSlug || this.selectedCoach()?.publicSlug || '';
+    if (!slug || !this.selectedDate) return;
 
     this.loadingSlots.set(true);
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
     this.api
-      .get<AvailableSlot[]>(`/public/booking/${this.coachSlug}/slots`, {
+      .get<AvailableSlot[]>(`/public/booking/${slug}/slots`, {
         from: this.selectedDate,
         to: this.selectedDate,
         tz,
       })
       .subscribe({
-        next: (slots) => {
-          this.slots.set(slots);
-          this.loadingSlots.set(false);
-        },
+        next: (slots) => { this.slots.set(slots); this.loadingSlots.set(false); },
         error: () => this.loadingSlots.set(false),
       });
   }
