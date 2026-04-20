@@ -18,6 +18,13 @@ export async function verifyRecaptcha(
     return;
   }
 
+  // Skip reCAPTCHA for native mobile apps (Capacitor origin)
+  const origin = req.headers.origin || '';
+  if (origin === 'https://localhost' || origin === 'http://localhost') {
+    next();
+    return;
+  }
+
   const token = req.body?.recaptchaToken;
   if (!token) {
     res.status(400).json({ error: req.t('errors.recaptchaRequired') });
