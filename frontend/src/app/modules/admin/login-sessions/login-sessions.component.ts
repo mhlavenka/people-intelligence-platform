@@ -26,6 +26,7 @@ interface OrgLoginSession {
     MatProgressSpinnerModule, MatTooltipModule, MatSnackBarModule, TranslateModule,
   ],
   template: `
+    <div class="sessions-page">
     <div class="page-header">
       <h2>
         <mat-icon>devices</mat-icon>
@@ -78,8 +79,10 @@ interface OrgLoginSession {
         <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
       </table>
     }
+    </div>
   `,
   styles: [`
+    .sessions-page { padding: 32px; width: 100%; max-width: 100%; box-sizing: border-box; }
     .page-header { margin-bottom: 24px; }
     .page-header h2 { display: flex; align-items: center; gap: 8px; margin: 0; }
     .subtitle { color: #8fa4c0; font-size: 14px; margin: 4px 0 0; }
