@@ -1,7 +1,7 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Haptics, NotificationType } from '@capacitor/haptics';
 import {
   IonContent,
   IonHeader,
@@ -18,18 +18,36 @@ import {
   IonSpinner,
   IonCard,
   IonCardContent,
+  IonCardHeader,
+  IonCardTitle,
   IonRadioGroup,
   IonRadio,
+  IonAvatar,
+  IonIcon,
+  IonSkeletonText,
+  IonNote,
 } from '@ionic/angular/standalone';
+import { addIcons } from 'ionicons';
+import { personOutline, timeOutline, checkmarkCircleOutline } from 'ionicons/icons';
 import { TranslateModule } from '@ngx-translate/core';
 import { ApiService } from '../../core/api.service';
 import { AuthService } from '../../core/auth.service';
 
-interface CoachInfo {
+interface Coach {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  profilePicture?: string;
+  publicSlug?: string;
+}
+
+interface CoachPublicInfo {
   coachName: string;
-  coachSlug: string;
   appointmentDuration: number;
   timezone: string;
+  bookingPageTitle?: string;
+  bookingPageDesc?: string;
 }
 
 interface AvailableSlot {
@@ -44,7 +62,6 @@ interface AvailableSlot {
   selector: 'app-booking-new',
   standalone: true,
   imports: [
-    DatePipe,
     FormsModule,
     IonContent,
     IonHeader,
@@ -61,8 +78,14 @@ interface AvailableSlot {
     IonSpinner,
     IonCard,
     IonCardContent,
+    IonCardHeader,
+    IonCardTitle,
     IonRadioGroup,
     IonRadio,
+    IonAvatar,
+    IonIcon,
+    IonSkeletonText,
+    IonNote,
     TranslateModule,
   ],
   template: `
@@ -76,7 +99,57 @@ interface AvailableSlot {
     </ion-header>
 
     <ion-content class="ion-padding">
+      <!-- Step 1: Coach Selection -->
+      @if (step() === 'coach') {
+        <h3>Select your coach</h3>
+        @if (loadingCoaches()) {
+          <ion-list>
+            @for (i of [1, 2]; track i) {
+              <ion-item>
+                <ion-avatar slot="start">
+                  <ion-skeleton-text [animated]="true"></ion-skeleton-text>
+                </ion-avatar>
+                <ion-label>
+                  <ion-skeleton-text [animated]="true" style="width: 60%"></ion-skeleton-text>
+                </ion-label>
+              </ion-item>
+            }
+          </ion-list>
+        } @else if (coaches().length === 0) {
+          <ion-card>
+            <ion-card-content>
+              <p>No coaches available for booking. Please contact your organization.</p>
+            </ion-card-content>
+          </ion-card>
+        } @else {
+          <ion-list>
+            @for (coach of coaches(); track coach._id) {
+              <ion-item button (click)="selectCoach(coach)">
+                <ion-avatar slot="start">
+                  <ion-icon name="person-outline" style="font-size: 32px; padding: 4px;"></ion-icon>
+                </ion-avatar>
+                <ion-label>
+                  <h2>{{ coach.firstName }} {{ coach.lastName }}</h2>
+                  <p>{{ coach.email }}</p>
+                </ion-label>
+              </ion-item>
+            }
+          </ion-list>
+        }
+      }
+
+      <!-- Step 2: Date Selection -->
       @if (step() === 'date') {
+        <ion-card>
+          <ion-card-content>
+            <ion-icon name="person-outline"></ion-icon>
+            <strong>{{ selectedCoach()?.firstName }} {{ selectedCoach()?.lastName }}</strong>
+            @if (coachPublicInfo()) {
+              <ion-note> &middot; {{ coachPublicInfo()!.appointmentDuration }} min</ion-note>
+            }
+          </ion-card-content>
+        </ion-card>
+
         <h3>{{ 'BOOKINGS.SELECT_DATE' | translate }}</h3>
         <ion-datetime
           presentation="date"
@@ -85,17 +158,26 @@ interface AvailableSlot {
         ></ion-datetime>
       }
 
+      <!-- Step 3: Time Slot -->
       @if (step() === 'slot') {
         <h3>{{ 'BOOKINGS.SELECT_TIME' | translate }}</h3>
         @if (loadingSlots()) {
-          <ion-spinner></ion-spinner>
+          <div class="spinner-center">
+            <ion-spinner></ion-spinner>
+          </div>
         } @else if (slots().length === 0) {
-          <p>{{ 'BOOKINGS.NO_SLOTS' | translate }}</p>
+          <ion-card>
+            <ion-card-content>
+              <p>{{ 'BOOKINGS.NO_SLOTS' | translate }}</p>
+              <ion-button fill="outline" (click)="step.set('date')">Pick another date</ion-button>
+            </ion-card-content>
+          </ion-card>
         } @else {
           <ion-list>
             <ion-radio-group [(ngModel)]="selectedSlot">
               @for (slot of slots(); track slot.startUtc) {
                 <ion-item>
+                  <ion-icon name="time-outline" slot="start" color="medium"></ion-icon>
                   <ion-radio [value]="slot">{{ slot.label }}</ion-radio>
                 </ion-item>
               }
@@ -107,12 +189,16 @@ interface AvailableSlot {
         }
       }
 
+      <!-- Step 4: Confirmation -->
       @if (step() === 'confirm') {
         <ion-card>
+          <ion-card-header>
+            <ion-card-title>Confirm Booking</ion-card-title>
+          </ion-card-header>
           <ion-card-content>
-            <p><strong>{{ coachInfo()?.coachName }}</strong></p>
-            <p>{{ selectedSlot?.label }}</p>
-            <p>{{ coachInfo()?.appointmentDuration }} min</p>
+            <p><strong>Coach:</strong> {{ selectedCoach()?.firstName }} {{ selectedCoach()?.lastName }}</p>
+            <p><strong>Time:</strong> {{ selectedSlot?.label }}</p>
+            <p><strong>Duration:</strong> {{ coachPublicInfo()?.appointmentDuration }} min</p>
           </ion-card-content>
         </ion-card>
 
@@ -131,6 +217,7 @@ interface AvailableSlot {
           @if (submitting()) {
             <ion-spinner name="crescent"></ion-spinner>
           } @else {
+            <ion-icon name="checkmark-circle-outline" slot="start"></ion-icon>
             {{ 'BOOKINGS.CONFIRM' | translate }}
           }
         </ion-button>
@@ -149,6 +236,15 @@ interface AvailableSlot {
       ion-button {
         margin-top: 16px;
       }
+      .spinner-center {
+        display: flex;
+        justify-content: center;
+        padding: 32px;
+      }
+      ion-card-content ion-icon {
+        vertical-align: middle;
+        margin-right: 4px;
+      }
     `,
   ],
 })
@@ -157,8 +253,11 @@ export class BookingNewPage implements OnInit {
   private auth = inject(AuthService);
   private router = inject(Router);
 
-  step = signal<'date' | 'slot' | 'confirm'>('date');
-  coachInfo = signal<CoachInfo | null>(null);
+  step = signal<'coach' | 'date' | 'slot' | 'confirm'>('coach');
+  coaches = signal<Coach[]>([]);
+  loadingCoaches = signal(true);
+  selectedCoach = signal<Coach | null>(null);
+  coachPublicInfo = signal<CoachPublicInfo | null>(null);
   slots = signal<AvailableSlot[]>([]);
   loadingSlots = signal(false);
   submitting = signal(false);
@@ -170,19 +269,39 @@ export class BookingNewPage implements OnInit {
   private coachSlug = '';
   private selectedDate = '';
 
+  constructor() {
+    addIcons({ personOutline, timeOutline, checkmarkCircleOutline });
+  }
+
   ngOnInit() {
-    // TODO: In a full implementation, this would come from a coach selection step
-    // For now we'll handle the case where the coachee has a single assigned coach
+    this.loadCoaches();
+  }
+
+  selectCoach(coach: Coach) {
+    this.selectedCoach.set(coach);
+    this.coachSlug = coach.publicSlug || '';
+
+    if (this.coachSlug) {
+      this.api.get<CoachPublicInfo>(`/public/booking/${this.coachSlug}`).subscribe({
+        next: (info) => {
+          this.coachPublicInfo.set(info);
+          this.step.set('date');
+        },
+        error: () => this.step.set('date'),
+      });
+    } else {
+      this.step.set('date');
+    }
   }
 
   onDateSelect(event: any) {
-    this.selectedDate = event.detail.value;
+    this.selectedDate = event.detail.value?.split('T')[0] || event.detail.value;
     this.step.set('slot');
     this.loadSlots();
   }
 
   confirmBooking() {
-    if (!this.selectedSlot || !this.coachInfo()) return;
+    if (!this.selectedSlot) return;
 
     this.submitting.set(true);
     const user = this.auth.currentUser();
@@ -190,7 +309,7 @@ export class BookingNewPage implements OnInit {
     this.api
       .post(`/public/booking/${this.coachSlug}`, {
         startTime: this.selectedSlot.startUtc,
-        endTime: this.slots()[0]?.endUtc,
+        endTime: this.selectedSlot.endUtc,
         clientName: `${user?.firstName} ${user?.lastName}`,
         clientEmail: user?.email,
         topic: this.topic || undefined,
@@ -199,22 +318,51 @@ export class BookingNewPage implements OnInit {
       .subscribe({
         next: () => {
           this.submitting.set(false);
+          Haptics.notification({ type: NotificationType.Success });
           this.router.navigate(['/tabs/bookings']);
         },
         error: () => this.submitting.set(false),
       });
   }
 
+  private loadCoaches() {
+    this.loadingCoaches.set(true);
+    // Get coaches from engagements — the coachee sees their assigned coaches
+    this.api.get<any[]>('/coaching/engagements').subscribe({
+      next: (engagements) => {
+        const coachMap = new Map<string, Coach>();
+        for (const eng of engagements) {
+          if (eng.coachId && eng.status !== 'completed') {
+            const coach = eng.coachId;
+            if (!coachMap.has(coach._id)) {
+              coachMap.set(coach._id, coach);
+            }
+          }
+        }
+        this.coaches.set(Array.from(coachMap.values()));
+        this.loadingCoaches.set(false);
+
+        // If only one coach, auto-select
+        if (coachMap.size === 1) {
+          this.selectCoach(Array.from(coachMap.values())[0]);
+        }
+      },
+      error: () => this.loadingCoaches.set(false),
+    });
+  }
+
   private loadSlots() {
     if (!this.coachSlug || !this.selectedDate) return;
 
     this.loadingSlots.set(true);
-    const from = this.selectedDate;
-    const to = this.selectedDate;
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
     this.api
-      .get<AvailableSlot[]>(`/public/booking/${this.coachSlug}/slots`, { from, to, tz })
+      .get<AvailableSlot[]>(`/public/booking/${this.coachSlug}/slots`, {
+        from: this.selectedDate,
+        to: this.selectedDate,
+        tz,
+      })
       .subscribe({
         next: (slots) => {
           this.slots.set(slots);
