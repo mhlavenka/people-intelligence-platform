@@ -99,6 +99,9 @@
     "templateNotFound": "Plantilla no encontrada",
     "assignmentTargetRequired": "Seleccione al menos un departamento o un usuario",
     "assignmentNotFound": "Asignación no encontrada",
+    "coachIdRequired": "Se debe seleccionar un coach",
+    "coachNotFound": "Coach no encontrado",
+    "actionDetailsRequired": "Se requieren el título y la descripción de la acción",
 
     "coacheeNotFoundInOrg": "Coachee no encontrado en esta organización",
     "userNotFoundInOrg": "Usuario no encontrado en esta organización",

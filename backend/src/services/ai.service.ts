@@ -22,11 +22,24 @@ async function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+export class AILimitExceededError extends Error {
+  constructor() {
+    super('AI generation limit reached for this billing period. Please upgrade your plan or purchase additional credits.');
+    this.name = 'AILimitExceededError';
+  }
+}
+
 export async function callClaude(
   prompt: string,
   systemPrompt: string = SYSTEM_PROMPT,
   maxTokens = 2048,
+  organizationId?: string,
 ): Promise<string> {
+  if (organizationId) {
+    const limitOk = await checkAILimit(organizationId);
+    if (!limitOk) throw new AILimitExceededError();
+  }
+
   let lastError: Error | null = null;
 
   for (let attempt = 0; attempt < 3; attempt++) {
@@ -44,6 +57,11 @@ export async function callClaude(
 
       const content = message.content[0];
       if (content.type === 'text') {
+        if (organizationId) {
+          trackAIGeneration(organizationId).catch((err) =>
+            console.error('[AIService] Failed to track AI generation:', err),
+          );
+        }
         return content.text;
       }
       throw new Error('Unexpected response type from Claude');
@@ -54,6 +72,44 @@ export async function callClaude(
   }
 
   throw lastError || new Error('AI service failed after 3 attempts');
+}
+
+async function checkAILimit(organizationId: string): Promise<boolean> {
+  const { Organization } = await import('../models/Organization.model');
+  const { Plan } = await import('../models/Plan.model');
+  const org = await Organization.findById(organizationId).select('plan aiGenerationsUsed aiGenerationsResetAt').lean();
+  if (!org) return true;
+
+  const plan = await Plan.findOne({ key: org.plan }).select('limits').lean();
+  const maxAI = plan?.limits?.maxAIAnalyses ?? 0;
+  if (maxAI === 0) return true; // 0 = unlimited
+
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const resetAt = org.aiGenerationsResetAt;
+  const used = (!resetAt || resetAt < monthStart) ? 0 : (org.aiGenerationsUsed ?? 0);
+
+  return used < maxAI;
+}
+
+async function trackAIGeneration(organizationId: string): Promise<void> {
+  const { Organization } = await import('../models/Organization.model');
+  const now = new Date();
+  const org = await Organization.findById(organizationId).select('aiGenerationsResetAt').lean();
+  const resetAt = org?.aiGenerationsResetAt;
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  if (!resetAt || resetAt < monthStart) {
+    await Organization.updateOne(
+      { _id: organizationId },
+      { $set: { aiGenerationsUsed: 1, aiGenerationsResetAt: now } },
+    );
+  } else {
+    await Organization.updateOne(
+      { _id: organizationId },
+      { $inc: { aiGenerationsUsed: 1 } },
+    );
+  }
 }
 
 /** Extract the first complete JSON object from a Claude response that may contain prose. */

@@ -1,6 +1,7 @@
 import { Router, Response, NextFunction } from 'express';
 import { authenticateToken, requirePermission, AuthRequest } from '../middleware/auth.middleware';
 import { Organization } from '../models/Organization.model';
+import { User } from '../models/User.model';
 
 const router = Router();
 router.use(authenticateToken);
@@ -10,7 +11,11 @@ router.get('/me', async (req: AuthRequest, res: Response, next: NextFunction) =>
   try {
     const org = await Organization.findById(req.user!.organizationId);
     if (!org) { res.status(404).json({ error: req.t('errors.organizationNotFound') }); return; }
-    res.json(org);
+    const currentUsers = await User.countDocuments({
+      organizationId: req.user!.organizationId,
+      isActive: { $ne: false },
+    });
+    res.json({ ...org.toObject(), currentUsers });
   } catch (e) { next(e); }
 });
 

@@ -1,5 +1,6 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -12,16 +13,28 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatListModule } from '@angular/material/list';
+import { MatMenuModule } from '@angular/material/menu';
 import { ApiService } from '../../../core/api.service';
+import { AuthService } from '../../../core/auth.service';
 import { SurveyResponsesDialogComponent } from '../../survey/survey-responses-dialog/survey-responses-dialog.component';
 import { MiniGaugeComponent } from '../../../shared/mini-gauge/mini-gauge.component';
 import { RiskBadgeComponent } from '../../../shared/risk-badge/risk-badge.component';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 type ScriptSection =
   | { key: string; label: string; type: 'string'; value: string }
   | { key: string; label: string; type: 'list'; items: string[] }
   | { key: string; label: string; type: 'topics'; topics: { topic: string; points: string[] }[] };
+
+interface CoachOption {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+}
 
 interface ConflictAnalysis {
   _id: string;
@@ -36,6 +49,15 @@ interface ConflictAnalysis {
   recommendedActions?: RecommendedActions;
   completedActions?: Record<string, number[]>;
   escalationRequested: boolean;
+  escalatedToCoachId?: { _id: string; firstName: string; lastName: string } | string;
+  escalationMessage?: string;
+  professionalReview?: {
+    status: 'pending' | 'in_progress' | 'completed';
+    notes?: string;
+    recommendations?: string;
+    reviewedAt?: string;
+  };
+  generatedIntakeIds?: Record<string, string>;
   focusConflictType?: string;
   parentId?: string;
   createdAt: string;
@@ -60,10 +82,11 @@ interface RecommendedActions {
   selector: 'app-conflict-detail',
   standalone: true,
   imports: [
-    CommonModule, RouterLink,
+    CommonModule, FormsModule, RouterLink,
     MatButtonModule, MatIconModule, MatTabsModule,
     MatChipsModule, MatDividerModule, MatProgressSpinnerModule,
     MatTooltipModule, MatSnackBarModule, MatDialogModule, MatExpansionModule, MatCheckboxModule,
+    MatFormFieldModule, MatInputModule, MatListModule, MatMenuModule,
     MiniGaugeComponent, RiskBadgeComponent,
     TranslateModule,
   ],
@@ -285,13 +308,41 @@ interface RecommendedActions {
                       <div class="action-cards">
                         @for (a of ra.immediateActions; track $index) {
                           <div class="action-card" [class]="'priority-' + a.priority" [class.completed]="isCompleted('immediate', $index)">
+                            @if (generatingIntakeFor() === $index) {
+                              <div class="intake-overlay">
+                                <mat-spinner diameter="28" />
+                                <span>{{ 'CONFLICT.generatingIntake' | translate }}</span>
+                              </div>
+                            }
+                            @if (intakeGeneratedFor() === $index) {
+                              <div class="intake-overlay done">
+                                <mat-icon>check_circle</mat-icon>
+                                <span>{{ 'CONFLICT.intakeReady' | translate }}</span>
+                              </div>
+                            }
                             <div class="action-header">
                               <mat-checkbox [checked]="isCompleted('immediate', $index)" (change)="toggleCompleted('immediate', $index)" />
                               <span class="action-title">{{ a.title }}</span>
                               <span class="priority-badge" [class]="a.priority">{{ a.priority }}</span>
                             </div>
                             <p class="action-desc">{{ a.description }}</p>
-                            <div class="action-owner"><mat-icon>person</mat-icon> {{ a.owner }}</div>
+                            <div class="action-footer">
+                              <span class="action-owner"><mat-icon>person</mat-icon> {{ a.owner }}</span>
+                              @if (hasGeneratedIntake($index)) {
+                                <button mat-stroked-button class="gen-intake-btn done"
+                                        (click)="openGeneratedIntake($index)"
+                                        [matTooltip]="'CONFLICT.viewGeneratedIntake' | translate">
+                                  <mat-icon>open_in_new</mat-icon> {{ 'CONFLICT.viewIntake' | translate }}
+                                </button>
+                              } @else {
+                                <button mat-stroked-button class="gen-intake-btn"
+                                        (click)="generateActionIntake(a, $index)"
+                                        [disabled]="generatingIntakeFor() !== null"
+                                        [matTooltip]="'CONFLICT.generateIntakeTooltip' | translate">
+                                  <mat-icon>assignment</mat-icon> {{ 'CONFLICT.generateIntake' | translate }}
+                                </button>
+                              }
+                            </div>
                           </div>
                         }
                       </div>
@@ -370,8 +421,31 @@ interface RecommendedActions {
 
                 <div class="regen-row">
                   <button mat-stroked-button (click)="generateActions()">
-                    <mat-icon>refresh</mat-icon> Regenerate
+                    <mat-icon>refresh</mat-icon> {{ 'CONFLICT.regenerate' | translate }}
                   </button>
+                  @if (!analysis()!.escalationRequested) {
+                    <button mat-flat-button color="warn" [matMenuTriggerFor]="coachMenu" (click)="loadCoaches()">
+                      <mat-icon>escalator_warning</mat-icon> {{ 'CONFLICT.escalateToProfessional' | translate }}
+                    </button>
+                    <mat-menu #coachMenu="matMenu" class="coach-select-menu">
+                      @if (loadingCoaches()) {
+                        <div class="menu-loading"><mat-spinner diameter="24" /></div>
+                      } @else if (coaches().length === 0) {
+                        <div class="menu-empty">{{ 'CONFLICT.noCoachesAvailable' | translate }}</div>
+                      } @else {
+                        @for (c of coaches(); track c._id) {
+                          <button mat-menu-item (click)="escalateToCoach(c)">
+                            <mat-icon>person</mat-icon>
+                            <span>{{ c.firstName }} {{ c.lastName }}</span>
+                          </button>
+                        }
+                      }
+                    </mat-menu>
+                  } @else {
+                    <span class="escalation-chip">
+                      <mat-icon>check_circle</mat-icon> {{ 'CONFLICT.escalatedToProfessional' | translate }}
+                    </span>
+                  }
                 </div>
               }
             </div>
@@ -381,19 +455,77 @@ interface RecommendedActions {
           <mat-tab>
             <ng-template mat-tab-label>
               <mat-icon>rate_review</mat-icon>
-              <span>Professional Review</span>
+              <span>{{ 'CONFLICT.professionalReview' | translate }}</span>
+              @if (analysis()!.professionalReview) {
+                <span class="review-status-dot" [class]="analysis()!.professionalReview!.status"></span>
+              }
             </ng-template>
             <div class="tab-body">
-              <div class="placeholder-state">
-                <mat-icon>rate_review</mat-icon>
-                <h3>Professional Review</h3>
-                <p>
-                  This section is for a qualified specialist (HR, mediator, or coach) to
-                  document their independent assessment and recommendations based on
-                  the AI analysis above.
-                </p>
-                <span class="placeholder-tag">Coming soon</span>
-              </div>
+              @if (!analysis()!.escalationRequested) {
+                <div class="placeholder-state">
+                  <mat-icon>rate_review</mat-icon>
+                  <h3>{{ 'CONFLICT.professionalReview' | translate }}</h3>
+                  <p>{{ 'CONFLICT.professionalReviewEmpty' | translate }}</p>
+                </div>
+              } @else {
+                <div class="review-card">
+                  <div class="review-header">
+                    <mat-icon>person</mat-icon>
+                    <span>{{ 'CONFLICT.assignedTo' | translate }}: {{ coachName() }}</span>
+                    <span class="review-status-badge" [class]="analysis()!.professionalReview?.status || 'pending'">
+                      {{ analysis()!.professionalReview?.status || 'pending' }}
+                    </span>
+                  </div>
+
+                  @if (analysis()!.escalationMessage) {
+                    <div class="review-message">
+                      <mat-icon>message</mat-icon>
+                      <p>{{ analysis()!.escalationMessage }}</p>
+                    </div>
+                  }
+
+                  @if (isAssignedCoach()) {
+                    <!-- Coach can edit -->
+                    <mat-form-field appearance="outline" class="full-width">
+                      <mat-label>{{ 'CONFLICT.reviewNotes' | translate }}</mat-label>
+                      <textarea matInput [(ngModel)]="reviewNotes" rows="4"
+                                [placeholder]="'CONFLICT.reviewNotesPlaceholder' | translate"></textarea>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" class="full-width">
+                      <mat-label>{{ 'CONFLICT.reviewRecommendations' | translate }}</mat-label>
+                      <textarea matInput [(ngModel)]="reviewRecommendations" rows="4"
+                                [placeholder]="'CONFLICT.reviewRecommendationsPlaceholder' | translate"></textarea>
+                    </mat-form-field>
+
+                    <div class="review-actions">
+                      <button mat-stroked-button (click)="saveReview('in_progress')" [disabled]="savingReview()">
+                        <mat-icon>save</mat-icon> {{ 'CONFLICT.saveProgress' | translate }}
+                      </button>
+                      <button mat-flat-button color="primary" (click)="saveReview('completed')" [disabled]="savingReview()">
+                        <mat-icon>check_circle</mat-icon> {{ 'CONFLICT.markComplete' | translate }}
+                      </button>
+                    </div>
+                  } @else {
+                    <!-- Non-coach view -->
+                    @if (analysis()!.professionalReview?.notes) {
+                      <div class="review-section">
+                        <h4>{{ 'CONFLICT.reviewNotes' | translate }}</h4>
+                        <p>{{ analysis()!.professionalReview!.notes }}</p>
+                      </div>
+                    }
+                    @if (analysis()!.professionalReview?.recommendations) {
+                      <div class="review-section">
+                        <h4>{{ 'CONFLICT.reviewRecommendations' | translate }}</h4>
+                        <p>{{ analysis()!.professionalReview!.recommendations }}</p>
+                      </div>
+                    }
+                    @if (analysis()!.professionalReview?.status === 'pending') {
+                      <p class="pending-note">{{ 'CONFLICT.awaitingReview' | translate }}</p>
+                    }
+                  }
+                </div>
+              }
             </div>
           </mat-tab>
 
@@ -417,21 +549,7 @@ interface RecommendedActions {
           </mat-tab>
         </mat-tab-group>
 
-        @if (analysis()!.escalationRequested) {
-          <div class="escalation-banner">
-            <mat-icon>notifications_active</mat-icon>
-            Escalation has been requested — HR / Coach has been notified.
-          </div>
-        }
-
-        <!-- Actions bar -->
-        <div class="actions-bar">
-          @if (!analysis()!.escalationRequested && analysis()!.riskLevel !== 'low') {
-            <button mat-stroked-button color="warn" (click)="escalate()">
-              <mat-icon>escalator_warning</mat-icon> {{ 'CONFLICT.escalateToHR' | translate }}
-            </button>
-          }
-        </div>
+        <!-- Actions bar placeholder for future use -->
       </div>
     }
   `,
@@ -623,7 +741,62 @@ interface RecommendedActions {
       margin: 0; padding-left: 20px;
       li { font-size: 14px; color: #374151; line-height: 1.7; margin-bottom: 6px; }
     }
-    .regen-row { display: flex; justify-content: center; padding: 16px 0 0; }
+    .regen-row { display: flex; justify-content: center; gap: 12px; align-items: center; padding: 16px 0 0; flex-wrap: wrap; }
+    .escalation-chip {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 6px 14px; border-radius: 999px;
+      background: rgba(39,196,160,0.12); color: #1a9678;
+      font-size: 13px; font-weight: 600;
+      mat-icon { font-size: 16px; width: 16px; height: 16px; }
+    }
+    .menu-loading, .menu-empty { padding: 16px 24px; text-align: center; color: #6b7c93; font-size: 13px; }
+    .gen-intake-btn { font-size: 11px; height: 28px; line-height: 28px; }
+    .gen-intake-btn.done { color: #1a9678; border-color: #1a9678; }
+    .action-card { position: relative; }
+    .intake-overlay {
+      position: absolute; inset: 0; z-index: 2;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+      background: rgba(255,255,255,0.92); border-radius: 10px;
+      font-size: 13px; font-weight: 500; color: #5a6a7e;
+      &.done { color: #1a9678; mat-icon { font-size: 32px; width: 32px; height: 32px; } }
+    }
+
+    /* ─ Professional Review ─ */
+    .review-status-dot {
+      width: 8px; height: 8px; border-radius: 50%; margin-left: 6px; display: inline-block;
+      &.pending { background: #f0a500; }
+      &.in_progress { background: #3A9FD6; }
+      &.completed { background: #27C4A0; }
+    }
+    .review-card {
+      background: #f8fafc; border-radius: 12px; padding: 20px; margin-top: 8px;
+    }
+    .review-header {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 16px;
+      font-weight: 600; color: var(--artes-primary);
+      mat-icon { color: #9aa5b4; }
+    }
+    .review-status-badge {
+      margin-left: auto; padding: 3px 10px; border-radius: 999px;
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      &.pending { background: rgba(240,165,0,0.12); color: #a06800; }
+      &.in_progress { background: rgba(58,159,214,0.12); color: #2080b0; }
+      &.completed { background: rgba(39,196,160,0.12); color: #1a9678; }
+    }
+    .review-message {
+      display: flex; gap: 8px; padding: 10px 14px; border-radius: 8px;
+      background: rgba(58,159,214,0.06); margin-bottom: 16px;
+      mat-icon { color: #3A9FD6; flex-shrink: 0; margin-top: 2px; }
+      p { margin: 0; font-size: 13px; color: #5a6a7e; }
+    }
+    .review-section {
+      margin-bottom: 16px;
+      h4 { font-size: 13px; font-weight: 600; color: var(--artes-primary); margin: 0 0 6px; }
+      p { font-size: 13px; color: #5a6a7e; white-space: pre-wrap; line-height: 1.5; margin: 0; }
+    }
+    .review-actions { display: flex; gap: 12px; margin-top: 16px; }
+    .pending-note { color: #9aa5b4; font-style: italic; font-size: 13px; text-align: center; padding: 24px; }
+    .full-width { width: 100%; }
 
     /* ─ Placeholder tabs ─ */
     .placeholder-state {
@@ -655,8 +828,10 @@ export class ConflictDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private api = inject(ApiService);
+  private auth = inject(AuthService);
   private snack = inject(MatSnackBar);
   private dialog = inject(MatDialog);
+  private translateSvc = inject(TranslateService);
 
   loading = signal(true);
   analysis = signal<ConflictAnalysis | null>(null);
@@ -667,8 +842,34 @@ export class ConflictDetailComponent implements OnInit {
   // AI Recommended Actions
   recommendedActions = signal<RecommendedActions | null>(null);
   generatingActions = signal(false);
+  generatingIntakeFor = signal<number | null>(null);
+  intakeGeneratedFor = signal<number | null>(null);
   expandedPanel = signal<string>('immediate');
   completedActions = signal<Record<string, Set<number>>>({});
+
+  // Escalation / Coach selection
+  coaches = signal<CoachOption[]>([]);
+  loadingCoaches = signal(false);
+
+  // Professional Review
+  reviewNotes = '';
+  reviewRecommendations = '';
+  savingReview = signal(false);
+
+  coachName = computed(() => {
+    const a = this.analysis();
+    if (!a?.escalatedToCoachId) return '';
+    if (typeof a.escalatedToCoachId === 'string') return a.escalatedToCoachId;
+    return `${a.escalatedToCoachId.firstName} ${a.escalatedToCoachId.lastName}`;
+  });
+
+  isAssignedCoach = computed(() => {
+    const a = this.analysis();
+    const user = this.auth.currentUser();
+    if (!a?.escalatedToCoachId || !user) return false;
+    const coachId = typeof a.escalatedToCoachId === 'string' ? a.escalatedToCoachId : a.escalatedToCoachId._id;
+    return user.id === coachId;
+  });
 
   isCompleted(section: string, index: number): boolean {
     return this.completedActions()[section]?.has(index) ?? false;
@@ -709,6 +910,10 @@ export class ConflictDetailComponent implements OnInit {
           const map: Record<string, Set<number>> = {};
           for (const [k, v] of Object.entries(a.completedActions)) map[k] = new Set(v);
           this.completedActions.set(map);
+        }
+        if (a.professionalReview) {
+          this.reviewNotes = a.professionalReview.notes || '';
+          this.reviewRecommendations = a.professionalReview.recommendations || '';
         }
         this.loading.set(false);
         this.loadSubAnalyses(a._id);
@@ -813,15 +1018,100 @@ export class ConflictDetailComponent implements OnInit {
     });
   }
 
-  escalate(): void {
+  loadCoaches(): void {
+    if (this.coaches().length) return;
+    this.loadingCoaches.set(true);
+    this.api.get<(CoachOption & { role: string })[]>('/users').subscribe({
+      next: (users) => {
+        const eligible = users.filter(u => u.role === 'coach' || u.role === 'hr_manager');
+        this.coaches.set(eligible);
+        this.loadingCoaches.set(false);
+      },
+      error: () => this.loadingCoaches.set(false),
+    });
+  }
+
+  escalateToCoach(coach: CoachOption): void {
     const a = this.analysis();
     if (!a) return;
-    this.api.post(`/conflict/escalate/${a._id}`, {}).subscribe({
-      next: () => {
-        this.analysis.set({ ...a, escalationRequested: true });
-        this.snack.open('Escalation submitted', 'OK', { duration: 3000 });
+    this.api.post<ConflictAnalysis>(`/conflict/escalate/${a._id}`, { coachId: coach._id }).subscribe({
+      next: (updated) => {
+        this.analysis.set(updated);
+        this.reviewNotes = updated.professionalReview?.notes || '';
+        this.reviewRecommendations = updated.professionalReview?.recommendations || '';
+        this.snack.open(
+          this.translateSvc.instant('CONFLICT.escalationSent', { name: `${coach.firstName} ${coach.lastName}` }),
+          'OK', { duration: 3500 },
+        );
       },
-      error: () => this.snack.open('Escalation failed', 'OK', { duration: 3000 }),
+      error: () => this.snack.open(this.translateSvc.instant('CONFLICT.escalationFailed'), 'OK', { duration: 3000 }),
+    });
+  }
+
+  saveReview(status: 'in_progress' | 'completed'): void {
+    const a = this.analysis();
+    if (!a) return;
+    this.savingReview.set(true);
+    this.api.patch<ConflictAnalysis>(`/conflict/analyses/${a._id}/professional-review`, {
+      notes: this.reviewNotes,
+      recommendations: this.reviewRecommendations,
+      status,
+    }).subscribe({
+      next: (updated) => {
+        this.analysis.set(updated);
+        this.savingReview.set(false);
+        this.snack.open(
+          status === 'completed'
+            ? this.translateSvc.instant('CONFLICT.reviewCompleted')
+            : this.translateSvc.instant('CONFLICT.reviewSaved'),
+          'OK', { duration: 3000 },
+        );
+      },
+      error: () => { this.savingReview.set(false); this.snack.open('Failed to save', 'OK', { duration: 3000 }); },
+    });
+  }
+
+  hasGeneratedIntake(index: number): boolean {
+    const map = this.analysis()?.generatedIntakeIds;
+    return !!map?.[`immediate_${index}`];
+  }
+
+  openGeneratedIntake(index: number): void {
+    const templateId = this.analysis()?.generatedIntakeIds?.[`immediate_${index}`];
+    if (templateId) {
+      this.router.navigate(['/intakes'], { queryParams: { highlight: templateId } });
+    }
+  }
+
+  generateActionIntake(action: ActionItem, index: number): void {
+    const a = this.analysis();
+    if (!a) return;
+    this.generatingIntakeFor.set(index);
+    this.intakeGeneratedFor.set(null);
+    this.api.post<{ _id: string; title: string }>(`/conflict/analyses/${a._id}/generate-intake`, {
+      actionTitle: action.title,
+      actionDescription: action.description,
+      actionIndex: index,
+    }).subscribe({
+      next: (template) => {
+        this.generatingIntakeFor.set(null);
+        this.intakeGeneratedFor.set(index);
+        // Update local analysis with the new mapping
+        const updated = { ...a, generatedIntakeIds: { ...(a.generatedIntakeIds || {}), [`immediate_${index}`]: template._id } };
+        this.analysis.set(updated);
+        this.snack.open(
+          this.translateSvc.instant('CONFLICT.intakeGenerated', { title: template.title }),
+          this.translateSvc.instant('COMMON.close'),
+          { duration: 4000 },
+        );
+        setTimeout(() => {
+          if (this.intakeGeneratedFor() === index) this.intakeGeneratedFor.set(null);
+        }, 5000);
+      },
+      error: () => {
+        this.generatingIntakeFor.set(null);
+        this.snack.open(this.translateSvc.instant('CONFLICT.intakeGenerateFailed'), 'OK', { duration: 3000 });
+      },
     });
   }
 

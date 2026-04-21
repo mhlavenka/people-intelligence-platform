@@ -1,14 +1,18 @@
 # ARTES todo list
 -----------------
 
-- generate summary of what was done in the last week
-- update technical how to doc 
-- generate user how to
- 
 I. MODULES
 ----------
+
+**Intakes**
+ - I assigned an intake to a user and sent it to him. Add also an email notification. Right now it is only internal message hub. 
+
 **Conflict Intelligence**
  - created an analysis and design doc "conflict_intelligence_module.docx"
+ - Conflict intelligence flow:
+   - Plan based or org based selection for AI recommendations or professional recommendations 
+   - How do recommendations flow into action items and IDPs?
+   - Analyze the theory design doc
 
 **Coaching Module**
  - add mentoring to coaching module
@@ -37,19 +41,12 @@ II. SYSTEM
 **Placeholders**
  - Billing - contact us to upgrade - create form to send a contact us to system admin via SES. Alternatively let the organization admin upgrade / choose a plan
 
+**Mobile App**
+
+
+
 III. LOW
 --------
- - do I want a mobile Android / iPhone app?
-
-
 IV. NICE TO HAVE
 ----------------
  - user guide + how tos
-
-
-
-
-
-
-
-

@@ -49,7 +49,7 @@ router.post('/assess', async (req: AuthRequest, res: Response, next: NextFunctio
       req.language
     );
 
-    const aiResponse = await callClaude(prompt);
+    const aiResponse = await callClaude(prompt, undefined, undefined, req.user!.organizationId);
     let raw: Record<string, unknown> = {};
     try {
       raw = JSON.parse(extractJson(aiResponse));

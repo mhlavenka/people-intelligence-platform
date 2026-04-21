@@ -10,6 +10,8 @@ import {
   getSubAnalyses,
   createSubAnalysis,
   generateRecommendedActions,
+  updateProfessionalReview,
+  generateActionIntake,
 } from '../controllers/conflict.controller';
 
 const router = Router();
@@ -23,6 +25,8 @@ router.get('/analyses/:id/sub-analyses', requirePermission('VIEW_CONFLICT_DASHBO
 router.post('/analyses/:id/sub-analyses', requirePermission('RUN_CONFLICT_ANALYSIS'), createSubAnalysis);
 router.post('/analyses/:id/recommended-actions', requirePermission('RUN_CONFLICT_ANALYSIS'), generateRecommendedActions);
 router.post('/escalate/:id', requirePermission('ESCALATE_CONFLICT'), escalateConflict);
+router.patch('/analyses/:id/professional-review', requirePermission('VIEW_CONFLICT_DASHBOARD'), updateProfessionalReview);
+router.post('/analyses/:id/generate-intake', requirePermission('RUN_CONFLICT_ANALYSIS'), generateActionIntake);
 
 router.patch(
   '/analyses/:id/completed-actions',

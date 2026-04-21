@@ -31,7 +31,7 @@ router.post(
         req.language
       );
 
-      const aiResponse = await callClaude(prompt, undefined, 4096);
+      const aiResponse = await callClaude(prompt, undefined, 4096, req.user!.organizationId);
       let parsed: {
         goal: string;
         currentReality: string;
@@ -124,7 +124,7 @@ router.post(
         req.language
       );
 
-      const aiResponse = await callClaude(prompt, undefined, 4096);
+      const aiResponse = await callClaude(prompt, undefined, 4096, req.user!.organizationId);
       let parsed: {
         goal: string;
         currentReality: string;
@@ -246,7 +246,7 @@ router.post(
         req.language
       );
 
-      const aiResponse = await callClaude(prompt, undefined, 4096);
+      const aiResponse = await callClaude(prompt, undefined, 4096, req.user!.organizationId);
       let parsed: {
         goal: string;
         currentReality: string;

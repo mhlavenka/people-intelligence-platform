@@ -35,7 +35,7 @@ async function generateAndSendPostSessionForm(
     growFocus: session.growFocus,
   }, language);
 
-  const aiResponse = await callClaude(prompt);
+  const aiResponse = await callClaude(prompt, undefined, undefined, organizationId);
   let questions: Array<{ id: string; text: string; type: string; category: string }>;
   try {
     let clean = aiResponse.replace(/```(?:json)?\r?\n?/g, '').replace(/```/g, '').trim();
@@ -666,7 +666,7 @@ router.post(
         growFocus: session.growFocus,
       }, req.language);
 
-      const aiResponse = await callClaude(prompt);
+      const aiResponse = await callClaude(prompt, undefined, undefined, req.user!.organizationId);
 
       let questions: Array<{ id: string; text: string; type: string; category: string }>;
       try {

@@ -210,7 +210,7 @@ router.post(
         postSession: note.postSession,
       }, req.language);
 
-      const raw = await callClaude(prompt, undefined, 1024);
+      const raw = await callClaude(prompt, undefined, 1024, req.user!.organizationId);
       const parsed = JSON.parse(extractJson(raw));
 
       note.aiSummary = parsed.summary;
@@ -362,7 +362,7 @@ router.get(
         req.language
       );
 
-      const raw = await callClaude(prompt, undefined, 2048);
+      const raw = await callClaude(prompt, undefined, 2048, req.user!.organizationId);
       const parsed = JSON.parse(extractJson(raw));
       res.json(parsed);
     } catch (e) { next(e); }
@@ -415,7 +415,7 @@ router.get(
         req.language
       );
 
-      const raw = await callClaude(prompt, undefined, 2048);
+      const raw = await callClaude(prompt, undefined, 2048, req.user!.organizationId);
       const parsed = JSON.parse(extractJson(raw));
       res.json({
         ...parsed,

@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { AILimitExceededError } from '../services/ai.service';
 
 export interface AppError extends Error {
   statusCode?: number;
@@ -11,6 +12,11 @@ export function errorHandler(
   res: Response,
   _next: NextFunction
 ): void {
+  if (err instanceof AILimitExceededError) {
+    res.status(402).json({ error: err.message, code: 'AI_LIMIT_EXCEEDED' });
+    return;
+  }
+
   const statusCode = err.statusCode || 500;
   const message = err.message || 'Internal server error';
 

@@ -99,6 +99,9 @@
     "templateNotFound": "Template not found",
     "assignmentTargetRequired": "Select at least one department or user",
     "assignmentNotFound": "Assignment not found",
+    "coachIdRequired": "A coach must be selected",
+    "coachNotFound": "Coach not found",
+    "actionDetailsRequired": "Action title and description are required",
 
     "coacheeNotFoundInOrg": "Coachee not found in this organization",
     "userNotFoundInOrg": "User not found in this organization",

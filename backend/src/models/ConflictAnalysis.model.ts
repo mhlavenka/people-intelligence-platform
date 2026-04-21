@@ -23,8 +23,17 @@ export interface IConflictAnalysis extends Document {
     preventiveMeasures?: string[];
   };
   completedActions?: Record<string, number[]>;
+  generatedIntakeIds?: Record<string, string>;
   escalationRequested: boolean;
   escalationStatus?: EscalationStatus;
+  escalatedToCoachId?: mongoose.Types.ObjectId;
+  escalationMessage?: string;
+  professionalReview?: {
+    status: 'pending' | 'in_progress' | 'completed';
+    notes?: string;
+    recommendations?: string;
+    reviewedAt?: Date;
+  };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -49,10 +58,21 @@ const ConflictAnalysisSchema = new Schema<IConflictAnalysis>(
     managerScript: { type: String, required: true },
     recommendedActions: { type: Schema.Types.Mixed },
     completedActions: { type: Schema.Types.Mixed, default: {} },
+    generatedIntakeIds: { type: Schema.Types.Mixed, default: {} },
     escalationRequested: { type: Boolean, default: false },
     escalationStatus: {
       type: String,
       enum: ['pending', 'in_progress', 'resolved', 'escalated'],
+    },
+    escalatedToCoachId: { type: Schema.Types.ObjectId, ref: 'User' },
+    escalationMessage: { type: String },
+    professionalReview: {
+      type: new Schema({
+        status: { type: String, enum: ['pending', 'in_progress', 'completed'], default: 'pending' },
+        notes: String,
+        recommendations: String,
+        reviewedAt: Date,
+      }, { _id: false }),
     },
   },
   { timestamps: true }

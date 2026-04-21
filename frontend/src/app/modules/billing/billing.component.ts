@@ -70,6 +70,8 @@ interface OrgPlan {
   modules?: string[];
   suspendedAt?: string;
   suspensionReason?: string;
+  aiGenerationsUsed?: number;
+  aiGenerationsResetAt?: string;
 }
 
 interface AvailablePlan {
@@ -81,6 +83,7 @@ interface AvailablePlan {
   overagePriceCents: number;
   maxUsers: number;
   features: string[];
+  limits?: { maxAIAnalyses: number };
   isActive: boolean;
   sortOrder: number;
 }
@@ -191,6 +194,27 @@ interface AvailablePlan {
                           {{ orgData.maxUsers - (orgData.currentUsers ?? 0) }} seat(s) remaining
                         </div>
                       </div>
+
+                      @if (aiLimit() > 0) {
+                        <div class="usage-section" style="margin-top: 16px;">
+                          <div class="usage-header">
+                            <span class="usage-label">
+                              <mat-icon style="font-size:16px;width:16px;height:16px;vertical-align:middle;margin-right:4px">auto_awesome</mat-icon>
+                              {{ 'BILLING.aiGenerations' | translate }}
+                            </span>
+                            <span class="usage-numbers">
+                              {{ aiUsed() }}<span class="usage-sep"> / </span>{{ aiLimit() }}
+                            </span>
+                          </div>
+                          <mat-progress-bar mode="determinate"
+                            [value]="aiUsagePercent()"
+                            [color]="aiUsagePercent() >= 90 ? 'warn' : 'accent'"
+                            class="usage-bar"></mat-progress-bar>
+                          <div class="usage-caption">
+                            {{ aiLimit() - aiUsed() }} {{ 'BILLING.aiGenerationsRemaining' | translate }}
+                          </div>
+                        </div>
+                      }
                     </div>
                   </div>
                   <mat-divider class="card-divider"></mat-divider>
@@ -1230,6 +1254,28 @@ export class BillingComponent implements OnInit {
   loading = signal(true);
   paying = signal<string | null>(null);
   showLineItems = signal(false);
+
+  aiLimit = computed(() => {
+    const orgPlanKey = this.org()?.plan;
+    if (!orgPlanKey) return 0;
+    const plan = this.availablePlans().find((p) => p.key === orgPlanKey);
+    return plan?.limits?.maxAIAnalyses ?? 0;
+  });
+
+  aiUsed = computed(() => {
+    const org = this.org();
+    if (!org?.aiGenerationsUsed) return 0;
+    const resetAt = org.aiGenerationsResetAt ? new Date(org.aiGenerationsResetAt) : null;
+    const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+    if (!resetAt || resetAt < monthStart) return 0;
+    return org.aiGenerationsUsed;
+  });
+
+  aiUsagePercent = computed(() => {
+    const limit = this.aiLimit();
+    if (!limit) return 0;
+    return Math.min(100, Math.round((this.aiUsed() / limit) * 100));
+  });
 
   /** Most recent non-paid, non-void invoice (draft or sent or overdue). */
   currentInvoice = computed<Invoice | null>(() => {

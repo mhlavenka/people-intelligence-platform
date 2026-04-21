@@ -15,7 +15,7 @@ router.post(
         res.status(400).json({ error: req.t('errors.promptRequired') });
         return;
       }
-      const result = await callClaude(prompt, systemPrompt);
+      const result = await callClaude(prompt, systemPrompt, undefined, req.user!.organizationId);
       res.json({ result });
     } catch (e) {
       next(e);

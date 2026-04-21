@@ -99,6 +99,9 @@
     "templateNotFound": "Modèle introuvable",
     "assignmentTargetRequired": "Sélectionnez au moins un département ou un utilisateur",
     "assignmentNotFound": "Assignation introuvable",
+    "coachIdRequired": "Un coach doit être sélectionné",
+    "coachNotFound": "Coach introuvable",
+    "actionDetailsRequired": "Le titre et la description de l'action sont requis",
 
     "coacheeNotFoundInOrg": "Coaché introuvable dans cette organisation",
     "userNotFoundInOrg": "Utilisateur introuvable dans cette organisation",
