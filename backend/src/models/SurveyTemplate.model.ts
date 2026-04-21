@@ -181,6 +181,10 @@ export interface ISurveyTemplate extends Document {
     // Rater configuration: 'self' = respondent scores themselves; 'multi_rater' = 360
     rater_type?: 'self' | 'multi_rater';
 
+    // Custom AI analysis prompt — used as the system prompt when running analysis
+    // with this template. Falls back to the default SYSTEM_PROMPT if not set.
+    analysisPrompt?: string;
+
     language?: string;
     sourceTemplateId?: mongoose.Types.ObjectId;
 
@@ -343,6 +347,8 @@ const SurveyTemplateSchema = new Schema<ISurveyTemplate>(
 
         scoring:    { type: ScoringConfigSchema },
         rater_type: { type: String, enum: ['self', 'multi_rater'] },
+
+        analysisPrompt: { type: String },
 
         language: { type: String, enum: ['en', 'fr', 'es'], default: 'en' },
         sourceTemplateId: { type: Schema.Types.ObjectId, ref: 'SurveyTemplate' },

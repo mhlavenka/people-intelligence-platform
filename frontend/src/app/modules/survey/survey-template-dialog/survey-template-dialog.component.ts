@@ -53,6 +53,7 @@ interface SurveyTemplate {
     note?: string;
   };
   rater_type?: string;
+  analysisPrompt?: string;
   language?: string;
   questions: {
     id: string;
@@ -654,6 +655,26 @@ interface SurveyTemplate {
             </div>
           </mat-tab>
 
+          <!-- ══════════════════ TAB 4: AI PROMPT ══════════════════ -->
+          <mat-tab>
+            <ng-template mat-tab-label>
+              <mat-icon class="tab-icon">auto_awesome</mat-icon> {{ "SURVEY.tabAIPrompt" | translate }}
+            </ng-template>
+
+            <div class="tab-content">
+              <p class="prompt-hint">{{ 'SURVEY.analysisPromptHint' | translate }}</p>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>{{ 'SURVEY.analysisPromptLabel' | translate }}</mat-label>
+                <textarea matInput formControlName="analysisPrompt"
+                  rows="16"
+                  style="font-family: monospace; font-size: 13px; line-height: 1.5"
+                  [placeholder]="'SURVEY.analysisPromptPlaceholder' | translate"></textarea>
+                <mat-hint>{{ 'SURVEY.analysisPromptDefault' | translate }}</mat-hint>
+              </mat-form-field>
+            </div>
+          </mat-tab>
+
         </mat-tab-group>
       </form>
     </mat-dialog-content>
@@ -709,6 +730,13 @@ interface SurveyTemplate {
       padding: 20px 8px 24px;
       display: flex; flex-direction: column; gap: 10px;
       box-sizing: border-box;
+    }
+
+    .prompt-hint {
+      font-size: 13px; color: #5a6a7e; line-height: 1.5;
+      margin: 0 0 8px; padding: 10px 14px;
+      background: rgba(124,58,237,0.06); border-radius: 8px;
+      border-left: 3px solid #7c3aed;
     }
 
     /* Layout helpers */
@@ -923,6 +951,9 @@ export class SurveyTemplateDialogComponent implements OnInit {
       raterPoolMax:       [d?.rater_pool?.max ?? null],
       raterPoolRoleTypes: [(d?.rater_pool?.role_types ?? []).join(', ')],
 
+      // AI Analysis Prompt
+      analysisPrompt: [d?.analysisPrompt ?? ''],
+
       // Advanced JSON
       subscaleConfigJson: [d?.scoring?.subscale_config ? JSON.stringify(d.scoring.subscale_config, null, 2) : ''],
       benchmarksJson:     [d?.scoring?.benchmarks ? JSON.stringify(d.scoring.benchmarks, null, 2) : ''],
@@ -1116,6 +1147,8 @@ export class SurveyTemplateDialogComponent implements OnInit {
     if (v.instrumentVersion) payload['instrumentVersion'] = v.instrumentVersion;
     if (v.description)       payload['description']       = v.description;
     if (v.instructions)      payload['instructions']      = v.instructions;
+    if (v.analysisPrompt)    payload['analysisPrompt']    = v.analysisPrompt;
+    else                     payload['analysisPrompt']    = '';  // allow clearing
     if (v.levelOfAnalysis)   payload['level_of_analysis'] = v.levelOfAnalysis;
     if (v.relationshipTarget) payload['relationship_target'] = v.relationshipTarget;
     if (v.singleConstruct)   payload['single_construct']  = true;

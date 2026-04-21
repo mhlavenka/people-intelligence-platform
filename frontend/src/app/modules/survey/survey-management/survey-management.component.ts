@@ -41,6 +41,7 @@ interface SurveyTemplate {
   minimum_respondents_per_team?: number;
   scoring?: unknown;
   rater_type?: string;
+  analysisPrompt?: string;
   createdAt: string;
   responseCount?: number;
 }
@@ -154,6 +155,12 @@ interface SurveyTemplate {
                     <span class="instrument-version">v{{ t.instrumentVersion }}</span>
                   }
                   <span class="validated-label">{{ 'SURVEY.validatedInstrument' | translate }}</span>
+                  @if (t.analysisPrompt) {
+                    <span class="ai-prompt-badge" [matTooltip]="'SURVEY.hasCustomAIPrompt' | translate">
+                      <mat-icon style="font-size:14px;width:14px;height:14px">auto_awesome</mat-icon>
+                      {{ 'SURVEY.aiPrompt' | translate }}
+                    </span>
+                  }
                 </div>
               }
 
@@ -370,6 +377,12 @@ interface SurveyTemplate {
       .validated-label {
         margin-left: auto; font-size: 10px; font-weight: 700; text-transform: uppercase;
         letter-spacing: 0.5px; color: #2080b0;
+      }
+      .ai-prompt-badge {
+        display: inline-flex; align-items: center; gap: 3px;
+        font-size: 10px; font-weight: 700; text-transform: uppercase;
+        letter-spacing: 0.4px; color: #7c3aed;
+        background: rgba(124,58,237,0.08); padding: 1px 6px; border-radius: 4px;
       }
     }
 

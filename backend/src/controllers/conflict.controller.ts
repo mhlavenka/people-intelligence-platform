@@ -69,7 +69,8 @@ export async function analyzeConflict(
       req.language
     );
 
-    const aiResponse = await callClaude(prompt, undefined, undefined, organizationId);
+    const systemPrompt = template?.analysisPrompt || undefined;
+    const aiResponse = await callClaude(prompt, systemPrompt, undefined, organizationId);
 
     let parsed: {
       riskScore: number;
@@ -218,7 +219,12 @@ export async function createSubAnalysis(
       aiNarrative: parent.aiNarrative,
     }, req.language);
 
-    const aiResponse = await callClaude(prompt, undefined, undefined, organizationId);
+    let subSystemPrompt: string | undefined;
+    if (parent.intakeTemplateId) {
+      const tpl = await SurveyTemplate.findById(parent.intakeTemplateId).setOptions({ bypassTenantCheck: true }).select('analysisPrompt');
+      subSystemPrompt = tpl?.analysisPrompt || undefined;
+    }
+    const aiResponse = await callClaude(prompt, subSystemPrompt, undefined, organizationId);
 
     let parsed: {
       riskScore: number;
@@ -294,7 +300,12 @@ export async function generateRecommendedActions(
       aiNarrative: analysis.aiNarrative,
     }, req.language);
 
-    const aiResponse = await callClaude(prompt, undefined, undefined, organizationId);
+    let actionsSystemPrompt: string | undefined;
+    if (analysis.intakeTemplateId) {
+      const tpl = await SurveyTemplate.findById(analysis.intakeTemplateId).setOptions({ bypassTenantCheck: true }).select('analysisPrompt');
+      actionsSystemPrompt = tpl?.analysisPrompt || undefined;
+    }
+    const aiResponse = await callClaude(prompt, actionsSystemPrompt, undefined, organizationId);
 
     let parsed: unknown;
     try {
