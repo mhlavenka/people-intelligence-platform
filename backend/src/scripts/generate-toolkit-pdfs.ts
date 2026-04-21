@@ -1,18 +1,6 @@
 /**
  * Generate Interest-Based Negotiation Toolkit PDFs and upload to S3.
  * Run: npx ts-node --project tsconfig.json src/scripts/generate-toolkit-pdfs.ts
- *
- * Creates 7 downloadable worksheets:
- *   1. Positions vs. Interests Framework
- *   2. Interest Mapping Worksheet
- *   3. BATNA Assessment Guide
- *   4. Reframing Exercises
- *   5. Manager Conversation Planner
- *   6. The Balcony Technique
- *   7. Conflict Type Diagnostic
- *
- * Uploads to: s3://{bucket}/toolkit/{filename}.pdf
- * Public URLs printed to console for frontend integration.
  */
 import * as dotenv from 'dotenv';
 dotenv.config();
@@ -29,152 +17,157 @@ const s3 = new S3Client({
   },
 });
 
-const BRAND = {
-  navy: '#1B2A47',
-  blue: '#3A9FD6',
-  green: '#27C4A0',
-  lightBg: '#EBF5FB',
-  grey: '#5a6a7e',
-  lightGrey: '#e8edf4',
-};
+const C = { navy: '#1B2A47', blue: '#3A9FD6', green: '#27C4A0', grey: '#5a6a7e', line: '#d0d7e0' };
+const L = 50;                    // left margin
+const R = 545;                   // right edge (A4 width 595 - 50)
+const W = R - L;                 // content width
+const BOT = 780;                 // bottom safe zone
 
-function createDoc(): PDFKit.PDFDocument {
-  return new PDFDocument({
-    size: 'A4',
-    margins: { top: 60, bottom: 60, left: 55, right: 55 },
-    info: {
-      Author: 'Helena Coaching × HeadSoft Tech',
-      Creator: 'ARTES Conflict Intelligence Module',
-    },
-  });
+function mk(): PDFKit.PDFDocument {
+  return new PDFDocument({ size: 'A4', margins: { top: 50, bottom: 50, left: L, right: 50 },
+    info: { Author: 'Helena Coaching', Creator: 'ARTES' } });
 }
 
-function header(doc: PDFKit.PDFDocument, title: string, subtitle: string): void {
-  doc.rect(0, 0, doc.page.width, 100).fill(BRAND.navy);
-  doc.fillColor('#ffffff').fontSize(22).font('Helvetica-Bold')
-    .text(title, 55, 30, { width: doc.page.width - 110 });
-  doc.fontSize(11).font('Helvetica')
-    .text(subtitle, 55, 58, { width: doc.page.width - 110 });
-  doc.fillColor(BRAND.navy);
-  doc.y = 120;
+function needSpace(doc: PDFKit.PDFDocument, h: number): void {
+  if (doc.y + h > BOT) { doc.addPage(); doc.y = 50; }
 }
 
-function footer(doc: PDFKit.PDFDocument): void {
-  const y = doc.page.height - 40;
-  doc.fontSize(8).fillColor(BRAND.grey).font('Helvetica')
-    .text('ARTES Conflict Intelligence™ — Helena Coaching × HeadSoft Tech', 55, y, {
-      width: doc.page.width - 110,
-      align: 'center',
-    });
-  doc.text('Grounded in the Harvard Negotiation Project — Fisher, Ury & Patton', 55, y + 10, {
-    width: doc.page.width - 110,
-    align: 'center',
-  });
+function hdr(doc: PDFKit.PDFDocument, title: string): void {
+  doc.rect(0, 0, 595, 80).fill(C.navy);
+  doc.fill('#fff').font('Helvetica-Bold').fontSize(18).text(title, L, 22, { width: W });
+  doc.font('Helvetica').fontSize(9)
+    .text('Interest-Based Negotiation Toolkit — Harvard Negotiation Project', L, 50, { width: W });
+  doc.fillColor(C.navy); doc.y = 95;
 }
 
-function sectionTitle(doc: PDFKit.PDFDocument, text: string): void {
-  doc.moveDown(0.8);
-  doc.fontSize(14).fillColor(BRAND.blue).font('Helvetica-Bold').text(text);
-  doc.moveDown(0.3);
-  doc.fillColor(BRAND.navy).font('Helvetica').fontSize(10);
+function ftr(doc: PDFKit.PDFDocument): void {
+  const pages = (doc as any).bufferedPageRange?.() ?? { start: 0, count: 0 };
+  for (let i = 0; i < (pages.count || 1); i++) {
+    (doc as any).switchToPage?.(i);
+  }
+  doc.fontSize(7).fillColor(C.grey).font('Helvetica')
+    .text('ARTES Conflict Intelligence — Helena Coaching × HeadSoft Tech  |  Harvard Negotiation Project',
+      L, 810, { width: W, align: 'center' });
 }
 
-function bodyText(doc: PDFKit.PDFDocument, text: string): void {
-  doc.fontSize(10).fillColor(BRAND.navy).font('Helvetica')
-    .text(text, { lineGap: 3 });
-  doc.moveDown(0.3);
+function sec(doc: PDFKit.PDFDocument, text: string): void {
+  needSpace(doc, 30);
+  doc.moveDown(0.4);
+  doc.font('Helvetica-Bold').fontSize(12).fillColor(C.blue).text(text, L, doc.y, { width: W });
+  doc.moveDown(0.15); doc.font('Helvetica').fontSize(9.5).fillColor(C.navy);
 }
 
-function bulletList(doc: PDFKit.PDFDocument, items: string[]): void {
+function p(doc: PDFKit.PDFDocument, text: string): void {
+  needSpace(doc, 20);
+  doc.font('Helvetica').fontSize(9.5).fillColor(C.navy).text(text, L, doc.y, { width: W, lineGap: 2 });
+  doc.moveDown(0.2);
+}
+
+function italic(doc: PDFKit.PDFDocument, text: string): void {
+  needSpace(doc, 20);
+  doc.font('Helvetica-Oblique').fontSize(9).fillColor(C.grey).text(text, L, doc.y, { width: W, lineGap: 2 });
+  doc.moveDown(0.2); doc.font('Helvetica').fillColor(C.navy);
+}
+
+function bullets(doc: PDFKit.PDFDocument, items: string[]): void {
   for (const item of items) {
-    doc.fontSize(10).fillColor(BRAND.navy).font('Helvetica')
-      .text(`•  ${item}`, { indent: 12, lineGap: 2 });
+    needSpace(doc, 14);
+    doc.font('Helvetica').fontSize(9.5).fillColor(C.navy)
+      .text(`\u2022  ${item}`, L + 8, doc.y, { width: W - 8, lineGap: 1.5 });
   }
-  doc.moveDown(0.4);
+  doc.moveDown(0.15);
 }
 
-function numberedList(doc: PDFKit.PDFDocument, items: string[]): void {
+function nums(doc: PDFKit.PDFDocument, items: string[]): void {
   items.forEach((item, i) => {
-    doc.fontSize(10).fillColor(BRAND.navy).font('Helvetica')
-      .text(`${i + 1}.  ${item}`, { indent: 12, lineGap: 2 });
+    needSpace(doc, 14);
+    doc.font('Helvetica').fontSize(9.5).fillColor(C.navy)
+      .text(`${i + 1}.  ${item}`, L + 8, doc.y, { width: W - 8, lineGap: 1.5 });
   });
-  doc.moveDown(0.4);
+  doc.moveDown(0.15);
 }
 
-function fillableField(doc: PDFKit.PDFDocument, label: string, lines: number = 3): void {
-  doc.fontSize(10).fillColor(BRAND.blue).font('Helvetica-Bold')
-    .text(label);
-  doc.moveDown(0.2);
+function field(doc: PDFKit.PDFDocument, label: string, lines = 2): void {
+  needSpace(doc, 12 + lines * 16);
+  doc.font('Helvetica-Bold').fontSize(9).fillColor(C.blue).text(label, L, doc.y, { width: W });
+  doc.moveDown(0.1);
   for (let i = 0; i < lines; i++) {
-    const y = doc.y;
-    doc.moveTo(55, y).lineTo(doc.page.width - 55, y)
-      .strokeColor(BRAND.lightGrey).lineWidth(0.5).stroke();
-    doc.moveDown(1);
+    doc.moveTo(L, doc.y + 12).lineTo(R, doc.y + 12).strokeColor(C.line).lineWidth(0.5).stroke();
+    doc.y += 16;
   }
-  doc.moveDown(0.2);
+  doc.moveDown(0.1);
 }
 
-function twoColumnTable(doc: PDFKit.PDFDocument, rows: [string, string][], headerRow: [string, string]): void {
-  const colW = (doc.page.width - 110) / 2;
-  const startX = 55;
-
-  // Header
-  doc.fontSize(10).fillColor(BRAND.blue).font('Helvetica-Bold');
-  doc.text(headerRow[0], startX, doc.y, { width: colW, continued: false });
-  const headerY = doc.y - doc.currentLineHeight();
-  doc.text(headerRow[1], startX + colW, headerY, { width: colW });
-  doc.moveDown(0.3);
-  doc.moveTo(startX, doc.y).lineTo(startX + colW * 2, doc.y)
-    .strokeColor(BRAND.blue).lineWidth(0.8).stroke();
-  doc.moveDown(0.4);
-
-  // Rows
-  doc.font('Helvetica').fillColor(BRAND.navy);
-  for (const [left, right] of rows) {
-    const rowY = doc.y;
-    doc.fontSize(10).text(left, startX, rowY, { width: colW - 10 });
-    const leftH = doc.y - rowY;
-    doc.text(right, startX + colW, rowY, { width: colW - 10 });
-    const rightH = doc.y - (rowY + leftH);
-    doc.y = rowY + Math.max(leftH, leftH + rightH) + 4;
-    doc.moveTo(startX, doc.y).lineTo(startX + colW * 2, doc.y)
-      .strokeColor(BRAND.lightGrey).lineWidth(0.3).stroke();
-    doc.moveDown(0.3);
-  }
-  doc.moveDown(0.3);
+function subsec(doc: PDFKit.PDFDocument, text: string): void {
+  needSpace(doc, 22);
+  doc.font('Helvetica-Bold').fontSize(10).fillColor(C.blue).text(text, L, doc.y, { width: W });
+  doc.moveDown(0.1); doc.font('Helvetica').fontSize(9.5).fillColor(C.navy);
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Document generators
-// ─────────────────────────────────────────────────────────────────────────────
+function table(doc: PDFKit.PDFDocument, headers: [string, string], rows: [string, string][]): void {
+  const col1 = W * 0.42;
+  const col2 = W - col1;
 
+  needSpace(doc, 20 + rows.length * 28);
+
+  // header row
+  const hy = doc.y;
+  doc.font('Helvetica-Bold').fontSize(9).fillColor(C.blue);
+  doc.text(headers[0], L, hy, { width: col1 - 6 });
+  doc.text(headers[1], L + col1, hy, { width: col2 - 6 });
+  const afterH = Math.max(doc.y, hy + 12);
+  doc.moveTo(L, afterH + 2).lineTo(R, afterH + 2).strokeColor(C.blue).lineWidth(0.6).stroke();
+  doc.y = afterH + 6;
+
+  // data rows
+  doc.font('Helvetica').fontSize(9).fillColor(C.navy);
+  for (const [c1, c2] of rows) {
+    const ry = doc.y;
+    needSpace(doc, 26);
+    const startY = doc.y;
+
+    // measure both columns
+    const h1 = doc.heightOfString(c1, { width: col1 - 10 });
+    const h2 = doc.heightOfString(c2, { width: col2 - 10 });
+    const rowH = Math.max(h1, h2);
+
+    doc.text(c1, L, startY, { width: col1 - 10 });
+    doc.text(c2, L + col1, startY, { width: col2 - 10 });
+    doc.y = startY + rowH + 4;
+    doc.moveTo(L, doc.y).lineTo(R, doc.y).strokeColor(C.line).lineWidth(0.3).stroke();
+    doc.y += 4;
+  }
+  doc.moveDown(0.15);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 1. Positions vs. Interests Framework
+// ═══════════════════════════════════════════════════════════════════════════════
 function positionsFramework(doc: PDFKit.PDFDocument): void {
-  header(doc, 'Positions vs. Interests Framework', 'Interest-Based Negotiation Toolkit — Harvard Negotiation Project');
-  footer(doc);
+  hdr(doc, 'Positions vs. Interests Framework');
 
-  sectionTitle(doc, 'The Core Distinction');
-  bodyText(doc, 'A position is what someone says they want. An interest is why they want it. Durable conflict resolution requires moving past positions to discover the underlying interests that drive them.');
-  bodyText(doc, '"The most powerful interests are basic human needs: security, economic well-being, a sense of belonging, recognition, and control over one\'s life." — Fisher, Ury & Patton, Getting to Yes');
+  sec(doc, 'The Core Distinction');
+  p(doc, 'A position is what someone says they want. An interest is why they want it. Durable conflict resolution requires moving past positions to discover the underlying interests that drive them.');
+  italic(doc, '"The most powerful interests are basic human needs: security, economic well-being, a sense of belonging, recognition, and control over one\'s life." — Fisher, Ury & Patton');
 
-  sectionTitle(doc, 'How to Spot the Difference');
-  twoColumnTable(doc, [
+  sec(doc, 'How to Spot the Difference');
+  table(doc, ['Position (What)', 'Interest (Why)'], [
     ['Statement of demand or solution', 'Underlying need, concern, or fear'],
     ['"I need a private office."', '"I need quiet to concentrate on complex work."'],
     ['"We need to hire two more people."', '"We can\'t meet deadlines with current capacity."'],
-    ['"I want to be on that project."', '"I want recognition for my expertise in this area."'],
+    ['"I want to be on that project."', '"I want recognition for my expertise."'],
     ['"That deadline is impossible."', '"I\'m worried about quality if we rush."'],
-  ], ['Position (What)', 'Interest (Why)']);
+  ]);
 
-  sectionTitle(doc, 'Three Questions to Move from Positions to Interests');
-  numberedList(doc, [
+  sec(doc, 'Three Questions to Move from Positions to Interests');
+  nums(doc, [
     '"Help me understand — what\'s most important to you about this?"',
     '"If you had that, what would it give you that you don\'t have now?"',
     '"What are you most concerned about if this doesn\'t work out?"',
   ]);
 
-  sectionTitle(doc, 'The Five Categories of Interests');
-  bodyText(doc, 'Fisher and Ury identify five bedrock interests that motivate all people in conflict:');
-  bulletList(doc, [
+  sec(doc, 'The Five Categories of Interests');
+  bullets(doc, [
     'Security — physical, financial, or job safety',
     'Economic well-being — compensation, resources, budget',
     'Belonging — inclusion, respect within the group',
@@ -182,366 +175,315 @@ function positionsFramework(doc: PDFKit.PDFDocument): void {
     'Autonomy — control over one\'s work, decisions, and time',
   ]);
 
-  sectionTitle(doc, 'Quick Self-Check');
-  bodyText(doc, 'Before your next difficult conversation, ask yourself:');
-  fillableField(doc, 'What is MY position?', 2);
-  fillableField(doc, 'What interest is driving that position?', 2);
-  fillableField(doc, 'What might the OTHER person\'s underlying interest be?', 2);
-  fillableField(doc, 'Is there a solution that addresses both interests?', 2);
+  sec(doc, 'Quick Self-Check');
+  field(doc, 'What is MY position?', 2);
+  field(doc, 'What interest is driving that position?', 2);
+  field(doc, 'What might the OTHER person\'s underlying interest be?', 2);
+  field(doc, 'Is there a solution that addresses both interests?', 2);
 }
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// 2. Interest Mapping Worksheet
+// ═══════════════════════════════════════════════════════════════════════════════
 function interestMapping(doc: PDFKit.PDFDocument): void {
-  header(doc, 'Interest Mapping Worksheet', 'Interest-Based Negotiation Toolkit — Harvard Negotiation Project');
-  footer(doc);
+  hdr(doc, 'Interest Mapping Worksheet');
 
-  sectionTitle(doc, 'Purpose');
-  bodyText(doc, 'Use this worksheet before entering a difficult conversation or mediation. Map each party\'s interests to find common ground and creative solutions. Complete one worksheet per conflict situation.');
+  sec(doc, 'Purpose');
+  p(doc, 'Use this worksheet before a difficult conversation or mediation. Map each party\'s interests to find common ground and creative solutions.');
 
-  sectionTitle(doc, 'Step 1: Define the Situation');
-  fillableField(doc, 'What is the conflict or disagreement about? (One sentence)', 2);
-  fillableField(doc, 'Who are the parties involved?', 1);
+  sec(doc, 'Step 1: Define the Situation');
+  field(doc, 'What is the conflict about? (One sentence)', 2);
+  field(doc, 'Who are the parties involved?', 1);
 
-  sectionTitle(doc, 'Step 2: Map Party A\'s Interests');
-  fillableField(doc, 'What is Party A\'s stated position?', 2);
-  fillableField(doc, 'What might Party A need? (security, recognition, autonomy, belonging, resources)', 3);
-  fillableField(doc, 'What is Party A afraid of losing?', 2);
+  sec(doc, 'Step 2: Map Party A\'s Interests');
+  field(doc, 'Party A\'s stated position:', 2);
+  field(doc, 'What might Party A need? (security, recognition, autonomy, belonging, resources)', 2);
+  field(doc, 'What is Party A afraid of losing?', 2);
 
-  sectionTitle(doc, 'Step 3: Map Party B\'s Interests');
-  fillableField(doc, 'What is Party B\'s stated position?', 2);
-  fillableField(doc, 'What might Party B need? (security, recognition, autonomy, belonging, resources)', 3);
-  fillableField(doc, 'What is Party B afraid of losing?', 2);
+  sec(doc, 'Step 3: Map Party B\'s Interests');
+  field(doc, 'Party B\'s stated position:', 2);
+  field(doc, 'What might Party B need?', 2);
+  field(doc, 'What is Party B afraid of losing?', 2);
 
-  doc.addPage();
-  footer(doc);
+  sec(doc, 'Step 4: Identify Shared Interests');
+  p(doc, 'Look for interests that appear on both sides — these are the foundation for resolution.');
+  field(doc, 'What do both parties share?', 2);
 
-  sectionTitle(doc, 'Step 4: Identify Shared Interests');
-  bodyText(doc, 'Look for interests that appear on both sides — these are the foundation for resolution.');
-  fillableField(doc, 'What do both parties share? (e.g. team success, project quality, good working relationship)', 3);
+  sec(doc, 'Step 5: Generate Options');
+  p(doc, 'Brainstorm at least three options. Do not evaluate yet — just generate.');
+  field(doc, 'Option 1:', 2);
+  field(doc, 'Option 2:', 2);
+  field(doc, 'Option 3:', 2);
 
-  sectionTitle(doc, 'Step 5: Generate Options');
-  bodyText(doc, 'Brainstorm at least three options that address the core interests of both parties. Do not evaluate yet — just generate.');
-  fillableField(doc, 'Option 1:', 2);
-  fillableField(doc, 'Option 2:', 2);
-  fillableField(doc, 'Option 3:', 2);
-
-  sectionTitle(doc, 'Step 6: Evaluate Against Interests');
-  bodyText(doc, 'For each option, ask: Does this address Party A\'s core interest? Party B\'s? Which option addresses the most interests for both?');
-  fillableField(doc, 'Best option and why:', 3);
+  sec(doc, 'Step 6: Evaluate Against Interests');
+  p(doc, 'Does each option address Party A\'s core interest? Party B\'s? Which addresses the most interests?');
+  field(doc, 'Best option and why:', 2);
 }
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// 3. BATNA Assessment Guide
+// ═══════════════════════════════════════════════════════════════════════════════
 function batnaGuide(doc: PDFKit.PDFDocument): void {
-  header(doc, 'BATNA Assessment Guide', 'Interest-Based Negotiation Toolkit — Harvard Negotiation Project');
-  footer(doc);
+  hdr(doc, 'BATNA Assessment Guide');
 
-  sectionTitle(doc, 'What is a BATNA?');
-  bodyText(doc, 'Your BATNA (Best Alternative To a Negotiated Agreement) is what you will do if the current negotiation fails. It is your walk-away point — the benchmark against which any proposed agreement should be measured.');
-  bodyText(doc, '"The reason you negotiate is to produce something better than the results you can obtain without negotiating." — Fisher & Ury, Getting to Yes');
+  sec(doc, 'What is a BATNA?');
+  p(doc, 'Your BATNA (Best Alternative To a Negotiated Agreement) is what you will do if the negotiation fails. It is your walk-away benchmark.');
+  italic(doc, '"The reason you negotiate is to produce something better than the results you can obtain without negotiating." — Fisher & Ury');
 
-  sectionTitle(doc, 'Why It Matters in Workplace Conflict');
-  bulletList(doc, [
+  sec(doc, 'Why It Matters');
+  bullets(doc, [
     'A strong BATNA gives you confidence — you know you have options',
     'A weak BATNA signals you need this agreement more than you think',
     'Understanding the other party\'s BATNA helps you assess their flexibility',
-    'A BATNA is not a threat — it is a private benchmark for your own decision-making',
+    'A BATNA is not a threat — it is a private benchmark for decision-making',
   ]);
 
-  sectionTitle(doc, 'Step 1: List Your Alternatives');
-  bodyText(doc, 'If this conversation or negotiation fails, what are ALL your alternatives? List them without judging.');
-  fillableField(doc, 'Alternative 1:', 2);
-  fillableField(doc, 'Alternative 2:', 2);
-  fillableField(doc, 'Alternative 3:', 2);
+  sec(doc, 'Step 1: List Your Alternatives');
+  p(doc, 'If this negotiation fails, what are ALL your alternatives?');
+  field(doc, 'Alternative 1:', 2);
+  field(doc, 'Alternative 2:', 2);
+  field(doc, 'Alternative 3:', 2);
 
-  sectionTitle(doc, 'Step 2: Evaluate Each Alternative');
-  bodyText(doc, 'For each alternative, assess: How realistic is it? What are the costs? What do I lose?');
-  fillableField(doc, 'Best alternative and why (this is your BATNA):', 3);
+  sec(doc, 'Step 2: Evaluate Each Alternative');
+  p(doc, 'For each: How realistic is it? What are the costs? What do I lose?');
+  field(doc, 'Best alternative (this is your BATNA):', 2);
 
-  sectionTitle(doc, 'Step 3: Strengthen Your BATNA');
-  bodyText(doc, 'Can you improve your best alternative before entering the negotiation? The stronger your BATNA, the more confident and flexible you can be.');
-  fillableField(doc, 'What could I do to make my BATNA stronger?', 3);
+  sec(doc, 'Step 3: Strengthen Your BATNA');
+  field(doc, 'What could I do to make my BATNA stronger?', 2);
 
-  sectionTitle(doc, 'Step 4: Consider Their BATNA');
-  fillableField(doc, 'What is the other party\'s likely BATNA?', 2);
-  fillableField(doc, 'How does their BATNA compare to what I\'m offering?', 2);
+  sec(doc, 'Step 4: Consider Their BATNA');
+  field(doc, 'What is the other party\'s likely BATNA?', 2);
+  field(doc, 'How does their BATNA compare to what I\'m offering?', 2);
 
-  sectionTitle(doc, 'Decision Rule');
-  bodyText(doc, 'Accept any proposed agreement that is better than your BATNA. Reject any agreement that is worse. This keeps emotion out of the decision.');
+  sec(doc, 'Decision Rule');
+  p(doc, 'Accept any agreement better than your BATNA. Reject any agreement worse. This keeps emotion out of the decision.');
 }
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// 4. Reframing Exercises
+// ═══════════════════════════════════════════════════════════════════════════════
 function reframingExercises(doc: PDFKit.PDFDocument): void {
-  header(doc, 'Reframing Exercises', 'Interest-Based Negotiation Toolkit — Harvard Negotiation Project');
-  footer(doc);
+  hdr(doc, 'Reframing Exercises');
 
-  sectionTitle(doc, 'What is Reframing?');
-  bodyText(doc, 'Reframing is the skill of converting positional, blaming, or adversarial statements into interest-based questions that open up dialogue. It is one of the most powerful tools in the Harvard negotiation method.');
+  sec(doc, 'What is Reframing?');
+  p(doc, 'Reframing converts positional, blaming, or adversarial statements into interest-based questions that open dialogue. It is one of the most powerful Harvard negotiation tools.');
 
-  sectionTitle(doc, 'The Reframing Formula');
-  bodyText(doc, 'When you hear a position or accusation, reframe it as a question about interests:');
-  bulletList(doc, [
-    'Position → "Help me understand what\'s important to you about that."',
-    'Blame → "It sounds like [concern]. Can you tell me more?"',
-    'Demand → "What would that give you that you don\'t have now?"',
-    'Threat → "What are you most worried about here?"',
+  sec(doc, 'The Reframing Formula');
+  bullets(doc, [
+    'Position \u2192 "Help me understand what\'s important to you about that."',
+    'Blame \u2192 "It sounds like [concern]. Can you tell me more?"',
+    'Demand \u2192 "What would that give you that you don\'t have now?"',
+    'Threat \u2192 "What are you most worried about here?"',
   ]);
 
-  sectionTitle(doc, 'Practice: Reframe These Statements');
-  bodyText(doc, 'For each positional statement, write an interest-based reframe:');
-
+  sec(doc, 'Practice: Reframe These Statements');
   const exercises = [
     '"That\'s not my job — I shouldn\'t have to do this."',
     '"You never listen to my ideas in meetings."',
     '"If we don\'t get more budget, this project will fail."',
     '"I need to work from home every Friday — no exceptions."',
-    '"The new process is terrible. We should go back to the old way."',
+    '"The new process is terrible. Go back to the old way."',
     '"They always get the good projects and we get the leftovers."',
   ];
-
-  for (const statement of exercises) {
-    doc.fontSize(10).fillColor(BRAND.navy).font('Helvetica-Bold')
-      .text(statement);
-    fillableField(doc, 'Your reframe:', 2);
+  for (const stmt of exercises) {
+    needSpace(doc, 50);
+    doc.font('Helvetica-Bold').fontSize(9.5).fillColor(C.navy).text(stmt, L, doc.y, { width: W });
+    field(doc, 'Your reframe:', 1);
   }
 
-  sectionTitle(doc, 'Sample Reframes');
-  twoColumnTable(doc, [
-    ['"That\'s not my job."', '"It sounds like role clarity is important to you — can we map out what you see as your responsibilities?"'],
-    ['"You never listen."', '"I want to make sure your perspective is heard — what\'s the most important thing I\'m missing?"'],
+  sec(doc, 'Sample Reframes');
+  table(doc, ['Positional Statement', 'Interest-Based Reframe'], [
+    ['"That\'s not my job."', '"It sounds like role clarity matters — can we map responsibilities?"'],
+    ['"You never listen."', '"I want to make sure your perspective is heard — what am I missing?"'],
     ['"We need more budget."', '"What would additional resources enable that you can\'t do now?"'],
-  ], ['Positional Statement', 'Interest-Based Reframe']);
-}
-
-function managerPlanner(doc: PDFKit.PDFDocument): void {
-  header(doc, 'Manager Conversation Planner', 'Interest-Based Negotiation Toolkit — Harvard Negotiation Project');
-  footer(doc);
-
-  sectionTitle(doc, 'Purpose');
-  bodyText(doc, 'Use this planner to prepare for a conflict conversation using the four Harvard principles. Complete it before the meeting — preparation is the single biggest predictor of a productive outcome.');
-
-  sectionTitle(doc, 'Before the Conversation');
-  fillableField(doc, 'What is the situation? (Facts only — no judgments)', 3);
-  fillableField(doc, 'What are MY interests in this conversation? (What do I need?)', 2);
-  fillableField(doc, 'What might THEIR interests be? (What do they need?)', 2);
-  fillableField(doc, 'What shared interests exist? (Team success, project quality, working relationship)', 2);
-
-  sectionTitle(doc, 'Opening the Conversation (Principle 1: Separate People from Problem)');
-  bodyText(doc, 'Start with shared purpose, not accusations. Example openings:');
-  bulletList(doc, [
-    '"I\'d like to talk about [situation] because I think we both want [shared goal]."',
-    '"I\'ve noticed [observable behaviour] and I want to understand your perspective."',
-    '"I value our working relationship and want to address something before it becomes a bigger issue."',
   ]);
-  fillableField(doc, 'My opening statement:', 3);
-
-  sectionTitle(doc, 'Exploring Interests (Principle 2: Focus on Interests)');
-  bodyText(doc, 'Prepare 3 open-ended questions to explore underlying needs:');
-  fillableField(doc, 'Question 1:', 2);
-  fillableField(doc, 'Question 2:', 2);
-  fillableField(doc, 'Question 3:', 2);
-
-  doc.addPage();
-  footer(doc);
-
-  sectionTitle(doc, 'Generating Options (Principle 3: Invent Options for Mutual Gain)');
-  bodyText(doc, 'Come with at least two possible solutions, but be ready to brainstorm more together.');
-  fillableField(doc, 'Option A:', 2);
-  fillableField(doc, 'Option B:', 2);
-  fillableField(doc, 'Invitation to brainstorm: "What else might work for both of us?"', 1);
-
-  sectionTitle(doc, 'Grounding in Criteria (Principle 4: Objective Criteria)');
-  fillableField(doc, 'What objective standard, policy, or data can anchor this discussion?', 2);
-  fillableField(doc, 'How will we measure whether the agreed solution is working?', 2);
-
-  sectionTitle(doc, 'Closing the Conversation');
-  bodyText(doc, 'End with clear commitments and a follow-up plan:');
-  fillableField(doc, 'What specifically did we agree to?', 2);
-  fillableField(doc, 'Who will do what, by when?', 2);
-  fillableField(doc, 'When will we check in on progress?', 1);
-
-  sectionTitle(doc, 'Post-Conversation Reflection');
-  fillableField(doc, 'What went well?', 2);
-  fillableField(doc, 'What would I do differently next time?', 2);
 }
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// 5. Manager Conversation Planner
+// ═══════════════════════════════════════════════════════════════════════════════
+function managerPlanner(doc: PDFKit.PDFDocument): void {
+  hdr(doc, 'Manager Conversation Planner');
+
+  sec(doc, 'Before the Conversation');
+  field(doc, 'Situation (facts only — no judgments):', 2);
+  field(doc, 'My interests (what do I need?):', 2);
+  field(doc, 'Their likely interests (what do they need?):', 2);
+  field(doc, 'Shared interests:', 2);
+
+  sec(doc, 'Opening (Principle 1: Separate People from Problem)');
+  p(doc, 'Start with shared purpose, not accusations. Examples:');
+  bullets(doc, [
+    '"I\'d like to talk about [situation] because I think we both want [shared goal]."',
+    '"I\'ve noticed [behaviour] and I want to understand your perspective."',
+  ]);
+  field(doc, 'My opening statement:', 2);
+
+  sec(doc, 'Exploring Interests (Principle 2: Focus on Interests)');
+  field(doc, 'Question 1:', 1);
+  field(doc, 'Question 2:', 1);
+  field(doc, 'Question 3:', 1);
+
+  sec(doc, 'Generating Options (Principle 3: Mutual Gain)');
+  field(doc, 'Option A:', 2);
+  field(doc, 'Option B:', 2);
+
+  sec(doc, 'Objective Criteria (Principle 4)');
+  field(doc, 'What standard, policy, or data anchors this discussion?', 2);
+  field(doc, 'How will we measure whether the solution is working?', 2);
+
+  sec(doc, 'Closing');
+  field(doc, 'What did we agree to?', 2);
+  field(doc, 'Who will do what, by when?', 2);
+  field(doc, 'When will we check in?', 1);
+
+  sec(doc, 'Post-Conversation Reflection');
+  field(doc, 'What went well?', 2);
+  field(doc, 'What would I do differently?', 2);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 6. The Balcony Technique
+// ═══════════════════════════════════════════════════════════════════════════════
 function balconyTechnique(doc: PDFKit.PDFDocument): void {
-  header(doc, 'The Balcony Technique', 'Interest-Based Negotiation Toolkit — William Ury, Getting Past No');
-  footer(doc);
+  hdr(doc, 'The Balcony Technique');
 
-  sectionTitle(doc, 'The Concept');
-  bodyText(doc, 'William Ury\'s "Go to the Balcony" technique is about stepping back from reactive emotions to gain perspective — like stepping onto a balcony above a stage to observe the scene below. In workplace conflict, the AI analysis in ARTES serves as your "balcony view." This exercise helps you build the habit personally.');
+  sec(doc, 'The Concept');
+  p(doc, 'William Ury\'s "Go to the Balcony" is about stepping back from reactive emotions to gain perspective — like stepping onto a balcony above a stage. The AI analysis in ARTES serves as your "balcony view." This exercise builds the habit personally.');
 
-  sectionTitle(doc, 'When to Use It');
-  bulletList(doc, [
+  sec(doc, 'When to Use It');
+  bullets(doc, [
     'Before entering any difficult conversation',
-    'When you notice your heart rate rising during a disagreement',
+    'When your heart rate rises during a disagreement',
     'When you feel the urge to respond immediately to a provocation',
     'After receiving feedback that triggers a strong emotional reaction',
     'Before writing an email you might regret',
   ]);
 
-  sectionTitle(doc, 'The 5-Step Balcony Process');
+  sec(doc, 'The 5-Step Balcony Process');
 
-  doc.fontSize(11).fillColor(BRAND.blue).font('Helvetica-Bold')
-    .text('Step 1: Pause');
-  bodyText(doc, 'Stop. Do not respond yet. Take a breath. The pause itself is the most important step. Even 10 seconds changes the dynamic.');
+  subsec(doc, 'Step 1: Pause');
+  p(doc, 'Stop. Do not respond yet. Take a breath. Even 10 seconds changes the dynamic.');
 
-  doc.fontSize(11).fillColor(BRAND.blue).font('Helvetica-Bold')
-    .text('Step 2: Name What You\'re Feeling');
-  bodyText(doc, 'Silently label your emotion: "I\'m feeling angry" or "I\'m feeling threatened." Research shows that naming an emotion reduces its intensity (affect labelling).');
-  fillableField(doc, 'Right now, I am feeling:', 1);
+  subsec(doc, 'Step 2: Name What You\'re Feeling');
+  p(doc, 'Silently label your emotion: "I\'m feeling angry" or "threatened." Naming reduces intensity.');
+  field(doc, 'Right now, I am feeling:', 1);
 
-  doc.fontSize(11).fillColor(BRAND.blue).font('Helvetica-Bold')
-    .text('Step 3: Identify the Trigger');
-  bodyText(doc, 'What specifically triggered your reaction? Separate the trigger from the story you\'re telling about it.');
-  fillableField(doc, 'The trigger was:', 2);
-  fillableField(doc, 'The story I\'m telling myself about it:', 2);
+  subsec(doc, 'Step 3: Identify the Trigger');
+  p(doc, 'Separate the trigger from the story you\'re telling about it.');
+  field(doc, 'The trigger was:', 1);
+  field(doc, 'The story I\'m telling myself:', 1);
 
-  doc.fontSize(11).fillColor(BRAND.blue).font('Helvetica-Bold')
-    .text('Step 4: Look for the Interest');
-  bodyText(doc, 'From the balcony, ask: What is the other person\'s underlying interest? What is mine? Is there a way to address both?');
-  fillableField(doc, 'Their likely interest:', 2);
-  fillableField(doc, 'My underlying interest:', 2);
+  subsec(doc, 'Step 4: Look for the Interest');
+  p(doc, 'From the balcony: What is the other person\'s underlying interest? What is mine?');
+  field(doc, 'Their likely interest:', 1);
+  field(doc, 'My underlying interest:', 1);
 
-  doc.fontSize(11).fillColor(BRAND.blue).font('Helvetica-Bold')
-    .text('Step 5: Choose Your Response');
-  bodyText(doc, 'Now — and only now — decide how to respond. You are responding from the balcony, not from the stage.');
-  fillableField(doc, 'What I will say or do:', 3);
+  subsec(doc, 'Step 5: Choose Your Response');
+  p(doc, 'Now — and only now — decide how to respond. You are responding from the balcony, not the stage.');
+  field(doc, 'What I will say or do:', 2);
 
-  sectionTitle(doc, 'Quick Reference: Balcony Phrases');
-  bulletList(doc, [
+  sec(doc, 'Quick Reference: Balcony Phrases');
+  bullets(doc, [
     '"Let me think about that and come back to you."',
-    '"I want to respond to this properly — can we continue this in 30 minutes?"',
+    '"I want to respond properly — can we continue in 30 minutes?"',
     '"I notice I\'m having a strong reaction. Give me a moment."',
     '"Before I respond, help me understand your perspective better."',
   ]);
 }
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// 7. Conflict Type Diagnostic
+// ═══════════════════════════════════════════════════════════════════════════════
 function conflictDiagnostic(doc: PDFKit.PDFDocument): void {
-  header(doc, 'Conflict Type Diagnostic', 'Interest-Based Negotiation Toolkit — Harvard Negotiation Project');
-  footer(doc);
+  hdr(doc, 'Conflict Type Diagnostic');
 
-  sectionTitle(doc, 'Purpose');
-  bodyText(doc, 'Not all conflict is the same. The right intervention depends on correctly diagnosing the type of conflict. Use this diagnostic to identify the primary conflict type before choosing your approach.');
+  sec(doc, 'The Four Conflict Types');
 
-  sectionTitle(doc, 'The Four Conflict Types');
-
-  doc.fontSize(11).fillColor(BRAND.blue).font('Helvetica-Bold')
-    .text('1. Interpersonal Conflict');
-  bodyText(doc, 'Between individuals — driven by personality friction, communication style mismatches, or accumulated resentment. Mapped to the Feelings and Identity Conversations.');
-  bulletList(doc, [
-    'Signals: avoidance between specific people, complaints about personality, "I can\'t work with them"',
+  subsec(doc, '1. Interpersonal');
+  p(doc, 'Between individuals — personality friction, communication mismatches, accumulated resentment. Maps to the Feelings and Identity Conversations.');
+  bullets(doc, [
+    'Signals: avoidance, personality complaints, "I can\'t work with them"',
     'Intervention: facilitated dialogue, coaching, relationship repair',
   ]);
 
-  doc.fontSize(11).fillColor(BRAND.blue).font('Helvetica-Bold')
-    .text('2. Structural Conflict');
-  bodyText(doc, 'Generated by systems, not people — unclear roles, competing KPIs, resource scarcity, bad processes. Mapped to the "What Happened?" Conversation.');
-  bulletList(doc, [
-    'Signals: same conflict recurring with different people, cross-department friction, "the process is broken"',
+  subsec(doc, '2. Structural');
+  p(doc, 'Generated by systems — unclear roles, competing KPIs, resource scarcity. Maps to "What Happened?"');
+  bullets(doc, [
+    'Signals: same conflict with different people, cross-dept friction, "the process is broken"',
     'Intervention: RACI clarification, process redesign, resource reallocation',
   ]);
 
-  doc.fontSize(11).fillColor(BRAND.blue).font('Helvetica-Bold')
-    .text('3. Cultural Conflict');
-  bodyText(doc, 'Rooted in values, norms, or identity — generational, cross-cultural, or professional-culture clashes. Mapped to the Identity Conversation.');
-  bulletList(doc, [
-    'Signals: "that\'s not how we do things," discomfort with difference, exclusion patterns',
+  subsec(doc, '3. Cultural');
+  p(doc, 'Rooted in values, norms, or identity — generational, cross-cultural, or professional clashes. Maps to Identity Conversation.');
+  bullets(doc, [
+    'Signals: "that\'s not how we do things," discomfort with difference',
     'Intervention: inclusion training, norming exercises, values dialogue',
   ]);
 
-  doc.fontSize(11).fillColor(BRAND.blue).font('Helvetica-Bold')
-    .text('4. Positional Conflict');
-  bodyText(doc, 'Two parties holding incompatible positions — often masking compatible interests. The most common type and the most responsive to the Harvard method.');
-  bulletList(doc, [
-    'Signals: deadlock, "my way or the highway," escalation of demands',
+  subsec(doc, '4. Positional');
+  p(doc, 'Incompatible positions masking compatible interests. Most responsive to the Harvard method.');
+  bullets(doc, [
+    'Signals: deadlock, escalation of demands, "my way or the highway"',
     'Intervention: interest mapping, option generation, objective criteria',
   ]);
 
-  sectionTitle(doc, 'Diagnostic Checklist');
-  bodyText(doc, 'For the conflict you are currently facing, check all that apply:');
+  sec(doc, 'Diagnostic Checklist');
+  p(doc, 'Check all that apply to the conflict you are currently facing:');
+  table(doc, ['Signal', 'Likely Type'], [
+    ['Same conflict keeps happening with different people', 'Structural'],
+    ['Two specific people cannot work together', 'Interpersonal'],
+    ['Involves values, identity, or "how we do things"', 'Cultural'],
+    ['Both sides have stated incompatible demands', 'Positional'],
+    ['Gets worse under workload pressure', 'Structural'],
+    ['Emotions run high even on minor issues', 'Interpersonal'],
+    ['Crosses department or team boundaries', 'Structural'],
+    ['One party feels competence or worth questioned', 'Cultural / Identity'],
+  ]);
 
-  const checks = [
-    ['□ The same conflict keeps happening with different people', 'Structural'],
-    ['□ Two specific people cannot work together', 'Interpersonal'],
-    ['□ The conflict involves values, identity, or "how we do things"', 'Cultural'],
-    ['□ Both sides have stated incompatible demands', 'Positional'],
-    ['□ The conflict gets worse under workload pressure', 'Structural'],
-    ['□ Emotions run high even when discussing minor issues', 'Interpersonal / Identity'],
-    ['□ The conflict crosses department or team boundaries', 'Structural'],
-    ['□ One party feels their competence or worth is questioned', 'Cultural / Identity'],
-  ];
-
-  for (const [check, type] of checks) {
-    doc.fontSize(10).fillColor(BRAND.navy).font('Helvetica')
-      .text(`${check}  →  ${type}`, { indent: 12, lineGap: 4 });
-  }
-
-  doc.moveDown(0.5);
-  fillableField(doc, 'Primary conflict type for this situation:', 1);
-  fillableField(doc, 'Recommended intervention approach:', 3);
+  field(doc, 'Primary conflict type for this situation:', 1);
+  field(doc, 'Recommended intervention approach:', 2);
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
 // Generate and upload
-// ─────────────────────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
 
-interface ToolkitDoc {
-  filename: string;
-  generator: (doc: PDFKit.PDFDocument) => void;
-}
-
-const documents: ToolkitDoc[] = [
-  { filename: 'positions-vs-interests-framework', generator: positionsFramework },
-  { filename: 'interest-mapping-worksheet', generator: interestMapping },
-  { filename: 'batna-assessment-guide', generator: batnaGuide },
-  { filename: 'reframing-exercises', generator: reframingExercises },
-  { filename: 'manager-conversation-planner', generator: managerPlanner },
-  { filename: 'balcony-technique', generator: balconyTechnique },
-  { filename: 'conflict-type-diagnostic', generator: conflictDiagnostic },
+const documents = [
+  { filename: 'positions-vs-interests-framework', gen: positionsFramework },
+  { filename: 'interest-mapping-worksheet', gen: interestMapping },
+  { filename: 'batna-assessment-guide', gen: batnaGuide },
+  { filename: 'reframing-exercises', gen: reframingExercises },
+  { filename: 'manager-conversation-planner', gen: managerPlanner },
+  { filename: 'balcony-technique', gen: balconyTechnique },
+  { filename: 'conflict-type-diagnostic', gen: conflictDiagnostic },
 ];
 
-async function generateAndUpload(): Promise<void> {
+async function run(): Promise<void> {
   const bucket = config.aws.s3Bucket;
-  if (!bucket) throw new Error('AWS_S3_BUCKET not set in .env');
+  if (!bucket) throw new Error('AWS_S3_BUCKET not set');
+  console.log(`Bucket: ${bucket}\n`);
 
-  console.log(`Uploading to bucket: ${bucket}\n`);
-  const urls: string[] = [];
-
-  for (const { filename, generator } of documents) {
-    const doc = createDoc();
+  for (const { filename, gen } of documents) {
+    const doc = mk();
     const chunks: Buffer[] = [];
-
     await new Promise<void>((resolve, reject) => {
-      doc.on('data', (chunk: Buffer) => chunks.push(chunk));
-      doc.on('end', () => resolve());
+      doc.on('data', (c: Buffer) => chunks.push(c));
+      doc.on('end', resolve);
       doc.on('error', reject);
-
-      generator(doc);
+      gen(doc);
       doc.end();
     });
-
-    const buffer = Buffer.concat(chunks);
+    const buf = Buffer.concat(chunks);
     const key = `toolkit/${filename}.pdf`;
-
     await s3.send(new PutObjectCommand({
-      Bucket: bucket,
-      Key: key,
-      Body: buffer,
+      Bucket: bucket, Key: key, Body: buf,
       ContentType: 'application/pdf',
-      ContentDisposition: `attachment; filename="${filename}.pdf"`,
+      ContentDisposition: `inline; filename="${filename}.pdf"`,
     }));
-
-    const url = `https://${bucket}.s3.${config.aws.region}.amazonaws.com/${key}`;
-    urls.push(url);
-    console.log(`  ✓  ${filename}.pdf  (${(buffer.length / 1024).toFixed(1)} KB)  →  ${url}`);
+    console.log(`  \u2713  ${filename}.pdf  (${(buf.length / 1024).toFixed(1)} KB)`);
   }
-
-  console.log('\n─────────────────────────────────────');
-  console.log(`  ${urls.length} toolkit PDFs uploaded to S3`);
-  console.log('─────────────────────────────────────\n');
-  console.log('URLs for frontend integration:');
-  console.log(JSON.stringify(urls, null, 2));
+  console.log('\nDone.');
 }
 
-generateAndUpload().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+run().catch((e) => { console.error(e); process.exit(1); });
