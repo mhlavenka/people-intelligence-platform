@@ -77,9 +77,10 @@ import { TranslateModule } from '@ngx-translate/core';
               <strong>{{ resource.titleKey | translate }}</strong>
               <span>{{ resource.descKey | translate }}</span>
             </div>
-            <button mat-icon-button [matTooltip]="('CONFLICT.downloadResource' | translate) + ' ' + (resource.titleKey | translate)" class="download-btn">
+            <a mat-icon-button [href]="resource.pdfUrl" target="_blank" rel="noopener"
+              [matTooltip]="('CONFLICT.downloadResource' | translate) + ' ' + (resource.titleKey | translate)" class="download-btn">
               <mat-icon>download</mat-icon>
-            </button>
+            </a>
           </div>
         }
       </div>
@@ -149,13 +150,15 @@ export class ConflictSkillBuildingComponent {
     { url: 'https://www.viacharacter.org/', titleKey: 'CONFLICT.viaTitle', descKey: 'CONFLICT.viaDesc', icon: 'star_outline', color: '#27C4A0' },
   ];
 
+  private readonly cdnBase = 'https://artes-assets.s3.us-east-1.amazonaws.com/toolkit';
+
   toolkitResources = [
-    { titleKey: 'CONFLICT.positionsFrameworkTitle', descKey: 'CONFLICT.positionsFrameworkDesc', icon: 'compare_arrows', color: '#3A9FD6' },
-    { titleKey: 'CONFLICT.interestMappingTitle', descKey: 'CONFLICT.interestMappingDesc', icon: 'account_tree', color: '#27C4A0' },
-    { titleKey: 'CONFLICT.batnaGuideTitle', descKey: 'CONFLICT.batnaGuideDesc', icon: 'route', color: '#f0a500' },
-    { titleKey: 'CONFLICT.reframingExercisesTitle', descKey: 'CONFLICT.reframingExercisesDesc', icon: 'swap_vert', color: '#e53e3e' },
-    { titleKey: 'CONFLICT.managerPlannerTitle', descKey: 'CONFLICT.managerPlannerDesc', icon: 'edit_note', color: '#7c3aed' },
-    { titleKey: 'CONFLICT.balconyTechniqueTitle', descKey: 'CONFLICT.balconyTechniqueDesc', icon: 'visibility', color: '#1B2A47' },
-    { titleKey: 'CONFLICT.conflictDiagnosticTitle', descKey: 'CONFLICT.conflictDiagnosticDesc', icon: 'category', color: '#e86c3a' },
+    { titleKey: 'CONFLICT.positionsFrameworkTitle', descKey: 'CONFLICT.positionsFrameworkDesc', icon: 'compare_arrows', color: '#3A9FD6', pdfUrl: `${this.cdnBase}/positions-vs-interests-framework.pdf` },
+    { titleKey: 'CONFLICT.interestMappingTitle', descKey: 'CONFLICT.interestMappingDesc', icon: 'account_tree', color: '#27C4A0', pdfUrl: `${this.cdnBase}/interest-mapping-worksheet.pdf` },
+    { titleKey: 'CONFLICT.batnaGuideTitle', descKey: 'CONFLICT.batnaGuideDesc', icon: 'route', color: '#f0a500', pdfUrl: `${this.cdnBase}/batna-assessment-guide.pdf` },
+    { titleKey: 'CONFLICT.reframingExercisesTitle', descKey: 'CONFLICT.reframingExercisesDesc', icon: 'swap_vert', color: '#e53e3e', pdfUrl: `${this.cdnBase}/reframing-exercises.pdf` },
+    { titleKey: 'CONFLICT.managerPlannerTitle', descKey: 'CONFLICT.managerPlannerDesc', icon: 'edit_note', color: '#7c3aed', pdfUrl: `${this.cdnBase}/manager-conversation-planner.pdf` },
+    { titleKey: 'CONFLICT.balconyTechniqueTitle', descKey: 'CONFLICT.balconyTechniqueDesc', icon: 'visibility', color: '#1B2A47', pdfUrl: `${this.cdnBase}/balcony-technique.pdf` },
+    { titleKey: 'CONFLICT.conflictDiagnosticTitle', descKey: 'CONFLICT.conflictDiagnosticDesc', icon: 'category', color: '#e86c3a', pdfUrl: `${this.cdnBase}/conflict-type-diagnostic.pdf` },
   ];
 }
