@@ -141,16 +141,21 @@ export class ConflictSkillBuildingComponent {
   ];
 
   externalTools = [
+    { url: 'https://kilmanndiagnostics.com/overview-thomas-kilmann-conflict-mode-instrument-tki/', titleKey: 'CONFLICT.tkiTitle', descKey: 'CONFLICT.tkiDesc', icon: 'swap_horiz', color: '#3A9FD6' },
     { url: 'https://cad.storefront.mhs.com/collections/eq-i-2-0/', titleKey: 'CONFLICT.eqi20Title', descKey: 'CONFLICT.eqi20Desc', icon: 'insights', color: '#e86c3a' },
     { url: 'https://cad.storefront.mhs.com/collections/eq-360/', titleKey: 'CONFLICT.eq360Title', descKey: 'CONFLICT.eq360Desc', icon: '360', color: '#f0a500' },
-    { url: 'https://www.themyersbriggs.com/en-US/Products-and-Services/Myers-Briggs', titleKey: 'CONFLICT.mbtiTitle', descKey: 'CONFLICT.mbtiDesc', icon: 'people_alt', color: '#1B2A47' },
+    { url: 'https://www.discprofile.com/', titleKey: 'CONFLICT.discTitle', descKey: 'CONFLICT.discDesc', icon: 'groups', color: '#1B2A47' },
+    { url: 'https://www.themyersbriggs.com/en-US/Products-and-Services/Myers-Briggs', titleKey: 'CONFLICT.mbtiTitle', descKey: 'CONFLICT.mbtiDesc', icon: 'people_alt', color: '#7c3aed' },
     { url: 'https://www.viacharacter.org/', titleKey: 'CONFLICT.viaTitle', descKey: 'CONFLICT.viaDesc', icon: 'star_outline', color: '#27C4A0' },
   ];
 
   toolkitResources = [
     { titleKey: 'CONFLICT.positionsFrameworkTitle', descKey: 'CONFLICT.positionsFrameworkDesc', icon: 'compare_arrows', color: '#3A9FD6' },
     { titleKey: 'CONFLICT.interestMappingTitle', descKey: 'CONFLICT.interestMappingDesc', icon: 'account_tree', color: '#27C4A0' },
-    { titleKey: 'CONFLICT.conflictDiagnosticTitle', descKey: 'CONFLICT.conflictDiagnosticDesc', icon: 'category', color: '#e86c3a' },
+    { titleKey: 'CONFLICT.batnaGuideTitle', descKey: 'CONFLICT.batnaGuideDesc', icon: 'route', color: '#f0a500' },
+    { titleKey: 'CONFLICT.reframingExercisesTitle', descKey: 'CONFLICT.reframingExercisesDesc', icon: 'swap_vert', color: '#e53e3e' },
     { titleKey: 'CONFLICT.managerPlannerTitle', descKey: 'CONFLICT.managerPlannerDesc', icon: 'edit_note', color: '#7c3aed' },
+    { titleKey: 'CONFLICT.balconyTechniqueTitle', descKey: 'CONFLICT.balconyTechniqueDesc', icon: 'visibility', color: '#1B2A47' },
+    { titleKey: 'CONFLICT.conflictDiagnosticTitle', descKey: 'CONFLICT.conflictDiagnosticDesc', icon: 'category', color: '#e86c3a' },
   ];
 }
