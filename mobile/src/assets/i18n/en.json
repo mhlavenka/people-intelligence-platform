@@ -59,7 +59,9 @@
     "PREV": "Previous",
     "NEXT": "Next",
     "SUBMIT": "Submit",
-    "SELECTED": "Selected"
+    "SELECTED": "Selected",
+    "ALREADY_COMPLETED": "Already completed",
+    "ALREADY_COMPLETED_DESC": "You have already submitted your response to this survey. Each survey can only be completed once."
   },
   "IDP": {
     "TITLE": "My Development Plan",

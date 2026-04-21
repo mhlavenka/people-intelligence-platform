@@ -59,7 +59,9 @@
     "PREV": "Précédent",
     "NEXT": "Suivant",
     "SUBMIT": "Soumettre",
-    "SELECTED": "Sélectionné"
+    "SELECTED": "Sélectionné",
+    "ALREADY_COMPLETED": "Déjà complété",
+    "ALREADY_COMPLETED_DESC": "Vous avez déjà soumis votre réponse à ce sondage. Chaque sondage ne peut être complété qu'une seule fois."
   },
   "IDP": {
     "TITLE": "Mon Plan de Développement",

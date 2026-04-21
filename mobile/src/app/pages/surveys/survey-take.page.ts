@@ -87,6 +87,14 @@ interface SurveyTemplate {
           <h2>{{ 'SURVEYS.SUBMITTED' | translate }}</h2>
           <ion-button (click)="goBack()">{{ 'SURVEYS.BACK' | translate }}</ion-button>
         </div>
+      } @else if (alreadyCompleted()) {
+        <div class="success-state">
+          <h2>{{ 'SURVEYS.ALREADY_COMPLETED' | translate }}</h2>
+          <p style="color: var(--ion-color-medium); text-align: center; padding: 0 24px;">
+            {{ 'SURVEYS.ALREADY_COMPLETED_DESC' | translate }}
+          </p>
+          <ion-button (click)="goBack()">{{ 'SURVEYS.BACK' | translate }}</ion-button>
+        </div>
       } @else if (template()) {
         @if (template()!.instructions) {
           <ion-card>
@@ -311,6 +319,7 @@ export class SurveyTakePage implements OnInit {
   currentIndex = signal(0);
   submitted = signal(false);
   submitting = signal(false);
+  alreadyCompleted = signal(false);
 
   currentAnswer: any = null;
   private answers: Record<string, any> = {};
@@ -327,16 +336,27 @@ export class SurveyTakePage implements OnInit {
 
   ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id');
-    if (id) {
-      this.api.get<SurveyTemplate>(`/surveys/templates/${id}`).subscribe({
-        next: (t) => {
-          this.template.set(t);
+    if (!id) return;
+
+    this.api.get<{ alreadySubmitted: boolean }>(`/surveys/check/${id}`).subscribe({
+      next: (check) => {
+        if (check.alreadySubmitted) {
+          this.alreadyCompleted.set(true);
           this.loading.set(false);
-          this.loadAnswer();
-        },
-        error: () => this.loading.set(false),
-      });
-    }
+          return;
+        }
+        this.api.get<SurveyTemplate>(`/surveys/templates/${id}`).subscribe({
+          next: (t) => { this.template.set(t); this.loading.set(false); this.loadAnswer(); },
+          error: () => this.loading.set(false),
+        });
+      },
+      error: () => {
+        this.api.get<SurveyTemplate>(`/surveys/templates/${id}`).subscribe({
+          next: (t) => { this.template.set(t); this.loading.set(false); this.loadAnswer(); },
+          error: () => this.loading.set(false),
+        });
+      },
+    });
   }
 
   next() {
@@ -380,7 +400,13 @@ export class SurveyTakePage implements OnInit {
         this.submitted.set(true);
         Haptics.notification({ type: NotificationType.Success });
       },
-      error: () => this.submitting.set(false),
+      error: (err: any) => {
+        this.submitting.set(false);
+        if (err.status === 409) {
+          this.alreadyCompleted.set(true);
+          Haptics.notification({ type: NotificationType.Warning });
+        }
+      },
     });
   }
 

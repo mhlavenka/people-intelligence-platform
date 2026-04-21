@@ -59,7 +59,9 @@
     "PREV": "Anterior",
     "NEXT": "Siguiente",
     "SUBMIT": "Enviar",
-    "SELECTED": "Seleccionado"
+    "SELECTED": "Seleccionado",
+    "ALREADY_COMPLETED": "Ya completado",
+    "ALREADY_COMPLETED_DESC": "Ya ha enviado su respuesta a esta encuesta. Cada encuesta solo puede completarse una vez."
   },
   "IDP": {
     "TITLE": "Mi Plan de Desarrollo",

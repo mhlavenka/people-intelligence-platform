@@ -15,7 +15,8 @@ import {
   IonIcon,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { documentTextOutline } from 'ionicons/icons';
+import { documentTextOutline, checkmarkCircleOutline } from 'ionicons/icons';
+import { forkJoin } from 'rxjs';
 import { TranslateModule } from '@ngx-translate/core';
 import { ApiService } from '../../core/api.service';
 
@@ -26,6 +27,7 @@ interface SurveyTemplate {
   moduleType: string;
   intakeType: string;
   questionCount?: number;
+  completed?: boolean;
 }
 
 @Component({
@@ -76,17 +78,23 @@ interface SurveyTemplate {
       } @else {
         <ion-list>
           @for (survey of surveys(); track survey._id) {
-            <ion-item button (click)="openSurvey(survey._id)">
-              <ion-icon name="document-text-outline" slot="start" color="primary"></ion-icon>
+            <ion-item [button]="!survey.completed" (click)="openSurvey(survey)"
+              [class.completed]="survey.completed">
+              <ion-icon [name]="survey.completed ? 'checkmark-circle-outline' : 'document-text-outline'"
+                slot="start" [color]="survey.completed ? 'success' : 'primary'"></ion-icon>
               <ion-label>
                 <h2>{{ survey.title }}</h2>
-                @if (survey.description) {
+                @if (survey.completed) {
+                  <p class="completed-text">{{ 'SURVEYS.ALREADY_COMPLETED' | translate }}</p>
+                } @else if (survey.description) {
                   <p>{{ survey.description }}</p>
                 }
               </ion-label>
-              <ion-badge slot="end" color="tertiary">
-                {{ survey.intakeType }}
-              </ion-badge>
+              @if (!survey.completed) {
+                <ion-badge slot="end" color="tertiary">
+                  {{ survey.intakeType }}
+                </ion-badge>
+              }
             </ion-item>
           }
         </ion-list>
@@ -102,6 +110,8 @@ interface SurveyTemplate {
         height: 50%;
         color: var(--ion-color-medium);
       }
+      .completed { opacity: 0.55; }
+      .completed-text { color: var(--ion-color-success); font-weight: 600; }
     `,
   ],
 })
@@ -113,7 +123,7 @@ export class SurveyListPage implements OnInit {
   loading = signal(true);
 
   constructor() {
-    addIcons({ documentTextOutline });
+    addIcons({ documentTextOutline, checkmarkCircleOutline });
   }
 
   ngOnInit() {
@@ -124,17 +134,36 @@ export class SurveyListPage implements OnInit {
     this.loadSurveys(() => event.target.complete());
   }
 
-  openSurvey(id: string) {
-    this.router.navigate(['/tabs/surveys', id]);
+  openSurvey(survey: SurveyTemplate) {
+    if (survey.completed) return;
+    this.router.navigate(['/tabs/surveys', survey._id]);
   }
 
   private loadSurveys(onComplete?: () => void) {
     this.loading.set(true);
     this.api.get<SurveyTemplate[]>('/surveys/my-intakes').subscribe({
       next: (templates) => {
-        this.surveys.set(templates);
-        this.loading.set(false);
-        onComplete?.();
+        if (templates.length === 0) {
+          this.surveys.set([]);
+          this.loading.set(false);
+          onComplete?.();
+          return;
+        }
+        const checks = templates.map((t) =>
+          this.api.get<{ alreadySubmitted: boolean }>(`/surveys/check/${t._id}`)
+        );
+        forkJoin(checks).subscribe({
+          next: (results) => {
+            this.surveys.set(templates.map((t, i) => ({ ...t, completed: results[i].alreadySubmitted })));
+            this.loading.set(false);
+            onComplete?.();
+          },
+          error: () => {
+            this.surveys.set(templates);
+            this.loading.set(false);
+            onComplete?.();
+          },
+        });
       },
       error: () => {
         this.loading.set(false);
