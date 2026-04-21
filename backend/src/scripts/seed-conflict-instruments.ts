@@ -2,9 +2,10 @@
  * Seed the Harvard Negotiation Project conflict intelligence intake instruments.
  * Run: npx ts-node src/scripts/seed-conflict-instruments.ts
  *
- * Creates 2 global, validated instruments:
- *   1. Conflict Intelligence — Bi-Weekly Pulse Survey  (15 items, 6 categories)
- *   2. Conflict Intelligence — Quarterly Deep-Dive     (21 items, 7 categories)
+ * Creates 3 global, validated instruments:
+ *   1. Conflict Intelligence — Bi-Weekly Pulse Survey        (15 items, 6 categories, team-level)
+ *   2. Conflict Intelligence — Quarterly Deep-Dive           (21 items, 7 categories, team-level)
+ *   3. HNP Conflict Handling Style Assessment                (24 items, 6 categories, individual-level)
  *
  * Grounded in:
  *   - Fisher, Ury & Patton — Getting to Yes (interest-based negotiation)
@@ -234,6 +235,167 @@ const quarterlyDeepDive = {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Instrument 3 — HNP Conflict Handling Mode Assessment (24 items)
+// Individual-level assessment measuring conflict handling competency through
+// the four Harvard principles and the Three Conversations framework.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const HNP_CHS_ANALYSIS_PROMPT = `You are an expert conflict handling style analyst using the Harvard Negotiation Project framework.
+
+You are analysing an individual's conflict handling profile based on the HNP Conflict Handling Mode Assessment. This instrument measures how a person navigates conflict across six dimensions grounded in Fisher, Ury & Patton's principled negotiation and Stone, Patton & Heen's Three Conversations framework.
+
+The six assessment dimensions are:
+
+1. **Interest Discovery** (ch01–ch04): Does this person focus on underlying interests rather than stated positions? Do they probe for needs, concerns, and motivations behind what people say they want? (Harvard Principle 2: Focus on interests, not positions)
+
+2. **Separating People from Problems** (ch05–ch08): Can this person decouple emotional/relational dynamics from substantive issues? Do they address the person and the problem as distinct? (Harvard Principle 1)
+
+3. **Option Generation** (ch09–ch12): Does this person create multiple solutions before deciding? Do they expand the pie rather than dividing it? (Harvard Principle 3: Invent options for mutual gain)
+
+4. **Objective Criteria** (ch13–ch16): Does this person ground discussions in data, standards, and precedent rather than power or personality? (Harvard Principle 4: Insist on objective criteria)
+
+5. **Emotional & Identity Awareness** (ch17–ch20): Can this person recognise and navigate the Feelings Conversation and the Identity Conversation? Do they acknowledge emotions and protect self-image during conflict? (Stone, Patton & Heen: Three Conversations)
+
+6. **Conflict Response Pattern** (ch21–ch24): What is this person's default behavioural pattern under conflict? Engage/collaborate vs avoid/accommodate vs compete? How adaptive are they?
+
+Scoring approach:
+- Scale items (1–5): higher = stronger competency in that dimension
+- Forced-choice items: reveal the person's default mode preference (not right/wrong)
+- Boolean items: flag specific behavioural patterns (avoidance, escalation, reflection)
+
+Your analysis should:
+1. **Profile summary** (2–3 paragraphs): Describe this person's conflict handling style using interest-based language. Identify their strengths and growth edges. Reference specific dimensions.
+2. **Strongest dimensions**: Which 2–3 dimensions show highest competency?
+3. **Development priorities**: Which 1–2 dimensions would most improve their conflict effectiveness?
+4. **Practical recommendations**: 3–5 specific, actionable steps this person can take to develop their conflict handling capability. Frame recommendations around the Harvard principles.
+5. **Conflict mode tendency**: Based on forced-choice responses, describe their default conflict mode (collaborative, competitive, accommodating, avoiding, or compromising) and when it serves them well vs when it may limit them.
+
+Return ONLY valid JSON:
+{
+  "overallScore": <0-100 composite conflict handling competency>,
+  "dimensionScores": [
+    { "name": "<dimension name>", "score": <0-100>, "level": "<strong|developing|emerging>" }
+  ],
+  "profileSummary": "<2-3 paragraph narrative>",
+  "strengths": ["<strength 1>", "<strength 2>"],
+  "developmentPriorities": ["<priority 1>", "<priority 2>"],
+  "recommendations": [
+    { "title": "<action title>", "description": "<1-2 sentence explanation>" }
+  ],
+  "conflictModeTendency": "<description of default mode and its implications>"
+}`;
+
+const conflictHandlingMode = {
+  instrumentId: 'HNP-CHS',
+  instrumentVersion: '2026-04',
+  title: 'HNP Conflict Handling Style Assessment',
+  moduleType: 'conflict' as const,
+  intakeType: 'assessment' as const,
+  analysisPrompt: HNP_CHS_ANALYSIS_PROMPT,
+  level_of_analysis: 'individual' as const,
+  minResponsesForAnalysis: 1,
+  description:
+    'An individual conflict handling assessment grounded in the Harvard Negotiation Project framework. ' +
+    'Measures competency across the four principled negotiation principles (Fisher, Ury & Patton) and ' +
+    'emotional/identity awareness from the Three Conversations model (Stone, Patton & Heen). ' +
+    'Takes 10–15 minutes. Results produce a personalised conflict handling profile with development recommendations.',
+  instructions:
+    'This assessment measures how you handle conflict and disagreement at work. There are no right or wrong answers — ' +
+    'each question explores your natural tendencies and learned approaches. Answer based on what you actually do, ' +
+    'not what you think you should do. For forced-choice questions, pick the option that feels most like you, even if neither is perfect. ' +
+    'Your results will be used to create a personalised development profile.',
+  questions: [
+    // ── Interest Discovery (Harvard Principle 2: Focus on interests, not positions) ──
+    { id: 'ch01', category: 'Interest Discovery', type: 'scale',
+      text: 'When someone takes a strong position in a disagreement, I try to understand what underlying need or concern is driving that position.' },
+    { id: 'ch02', category: 'Interest Discovery', type: 'scale',
+      text: 'Before proposing a solution to a conflict, I ask questions to understand what each person actually needs — not just what they are asking for.' },
+    { id: 'ch03', category: 'Interest Discovery', type: 'scale',
+      text: 'I can usually identify at least one interest that both sides of a conflict share, even when their positions seem incompatible.' },
+    { id: 'ch04', category: 'Interest Discovery', type: 'forced_choice',
+      text: 'When a colleague insists on a specific solution you disagree with, which response is closer to your instinct?',
+      options: [
+        { value: 'A', text: 'I explain why their solution won\'t work and propose my alternative.', subscale: 'competing' },
+        { value: 'B', text: 'I ask what problem they are trying to solve — there might be a way to address both our concerns.', subscale: 'collaborating' },
+      ] },
+
+    // ── Separating People from Problems (Harvard Principle 1) ──
+    { id: 'ch05', category: 'Separating People from Problems', type: 'scale',
+      text: 'I can disagree with someone\'s idea without it affecting how I feel about them as a person.' },
+    { id: 'ch06', category: 'Separating People from Problems', type: 'scale',
+      text: 'When I feel frustrated during a disagreement, I focus on the issue rather than criticising the other person.' },
+    { id: 'ch07', category: 'Separating People from Problems', type: 'scale',
+      text: 'I make a conscious effort to acknowledge the other person\'s perspective before presenting my own, even when I disagree strongly.' },
+    { id: 'ch08', category: 'Separating People from Problems', type: 'forced_choice',
+      text: 'A team member misses a deadline that affects your work. Which response is closer to yours?',
+      options: [
+        { value: 'A', text: 'I address the impact on the project and ask what happened, without making it personal.', subscale: 'collaborating' },
+        { value: 'B', text: 'I absorb the impact myself and find a workaround to avoid a difficult conversation.', subscale: 'accommodating' },
+      ] },
+
+    // ── Option Generation (Harvard Principle 3: Invent options for mutual gain) ──
+    { id: 'ch09', category: 'Option Generation', type: 'scale',
+      text: 'When facing a conflict, I brainstorm multiple possible solutions before committing to one.' },
+    { id: 'ch10', category: 'Option Generation', type: 'scale',
+      text: 'I look for creative solutions where both parties can gain something important, rather than splitting the difference.' },
+    { id: 'ch11', category: 'Option Generation', type: 'scale',
+      text: 'I involve the other party in generating solutions rather than arriving with a pre-formed answer.' },
+    { id: 'ch12', category: 'Option Generation', type: 'forced_choice',
+      text: 'Two departments need the same budget allocation. Which approach is closer to yours?',
+      options: [
+        { value: 'A', text: 'I propose splitting it proportionally — fair and efficient.', subscale: 'compromising' },
+        { value: 'B', text: 'I explore whether we can restructure the timeline or find additional funding so both departments get what they need.', subscale: 'collaborating' },
+      ] },
+
+    // ── Objective Criteria (Harvard Principle 4: Insist on objective criteria) ──
+    { id: 'ch13', category: 'Objective Criteria', type: 'scale',
+      text: 'When negotiating a disagreement, I try to find external standards, benchmarks, or precedents to anchor the discussion.' },
+    { id: 'ch14', category: 'Objective Criteria', type: 'scale',
+      text: 'I prefer to resolve conflicts based on data and evidence rather than who has more authority or influence.' },
+    { id: 'ch15', category: 'Objective Criteria', type: 'scale',
+      text: 'I actively seek feedback from neutral parties or objective sources when I am unsure whether my position is reasonable.' },
+    { id: 'ch16', category: 'Objective Criteria', type: 'forced_choice',
+      text: 'You and a peer disagree on the right approach for a project. Which is closer to your instinct?',
+      options: [
+        { value: 'A', text: 'I defer to whoever has more experience or seniority on this topic.', subscale: 'accommodating' },
+        { value: 'B', text: 'I suggest we agree on criteria for evaluating both approaches, then assess them objectively.', subscale: 'collaborating' },
+      ] },
+
+    // ── Emotional & Identity Awareness (Three Conversations: Feelings + Identity) ──
+    { id: 'ch17', category: 'Emotional & Identity Awareness', type: 'scale',
+      text: 'I can recognise when my own emotional reaction to a conflict is disproportionate to the issue at hand.' },
+    { id: 'ch18', category: 'Emotional & Identity Awareness', type: 'scale',
+      text: 'When someone becomes defensive during a disagreement, I consider that their sense of competence or identity may feel threatened.' },
+    { id: 'ch19', category: 'Emotional & Identity Awareness', type: 'scale',
+      text: 'I am comfortable naming emotions in a conflict conversation — saying things like "It sounds like this has been really frustrating for you."' },
+    { id: 'ch20', category: 'Emotional & Identity Awareness', type: 'boolean',
+      text: 'In the past month, have you paused to reflect on your own emotional state before entering a difficult conversation at work?' },
+
+    // ── Conflict Response Pattern (default behavioural mode) ──
+    { id: 'ch21', category: 'Conflict Response Pattern', type: 'forced_choice',
+      text: 'When you sense a conflict brewing, what is your first instinct?',
+      options: [
+        { value: 'A', text: 'Address it directly — I prefer to get issues on the table early.', subscale: 'competing' },
+        { value: 'B', text: 'Observe and wait — I want to understand the full picture before acting.', subscale: 'avoiding' },
+      ] },
+    { id: 'ch22', category: 'Conflict Response Pattern', type: 'forced_choice',
+      text: 'When a conversation becomes heated, which is closer to your response?',
+      options: [
+        { value: 'A', text: 'I hold my ground — backing down too quickly means my concerns get overlooked.', subscale: 'competing' },
+        { value: 'B', text: 'I de-escalate — maintaining the relationship is more important than winning this point.', subscale: 'accommodating' },
+      ] },
+    { id: 'ch23', category: 'Conflict Response Pattern', type: 'forced_choice',
+      text: 'After a conflict is resolved, which better describes your feeling?',
+      options: [
+        { value: 'A', text: 'Satisfied if the outcome is fair, even if neither side got everything they wanted.', subscale: 'compromising' },
+        { value: 'B', text: 'Satisfied only if both parties\' core concerns were genuinely addressed.', subscale: 'collaborating' },
+      ] },
+    { id: 'ch24', category: 'Conflict Response Pattern', type: 'boolean',
+      text: 'Do you sometimes avoid raising legitimate concerns at work because you worry about the conversation becoming uncomfortable?' },
+  ] as IQuestion[],
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Seeder
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -244,7 +406,7 @@ async function seed(): Promise<void> {
   await mongoose.connect(uri);
   console.log('Connected to MongoDB');
 
-  const instruments = [biWeeklyPulse, quarterlyDeepDive];
+  const instruments = [biWeeklyPulse, quarterlyDeepDive, conflictHandlingMode];
 
   let created = 0;
   let updated = 0;
@@ -265,17 +427,20 @@ async function seed(): Promise<void> {
       // Update to latest version
       existing.instrumentId = inst.instrumentId;
       existing.instrumentVersion = inst.instrumentVersion;
+      existing.intakeType = inst.intakeType;
       existing.description = inst.description;
       existing.instructions = inst.instructions;
       existing.questions = inst.questions;
       existing.analysisPrompt = inst.analysisPrompt;
+      if ('level_of_analysis' in inst) (existing as any).level_of_analysis = inst.level_of_analysis;
+      if ('minResponsesForAnalysis' in inst) existing.minResponsesForAnalysis = inst.minResponsesForAnalysis;
       await existing.save();
       console.log(`  ↻ updated  [${inst.instrumentId}]  ${inst.title}  (${inst.questions.length} questions)`);
       updated++;
       continue;
     }
 
-    await SurveyTemplate.create({
+    const createPayload: Record<string, unknown> = {
       moduleType: inst.moduleType,
       intakeType: inst.intakeType,
       instrumentId: inst.instrumentId,
@@ -287,7 +452,10 @@ async function seed(): Promise<void> {
       analysisPrompt: inst.analysisPrompt,
       isActive: true,
       isGlobal: true,
-    });
+    };
+    if ('level_of_analysis' in inst) createPayload['level_of_analysis'] = inst.level_of_analysis;
+    if ('minResponsesForAnalysis' in inst) createPayload['minResponsesForAnalysis'] = inst.minResponsesForAnalysis;
+    await SurveyTemplate.create(createPayload);
 
     console.log(`  ✓ created  [${inst.instrumentId}]  ${inst.title}  (${inst.questions.length} questions)`);
     created++;
