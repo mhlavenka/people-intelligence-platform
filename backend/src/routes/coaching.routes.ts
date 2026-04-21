@@ -15,7 +15,7 @@ import { cancelBooking } from '../services/booking.service';
 import { BookingSettings } from '../models/BookingSettings.model';
 import { buildPostSessionReflectionPrompt, callClaude } from '../services/ai.service';
 import { sendEmail } from '../services/email.service';
-import { notifyPostSessionForm, createHubNotification, isNotificationEnabled } from '../services/hubNotification.service';
+import { notifyPostSessionForm, notifyPreSessionForm, createHubNotification, isNotificationEnabled } from '../services/hubNotification.service';
 import { config } from '../config/env';
 
 async function generateAndSendPostSessionForm(
@@ -566,10 +566,53 @@ router.put(
         );
       }
 
+      const preSessionTemplateChanged =
+        req.body.preSessionIntakeTemplateId
+        && req.body.preSessionIntakeTemplateId !== existing.preSessionIntakeTemplateId?.toString();
+
       const wasNotCompleted = existing.status !== 'completed';
       const prev = { date: existing.date, status: existing.status };
       Object.assign(existing, req.body);
       await existing.save();
+
+      // Notify coachee when a pre-session assessment form is added/changed
+      if (preSessionTemplateChanged) {
+        (async () => {
+          try {
+            const [coachee, coach, template] = await Promise.all([
+              User.findById(existing.coacheeId).select('firstName email preferredLanguage'),
+              User.findById(existing.coachId).select('firstName lastName'),
+              SurveyTemplate.findById(existing.preSessionIntakeTemplateId).select('title'),
+            ]);
+            if (!coachee?.email || !coach || !template) return;
+
+            const coachName = `${coach.firstName} ${coach.lastName}`;
+            const sessionDate = existing.date.toLocaleDateString(coachee.preferredLanguage || 'en', {
+              weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+            });
+            const intakeUrl = `${config.frontendUrl}/intake/${template._id}?sessionId=${existing._id}`;
+
+            await sendEmail({
+              to: coachee.email,
+              subject: `Pre-session form ready — ${sessionDate}`,
+              html: `<p>Hi ${coachee.firstName},</p>
+                     <p>${coachName} has added a pre-session form for your session on <strong>${sessionDate}</strong>.</p>
+                     <p><a href="${intakeUrl}">Complete Pre-Session Form: ${template.title}</a></p>`,
+            });
+
+            await notifyPreSessionForm({
+              coacheeId: existing.coacheeId,
+              organizationId: req.user!.organizationId,
+              coachName,
+              sessionDate,
+              templateTitle: template.title,
+              intakeUrl,
+            });
+          } catch (err) {
+            console.error('[Coaching] Failed to notify coachee about pre-session form:', err);
+          }
+        })();
+      }
 
       // Mirror date / status changes into the linked Booking
       await propagateSessionUpdate(existing, prev).catch((err) =>

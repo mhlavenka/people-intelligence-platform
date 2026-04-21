@@ -15,8 +15,13 @@ import {
 const router = Router();
 router.use(authenticateToken, tenantResolver);
 
-// Read access: coach, admin, hr_manager, AND coachee (filtered to their own).
-const journalReadAccess = requirePermission('VIEW_JOURNAL');
+// Coachees always have journal access to their own data (scoped by
+// journalScope); other roles need the explicit VIEW_JOURNAL permission.
+// This avoids lockout when a SystemRoleOverride strips VIEW_JOURNAL.
+const journalReadAccess = (req: AuthRequest, res: Response, next: NextFunction): void => {
+  if (req.user?.role === 'coachee') { next(); return; }
+  requirePermission('VIEW_JOURNAL')(req, res, next);
+};
 const journalAccess = requirePermission('MANAGE_JOURNAL');
 
 /** Build a per-role engagement filter for journal queries. */

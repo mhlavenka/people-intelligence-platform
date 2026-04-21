@@ -453,6 +453,11 @@ interface Session {
                               <span class="journal-field-label">{{ 'COACHING.agenda' | translate }}</span>
                               <p>{{ note.preSession!.agenda! | slice:0:120 }}{{ note.preSession!.agenda!.length > 120 ? '...' : '' }}</p>
                             </div>
+                          } @else if (note.coacheePre?.mainTopic) {
+                            <div class="journal-field">
+                              <span class="journal-field-label">{{ 'COACHING.mainTopicLabel' | translate }}</span>
+                              <p>{{ note.coacheePre!.mainTopic! | slice:0:120 }}{{ note.coacheePre!.mainTopic!.length > 120 ? '...' : '' }}</p>
+                            </div>
                           }
                           @if (note.inSession?.observations) {
                             <div class="journal-field">
@@ -465,8 +470,13 @@ interface Session {
                               <span class="journal-field-label">{{ 'COACHING.reflection' | translate }}</span>
                               <p>{{ note.postSession!.coachReflection! | slice:0:120 }}{{ note.postSession!.coachReflection!.length > 120 ? '...' : '' }}</p>
                             </div>
+                          } @else if (note.coacheePost?.biggestInsight) {
+                            <div class="journal-field">
+                              <span class="journal-field-label">{{ 'COACHING.myBiggestInsight' | translate }}</span>
+                              <p>{{ note.coacheePost!.biggestInsight! | slice:0:120 }}{{ note.coacheePost!.biggestInsight!.length > 120 ? '...' : '' }}</p>
+                            </div>
                           }
-                          @if (!note.preSession?.agenda && !note.inSession?.observations && !note.postSession?.coachReflection) {
+                          @if (!note.preSession?.agenda && !note.coacheePre?.mainTopic && !note.inSession?.observations && !note.postSession?.coachReflection && !note.coacheePost?.biggestInsight) {
                             <p class="journal-empty-hint">{{ 'COACHING.noContentYetCoach' | translate }}</p>
                           }
                         } @else {

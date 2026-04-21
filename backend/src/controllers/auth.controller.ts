@@ -231,12 +231,23 @@ export async function refresh(req: Request, res: Response, next: NextFunction): 
     }
 
     const decoded = jwt.verify(refreshToken, config.jwt.refreshSecret) as TokenPayload;
-    const { iat, exp, ...cleanPayload } = decoded as TokenPayload & { iat?: number; exp?: number };
-    const tokens = generateTokens(cleanPayload);
 
-    trackLoginSession(req, cleanPayload.userId, cleanPayload.organizationId, tokens.accessToken);
+    // Re-resolve permissions from the database so that role/permission
+    // changes take effect without requiring a full re-login.
+    const user = await User.findById(decoded.userId).setOptions({ bypassTenantCheck: true });
+    let payload: TokenPayload;
+    if (user) {
+      payload = await buildPayload(user);
+    } else {
+      const { iat, exp, ...cleanPayload } = decoded as TokenPayload & { iat?: number; exp?: number };
+      payload = cleanPayload;
+    }
 
-    res.json({ ...tokens, user: cleanPayload });
+    const tokens = generateTokens(payload);
+
+    trackLoginSession(req, payload.userId, payload.organizationId, tokens.accessToken);
+
+    res.json({ ...tokens, user: payload });
   } catch (err) {
     console.error('[Refresh] Token verification failed:', (err as Error).message);
     res.status(401).json({ error: t(req, 'errors.invalidRefreshToken') });
