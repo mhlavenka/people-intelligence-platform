@@ -33,6 +33,11 @@ jobs:
         working-directory: mobile
         run: npx ng build --configuration production
 
+      - name: Install CocoaPods
+        run: |
+          gem install cocoapods
+          pod --version
+
       - name: Sync Capacitor iOS
         working-directory: mobile
         run: npx cap sync ios
