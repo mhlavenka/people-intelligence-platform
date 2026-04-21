@@ -96,6 +96,9 @@
     "intakeNoLongerActive": "Cette admission n'est plus active.",
     "responseAlreadySubmitted": "Une réponse pour ce coaché et ce modèle a déjà été soumise.",
     "minimumResponsesRequired": "Minimum {{min}} réponse(s) requise(s) avant de consulter les résultats. Actuel : {{count}}",
+    "templateNotFound": "Modèle introuvable",
+    "assignmentTargetRequired": "Sélectionnez au moins un département ou un utilisateur",
+    "assignmentNotFound": "Assignation introuvable",
 
     "coacheeNotFoundInOrg": "Coaché introuvable dans cette organisation",
     "userNotFoundInOrg": "Utilisateur introuvable dans cette organisation",

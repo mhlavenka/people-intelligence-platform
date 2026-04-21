@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
@@ -20,11 +20,14 @@ import {
   IonIcon,
   IonButtons,
   IonButton,
+  IonFab,
+  IonFabButton,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { videocamOutline, callOutline, personOutline, personCircleOutline } from 'ionicons/icons';
+import { videocamOutline, callOutline, personOutline, personCircleOutline, addOutline } from 'ionicons/icons';
 import { TranslateModule } from '@ngx-translate/core';
 import { ApiService } from '../../core/api.service';
+import { AuthService } from '../../core/auth.service';
 
 interface Session {
   _id: string;
@@ -60,6 +63,8 @@ interface Session {
     IonIcon,
     IonButtons,
     IonButton,
+    IonFab,
+    IonFabButton,
     RouterLink,
     TranslateModule,
   ],
@@ -128,6 +133,14 @@ interface Session {
           }
         </ion-list>
       }
+
+      @if (isCoachee()) {
+        <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+          <ion-fab-button (click)="bookSession()">
+            <ion-icon name="add-outline"></ion-icon>
+          </ion-fab-button>
+        </ion-fab>
+      }
     </ion-content>
   `,
   styles: [
@@ -144,14 +157,19 @@ interface Session {
 })
 export class SessionListPage implements OnInit {
   private api = inject(ApiService);
+  private auth = inject(AuthService);
   private router = inject(Router);
 
   sessions = signal<Session[]>([]);
   loading = signal(true);
   segment = 'upcoming';
+  isCoachee = computed(() => {
+    const user = this.auth.currentUser();
+    return user?.role !== 'coach';
+  });
 
   constructor() {
-    addIcons({ videocamOutline, callOutline, personOutline, personCircleOutline });
+    addIcons({ videocamOutline, callOutline, personOutline, personCircleOutline, addOutline });
   }
 
   ngOnInit() {
@@ -168,6 +186,10 @@ export class SessionListPage implements OnInit {
 
   openSession(id: string) {
     this.router.navigate(['/tabs/sessions', id]);
+  }
+
+  bookSession() {
+    this.router.navigate(['/tabs/sessions/book']);
   }
 
   formatIcon(format: string): string {

@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import {
   IonTabs,
@@ -19,6 +19,7 @@ import {
 } from 'ionicons/icons';
 import { OfflineBannerComponent } from '../shared/components/offline-banner.component';
 import { ApiService } from '../core/api.service';
+import { AuthService } from '../core/auth.service';
 import { OfflineService } from '../core/offline.service';
 import { ConnectivityService } from '../core/connectivity.service';
 
@@ -35,10 +36,12 @@ import { ConnectivityService } from '../core/connectivity.service';
           <ion-label>Sessions</ion-label>
         </ion-tab-button>
 
-        <ion-tab-button tab="bookings">
-          <ion-icon name="calendar-outline"></ion-icon>
-          <ion-label>Bookings</ion-label>
-        </ion-tab-button>
+        @if (isCoach()) {
+          <ion-tab-button tab="bookings">
+            <ion-icon name="calendar-outline"></ion-icon>
+            <ion-label>Bookings</ion-label>
+          </ion-tab-button>
+        }
 
         <ion-tab-button tab="surveys">
           <ion-icon name="clipboard-outline"></ion-icon>
@@ -74,11 +77,13 @@ import { ConnectivityService } from '../core/connectivity.service';
 })
 export class TabsPage implements OnInit {
   private api = inject(ApiService);
+  private auth = inject(AuthService);
   private offline = inject(OfflineService);
   private connectivity = inject(ConnectivityService);
   private router = inject(Router);
 
   unreadCount = signal(0);
+  isCoach = computed(() => this.auth.currentUser()?.role === 'coach');
 
   constructor() {
     addIcons({

@@ -96,6 +96,9 @@
     "intakeNoLongerActive": "This intake is no longer active.",
     "responseAlreadySubmitted": "A response for this coachee and template has already been submitted.",
     "minimumResponsesRequired": "Minimum {{min}} response(s) required before viewing results. Current: {{count}}",
+    "templateNotFound": "Template not found",
+    "assignmentTargetRequired": "Select at least one department or user",
+    "assignmentNotFound": "Assignment not found",
 
     "coacheeNotFoundInOrg": "Coachee not found in this organization",
     "userNotFoundInOrg": "User not found in this organization",

@@ -96,6 +96,9 @@
     "intakeNoLongerActive": "Esta evaluación ya no está activa.",
     "responseAlreadySubmitted": "Ya se ha enviado una respuesta para este coachee y plantilla.",
     "minimumResponsesRequired": "Se requieren un mínimo de {{min}} respuesta(s) para ver resultados. Actual: {{count}}",
+    "templateNotFound": "Plantilla no encontrada",
+    "assignmentTargetRequired": "Seleccione al menos un departamento o un usuario",
+    "assignmentNotFound": "Asignación no encontrada",
 
     "coacheeNotFoundInOrg": "Coachee no encontrado en esta organización",
     "userNotFoundInOrg": "Usuario no encontrado en esta organización",

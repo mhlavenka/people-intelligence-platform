@@ -130,7 +130,7 @@ export class SurveyListPage implements OnInit {
 
   private loadSurveys(onComplete?: () => void) {
     this.loading.set(true);
-    this.api.get<SurveyTemplate[]>('/surveys/templates', { intakeType: 'survey' }).subscribe({
+    this.api.get<SurveyTemplate[]>('/surveys/my-intakes').subscribe({
       next: (templates) => {
         this.surveys.set(templates);
         this.loading.set(false);

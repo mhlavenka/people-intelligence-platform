@@ -69,6 +69,7 @@ export interface INotificationPreferences {
   bookingRescheduled: boolean;
   engagementCreated: boolean;
   directMessages: boolean;
+  surveyAssigned: boolean;
   googleCalendarInvites: boolean; // deprecated — use calendarInvites
 }
 

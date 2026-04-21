@@ -14,6 +14,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { ApiService } from '../../../core/api.service';
 import { SurveyTemplateDialogComponent } from '../survey-template-dialog/survey-template-dialog.component';
 import { SurveyResponsesDialogComponent } from '../survey-responses-dialog/survey-responses-dialog.component';
+import { IntakeAssignDialogComponent } from '../intake-assign-dialog/intake-assign-dialog.component';
 import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog.component';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
@@ -220,12 +221,19 @@ interface SurveyTemplate {
               </div>
 
               <div class="card-footer">
-                <button mat-stroked-button (click)="copySurveyLink(t)" [disabled]="!t.isActive">
-                  <mat-icon>link</mat-icon> {{ 'SURVEY.copyLink' | translate }}
+                <button mat-icon-button (click)="copySurveyLink(t)" [disabled]="!t.isActive"
+                        [matTooltip]="'SURVEY.copyLink' | translate">
+                  <mat-icon>link</mat-icon>
                 </button>
-                <button mat-stroked-button (click)="openEditDialog(t)">
-                  <mat-icon>edit</mat-icon> {{ 'COMMON.edit' | translate }}
+                <button mat-icon-button (click)="assignIntake(t)" [disabled]="!t.isActive"
+                        [matTooltip]="'SURVEY.assignIntake' | translate">
+                  <mat-icon>upload</mat-icon>
                 </button>
+                <button mat-icon-button (click)="openEditDialog(t)"
+                        [matTooltip]="'COMMON.edit' | translate">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <span class="footer-spacer"></span>
                 <button mat-raised-button color="primary" (click)="viewResponses(t)"
                         [matTooltip]="(t.responseCount ?? 0) === 0 ? ('SURVEY.noResponsesYet' | translate) : ''">
                   <mat-icon>bar_chart</mat-icon>
@@ -375,8 +383,8 @@ interface SurveyTemplate {
     }
 
     .card-footer {
-      display: flex; gap: 8px; margin-top: 4px;
-      button { flex: 1; font-size: 13px; }
+      display: flex; gap: 4px; align-items: center; margin-top: 4px;
+      .footer-spacer { flex: 1; }
     }
 
     .danger-item { color: #e53e3e; }
@@ -583,6 +591,14 @@ export class SurveyManagementComponent implements OnInit {
         },
         error: () => this.snackBar.open(this.translateSvc.instant('SURVEY.clearResponsesFailed'), this.translateSvc.instant('COMMON.close'), { duration: 2500 }),
       });
+    });
+  }
+
+  assignIntake(template: SurveyTemplate): void {
+    this.dialog.open(IntakeAssignDialogComponent, {
+      width: '580px',
+      maxHeight: '90vh',
+      data: { _id: template._id, title: template.title },
     });
   }
 

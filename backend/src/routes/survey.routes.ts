@@ -4,8 +4,11 @@ import { authenticateToken, requirePermission, AuthRequest } from '../middleware
 import { tenantResolver } from '../middleware/tenant.middleware';
 import { SurveyTemplate } from '../models/SurveyTemplate.model';
 import { SurveyResponse } from '../models/SurveyResponse.model';
+import { SurveyAssignment } from '../models/SurveyAssignment.model';
 import { CoachingSession } from '../models/CoachingSession.model';
+import { User } from '../models/User.model';
 import { callClaude } from '../services/ai.service';
+import { createHubNotification } from '../services/hubNotification.service';
 
 function makeSubmissionToken(userId: string, templateId: string, sessionId?: string): string {
   const payload = sessionId ? `${userId}:${templateId}:${sessionId}` : `${userId}:${templateId}`;
@@ -85,6 +88,60 @@ router.get(
       next(e);
     }
   }
+);
+
+// Returns only intakes relevant to the current user: assigned directly,
+// assigned via department, or linked as pre/post-session intakes.
+router.get(
+  '/my-intakes',
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const userId = req.user!.userId;
+      const orgId = req.user!.organizationId;
+
+      // 1. Get user's department
+      const me = await User.findById(userId).select('department').lean();
+      const myDept = me?.department;
+
+      // 2. Find template IDs assigned to this user (direct or via department)
+      const assignmentFilter: Record<string, unknown> = {
+        organizationId: orgId,
+        $or: [{ userIds: userId }] as any[],
+      };
+      if (myDept) {
+        (assignmentFilter['$or'] as any[]).push({ departments: myDept });
+      }
+      const assignments = await SurveyAssignment.find(assignmentFilter)
+        .select('templateId')
+        .lean();
+      const assignedIds = [...new Set(assignments.map((a) => a.templateId.toString()))];
+
+      // 3. Find pre/post session intake template IDs from upcoming sessions
+      const CoachingSession = (await import('../models/CoachingSession.model')).CoachingSession;
+      const sessions = await CoachingSession.find({
+        organizationId: orgId,
+        $or: [{ coacheeId: userId }],
+        status: 'scheduled',
+      })
+        .select('preSessionIntakeTemplateId postSessionIntakeTemplateId')
+        .lean();
+      const sessionTemplateIds = new Set<string>();
+      for (const s of sessions) {
+        if (s.preSessionIntakeTemplateId) sessionTemplateIds.add(s.preSessionIntakeTemplateId.toString());
+        if (s.postSessionIntakeTemplateId) sessionTemplateIds.add(s.postSessionIntakeTemplateId.toString());
+      }
+
+      const allIds = [...new Set([...assignedIds, ...sessionTemplateIds])];
+      if (allIds.length === 0) { res.json([]); return; }
+
+      const templates = await SurveyTemplate.find({
+        _id: { $in: allIds },
+        isActive: true,
+      }).setOptions({ bypassTenantCheck: true });
+
+      res.json(templates);
+    } catch (e) { next(e); }
+  },
 );
 
 router.get(
@@ -463,6 +520,102 @@ router.get(
       next(e);
     }
   }
+);
+
+// ── Intake Assignments ──────────────────────────────────────────────────
+
+router.post(
+  '/templates/:id/assign',
+  requirePermission('MANAGE_INTAKE_TEMPLATES'),
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const template = await SurveyTemplate.findOne({
+        _id: req.params['id'],
+        $or: [
+          { organizationId: req.user!.organizationId },
+          { isGlobal: true },
+        ],
+      }).setOptions({ bypassTenantCheck: true });
+      if (!template) { res.status(404).json({ error: req.t('errors.templateNotFound') }); return; }
+
+      const { userIds = [], departments = [], message } = req.body as {
+        userIds?: string[];
+        departments?: string[];
+        message?: string;
+      };
+      if (!userIds.length && !departments.length) {
+        res.status(400).json({ error: req.t('errors.assignmentTargetRequired') });
+        return;
+      }
+
+      // Resolve all recipient user IDs (explicit + department members)
+      const recipientSet = new Set<string>(userIds);
+      if (departments.length) {
+        const deptUsers = await User.find({
+          organizationId: req.user!.organizationId,
+          department: { $in: departments },
+        }).select('_id').lean();
+        for (const u of deptUsers) recipientSet.add(u._id.toString());
+      }
+
+      const assignment = await SurveyAssignment.create({
+        organizationId: req.user!.organizationId,
+        templateId: template._id,
+        assignedBy: req.user!.userId,
+        userIds,
+        departments,
+        message,
+      });
+
+      // Send hub notification to each recipient
+      const intakeLink = `/intake/${template._id}`;
+      const promises = Array.from(recipientSet).map((uid) =>
+        createHubNotification({
+          userId: uid,
+          organizationId: req.user!.organizationId,
+          type: 'survey_response',
+          title: template.title,
+          body: message || `You have been assigned a new intake: ${template.title}`,
+          link: intakeLink,
+          category: 'surveyAssigned',
+        }),
+      );
+      await Promise.allSettled(promises);
+
+      res.status(201).json({ assignment, notifiedCount: recipientSet.size });
+    } catch (e) { next(e); }
+  },
+);
+
+router.get(
+  '/templates/:id/assignments',
+  requirePermission('MANAGE_INTAKE_TEMPLATES'),
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const assignments = await SurveyAssignment.find({
+        templateId: req.params['id'],
+        organizationId: req.user!.organizationId,
+      })
+        .populate('assignedBy', 'firstName lastName')
+        .sort({ createdAt: -1 });
+      res.json(assignments);
+    } catch (e) { next(e); }
+  },
+);
+
+router.delete(
+  '/assignments/:id',
+  requirePermission('MANAGE_INTAKE_TEMPLATES'),
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const result = await SurveyAssignment.findOneAndDelete({
+        _id: req.params['id'],
+        organizationId: req.user!.organizationId,
+      });
+      if (!result) { res.status(404).json({ error: req.t('errors.assignmentNotFound') }); return; }
+      res.json({ deleted: true });
+    } catch (e) { next(e); }
+  },
 );
 
 export default router;

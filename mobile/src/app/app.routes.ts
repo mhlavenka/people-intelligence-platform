@@ -19,6 +19,11 @@ export const routes: Routes = [
           import('./pages/sessions/session-list.page').then((m) => m.SessionListPage),
       },
       {
+        path: 'sessions/book',
+        loadComponent: () =>
+          import('./pages/sessions/session-book.page').then((m) => m.SessionBookPage),
+      },
+      {
         path: 'sessions/:id',
         loadComponent: () =>
           import('./pages/sessions/session-detail.page').then((m) => m.SessionDetailPage),

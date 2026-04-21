@@ -5,7 +5,8 @@ const config: CapacitorConfig = {
   appName: 'ARTES',
   webDir: 'www/browser',
   server: {
-    androidScheme: 'https'
+    androidScheme: 'https',
+    iosScheme: 'https'
   },
   plugins: {
     PushNotifications: {
