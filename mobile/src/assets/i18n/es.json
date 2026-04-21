@@ -58,7 +58,8 @@
     "BACK": "Volver a encuestas",
     "PREV": "Anterior",
     "NEXT": "Siguiente",
-    "SUBMIT": "Enviar"
+    "SUBMIT": "Enviar",
+    "SELECTED": "Seleccionado"
   },
   "IDP": {
     "TITLE": "Mi Plan de Desarrollo",

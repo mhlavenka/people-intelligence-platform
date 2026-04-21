@@ -58,7 +58,8 @@
     "BACK": "Back to Surveys",
     "PREV": "Previous",
     "NEXT": "Next",
-    "SUBMIT": "Submit"
+    "SUBMIT": "Submit",
+    "SELECTED": "Selected"
   },
   "IDP": {
     "TITLE": "My Development Plan",

@@ -58,7 +58,8 @@
     "BACK": "Retour aux sondages",
     "PREV": "Précédent",
     "NEXT": "Suivant",
-    "SUBMIT": "Soumettre"
+    "SUBMIT": "Soumettre",
+    "SELECTED": "Sélectionné"
   },
   "IDP": {
     "TITLE": "Mon Plan de Développement",

@@ -15,10 +15,7 @@ import {
   IonCardContent,
   IonCardHeader,
   IonCardTitle,
-  IonRange,
   IonTextarea,
-  IonRadioGroup,
-  IonRadio,
   IonItem,
   IonLabel,
   IonToggle,
@@ -64,10 +61,7 @@ interface SurveyTemplate {
     IonCardContent,
     IonCardHeader,
     IonCardTitle,
-    IonRange,
     IonTextarea,
-    IonRadioGroup,
-    IonRadio,
     IonItem,
     IonLabel,
     IonToggle,
@@ -114,14 +108,27 @@ interface SurveyTemplate {
             <ion-card-content>
               @switch (q.type) {
                 @case ('scale') {
-                  <ion-range
-                    [min]="q.scale_range?.min || 1"
-                    [max]="q.scale_range?.max || 10"
-                    [pin]="true"
-                    [snaps]="true"
-                    [ticks]="true"
-                    [(ngModel)]="currentAnswer"
-                  ></ion-range>
+                  <div class="scale-labels">
+                    <span class="scale-pole">{{ scaleLabel(q, scaleMin(q)) || (scaleMin(q) + ' — Low') }}</span>
+                    <span class="scale-pole">{{ scaleLabel(q, scaleMax(q)) || (scaleMax(q) + ' — High') }}</span>
+                  </div>
+                  <div class="scale-grid">
+                    @for (n of scaleValues(q); track n) {
+                      <button class="scale-btn"
+                        [class.selected]="currentAnswer === n"
+                        (click)="setScale(n)">
+                        {{ n }}
+                      </button>
+                    }
+                  </div>
+                  @if (currentAnswer !== null) {
+                    <p class="scale-selected">
+                      {{ 'SURVEYS.SELECTED' | translate }}: <strong>{{ currentAnswer }}</strong>
+                      @if (scaleLabel(q, currentAnswer)) {
+                        — {{ scaleLabel(q, currentAnswer) }}
+                      }
+                    </p>
+                  }
                 }
                 @case ('text') {
                   <ion-textarea
@@ -140,13 +147,16 @@ interface SurveyTemplate {
                   </ion-item>
                 }
                 @case ('forced_choice') {
-                  <ion-radio-group [(ngModel)]="currentAnswer">
+                  <div class="fc-list">
                     @for (opt of q.options; track opt.value) {
-                      <ion-item>
-                        <ion-radio [value]="opt.value">{{ opt.text }}</ion-radio>
-                      </ion-item>
+                      <button class="fc-card"
+                        [class.selected]="currentAnswer === opt.value"
+                        (click)="currentAnswer = opt.value">
+                        <span class="fc-badge">{{ opt.value }}</span>
+                        <span class="fc-text">{{ opt.text }}</span>
+                      </button>
                     }
-                  </ion-radio-group>
+                  </div>
                 }
               }
             </ion-card-content>
@@ -199,6 +209,92 @@ interface SurveyTemplate {
         align-items: center;
         justify-content: center;
         height: 60%;
+      }
+
+      /* ── Scale buttons ── */
+      .scale-labels {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+      }
+      .scale-pole {
+        font-size: 12px;
+        color: var(--ion-color-medium);
+        font-style: italic;
+      }
+      .scale-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 8px;
+      }
+      .scale-btn {
+        height: 44px;
+        border-radius: 10px;
+        border: 2px solid var(--ion-color-light-shade);
+        background: var(--ion-color-light);
+        color: var(--ion-text-color);
+        font-size: 16px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.15s;
+      }
+      .scale-btn.selected {
+        background: var(--ion-color-primary);
+        border-color: var(--ion-color-primary);
+        color: #fff;
+      }
+      .scale-selected {
+        text-align: center;
+        font-size: 13px;
+        color: var(--ion-color-medium);
+        margin-top: 10px;
+      }
+
+      /* ── Forced choice cards ── */
+      .fc-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .fc-card {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 14px;
+        border-radius: 12px;
+        border: 2px solid var(--ion-color-light-shade);
+        background: var(--ion-color-light);
+        text-align: left;
+        cursor: pointer;
+        width: 100%;
+        transition: all 0.15s;
+      }
+      .fc-card.selected {
+        border-color: var(--ion-color-primary);
+        background: var(--ion-color-primary-tint);
+      }
+      .fc-badge {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: var(--ion-color-light-shade);
+        color: var(--ion-color-primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        font-weight: 700;
+        flex-shrink: 0;
+      }
+      .fc-card.selected .fc-badge {
+        background: var(--ion-color-primary);
+        color: #fff;
+      }
+      .fc-text {
+        flex: 1;
+        font-size: 15px;
+        line-height: 1.45;
+        color: var(--ion-text-color);
       }
     `,
   ],
@@ -290,6 +386,24 @@ export class SurveyTakePage implements OnInit {
 
   goBack() {
     this.router.navigate(['/tabs/surveys']);
+  }
+
+  scaleMin(q: Question): number { return q.scale_range?.min ?? 1; }
+  scaleMax(q: Question): number { return q.scale_range?.max ?? 5; }
+
+  scaleValues(q: Question): number[] {
+    const min = this.scaleMin(q);
+    const max = this.scaleMax(q);
+    return Array.from({ length: max - min + 1 }, (_, i) => min + i);
+  }
+
+  scaleLabel(q: Question, val: number | null): string {
+    if (val === null || !q.scale_range?.labels) return '';
+    return q.scale_range.labels[String(val)] ?? '';
+  }
+
+  setScale(n: number): void {
+    this.currentAnswer = n;
   }
 
   private saveAnswer() {
