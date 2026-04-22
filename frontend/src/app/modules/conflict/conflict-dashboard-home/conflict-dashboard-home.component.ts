@@ -75,6 +75,32 @@ interface ToolkitCard {
       </div>
     </div>
 
+    <!-- ── Live risk snapshot (directly under hero) ────────────────────── -->
+    <section class="block">
+      <div class="block-heading">
+        <div class="block-icon" style="background: rgba(240,165,0,0.14); color:#f0a500;">
+          <mat-icon>monitoring</mat-icon>
+        </div>
+        <div>
+          <h2>{{ 'CONFLICT.riskOverviewTitle' | translate }}</h2>
+          <p>{{ 'CONFLICT.riskOverviewDesc' | translate }}</p>
+        </div>
+        <a class="block-link" routerLink="/conflict/analysis">
+          {{ 'CONFLICT.viewAllAnalyses' | translate }}
+          <mat-icon>arrow_forward</mat-icon>
+        </a>
+      </div>
+
+      <div class="risk-grid">
+        @for (r of riskSlices(); track r.key) {
+          <a class="risk-card" [class]="'risk-card--' + r.key" routerLink="/conflict/analysis">
+            <div class="risk-count">{{ r.count }}</div>
+            <div class="risk-label">{{ r.labelKey | translate }}</div>
+          </a>
+        }
+      </div>
+    </section>
+
     <!-- ── Methodology pillars ─────────────────────────────────────────── -->
     <section class="block">
       <div class="block-heading">
@@ -94,7 +120,7 @@ interface ToolkitCard {
               <mat-icon>{{ p.icon }}</mat-icon>
             </div>
             <h3>{{ p.titleKey | translate }}</h3>
-            <p>{{ p.descKey | translate }}</p>
+            <div class="pillar-body" [innerHTML]="p.descKey | translate"></div>
             <span class="pillar-stripe" [style.background]="p.color"></span>
           </div>
         }
@@ -130,32 +156,6 @@ interface ToolkitCard {
       </div>
     </section>
 
-    <!-- ── Live risk snapshot ──────────────────────────────────────────── -->
-    <section class="block">
-      <div class="block-heading">
-        <div class="block-icon" style="background: rgba(240,165,0,0.14); color:#f0a500;">
-          <mat-icon>monitoring</mat-icon>
-        </div>
-        <div>
-          <h2>{{ 'CONFLICT.riskOverviewTitle' | translate }}</h2>
-          <p>{{ 'CONFLICT.riskOverviewDesc' | translate }}</p>
-        </div>
-        <a class="block-link" routerLink="/conflict/analysis">
-          {{ 'CONFLICT.viewAllAnalyses' | translate }}
-          <mat-icon>arrow_forward</mat-icon>
-        </a>
-      </div>
-
-      <div class="risk-grid">
-        @for (r of riskSlices(); track r.key) {
-          <a class="risk-card" [class]="'risk-card--' + r.key" routerLink="/conflict/analysis">
-            <div class="risk-count">{{ r.count }}</div>
-            <div class="risk-label">{{ r.labelKey | translate }}</div>
-          </a>
-        }
-      </div>
-    </section>
-
     <!-- ── Escalation pathway ─────────────────────────────────────────── -->
     <section class="block escalation-block">
       <div class="block-heading">
@@ -187,7 +187,7 @@ interface ToolkitCard {
       </a>
     </section>
 
-    <!-- ── Knowledge building (absorbed from old page) ─────────────────── -->
+    <!-- ── Knowledge & skill building: 3 columns ──────────────────────── -->
     <section class="block">
       <div class="block-heading">
         <div class="block-icon" style="background: rgba(39,196,160,0.14); color:#27C4A0;">
@@ -199,9 +199,11 @@ interface ToolkitCard {
         </div>
       </div>
 
-      <div class="knowledge-columns">
+      <div class="knowledge-columns-3">
         <div class="knowledge-col">
-          <div class="col-label"><mat-icon>layers</mat-icon> {{ 'CONFLICT.inPlatformModules' | translate }}</div>
+          <div class="col-label" style="color:#3A9FD6;">
+            <mat-icon>layers</mat-icon> {{ 'CONFLICT.inPlatformModules' | translate }}
+          </div>
           @for (item of inPlatformPaths; track item.titleKey) {
             <a class="k-card" [routerLink]="item.route">
               <div class="k-icon" [style.background]="item.color + '18'" [style.color]="item.color">
@@ -217,7 +219,9 @@ interface ToolkitCard {
         </div>
 
         <div class="knowledge-col">
-          <div class="col-label"><mat-icon>open_in_new</mat-icon> {{ 'CONFLICT.externalAssessments' | translate }}</div>
+          <div class="col-label" style="color:#e86c3a;">
+            <mat-icon>open_in_new</mat-icon> {{ 'CONFLICT.externalAssessments' | translate }}
+          </div>
           @for (item of externalTools; track item.titleKey) {
             <a class="k-card" [href]="item.url" target="_blank" rel="noopener">
               <div class="k-icon" [style.background]="item.color + '18'" [style.color]="item.color">
@@ -231,38 +235,25 @@ interface ToolkitCard {
             </a>
           }
         </div>
-      </div>
-    </section>
 
-    <!-- ── Toolkit PDFs ─────────────────────────────────────────────── -->
-    <section class="block">
-      <div class="block-heading">
-        <div class="block-icon" style="background: rgba(124,58,237,0.14); color:#7c3aed;">
-          <mat-icon>handshake</mat-icon>
-        </div>
-        <div>
-          <h2>{{ 'CONFLICT.negotiationToolkit' | translate }}</h2>
-          <p>{{ 'CONFLICT.negotiationToolkitDesc' | translate }}</p>
-        </div>
-      </div>
-
-      <div class="toolkit-grid">
-        @for (res of toolkitResources; track res.titleKey) {
-          <div class="toolkit-card">
-            <div class="toolkit-icon" [style.background]="res.color + '18'" [style.color]="res.color">
-              <mat-icon>{{ res.icon }}</mat-icon>
-            </div>
-            <div class="toolkit-info">
-              <strong>{{ res.titleKey | translate }}</strong>
-              <span>{{ res.descKey | translate }}</span>
-            </div>
-            <a mat-icon-button [href]="res.pdfUrl" target="_blank" rel="noopener"
-               [matTooltip]="('CONFLICT.downloadResource' | translate) + ' ' + (res.titleKey | translate)"
-               class="download-btn">
-              <mat-icon>download</mat-icon>
-            </a>
+        <div class="knowledge-col">
+          <div class="col-label" style="color:#7c3aed;">
+            <mat-icon>handshake</mat-icon> {{ 'CONFLICT.negotiationToolkit' | translate }}
           </div>
-        }
+          @for (res of toolkitResources; track res.titleKey) {
+            <a class="k-card" [href]="res.pdfUrl" target="_blank" rel="noopener"
+               [matTooltip]="('CONFLICT.downloadResource' | translate) + ' ' + (res.titleKey | translate)">
+              <div class="k-icon" [style.background]="res.color + '18'" [style.color]="res.color">
+                <mat-icon>{{ res.icon }}</mat-icon>
+              </div>
+              <div class="k-info">
+                <strong>{{ res.titleKey | translate }}</strong>
+                <span>{{ res.descKey | translate }}</span>
+              </div>
+              <mat-icon class="k-arrow">download</mat-icon>
+            </a>
+          }
+        </div>
       </div>
     </section>
   `,
@@ -289,7 +280,7 @@ interface ToolkitCard {
         repeating-linear-gradient(45deg, rgba(255,255,255,0.035) 0 1px, transparent 1px 12px);
       pointer-events: none;
     }
-    .hero-inner { position: relative; z-index: 1; max-width: 820px; }
+    .hero-inner { position: relative; z-index: 1; width: 100%; }
     .hero-badge {
       display: inline-flex; align-items: center; gap: 6px;
       padding: 4px 12px; border-radius: 999px;
@@ -304,6 +295,7 @@ interface ToolkitCard {
     .hero h1 {
       font-size: 34px; font-weight: 700; line-height: 1.15;
       margin: 0 0 14px; letter-spacing: -0.3px;
+      color: #ffffff;   /* override the global h1 navy rule */
     }
     .hero-lead {
       font-size: 15px; line-height: 1.6; color: rgba(255,255,255,0.85);
@@ -372,7 +364,25 @@ interface ToolkitCard {
       mat-icon { font-size: 22px; width: 22px; height: 22px; }
     }
     .pillar h3 { font-size: 14px; margin: 0 0 8px; color: var(--artes-primary); font-weight: 700; }
-    .pillar p  { font-size: 12.5px; line-height: 1.55; color: #5a6a7e; margin: 0; }
+    .pillar-body {
+      font-size: 12.5px; line-height: 1.6; color: #5a6a7e;
+      p  { margin: 0 0 10px; }
+      ul { padding-left: 0; margin: 0; list-style: none; }
+      li {
+        position: relative;
+        padding: 5px 0 5px 16px;
+        border-top: 1px solid #eef2f7;
+        font-size: 12px; line-height: 1.5;
+        &:first-child { border-top: none; }
+        &::before {
+          content: ''; position: absolute; left: 0; top: 12px;
+          width: 6px; height: 6px; border-radius: 50%;
+          background: currentColor; opacity: 0.35;
+        }
+      }
+      strong { color: var(--artes-primary); font-weight: 600; }
+      em { font-style: italic; color: #6b7280; }
+    }
     .pillar-stripe {
       position: absolute; left: 0; bottom: 0;
       width: 100%; height: 3px;
@@ -422,7 +432,7 @@ interface ToolkitCard {
       color: var(--artes-primary);
     }
     .timeline-content p {
-      font-size: 11.5px; line-height: 1.5; margin: 0;
+      font-size: 13px; line-height: 1.5; margin: 10px 100px;
       color: #5a6a7e;
     }
 
@@ -502,12 +512,15 @@ interface ToolkitCard {
       font-weight: 600;
     }
 
-    /* ── Knowledge / toolkit ─────────────────────────────────────────── */
-    .knowledge-columns {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 24px;
+    /* ── Knowledge / toolkit (3 columns) ─────────────────────────────── */
+    .knowledge-columns-3 {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;
+    }
+    @media (max-width: 1100px) {
+      .knowledge-columns-3 { grid-template-columns: repeat(2, 1fr); }
     }
     @media (max-width: 720px) {
-      .knowledge-columns { grid-template-columns: 1fr; }
+      .knowledge-columns-3 { grid-template-columns: 1fr; }
     }
     .col-label {
       display: flex; align-items: center; gap: 6px;
@@ -535,24 +548,6 @@ interface ToolkitCard {
     }
     .k-arrow { color: #c4cdd6; font-size: 18px; width: 18px; height: 18px; flex-shrink: 0; }
 
-    .toolkit-grid { display: flex; flex-direction: column; gap: 10px; }
-    .toolkit-card {
-      display: flex; align-items: center; gap: 14px; padding: 14px 16px;
-      border: 1px solid #e8edf4; border-radius: 10px; background: #fafbfc;
-      transition: background 0.15s;
-      &:hover { background: #f0f4f8; }
-    }
-    .toolkit-icon {
-      width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
-      display: flex; align-items: center; justify-content: center;
-      mat-icon { font-size: 20px; }
-    }
-    .toolkit-info {
-      flex: 1; display: flex; flex-direction: column; gap: 2px;
-      strong { font-size: 13px; color: var(--artes-primary); }
-      span { font-size: 12px; color: #5a6a7e; }
-    }
-    .download-btn { color: var(--artes-accent); }
   `],
 })
 export class ConflictDashboardHomeComponent implements OnInit {

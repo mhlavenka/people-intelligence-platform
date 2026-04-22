@@ -130,7 +130,7 @@ interface ConflictAnalysis {
     }
     .analysis-banner-head {
       display: flex; gap: 14px; align-items: flex-start; margin-bottom: 18px;
-      h2 { font-size: 17px; margin: 0 0 6px; font-weight: 700; letter-spacing: -0.1px; }
+      h2 { font-size: 17px; margin: 0 0 6px; font-weight: 700; letter-spacing: -0.1px; color: #ffffff; }
       p  { font-size: 13px; line-height: 1.6; margin: 0; color: rgba(255,255,255,0.85); }
     }
     .analysis-banner-icon {
