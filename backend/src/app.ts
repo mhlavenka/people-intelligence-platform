@@ -118,10 +118,14 @@ app.use(errorHandler);
 async function bootstrap(): Promise<void> {
   await initI18n();
   await connectDatabase();
-  startReminderJob();
-  startWebhookRenewalJob();
-  startTrialRevertJob();
-  startPreSessionIntakeJob();
+  if (config.enableCrons) {
+    startReminderJob();
+    startWebhookRenewalJob();
+    startTrialRevertJob();
+    startPreSessionIntakeJob();
+  } else {
+    console.log('[Server] Cron jobs disabled (set ENABLE_CRONS=true to enable)');
+  }
   app.listen(config.port, () => {
     console.log(`[Server] Running on port ${config.port} [${config.nodeEnv}]`);
   });

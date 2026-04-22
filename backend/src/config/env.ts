@@ -60,4 +60,5 @@ export const config = {
     origin: process.env['WEBAUTHN_ORIGIN'] || process.env['FRONTEND_URL'] || 'http://localhost:4200',
   },
   FIREBASE_SERVICE_ACCOUNT: process.env['FIREBASE_SERVICE_ACCOUNT'] || '',
+  enableCrons: process.env['ENABLE_CRONS'] === 'true',
 };
