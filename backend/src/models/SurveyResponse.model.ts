@@ -48,7 +48,7 @@ const SurveyResponseSchema = new Schema<ISurveyResponse>(
     sessionId: { type: Schema.Types.ObjectId, ref: 'CoachingSession', index: true },
     submissionToken: { type: String, required: true },          // one-way hash, always present
     departmentId: { type: String },
-    respondentLanguage: { type: String, enum: ['en', 'fr', 'es'] },
+    respondentLanguage: { type: String, enum: ['en', 'fr', 'es', 'sk'] },
     responses: [ResponseItemSchema],
     submittedAt: { type: Date, default: Date.now },
     isAnonymous: { type: Boolean, default: true },

@@ -14,7 +14,12 @@ const SYSTEM_PROMPT =
 const client = new Anthropic({ apiKey: config.anthropic.apiKey });
 
 function languageInstruction(language: string): string {
-  const langName = language === 'fr' ? 'French (use formal "vous" register)' : 'English';
+  const langNames: Record<string, string> = {
+    fr: 'French (use formal "vous" register)',
+    es: 'Spanish (use formal "usted" register)',
+    sk: 'Slovak (use formal "vykanie" register)',
+  };
+  const langName = langNames[language] ?? 'English';
   return `\n\nIMPORTANT: All string values in your JSON response must be written in ${langName}. Do not translate the JSON keys — they must stay exactly as specified above.`;
 }
 

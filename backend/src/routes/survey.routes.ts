@@ -199,8 +199,8 @@ router.post(
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const { targetLanguage } = req.body;
-      if (!targetLanguage || !['en', 'fr', 'es'].includes(targetLanguage)) {
-        res.status(400).json({ error: 'Valid targetLanguage (en, fr, es) is required' });
+      if (!targetLanguage || !['en', 'fr', 'es', 'sk'].includes(targetLanguage)) {
+        res.status(400).json({ error: 'Valid targetLanguage (en, fr, es, sk) is required' });
         return;
       }
 
