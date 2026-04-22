@@ -26,7 +26,7 @@ interface EngagementInfo {
     <div class="journal-page">
       <!-- Header -->
       <div class="page-header">
-        <a [routerLink]="'/coaching/' + engagementId" class="back-link"><mat-icon>arrow_back</mat-icon> Back to Engagement</a>
+        <a [routerLink]="'/coaching/' + engagementId" class="back-link"><mat-icon>arrow_back</mat-icon> {{ 'COACHING.backToEngagement' | translate }}</a>
       </div>
 
       @if (loading()) {
