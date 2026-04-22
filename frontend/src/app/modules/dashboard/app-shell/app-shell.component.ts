@@ -796,6 +796,7 @@ export class AppShellComponent implements OnInit, OnDestroy {
     { code: 'en', label: 'English', svg: '<svg width="20" height="14" viewBox="0 0 20 14"><rect width="20" height="14" fill="#012169"/><path d="M0,0L20,14M20,0L0,14" stroke="#fff" stroke-width="2.4"/><path d="M0,0L20,14M20,0L0,14" stroke="#C8102E" stroke-width="1.2"/><path d="M10,0V14M0,7H20" stroke="#fff" stroke-width="4"/><path d="M10,0V14M0,7H20" stroke="#C8102E" stroke-width="2.4"/></svg>' },
     { code: 'fr', label: 'Français', svg: '<svg width="20" height="14" viewBox="0 0 20 14"><rect width="6.67" height="14" fill="#002395"/><rect x="6.67" width="6.67" height="14" fill="#fff"/><rect x="13.33" width="6.67" height="14" fill="#ED2939"/></svg>' },
     { code: 'es', label: 'Español', svg: '<svg width="20" height="14" viewBox="0 0 20 14"><rect width="20" height="14" fill="#AA151B"/><rect y="3.5" width="20" height="7" fill="#F1BF00"/></svg>' },
+    { code: 'sk', label: 'Slovenčina', svg: '<svg width="20" height="14" viewBox="0 0 20 14"><rect width="20" height="4.67" fill="#fff"/><rect y="4.67" width="20" height="4.67" fill="#0B4EA2"/><rect y="9.33" width="20" height="4.67" fill="#EE1C25"/></svg>' },
   ];
 
   langFlag(code: string): SafeHtml {

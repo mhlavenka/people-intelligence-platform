@@ -91,9 +91,7 @@ interface OrgResponse {
           @if (selectedMinRequired() > 1) {
             <div class="info-box">
               <mat-icon>shield</mat-icon>
-              <p>Analysis requires a minimum of <strong>{{ selectedMinRequired() }} responses</strong>
-              to protect individual privacy. Results are aggregated — no individual data is shown.</p>
-
+              <p [innerHTML]="'CONFLICT.privacyMinResponses' | translate:{ count: selectedMinRequired() }"></p>
             </div>
           }
         </form>

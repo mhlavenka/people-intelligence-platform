@@ -1035,7 +1035,10 @@
     "templateHeader": "Modèle",
     "responsesHeader": "Réponses",
     "surveyIntakeActivity": "Activité des enquêtes et prises en charge",
-    "surveyIntakeActivityDesc": "Utilisation des modèles et tendances des réponses"
+    "surveyIntakeActivityDesc": "Utilisation des modèles et tendances des réponses",
+    "orgLogoHint": "PNG, JPG ou SVG · max 2 Mo · affiché dans l’en-tête de la plateforme",
+    "departmentsHint": "Définissez les services de votre organisation. Utilisés dans l’analyse Conflict Intelligence et l’organigramme.",
+    "taxIdHint": "Utilisé sur les factures pour conformité fiscale"
   },
   "SURVEY": {
     "intakeManagement": "Gestion des prises en charge",
@@ -1927,14 +1930,26 @@
   },
   "ORGCHART": {
     "title": "Organigramme",
+    "pageTitle": "Organigramme",
     "subtitle": "Hiérarchie visuelle de la structure de votre équipe",
+    "pageSubtitle": "Glissez une carte sur une autre pour définir la ligne hiérarchique. Déposez sur une zone vide pour la placer au sommet de l’organigramme.",
     "noData": "Aucune donnée d’organigramme disponible. Ajoutez des utilisateurs avec des affectations de gestionnaire pour construire l’organigramme.",
     "zoomIn": "Zoom avant",
     "zoomOut": "Zoom arrière",
     "resetZoom": "Réinitialiser le zoom",
     "fitToScreen": "Ajuster à l’écran",
     "dragToReassign": "Glisser pour réaffecter",
-    "removeFromReportingLine": "Retirer de la ligne hiérarchique"
+    "removeFromReportingLine": "Retirer de la ligne hiérarchique",
+    "filterAll": "Tous",
+    "removeFromHierarchy": "Retirer de la hiérarchie",
+    "loadFailed": "Échec du chargement de l’organigramme",
+    "saved": "Organigramme enregistré",
+    "saveFailed": "Échec de l’enregistrement — veuillez réessayer",
+    "roleAdmin": "Administrateur",
+    "roleHrManager": "Responsable RH",
+    "roleManager": "Manager",
+    "roleCoach": "Coach",
+    "roleEmployee": "Employé"
   },
   "BOOKING": {
     "availability": "Disponibilité",
@@ -2568,5 +2583,27 @@
     "coacheeFeedbackForCoachPlaceholder": "Qu'est-ce qui a bien fonctionné ? Qu'est-ce qui pourrait être différent ?",
     "coacheeSaved": "Enregistré",
     "coacheeOk": "OK"
+  },
+  "SESSIONS": {
+    "pageTitle": "Sessions de connexion actives",
+    "subtitle": "Toutes les sessions actives de l’organisation. Révoquez les sessions pour forcer une réauthentification. Obsolète = inactive depuis plus d’une heure.",
+    "refresh": "Actualiser",
+    "cleanStale": "Nettoyer les obsolètes",
+    "noActive": "Aucune session active.",
+    "noActiveFound": "Aucune session active trouvée.",
+    "user": "Utilisateur",
+    "you": "Vous",
+    "device": "Appareil",
+    "ip": "IP",
+    "lastActive": "Dernière activité",
+    "lastActivePrefix": "Dernière activité",
+    "unknownIp": "IP inconnue",
+    "current": "Actuelle",
+    "revokeSession": "Révoquer la session",
+    "revokeThisSession": "Révoquer cette session",
+    "revokeAllOthers": "Révoquer toutes les autres sessions",
+    "sessionRevoked": "Session révoquée",
+    "revokeFailed": "Échec de la révocation de la session",
+    "cleanFailed": "Échec du nettoyage des sessions obsolètes"
   }
 }

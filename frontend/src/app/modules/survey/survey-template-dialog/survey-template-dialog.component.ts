@@ -185,6 +185,7 @@ interface SurveyTemplate {
                     <mat-option value="en">English</mat-option>
                     <mat-option value="fr">Français</mat-option>
                     <mat-option value="es">Español</mat-option>
+                    <mat-option value="sk">Slovenčina</mat-option>
                   </mat-select>
                 </mat-form-field>
               </div>
@@ -895,6 +896,7 @@ export class SurveyTemplateDialogComponent implements OnInit {
     { value: 'en', label: 'English' },
     { value: 'fr', label: 'Français' },
     { value: 'es', label: 'Español' },
+    { value: 'sk', label: 'Slovenčina' },
   ];
 
   isEdit = () => !!this.existingData;

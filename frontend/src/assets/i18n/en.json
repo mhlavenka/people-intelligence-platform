@@ -1035,7 +1035,10 @@
     "templateHeader": "Template",
     "responsesHeader": "Responses",
     "surveyIntakeActivity": "Survey & Intake Activity",
-    "surveyIntakeActivityDesc": "Template usage and response trends"
+    "surveyIntakeActivityDesc": "Template usage and response trends",
+    "orgLogoHint": "PNG, JPG or SVG · max 2 MB · displayed in the platform header",
+    "departmentsHint": "Define the departments in your organization. Used in Conflict Intelligence analysis and the Org Chart.",
+    "taxIdHint": "Used on invoices for tax compliance"
   },
   "SURVEY": {
     "intakeManagement": "Intake Management",
@@ -1927,14 +1930,26 @@
   },
   "ORGCHART": {
     "title": "Organization Chart",
+    "pageTitle": "Organizational Chart",
     "subtitle": "Visual hierarchy of your team structure",
+    "pageSubtitle": "Drag a person card onto another to set their reporting line. Drop on an empty area to make them a top-level node.",
     "noData": "No org chart data available. Add users with manager assignments to build the chart.",
     "zoomIn": "Zoom in",
     "zoomOut": "Zoom out",
     "resetZoom": "Reset zoom",
     "fitToScreen": "Fit to screen",
     "dragToReassign": "Drag to reassign",
-    "removeFromReportingLine": "Remove from reporting line"
+    "removeFromReportingLine": "Remove from reporting line",
+    "filterAll": "All",
+    "removeFromHierarchy": "Remove from hierarchy",
+    "loadFailed": "Failed to load org chart",
+    "saved": "Org chart saved",
+    "saveFailed": "Failed to save — please try again",
+    "roleAdmin": "Admin",
+    "roleHrManager": "HR Manager",
+    "roleManager": "Manager",
+    "roleCoach": "Coach",
+    "roleEmployee": "Employee"
   },
   "BOOKING": {
     "availability": "Availability",
@@ -2568,5 +2583,27 @@
     "coacheeFeedbackForCoachPlaceholder": "What worked well? What could be different?",
     "coacheeSaved": "Saved",
     "coacheeOk": "OK"
+  },
+  "SESSIONS": {
+    "pageTitle": "Active Login Sessions",
+    "subtitle": "All active sessions across the organization. Revoke sessions to force re-authentication. Stale = inactive for 1+ hour.",
+    "refresh": "Refresh",
+    "cleanStale": "Clean Stale",
+    "noActive": "No active sessions.",
+    "noActiveFound": "No active sessions found.",
+    "user": "User",
+    "you": "You",
+    "device": "Device",
+    "ip": "IP",
+    "lastActive": "Last Active",
+    "lastActivePrefix": "Last active",
+    "unknownIp": "Unknown IP",
+    "current": "Current",
+    "revokeSession": "Revoke session",
+    "revokeThisSession": "Revoke this session",
+    "revokeAllOthers": "Revoke All Other Sessions",
+    "sessionRevoked": "Session revoked",
+    "revokeFailed": "Failed to revoke session",
+    "cleanFailed": "Failed to clean stale sessions"
   }
 }

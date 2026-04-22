@@ -10,7 +10,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ApiService } from '../../core/api.service';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 // ── Layout constants ──────────────────────────────────────────────────────────
 const NW   = 300;   // node width
@@ -151,12 +151,12 @@ const ROLE_COLOR: Record<string, string> = {
   coachee:    '#5a6a7e',
 };
 
-const ROLE_LABEL: Record<string, string> = {
-  admin:      'Admin',
-  hr_manager: 'HR Manager',
-  manager:    'Manager',
-  coach:      'Coach',
-  coachee:    'Employee',
+const ROLE_LABEL_KEY: Record<string, string> = {
+  admin:      'ORGCHART.roleAdmin',
+  hr_manager: 'ORGCHART.roleHrManager',
+  manager:    'ORGCHART.roleManager',
+  coach:      'ORGCHART.roleCoach',
+  coachee:    'ORGCHART.roleEmployee',
 };
 
 const DEPT_PALETTE = [
@@ -186,13 +186,13 @@ const DEPT_PALETTE = [
       <div class="oc-header">
         <div class="header-left">
           <div>
-            <h1>Organizational Chart</h1>
-            <p>Drag a person card onto another to set their reporting line. Drop on an empty area to make them a top-level node.</p>
+            <h1>{{ 'ORGCHART.pageTitle' | translate }}</h1>
+            <p>{{ 'ORGCHART.pageSubtitle' | translate }}</p>
           </div>
           @if (departments().length) {
             <div class="dept-filters">
               <button class="dept-chip" [class.active]="deptFilter() === null"
-                      (click)="deptFilter.set(null)">All</button>
+                      (click)="deptFilter.set(null)">{{ 'ORGCHART.filterAll' | translate }}</button>
               @for (dept of departments(); track dept) {
                 <button class="dept-chip"
                         [class.active]="deptFilter() === dept"
@@ -227,7 +227,7 @@ const DEPT_PALETTE = [
               } @else {
                 <mat-icon>save</mat-icon>
               }
-              Save
+              {{ 'COMMON.save' | translate }}
             </button>
           }
         </div>
@@ -334,10 +334,10 @@ const DEPT_PALETTE = [
           }
           <span class="legend-sep">|</span>
           <mat-icon class="legend-icon">drag_indicator</mat-icon>
-          <span class="legend-label">Drag to reassign</span>
+          <span class="legend-label">{{ 'ORGCHART.dragToReassign' | translate }}</span>
           <span class="legend-sep">|</span>
           <mat-icon class="legend-icon">link_off</mat-icon>
-          <span class="legend-label">Remove from hierarchy</span>
+          <span class="legend-label">{{ 'ORGCHART.removeFromHierarchy' | translate }}</span>
         </div>
       }
     </div>
@@ -681,11 +681,23 @@ export class OrgChartComponent implements OnInit {
     };
   });
 
-  legendEntries = Object.entries(ROLE_LABEL).map(([role, label]) => ({
-    role, label, color: ROLE_COLOR[role] ?? '#888',
-  }));
+  legendEntries: { role: string; label: string; color: string }[] = [];
 
-  constructor(private api: ApiService, private snack: MatSnackBar) {}
+  constructor(
+    private api: ApiService,
+    private snack: MatSnackBar,
+    private translate: TranslateService,
+  ) {
+    const rebuild = () => {
+      this.legendEntries = Object.entries(ROLE_LABEL_KEY).map(([role, key]) => ({
+        role,
+        label: this.translate.instant(key),
+        color: ROLE_COLOR[role] ?? '#888',
+      }));
+    };
+    rebuild();
+    this.translate.onLangChange.subscribe(rebuild);
+  }
 
   ngOnInit(): void { this.load(); }
 
@@ -703,7 +715,11 @@ export class OrgChartComponent implements OnInit {
       },
       error: () => {
         this.loading.set(false);
-        this.snack.open('Failed to load org chart', 'Close', { duration: 3000 });
+        this.snack.open(
+          this.translate.instant('ORGCHART.loadFailed'),
+          this.translate.instant('COMMON.close'),
+          { duration: 3000 },
+        );
       },
     });
   }
@@ -775,11 +791,19 @@ export class OrgChartComponent implements OnInit {
       next: () => {
         this.originalUsers.set(structuredClone(this.users()));
         this.saving.set(false);
-        this.snack.open('Org chart saved', 'Close', { duration: 2500 });
+        this.snack.open(
+          this.translate.instant('ORGCHART.saved'),
+          this.translate.instant('COMMON.close'),
+          { duration: 2500 },
+        );
       },
       error: () => {
         this.saving.set(false);
-        this.snack.open('Failed to save — please try again', 'Close', { duration: 3000 });
+        this.snack.open(
+          this.translate.instant('ORGCHART.saveFailed'),
+          this.translate.instant('COMMON.close'),
+          { duration: 3000 },
+        );
       },
     });
   }
@@ -791,6 +815,9 @@ export class OrgChartComponent implements OnInit {
   // ── Helpers ──────────────────────────────────────────────────────────────────
   initials  = (n: OrgUser) => `${n.firstName[0]}${n.lastName[0]}`.toUpperCase();
   roleColor = (role: string) => ROLE_COLOR[role] ?? '#5a6a7e';
-  roleLabel = (role: string) => ROLE_LABEL[role] ?? role;
+  roleLabel = (role: string) => {
+    const key = ROLE_LABEL_KEY[role];
+    return key ? this.translate.instant(key) : role;
+  };
   deptColor = (dept?: string) => (dept ? (this.deptColorMap().get(dept) ?? '#9aa5b4') : '#9aa5b4');
 }

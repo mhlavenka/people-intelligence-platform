@@ -207,7 +207,7 @@ const RADIUS_OPTIONS = [
               </div>
               <div class="logo-actions">
                 <span class="logo-label">{{ 'ADMIN.orgLogo' | translate }}</span>
-                <span class="logo-hint">PNG, JPG or SVG · max 2 MB · displayed in the platform header</span>
+                <span class="logo-hint">{{ 'ADMIN.orgLogoHint' | translate }}</span>
                 <div class="logo-btns">
                   <label class="logo-upload-btn" [class.saving]="savingLogo()">
                     <input type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp"
@@ -261,6 +261,7 @@ const RADIUS_OPTIONS = [
                     <mat-option value="en">English</mat-option>
                     <mat-option value="fr">Français</mat-option>
                     <mat-option value="es">Español</mat-option>
+                    <mat-option value="sk">Slovenčina</mat-option>
                   </mat-select>
                 </mat-form-field>
               </div>
@@ -301,7 +302,7 @@ const RADIUS_OPTIONS = [
               </div>
               <div>
                 <h2>{{ 'ADMIN.departments' | translate }}</h2>
-                <p style="font-size:13px;color:#5a6a7e;margin:2px 0 0">Define the departments in your organization. Used in Conflict Intelligence analysis and the Org Chart.</p>
+                <p style="font-size:13px;color:#5a6a7e;margin:2px 0 0">{{ 'ADMIN.departmentsHint' | translate }}</p>
               </div>
             </div>
             <mat-divider />
@@ -548,7 +549,7 @@ const RADIUS_OPTIONS = [
               <mat-form-field appearance="outline" class="full-width">
                 <mat-label>{{ 'ADMIN.taxId' | translate }}</mat-label>
                 <input matInput formControlName="taxId" placeholder="e.g. DE123456789" />
-                <mat-hint>Used on invoices for tax compliance</mat-hint>
+                <mat-hint>{{ 'ADMIN.taxIdHint' | translate }}</mat-hint>
               </mat-form-field>
               <div class="form-actions">
                 <button mat-raised-button color="primary"
