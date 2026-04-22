@@ -36,7 +36,7 @@ const MOODS: { value: JournalMood; icon: string; label: string }[] = [
   template: `
     <div class="journal-page">
       <div class="page-header">
-        <a routerLink="/journal/reflective" class="back-link"><mat-icon>arrow_back</mat-icon> Back to Journal</a>
+        <a routerLink="/journal/reflective" class="back-link"><mat-icon>arrow_back</mat-icon> {{ 'JOURNAL.backToJournal' | translate }}</a>
         <h1>{{ isEdit ? ('JOURNAL.editReflectiveEntry' | translate) : ('JOURNAL.newReflectiveEntryTitle' | translate) }}</h1>
       </div>
 

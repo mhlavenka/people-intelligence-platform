@@ -31,7 +31,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
   template: `
     <div class="journal-page">
       <div class="page-header">
-        <a [routerLink]="backLink" class="back-link"><mat-icon>arrow_back</mat-icon> Back</a>
+        <a [routerLink]="backLink" class="back-link"><mat-icon>arrow_back</mat-icon> {{ 'COMMON.back' | translate }}</a>
         <h1>{{ isEdit ? ('JOURNAL.editSessionNote' | translate) : ('JOURNAL.newSessionNoteTitle' | translate) }}</h1>
       </div>
 
