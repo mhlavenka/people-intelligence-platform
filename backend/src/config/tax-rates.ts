@@ -108,6 +108,23 @@ export function calculateTax(subtotalCents: number, country?: string, province?:
   };
 }
 
+/** Country codes used across the platform. */
+export const COUNTRIES: { code: string; name: string }[] = [
+  { code: 'AT', name: 'Austria' },   { code: 'AU', name: 'Australia' },
+  { code: 'BE', name: 'Belgium' },   { code: 'CA', name: 'Canada' },
+  { code: 'CH', name: 'Switzerland' }, { code: 'CZ', name: 'Czechia' },
+  { code: 'DE', name: 'Germany' },   { code: 'DK', name: 'Denmark' },
+  { code: 'ES', name: 'Spain' },     { code: 'FI', name: 'Finland' },
+  { code: 'FR', name: 'France' },    { code: 'GB', name: 'United Kingdom' },
+  { code: 'HR', name: 'Croatia' },   { code: 'HU', name: 'Hungary' },
+  { code: 'IE', name: 'Ireland' },   { code: 'IT', name: 'Italy' },
+  { code: 'NL', name: 'Netherlands' }, { code: 'NO', name: 'Norway' },
+  { code: 'PL', name: 'Poland' },    { code: 'PT', name: 'Portugal' },
+  { code: 'RO', name: 'Romania' },   { code: 'SE', name: 'Sweden' },
+  { code: 'SI', name: 'Slovenia' },  { code: 'SK', name: 'Slovakia' },
+  { code: 'US', name: 'United States' },
+];
+
 /** All province codes for UI dropdowns. */
 export const CANADIAN_PROVINCES = [
   { code: 'AB', name: 'Alberta' },
@@ -124,3 +141,16 @@ export const CANADIAN_PROVINCES = [
   { code: 'SK', name: 'Saskatchewan' },
   { code: 'YT', name: 'Yukon' },
 ];
+
+const COUNTRY_MAP = new Map(COUNTRIES.map((c) => [c.code, c.name]));
+const PROVINCE_MAP = new Map(CANADIAN_PROVINCES.map((p) => [p.code, p.name]));
+
+export function countryName(code?: string): string {
+  if (!code) return '';
+  return COUNTRY_MAP.get(code.toUpperCase()) || code;
+}
+
+export function provinceName(code?: string): string {
+  if (!code) return '';
+  return PROVINCE_MAP.get(code.toUpperCase()) || code;
+}

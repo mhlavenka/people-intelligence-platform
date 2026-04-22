@@ -74,7 +74,7 @@ function isGroup(entry: NavEntry): entry is NavGroup {
         <img src="assets/artes_icon_512.png" alt="ARTES" class="mobile-logo" />
         <span class="mobile-title">{{ orgName() }}</span>
         <button class="mobile-bell-btn" (click)="openHub()">
-          <mat-icon [matBadge]="unreadCount() > 0 ? unreadCount() : null" matBadgeColor="warn" matBadgeSize="small">notifications</mat-icon>
+          <mat-icon aria-hidden="false" [attr.aria-label]="unreadCount() > 0 ? unreadCount() + ' unread notifications' : 'Notifications'" [matBadge]="unreadCount() > 0 ? unreadCount() : null" matBadgeColor="warn" matBadgeSize="small">notifications</mat-icon>
         </button>
       </div>
 
@@ -222,6 +222,8 @@ function isGroup(entry: NavEntry): entry is NavGroup {
                     [matTooltip]="sidebarCollapsed() ? ('NAV.messagesAlerts' | translate) : ''"
                     matTooltipPosition="right">
               <mat-icon
+                aria-hidden="false"
+                [attr.aria-label]="unreadCount() > 0 ? unreadCount() + ' unread notifications' : 'Notifications'"
                 [class.bell-ringing]="unreadCount() > 0"
                 [matBadge]="unreadCount() > 0 ? unreadCount() : null"
                 matBadgeColor="warn"

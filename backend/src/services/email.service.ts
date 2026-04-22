@@ -1,4 +1,4 @@
-import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses';
+import { SESClient, SendEmailCommand, SendRawEmailCommand } from '@aws-sdk/client-ses';
 import i18next from 'i18next';
 import { config } from '../config/env';
 
@@ -111,6 +111,61 @@ export async function sendEmail(params: {
     },
   });
 
+  await ses.send(command);
+}
+
+export interface EmailAttachment {
+  filename: string;
+  content: Buffer;
+  contentType: string;
+}
+
+export async function sendEmailWithAttachments(params: {
+  to: string | string[];
+  subject: string;
+  html: string;
+  attachments: EmailAttachment[];
+}): Promise<void> {
+  const recipients = Array.isArray(params.to) ? params.to : [params.to];
+  const wrappedHtml = brandedHtml(params.subject, params.html);
+
+  if (isDev && !config.aws.sesFromEmail) {
+    console.log(
+      `[EmailService] DEV — would send "${params.subject}" to ${recipients.join(', ')} with ${params.attachments.length} attachment(s)`
+    );
+    return;
+  }
+
+  const boundary = `----=_Part_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+  const rawParts: string[] = [
+    `From: ${FROM}`,
+    `To: ${recipients.join(', ')}`,
+    `Subject: =?UTF-8?B?${Buffer.from(params.subject).toString('base64')}?=`,
+    'MIME-Version: 1.0',
+    `Content-Type: multipart/mixed; boundary="${boundary}"`,
+    '',
+    `--${boundary}`,
+    'Content-Type: text/html; charset=UTF-8',
+    'Content-Transfer-Encoding: base64',
+    '',
+    Buffer.from(wrappedHtml).toString('base64').replace(/(.{76})/g, '$1\n'),
+  ];
+
+  for (const att of params.attachments) {
+    rawParts.push(
+      `--${boundary}`,
+      `Content-Type: ${att.contentType}; name="${att.filename}"`,
+      `Content-Disposition: attachment; filename="${att.filename}"`,
+      'Content-Transfer-Encoding: base64',
+      '',
+      att.content.toString('base64').replace(/(.{76})/g, '$1\n'),
+    );
+  }
+  rawParts.push(`--${boundary}--`);
+
+  const command = new SendRawEmailCommand({
+    RawMessage: { Data: Buffer.from(rawParts.join('\r\n')) },
+  });
   await ses.send(command);
 }
 

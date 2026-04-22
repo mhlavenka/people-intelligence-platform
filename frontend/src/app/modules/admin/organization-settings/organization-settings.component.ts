@@ -13,6 +13,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { ApiService } from '../../../core/api.service';
 import { ThemeService, OrgTheme } from '../../../core/theme.service';
+import { COUNTRIES } from '../../../core/geo.constants';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 interface BillingAddress {
@@ -1029,21 +1030,7 @@ export class OrganizationSettingsComponent implements OnInit {
   colorFields   = COLOR_FIELDS;
   radiusOptions = RADIUS_OPTIONS;
 
-  countries = [
-    { code: 'AT', name: 'Austria' },        { code: 'AU', name: 'Australia' },
-    { code: 'BE', name: 'Belgium' },        { code: 'CA', name: 'Canada' },
-    { code: 'CH', name: 'Switzerland' },    { code: 'CZ', name: 'Czechia' },
-    { code: 'DE', name: 'Germany' },        { code: 'DK', name: 'Denmark' },
-    { code: 'ES', name: 'Spain' },          { code: 'FI', name: 'Finland' },
-    { code: 'FR', name: 'France' },         { code: 'GB', name: 'United Kingdom' },
-    { code: 'HR', name: 'Croatia' },        { code: 'HU', name: 'Hungary' },
-    { code: 'IE', name: 'Ireland' },        { code: 'IT', name: 'Italy' },
-    { code: 'NL', name: 'Netherlands' },    { code: 'NO', name: 'Norway' },
-    { code: 'PL', name: 'Poland' },         { code: 'PT', name: 'Portugal' },
-    { code: 'RO', name: 'Romania' },        { code: 'SE', name: 'Sweden' },
-    { code: 'SI', name: 'Slovenia' },       { code: 'SK', name: 'Slovakia' },
-    { code: 'US', name: 'United States' },
-  ];
+  countries = COUNTRIES;
 
   orgInitials = () => {
     const name = this.org()?.name ?? '';

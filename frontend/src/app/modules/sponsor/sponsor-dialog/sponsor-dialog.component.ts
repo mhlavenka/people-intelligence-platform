@@ -13,6 +13,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ProvinceTaxInfo, Sponsor, SponsorService } from '../sponsor.service';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { COUNTRIES } from '../../../core/geo.constants';
 
 export interface SponsorDialogData {
   sponsor?: Sponsor;
@@ -83,9 +84,9 @@ export interface SponsorDialogData {
         <mat-form-field appearance="outline">
           <mat-label>Country</mat-label>
           <mat-select [(ngModel)]="form.billingAddress.country">
-            <mat-option value="CA">Canada</mat-option>
-            <mat-option value="US">United States</mat-option>
-            <mat-option value="GB">United Kingdom</mat-option>
+            @for (c of countries; track c.code) {
+              <mat-option [value]="c.code">{{ c.name }}</mat-option>
+            }
             <mat-option value="">Other</mat-option>
           </mat-select>
         </mat-form-field>
@@ -171,6 +172,7 @@ export class SponsorDialogComponent implements OnInit {
   saving = signal(false);
   errorMsg = signal('');
   provinces = signal<ProvinceTaxInfo[]>([]);
+  countries = COUNTRIES;
 
   form: {
     name: string; email: string; organization?: string; phone?: string;

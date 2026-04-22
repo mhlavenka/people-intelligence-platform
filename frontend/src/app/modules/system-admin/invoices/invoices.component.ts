@@ -635,10 +635,36 @@ const COUNTRY_TAX_RATES: Record<string, number> = {
                   <span class="total-label">Subtotal</span>
                   <span class="total-value">{{ formatAmount(selectedInvoice()!.subtotal) }}</span>
                 </div>
-                <div class="total-row">
-                  <span class="total-label">Tax ({{ selectedInvoice()!.taxRate }}%)</span>
-                  <span class="total-value">{{ formatAmount(selectedInvoice()!.tax) }}</span>
-                </div>
+                @if (selectedInvoice()!.taxBreakdown?.gst) {
+                  <div class="total-row">
+                    <span class="total-label">GST (5%)</span>
+                    <span class="total-value">{{ formatAmount(selectedInvoice()!.taxBreakdown!.gst) }}</span>
+                  </div>
+                }
+                @if (selectedInvoice()!.taxBreakdown?.hst) {
+                  <div class="total-row">
+                    <span class="total-label">HST ({{ (selectedInvoice()!.taxRate * 100).toFixed(0) }}%)</span>
+                    <span class="total-value">{{ formatAmount(selectedInvoice()!.taxBreakdown!.hst) }}</span>
+                  </div>
+                }
+                @if (selectedInvoice()!.taxBreakdown?.pst) {
+                  <div class="total-row">
+                    <span class="total-label">PST</span>
+                    <span class="total-value">{{ formatAmount(selectedInvoice()!.taxBreakdown!.pst) }}</span>
+                  </div>
+                }
+                @if (selectedInvoice()!.taxBreakdown?.qst) {
+                  <div class="total-row">
+                    <span class="total-label">QST (9.975%)</span>
+                    <span class="total-value">{{ formatAmount(selectedInvoice()!.taxBreakdown!.qst) }}</span>
+                  </div>
+                }
+                @if (selectedInvoice()!.tax > 0 && !selectedInvoice()!.taxBreakdown) {
+                  <div class="total-row">
+                    <span class="total-label">Tax ({{ (selectedInvoice()!.taxRate * 100).toFixed(1).replace('.0', '') }}%)</span>
+                    <span class="total-value">{{ formatAmount(selectedInvoice()!.tax) }}</span>
+                  </div>
+                }
                 <div class="total-row grand-total">
                   <span class="total-label">Total</span>
                   <span class="total-value">{{ formatAmount(selectedInvoice()!.total) }}</span>

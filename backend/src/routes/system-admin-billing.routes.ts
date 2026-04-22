@@ -6,10 +6,12 @@ import { Organization } from '../models/Organization.model';
 import { User } from '../models/User.model';
 import { Message } from '../models/Message.model';
 import { Notification } from '../models/Notification.model';
-import { sendEmail, sendPaymentReminderEmail, sendSuspensionEmail } from '../services/email.service';
+import { sendEmail, sendEmailWithAttachments, sendPaymentReminderEmail, sendSuspensionEmail } from '../services/email.service';
+import { generateInvoicePdf } from '../services/invoicePdf.service';
 import { config } from '../config/env';
 import { Plan } from '../models/Plan.model';
-import { calculateTax, getTaxRates } from '../config/tax-rates';
+import { calculateTax, getTaxRates, countryName, provinceName } from '../config/tax-rates';
+import { AppSettings } from '../models/AppSettings.model';
 
 const router = Router();
 
@@ -212,6 +214,7 @@ router.post(
       if (preview) {
         const taxInfo = country === 'CA' ? getTaxRates(country, province) : null;
         res.json({
+          organizationId: { _id: org._id, name: org.name, billingEmail: org.billingEmail },
           invoiceNumber,
           period: { from: new Date(periodFrom), to: periodToDate },
           lineItems,
@@ -249,6 +252,7 @@ router.post(
         notes,
       });
 
+      await invoice.populate('organizationId', 'name billingEmail');
       res.status(201).json(invoice);
     } catch (e) {
       next(e);
@@ -434,14 +438,31 @@ router.post(
 
       const billingUrl = `${config.frontendUrl}/billing`;
 
+      // Load company address from platform settings
+      const appSettings = await AppSettings.findOne().setOptions({ bypassTenantCheck: true }).lean();
+      const ci = appSettings?.companyInfo;
+      const fromLines: string[] = [];
+      if (ci?.name) fromLines.push(`<strong>${ci.name}</strong>`);
+      if (ci?.line1) fromLines.push(ci.line1);
+      if (ci?.line2) fromLines.push(ci.line2);
+      const fromCity = [ci?.city, provinceName(ci?.state), ci?.postalCode].filter(Boolean).join(', ');
+      if (fromCity) fromLines.push(fromCity);
+      if (ci?.country) fromLines.push(countryName(ci.country));
+      if (ci?.taxId) fromLines.push(`Tax ID: ${ci.taxId}`);
+      if (ci?.phone) fromLines.push(ci.phone);
+      if (ci?.email) fromLines.push(ci.email);
+      const fromHtml = fromLines.length
+        ? `<div style="color:#5a6a7e;margin:0 0 16px;line-height:1.6;font-size:13px;"><strong>From:</strong><br>${fromLines.join('<br>')}</div>`
+        : '';
+
       // Build billing address block for email
       const addr = invoice.billingAddress;
       const addrLines: string[] = [];
       if (addr?.line1) addrLines.push(addr.line1);
       if (addr?.line2) addrLines.push(addr.line2);
       if (addr?.city || addr?.postalCode) addrLines.push([addr.postalCode, addr.city].filter(Boolean).join(' '));
-      if (addr?.state) addrLines.push(addr.state);
-      if (addr?.country) addrLines.push(addr.country);
+      if (addr?.state) addrLines.push(provinceName(addr.state));
+      if (addr?.country) addrLines.push(countryName(addr.country));
       const addrHtml = addrLines.length
         ? `<p style="color:#5a6a7e;margin:0 0 4px;line-height:1.6;">${addrLines.join('<br>')}</p>`
         : '';
@@ -453,8 +474,9 @@ router.post(
         <h2 style="color:#1B2A47;margin:0 0 8px;font-size:22px;">
           Invoice ${invoice.invoiceNumber}
         </h2>
+        ${fromHtml}
         <p style="color:#5a6a7e;margin:0 0 4px;line-height:1.6;">
-          <strong>Organization:</strong> ${org.name}
+          <strong>Bill to:</strong> ${org.name}
         </p>
         ${addrHtml}
         ${taxIdHtml}
@@ -536,11 +558,22 @@ router.post(
         </p>
       `;
 
-      await sendEmail({
+      const pdfBuffer = await generateInvoicePdf(invoice, {
+        name: org.name,
+        email: org.billingEmail,
+        address: invoice.billingAddress,
+        taxId: invoice.taxId,
+      }, ci as any);
+
+      await sendEmailWithAttachments({
         to: org.billingEmail,
-        subject: `Invoice ${invoice.invoiceNumber} from ARTES — ${fmt(invoice.total)} due ${dueDateStr}`,
+        subject: `Invoice ${invoice.invoiceNumber} from ${ci?.name || 'ARTES'} — ${fmt(invoice.total)} due ${dueDateStr}`,
         html: emailHtml,
-        text: `Invoice ${invoice.invoiceNumber}\n\nOrganization: ${org.name}\nPeriod: ${periodFrom} – ${periodTo}\nDue: ${dueDateStr}\nTotal: ${fmt(invoice.total)}\n\nPay at: ${billingUrl}`,
+        attachments: [{
+          filename: `${invoice.invoiceNumber}.pdf`,
+          content: pdfBuffer,
+          contentType: 'application/pdf',
+        }],
       });
 
       res.json(invoice);

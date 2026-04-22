@@ -22,7 +22,7 @@ router.get('/', async (req: AuthRequest, res: Response, next: NextFunction) => {
 /** Update app settings (partial merge). */
 router.put('/', async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const { passwordPolicy, loginPolicy, sessionPolicy, tokenPolicy, general } = req.body;
+    const { passwordPolicy, loginPolicy, sessionPolicy, tokenPolicy, general, companyInfo } = req.body;
 
     let settings = await AppSettings.findOne();
     if (!settings) {
@@ -34,6 +34,7 @@ router.put('/', async (req: AuthRequest, res: Response, next: NextFunction) => {
     if (sessionPolicy)  { Object.assign(settings.sessionPolicy, sessionPolicy); }
     if (tokenPolicy)    { Object.assign(settings.tokenPolicy, tokenPolicy); }
     if (general)        { Object.assign(settings.general, general); }
+    if (companyInfo)    { Object.assign(settings.companyInfo, companyInfo); }
 
     settings.updatedBy = req.user!.userId as any;
     await settings.save();

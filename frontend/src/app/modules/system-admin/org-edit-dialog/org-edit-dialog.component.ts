@@ -11,6 +11,7 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ApiService } from '../../../core/api.service';
+import { COUNTRIES, CANADIAN_PROVINCES } from '../../../core/geo.constants';
 import { TranslateModule } from '@ngx-translate/core';
 
 interface PlanOption {
@@ -582,37 +583,8 @@ export class OrgEditDialogComponent implements OnInit {
     { key: 'coaching',       label: 'Coaching',          icon: 'psychology_alt' },
   ];
 
-  canadianProvinces = [
-    { code: 'AB', name: 'Alberta' },
-    { code: 'BC', name: 'British Columbia' },
-    { code: 'MB', name: 'Manitoba' },
-    { code: 'NB', name: 'New Brunswick' },
-    { code: 'NL', name: 'Newfoundland and Labrador' },
-    { code: 'NS', name: 'Nova Scotia' },
-    { code: 'NT', name: 'Northwest Territories' },
-    { code: 'NU', name: 'Nunavut' },
-    { code: 'ON', name: 'Ontario' },
-    { code: 'PE', name: 'Prince Edward Island' },
-    { code: 'QC', name: 'Quebec' },
-    { code: 'SK', name: 'Saskatchewan' },
-    { code: 'YT', name: 'Yukon' },
-  ];
-
-  countries = [
-    { code: 'AT', name: 'Austria' },        { code: 'AU', name: 'Australia' },
-    { code: 'BE', name: 'Belgium' },        { code: 'CA', name: 'Canada' },
-    { code: 'CH', name: 'Switzerland' },    { code: 'CZ', name: 'Czechia' },
-    { code: 'DE', name: 'Germany' },        { code: 'DK', name: 'Denmark' },
-    { code: 'ES', name: 'Spain' },          { code: 'FI', name: 'Finland' },
-    { code: 'FR', name: 'France' },         { code: 'GB', name: 'United Kingdom' },
-    { code: 'HR', name: 'Croatia' },        { code: 'HU', name: 'Hungary' },
-    { code: 'IE', name: 'Ireland' },        { code: 'IT', name: 'Italy' },
-    { code: 'NL', name: 'Netherlands' },    { code: 'NO', name: 'Norway' },
-    { code: 'PL', name: 'Poland' },         { code: 'PT', name: 'Portugal' },
-    { code: 'RO', name: 'Romania' },        { code: 'SE', name: 'Sweden' },
-    { code: 'SI', name: 'Slovenia' },       { code: 'SK', name: 'Slovakia' },
-    { code: 'US', name: 'United States' },
-  ];
+  canadianProvinces = CANADIAN_PROVINCES;
+  countries = COUNTRIES;
 
   private selectedModules: string[] = [];
 

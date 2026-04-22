@@ -589,55 +589,69 @@ router.post(
         sponsorId: sponsor._id,
       });
       if (!invoice) { res.status(404).json({ error: req.t('errors.invoiceNotFound') }); return; }
-      if (invoice.status !== 'draft' && invoice.status !== 'overdue') {
+      if (!['draft', 'sent', 'overdue'].includes(invoice.status)) {
         res.status(400).json({ error: req.t('errors.cannotSendInvoiceStatus', { status: invoice.status }) });
         return;
       }
 
-      invoice.status = 'sent';
+      if (invoice.status === 'draft') invoice.status = 'sent';
       invoice.sentAt = new Date();
       await invoice.save();
 
-      // Best-effort sponsor email (uses the existing email service).
-      // Not blocking — even if email fails the status change persists.
+      // Generate PDF and email with attachment.
+      // Best-effort — even if email fails the status change persists.
       try {
-        const { sendEmail } = await import('../services/email.service');
+        const { sendEmailWithAttachments } = await import('../services/email.service');
+        const { generateInvoicePdf } = await import('../services/invoicePdf.service');
+        const { AppSettings } = await import('../models/AppSettings.model');
         const fmt = (cents: number) => `$${(cents / 100).toFixed(2)} CAD`;
-        const lines = invoice.lineItems.map((li) =>
-          `<tr>
-            <td style="padding:8px 12px;border-bottom:1px solid #eef2f7;">${li.description}</td>
-            <td style="padding:8px 12px;border-bottom:1px solid #eef2f7;text-align:center;">${li.quantity}</td>
-            <td style="padding:8px 12px;border-bottom:1px solid #eef2f7;text-align:right;">${fmt(li.unitPrice)}</td>
-            <td style="padding:8px 12px;border-bottom:1px solid #eef2f7;text-align:right;font-weight:600;">${fmt(li.amount)}</td>
-          </tr>`).join('');
         const dueStr = invoice.dueDate.toLocaleDateString(req.language || 'en', { year: 'numeric', month: 'long', day: 'numeric' });
+
+        const appSettings = await AppSettings.findOne().setOptions({ bypassTenantCheck: true }).lean();
+        const pdfBuffer = await generateInvoicePdf(invoice, {
+          name: sponsor.name,
+          organization: sponsor.organization,
+          email: sponsor.email,
+          address: sponsor.billingAddress,
+          taxId: sponsor.taxId,
+        }, appSettings?.companyInfo);
+
+        // Build tax summary lines for the email body
+        const taxLines: string[] = [];
+        const tb = invoice.taxBreakdown;
+        if (tb) {
+          if (tb.gst) taxLines.push(`GST (5%): ${fmt(tb.gst)}`);
+          if (tb.hst) taxLines.push(`HST (${(invoice.taxRate * 100).toFixed(0)}%): ${fmt(tb.hst)}`);
+          if (tb.pst) taxLines.push(`PST: ${fmt(tb.pst)}`);
+          if (tb.qst) taxLines.push(`QST (9.975%): ${fmt(tb.qst)}`);
+        } else if (invoice.tax > 0) {
+          taxLines.push(`Tax: ${fmt(invoice.tax)}`);
+        }
+
         const html = `
           <div style="font-family:Arial,sans-serif;color:#1B2A47;max-width:640px;margin:0 auto;">
             <h2 style="margin:0 0 12px;">Invoice ${invoice.invoiceNumber}</h2>
             <p>Hello ${sponsor.name},</p>
-            <p>A new coaching invoice is ready for your review. Total <strong>${fmt(invoice.total)}</strong> due ${dueStr}.</p>
-            <table style="width:100%;border-collapse:collapse;margin:16px 0;font-size:14px;">
-              <thead>
-                <tr style="background:#f7f9fc;">
-                  <th style="padding:10px 12px;text-align:left;color:#6b7c93;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;">Description</th>
-                  <th style="padding:10px 12px;color:#6b7c93;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;">Qty</th>
-                  <th style="padding:10px 12px;text-align:right;color:#6b7c93;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;">Unit price</th>
-                  <th style="padding:10px 12px;text-align:right;color:#6b7c93;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;">Amount</th>
-                </tr>
-              </thead>
-              <tbody>${lines}</tbody>
-              <tfoot>
-                <tr><td colspan="3" style="text-align:right;padding:6px 12px;color:#6b7c93;">Subtotal</td><td style="text-align:right;padding:6px 12px;">${fmt(invoice.subtotal)}</td></tr>
-                ${invoice.tax > 0 ? `<tr><td colspan="3" style="text-align:right;padding:6px 12px;color:#6b7c93;">Tax</td><td style="text-align:right;padding:6px 12px;">${fmt(invoice.tax)}</td></tr>` : ''}
-                <tr><td colspan="3" style="text-align:right;padding:10px 12px;font-weight:700;border-top:2px solid #1B2A47;">Total due</td><td style="text-align:right;padding:10px 12px;font-weight:700;border-top:2px solid #1B2A47;">${fmt(invoice.total)}</td></tr>
-              </tfoot>
+            <p>A new coaching invoice is ready for your review.</p>
+            <table style="margin:16px 0;font-size:14px;border-collapse:collapse;">
+              <tr><td style="padding:4px 16px 4px 0;color:#6b7c93;">Subtotal</td><td style="font-weight:600;">${fmt(invoice.subtotal)}</td></tr>
+              ${taxLines.map((t) => `<tr><td style="padding:4px 16px 4px 0;color:#6b7c93;">${t.split(':')[0]}</td><td style="font-weight:600;">${t.split(':')[1]?.trim()}</td></tr>`).join('')}
+              <tr style="border-top:2px solid #1B2A47;"><td style="padding:8px 16px 4px 0;font-weight:700;">Total due</td><td style="padding-top:8px;font-weight:700;">${fmt(invoice.total)}</td></tr>
             </table>
+            <p>Due date: <strong>${dueStr}</strong></p>
+            <p>Please find the full invoice attached as a PDF.</p>
             <p style="color:#6b7c93;font-size:12px;">Sent by ARTES on behalf of your coach.</p>
           </div>`;
-        await sendEmail({
+
+        await sendEmailWithAttachments({
           to: sponsor.email,
           subject: `Invoice ${invoice.invoiceNumber} — ${fmt(invoice.total)} due ${dueStr}`,
           html,
+          attachments: [{
+            filename: `${invoice.invoiceNumber}.pdf`,
+            content: pdfBuffer,
+            contentType: 'application/pdf',
+          }],
         });
       } catch (err) {
         console.error('[Sponsor] Failed to email invoice:', err);

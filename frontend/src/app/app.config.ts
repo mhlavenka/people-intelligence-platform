@@ -20,7 +20,7 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(withInterceptors([authInterceptor])),
     importProvidersFrom(MatNativeDateModule),
     provideTranslateService({
-      defaultLanguage: 'en',
+      fallbackLang: 'en',
     }),
     provideTranslateHttpLoader({
       prefix: './assets/i18n/',

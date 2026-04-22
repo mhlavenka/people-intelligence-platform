@@ -34,12 +34,26 @@ export interface IGeneralSettings {
   maxFileUploadMB: number;
 }
 
+export interface ICompanyInfo {
+  name: string;
+  line1: string;
+  line2: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+  taxId: string;
+  phone: string;
+  email: string;
+}
+
 export interface IAppSettings extends Document {
   passwordPolicy: IPasswordPolicy;
   loginPolicy: ILoginPolicy;
   sessionPolicy: ISessionPolicy;
   tokenPolicy: ITokenPolicy;
   general: IGeneralSettings;
+  companyInfo: ICompanyInfo;
   updatedBy?: mongoose.Types.ObjectId;
   updatedAt: Date;
   createdAt: Date;
@@ -79,6 +93,19 @@ const GeneralSettingsSchema = new Schema({
   maxFileUploadMB:    { type: Number,  default: 10 },
 }, { _id: false });
 
+const CompanyInfoSchema = new Schema({
+  name:       { type: String, default: 'ARTES' },
+  line1:      { type: String, default: '' },
+  line2:      { type: String, default: '' },
+  city:       { type: String, default: '' },
+  state:      { type: String, default: '' },
+  postalCode: { type: String, default: '' },
+  country:    { type: String, default: 'CA' },
+  taxId:      { type: String, default: '' },
+  phone:      { type: String, default: '' },
+  email:      { type: String, default: '' },
+}, { _id: false });
+
 const AppSettingsSchema = new Schema(
   {
     passwordPolicy: { type: PasswordPolicySchema, default: () => ({}) },
@@ -86,6 +113,7 @@ const AppSettingsSchema = new Schema(
     sessionPolicy:  { type: SessionPolicySchema,  default: () => ({}) },
     tokenPolicy:    { type: TokenPolicySchema,    default: () => ({}) },
     general:        { type: GeneralSettingsSchema, default: () => ({}) },
+    companyInfo:    { type: CompanyInfoSchema,     default: () => ({}) },
     updatedBy:      { type: Schema.Types.ObjectId, ref: 'User' },
   },
   { timestamps: true }

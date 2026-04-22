@@ -136,7 +136,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
                           <mat-icon>send</mat-icon> {{ "SPONSOR.sendToSponsor" | translate }}
                         </button>
                       }
-                      @if (inv.status === 'overdue') {
+                      @if (inv.status === 'sent' || inv.status === 'overdue') {
                         <button mat-menu-item (click)="sendInvoice(inv)">
                           <mat-icon>send</mat-icon> {{ "SPONSOR.resend" | translate }}
                         </button>

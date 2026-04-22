@@ -12,6 +12,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ApiService } from '../../../core/api.service';
+import { COUNTRIES, CANADIAN_PROVINCES } from '../../../core/geo.constants';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 interface AppSettings {
@@ -43,6 +44,18 @@ interface AppSettings {
     defaultTimezone: string;
     dataRetentionDays: number;
     maxFileUploadMB: number;
+  };
+  companyInfo: {
+    name: string;
+    line1: string;
+    line2: string;
+    city: string;
+    state: string;
+    postalCode: string;
+    country: string;
+    taxId: string;
+    phone: string;
+    email: string;
   };
   updatedAt?: string;
 }
@@ -258,6 +271,82 @@ const REFRESH_EXPIRY_OPTIONS = [
             </div>
           </div>
 
+          <!-- ── Company Info (Invoice Sender) ─────────────── -->
+          <div class="settings-card">
+            <div class="card-header">
+              <mat-icon>business</mat-icon>
+              <div>
+                <h3>{{ 'SYSADMIN.companyInfoTitle' | translate }}</h3>
+                <p>{{ 'SYSADMIN.companyInfoDesc' | translate }}</p>
+              </div>
+            </div>
+            <div class="card-body" formGroupName="companyInfo">
+              <div class="field-row">
+                <mat-form-field appearance="outline" class="field-md">
+                  <mat-label>{{ 'SYSADMIN.companyName' | translate }}</mat-label>
+                  <input matInput formControlName="name" />
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="field-md">
+                  <mat-label>{{ 'SYSADMIN.companyTaxId' | translate }}</mat-label>
+                  <input matInput formControlName="taxId" placeholder="GST/HST #" />
+                </mat-form-field>
+              </div>
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>{{ 'SYSADMIN.addressLine1' | translate }}</mat-label>
+                <input matInput formControlName="line1" />
+              </mat-form-field>
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>{{ 'SYSADMIN.addressLine2' | translate }}</mat-label>
+                <input matInput formControlName="line2" />
+              </mat-form-field>
+              <div class="field-row">
+                <mat-form-field appearance="outline" class="field-md">
+                  <mat-label>{{ 'SYSADMIN.city' | translate }}</mat-label>
+                  <input matInput formControlName="city" />
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="field-sm">
+                  <mat-label>{{ 'SYSADMIN.postalCode' | translate }}</mat-label>
+                  <input matInput formControlName="postalCode" />
+                </mat-form-field>
+              </div>
+              <div class="field-row">
+                <mat-form-field appearance="outline" class="field-md">
+                  <mat-label>{{ 'SYSADMIN.country' | translate }}</mat-label>
+                  <mat-select formControlName="country">
+                    @for (c of countries; track c.code) {
+                      <mat-option [value]="c.code">{{ c.name }}</mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+                @if (form.get('companyInfo.country')?.value === 'CA') {
+                  <mat-form-field appearance="outline" class="field-md">
+                    <mat-label>{{ 'SYSADMIN.stateProvince' | translate }}</mat-label>
+                    <mat-select formControlName="state">
+                      @for (p of provinces; track p.code) {
+                        <mat-option [value]="p.code">{{ p.name }}</mat-option>
+                      }
+                    </mat-select>
+                  </mat-form-field>
+                } @else {
+                  <mat-form-field appearance="outline" class="field-md">
+                    <mat-label>{{ 'SYSADMIN.stateProvince' | translate }}</mat-label>
+                    <input matInput formControlName="state" />
+                  </mat-form-field>
+                }
+              </div>
+              <div class="field-row">
+                <mat-form-field appearance="outline" class="field-md">
+                  <mat-label>{{ 'SYSADMIN.companyPhone' | translate }}</mat-label>
+                  <input matInput formControlName="phone" />
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="field-md">
+                  <mat-label>{{ 'SYSADMIN.companyEmail' | translate }}</mat-label>
+                  <input matInput formControlName="email" type="email" />
+                </mat-form-field>
+              </div>
+            </div>
+          </div>
+
           <!-- ── General ─────────────────────────────────────── -->
           <div class="settings-card">
             <div class="card-header">
@@ -402,6 +491,9 @@ export class AppSettingsComponent implements OnInit {
   tokenExpiryOptions = TOKEN_EXPIRY_OPTIONS;
   refreshExpiryOptions = REFRESH_EXPIRY_OPTIONS;
 
+  countries = COUNTRIES;
+  provinces = CANADIAN_PROVINCES;
+
   ngOnInit(): void {
     this.form = this.fb.group({
       passwordPolicy: this.fb.group({
@@ -432,6 +524,18 @@ export class AppSettingsComponent implements OnInit {
         defaultTimezone:    ['UTC'],
         dataRetentionDays:  [0],
         maxFileUploadMB:    [10],
+      }),
+      companyInfo: this.fb.group({
+        name:       ['ARTES'],
+        line1:      [''],
+        line2:      [''],
+        city:       [''],
+        state:      [''],
+        postalCode: [''],
+        country:    ['CA'],
+        taxId:      [''],
+        phone:      [''],
+        email:      [''],
       }),
     });
 

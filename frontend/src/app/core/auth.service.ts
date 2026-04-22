@@ -1,4 +1,4 @@
-import { Injectable, NgZone, signal } from '@angular/core';
+import { inject, Injectable, Injector, NgZone, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, tap } from 'rxjs';
@@ -67,11 +67,12 @@ export class AuthService {
   private lastActivityWrite = 0;
   private readonly ACTIVITY_KEY = 'pip_last_activity';
 
+  private injector = inject(Injector);
+
   constructor(
     private http: HttpClient,
     private router: Router,
     private themeService: ThemeService,
-    private translateService: TranslateService,
     private ngZone: NgZone,
   ) {}
 
@@ -262,7 +263,7 @@ export class AuthService {
     // Apply user's language preference (or default to English)
     const lang = res.user.preferredLanguage || 'en';
     localStorage.setItem('artes_language', lang);
-    this.translateService.use(lang);
+    this.injector.get(TranslateService).use(lang);
   }
 
   /** Handle response from OAuth callback — stores tokens and user. */
