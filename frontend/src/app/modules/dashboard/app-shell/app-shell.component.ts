@@ -1,6 +1,5 @@
 import { Component, OnInit, OnDestroy, signal, computed, inject, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { MatIconModule } from '@angular/material/icon';
@@ -115,19 +114,17 @@ function isGroup(entry: NavEntry): entry is NavGroup {
             }
             <span class="org-name">{{ orgName() }}</span>
             <div class="flag-trigger" [matMenuTriggerFor]="langMenu">
-              @switch (translateService.currentLang) {
-                @case ('fr') { <svg width="20" height="14" viewBox="0 0 20 14"><rect width="6.67" height="14" fill="#002395"/><rect x="6.67" width="6.67" height="14" fill="#fff"/><rect x="13.33" width="6.67" height="14" fill="#ED2939"/></svg> }
-                @case ('es') { <svg width="20" height="14" viewBox="0 0 20 14"><rect width="20" height="14" fill="#AA151B"/><rect y="3.5" width="20" height="7" fill="#F1BF00"/></svg> }
-                @case ('sk') { <svg width="20" height="14" viewBox="0 0 20 14"><rect width="20" height="4.67" fill="#fff"/><rect y="4.67" width="20" height="4.67" fill="#0B4EA2"/><rect y="9.33" width="20" height="4.67" fill="#EE1C25"/></svg> }
-                @default { <svg width="20" height="14" viewBox="0 0 20 14"><rect width="20" height="14" fill="#012169"/><path d="M0,0L20,14M20,0L0,14" stroke="#fff" stroke-width="2.4"/><path d="M0,0L20,14M20,0L0,14" stroke="#C8102E" stroke-width="1.2"/><path d="M10,0V14M0,7H20" stroke="#fff" stroke-width="4"/><path d="M10,0V14M0,7H20" stroke="#C8102E" stroke-width="2.4"/></svg> }
-              }
+              <img [src]="'assets/flags/' + flagFile(translateService.currentLang) + '.svg'"
+                   [alt]="translateService.currentLang" class="lang-flag" />
             </div>
-            <mat-menu #langMenu="matMenu">
+            <mat-menu #langMenu="matMenu" class="lang-menu-panel">
               @for (l of languages; track l.code) {
                 @if (l.code !== translateService.currentLang) {
                   <button mat-menu-item (click)="switchLang(l.code)">
-                    <span [innerHTML]="safeSvg(l.svg)"></span>
-                    <span style="margin-left:8px">{{ l.label }}</span>
+                    <span class="lang-menu-row">
+                      <img [src]="'assets/flags/' + flagFile(l.code) + '.svg'" [alt]="l.label" class="lang-flag" />
+                      <span class="lang-menu-label">{{ l.label }}</span>
+                    </span>
                   </button>
                 }
               }
@@ -380,7 +377,11 @@ function isGroup(entry: NavEntry): entry is NavGroup {
       padding: 4px 6px; border-radius: 4px;
       line-height: 0; display: inline-flex; align-items: center;
       &:hover { background: rgba(255,255,255,0.1); }
-      svg { display: block; border-radius: 2px; }
+    }
+
+    .lang-flag {
+      width: 20px; height: 14px; display: block; border-radius: 2px; object-fit: cover;
+      flex-shrink: 0;
     }
 
     .nav-list {
@@ -734,7 +735,6 @@ export class AppShellComponent implements OnInit, OnDestroy {
     private api: ApiService,
     private themeService: ThemeService,
     public translateService: TranslateService,
-    private sanitizer: DomSanitizer,
     private dialog: MatDialog,
     private orgCtx: OrgContextService,
   ) {}
@@ -794,19 +794,21 @@ export class AppShellComponent implements OnInit, OnDestroy {
   }
 
   languages = [
-    { code: 'en', label: 'English', svg: '<svg width="20" height="14" viewBox="0 0 20 14"><rect width="20" height="14" fill="#012169"/><path d="M0,0L20,14M20,0L0,14" stroke="#fff" stroke-width="2.4"/><path d="M0,0L20,14M20,0L0,14" stroke="#C8102E" stroke-width="1.2"/><path d="M10,0V14M0,7H20" stroke="#fff" stroke-width="4"/><path d="M10,0V14M0,7H20" stroke="#C8102E" stroke-width="2.4"/></svg>' },
-    { code: 'fr', label: 'Français', svg: '<svg width="20" height="14" viewBox="0 0 20 14"><rect width="6.67" height="14" fill="#002395"/><rect x="6.67" width="6.67" height="14" fill="#fff"/><rect x="13.33" width="6.67" height="14" fill="#ED2939"/></svg>' },
-    { code: 'es', label: 'Español', svg: '<svg width="20" height="14" viewBox="0 0 20 14"><rect width="20" height="14" fill="#AA151B"/><rect y="3.5" width="20" height="7" fill="#F1BF00"/></svg>' },
-    { code: 'sk', label: 'Slovenčina', svg: '<svg width="20" height="14" viewBox="0 0 20 14"><rect width="20" height="4.67" fill="#fff"/><rect y="4.67" width="20" height="4.67" fill="#0B4EA2"/><rect y="9.33" width="20" height="4.67" fill="#EE1C25"/></svg>' },
+    { code: 'en', label: 'English' },
+    { code: 'fr', label: 'Français' },
+    { code: 'es', label: 'Español' },
+    { code: 'sk', label: 'Slovenčina' },
   ];
 
-  langFlag(code: string): SafeHtml {
-    const svg = this.languages.find(l => l.code === code)?.svg || '';
-    return this.sanitizer.bypassSecurityTrustHtml(svg);
-  }
+  private readonly FLAG_FILE: Record<string, string> = {
+    en: 'gb',
+    fr: 'fr',
+    es: 'es',
+    sk: 'sk',
+  };
 
-  safeSvg(svg: string): SafeHtml {
-    return this.sanitizer.bypassSecurityTrustHtml(svg);
+  flagFile(code: string): string {
+    return this.FLAG_FILE[code] ?? 'gb';
   }
 
   switchLang(lang: string): void {

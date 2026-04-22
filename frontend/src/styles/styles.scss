@@ -438,3 +438,23 @@ a {
   justify-content: center !important;
 }
 
+// Language-switcher menu panel — mat-menu renders inside a CDK overlay outside
+// the component tree, so size + layout are defined here globally.
+.lang-menu-panel {
+  .mat-mdc-menu-item { min-width: 180px; }
+  .lang-menu-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    white-space: nowrap;
+  }
+  .lang-flag {
+    width: 20px;
+    height: 14px;
+    display: block;
+    border-radius: 2px;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+}
+
