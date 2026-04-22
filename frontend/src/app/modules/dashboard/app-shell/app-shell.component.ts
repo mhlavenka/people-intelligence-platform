@@ -642,9 +642,9 @@ export class AppShellComponent implements OnInit, OnDestroy {
       icon: 'warning_amber',
       module: 'conflict',
       children: [
+        { label: 'NAV.conflictDashboard',  icon: 'dashboard',   route: '/conflict/dashboard',          roles: ['admin', 'hr_manager', 'manager', 'coach'] as AppRole[], module: 'conflict' },
         { label: 'NAV.conflictAnalysis',   icon: 'analytics',   route: '/conflict/analysis',           roles: ['admin', 'hr_manager', 'manager', 'coach'] as AppRole[], module: 'conflict' },
         { label: 'NAV.conflictIDPs',       icon: 'psychology',  route: '/conflict/skill-development',  roles: ['admin', 'hr_manager', 'manager', 'coach'] as AppRole[], module: 'conflict' },
-        { label: 'NAV.knowledgeBuilding',  icon: 'school',      route: '/conflict/skill-building',     roles: ['admin', 'hr_manager', 'manager', 'coach'] as AppRole[], module: 'conflict' },
       ],
     },
     { label: 'NAV.neuroinclusion',         icon: 'psychology',   route: '/neuroinclusion', roles: ['admin', 'hr_manager', 'manager'],               module: 'neuroinclusion' },

@@ -37,30 +37,19 @@ interface ConflictAnalysis {
     TranslateModule,
   ],
   template: `
-    <!-- Module banner -->
-    <div class="module-banner">
-      <div class="banner-insight">
-        <mat-icon class="banner-icon">lightbulb</mat-icon>
-        <p [innerHTML]="'CONFLICT.coreInsight' | translate"></p>
+    <!-- Analysis-specific banner: what AI Analysis actually does -->
+    <div class="analysis-banner">
+      <div class="analysis-banner-head">
+        <div class="analysis-banner-icon"><mat-icon>psychology</mat-icon></div>
+        <div>
+          <h2>{{ 'CONFLICT.analysisBannerTitle' | translate }}</h2>
+          <p>{{ 'CONFLICT.analysisBannerDesc' | translate }}</p>
+        </div>
       </div>
-      <div class="banner-features">
-        <span class="feature-pill"><mat-icon>poll</mat-icon> {{ 'CONFLICT.pillSurveys' | translate }}</span>
-        <span class="feature-pill"><mat-icon>psychology</mat-icon> {{ 'CONFLICT.pillAIMapping' | translate }}</span>
-        <span class="feature-pill"><mat-icon>escalator_warning</mat-icon> {{ 'CONFLICT.pillEscalation' | translate }}</span>
-        <span class="feature-pill"><mat-icon>trending_up</mat-icon> {{ 'CONFLICT.pillTrend' | translate }}</span>
-        <span class="feature-pill"><mat-icon>handshake</mat-icon> {{ 'CONFLICT.pillNegotiation' | translate }}</span>
-      </div>
-    </div>
-
-    <!-- Risk count cards -->
-    <div class="summary-bar">
-      <div class="risk-cards">
-        @for (level of riskLevels; track level.key) {
-          <div class="risk-card" [class]="'risk-card--' + level.key">
-            <div class="risk-count">{{ level.count }}</div>
-            <div class="risk-label">{{ level.label }}</div>
-          </div>
-        }
+      <div class="analysis-layers">
+        <div class="layer"><mat-icon>article</mat-icon><span [innerHTML]="'CONFLICT.analysisLayerNarrative' | translate"></span></div>
+        <div class="layer"><mat-icon>speed</mat-icon><span [innerHTML]="'CONFLICT.analysisLayerQuantitative' | translate"></span></div>
+        <div class="layer"><mat-icon>category</mat-icon><span [innerHTML]="'CONFLICT.analysisLayerPattern' | translate"></span></div>
       </div>
     </div>
 
@@ -133,83 +122,36 @@ interface ConflictAnalysis {
       }
     </div>
 
-    <!-- Mediation Escalation Pathway -->
-    <div class="section-card escalation-pathway">
-      <div class="section-header">
-        <div class="section-icon red"><mat-icon>escalator_warning</mat-icon></div>
-        <div>
-          <h3>{{ "CONFLICT.mediationPathway" | translate }}</h3>
-          <p>When coaching guides are insufficient, escalate directly to Helena's professional mediation services — coaching-integrated, interest-based, and designed to preserve relationships.</p>
-        </div>
-      </div>
-      <div class="escalation-steps">
-        <div class="escalation-step">
-          <div class="step-num">1</div>
-          <div class="step-content">
-            <strong>{{ "CONFLICT.step1Title" | translate }}</strong>
-            <span>Click "Escalate" on any high or critical risk analysis. HR is notified immediately.</span>
-          </div>
-        </div>
-        <div class="escalation-step">
-          <div class="step-num">2</div>
-          <div class="step-content">
-            <strong>{{ "CONFLICT.step2Title" | translate }}</strong>
-            <span>Helena reviews the AI analysis and conducts a 30-min intake with the HR contact to understand context.</span>
-          </div>
-        </div>
-        <div class="escalation-step">
-          <div class="step-num">3</div>
-          <div class="step-content">
-            <strong>{{ "CONFLICT.step3Title" | translate }}</strong>
-            <span>Interest-based negotiation session facilitated by Helena — focuses on underlying needs, not positions.</span>
-          </div>
-        </div>
-        <div class="escalation-step">
-          <div class="step-num">4</div>
-          <div class="step-content">
-            <strong>{{ "CONFLICT.step4Title" | translate }}</strong>
-            <span>Agreement documented, follow-up pulse survey scheduled to verify resolution at 30 and 60 days.</span>
-          </div>
-        </div>
-      </div>
-      <a href="mailto:helena@helenacoaching.com?subject=Mediation%20Escalation%20Request"
-         mat-stroked-button class="escalation-cta">
-        <mat-icon>email</mat-icon> Contact Helena for Mediation
-      </a>
-    </div>
   `,
   styles: [`
-    .module-banner {
+    .analysis-banner {
       background: linear-gradient(135deg, #1B2A47 0%, #243558 100%);
       border-radius: 16px; padding: 24px 28px; margin-bottom: 24px; color: white;
     }
-    .banner-insight {
-      display: flex; gap: 12px; align-items: flex-start; margin-bottom: 16px;
-      .banner-icon { color: #f0c040; font-size: 22px; flex-shrink: 0; margin-top: 2px; }
-      p { font-size: 13.5px; color: rgba(255,255,255,0.88); line-height: 1.7; margin: 0; }
+    .analysis-banner-head {
+      display: flex; gap: 14px; align-items: flex-start; margin-bottom: 18px;
+      h2 { font-size: 17px; margin: 0 0 6px; font-weight: 700; letter-spacing: -0.1px; }
+      p  { font-size: 13px; line-height: 1.6; margin: 0; color: rgba(255,255,255,0.85); }
+    }
+    .analysis-banner-icon {
+      width: 42px; height: 42px; border-radius: 11px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(58,159,214,0.25); color: #8bd0ff;
+      mat-icon { font-size: 22px; width: 22px; height: 22px; }
+    }
+    .analysis-layers {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px;
+    }
+    .layer {
+      display: flex; align-items: flex-start; gap: 10px;
+      padding: 12px 14px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 10px;
+      font-size: 12.5px; line-height: 1.5; color: rgba(255,255,255,0.9);
+      mat-icon { font-size: 18px; width: 18px; height: 18px; color: #f0c040; flex-shrink: 0; margin-top: 1px; }
       strong { color: white; }
     }
-    .banner-features { display: flex; flex-wrap: wrap; gap: 8px; }
-    .feature-pill {
-      display: inline-flex; align-items: center; gap: 5px;
-      padding: 4px 12px; background: rgba(255,255,255,0.12);
-      border: 1px solid rgba(255,255,255,0.18); border-radius: 20px;
-      font-size: 12px; color: rgba(255,255,255,0.9);
-      mat-icon { font-size: 14px; width: 14px; height: 14px; }
-    }
-
-    .summary-bar { display: flex; gap: 20px; align-items: stretch; margin-bottom: 24px; }
-    .risk-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; flex: 1; }
-    .risk-card {
-      background: white; border-radius: 12px; padding: 16px 20px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.06); border-left: 4px solid transparent; text-align: center;
-      .risk-count { font-size: 32px; font-weight: 700; color: var(--artes-primary); line-height: 1; }
-      .risk-label { font-size: 11px; color: #5a6a7e; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.4px; }
-    }
-    .risk-card--low      { border-color: #27C4A0; .risk-count { color: #27C4A0; } }
-    .risk-card--medium   { border-color: #f0a500; .risk-count { color: #f0a500; } }
-    .risk-card--high     { border-color: #e86c3a; .risk-count { color: #e86c3a; } }
-    .risk-card--critical { border-color: #e53e3e; .risk-count { color: #e53e3e; } }
 
     .analyses-section {
       background: white; border-radius: 16px;
@@ -259,23 +201,11 @@ interface ConflictAnalysis {
     .analysis-card-actions { display: flex; gap: 8px; padding-top: 4px; border-top: 1px solid #f0f4f8; }
     .delete-analysis-btn { color: #c5d0db; width: 28px; height: 28px; margin-left: auto; flex-shrink: 0; &:hover { color: #e53e3e !important; } }
 
-    .escalation-steps { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 20px; }
-    .escalation-step { display: flex; gap: 14px; align-items: flex-start; background: #fef7f5; border: 1px solid #fce0d4; border-radius: 10px; padding: 14px 16px; }
-    .step-num { width: 28px; height: 28px; background: #e53e3e; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; }
-    .step-content { display: flex; flex-direction: column; gap: 3px; strong { font-size: 13px; color: var(--artes-primary); } span { font-size: 12px; color: #5a6a7e; line-height: 1.5; } }
-    .escalation-cta { color: #e53e3e; border-color: #e53e3e; }
   `],
 })
 export class ConflictAnalysisComponent implements OnInit {
   analyses = signal<ConflictAnalysis[]>([]);
   loading = signal(true);
-
-  riskLevels = [
-    { key: 'low', label: 'Low Risk', count: 0 },
-    { key: 'medium', label: 'Medium Risk', count: 0 },
-    { key: 'high', label: 'High Risk', count: 0 },
-    { key: 'critical', label: 'Critical', count: 0 },
-  ];
 
   constructor(private api: ApiService, private dialog: MatDialog, private snackBar: MatSnackBar, private router: Router, private translate: TranslateService) {}
 
@@ -287,7 +217,6 @@ export class ConflictAnalysisComponent implements OnInit {
       next: (data) => {
         const topLevel = data.filter((a: any) => !a.parentId);
         this.analyses.set(topLevel);
-        this.riskLevels.forEach((l) => { l.count = topLevel.filter((a) => a.riskLevel === l.key).length; });
         this.loading.set(false);
       },
       error: () => this.loading.set(false),
