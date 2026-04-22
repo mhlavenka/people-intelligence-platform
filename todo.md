@@ -5,22 +5,16 @@ I. MODULES
 ----------
 
 **Intakes**
- - I assigned an intake to a user and sent it to him. Add also an email notification. Right now it is only internal message hub. 
 
 **Conflict Intelligence**
- - created an analysis and design doc "conflict_intelligence_module.docx"
  - Conflict intelligence flow:
    - Plan based or org based selection for AI recommendations or professional recommendations 
    - How do recommendations flow into action items and IDPs?
-   - Analyze the theory design doc
 
 **Coaching Module**
  - add mentoring to coaching module
- - invoicing, QB integration
-   - when invoice is sent, the tax line does not have different possible taxes - ex. split gst/qst
-   - should the invoice to sponsor be a pdf attachment rather than email body? 
  - repeating schedules for session creation by coach (weekly / monthly)
-
+ 
 **Booking**
 
 **IDPs** 
@@ -37,16 +31,21 @@ II. SYSTEM
 **Google Test Env**
  - need to switch to prod and have the app approved by google
 **Multilingual**
-
+ - missing translations: 
+**Sysadmin**
+ - sponsor invoicing should include the "from" address - the organization name and address.
 **Placeholders**
  - Billing - contact us to upgrade - create form to send a contact us to system admin via SES. Alternatively let the organization admin upgrade / choose a plan
 
 **Mobile App**
-
-
 
 III. LOW
 --------
 IV. NICE TO HAVE
 ----------------
  - user guide + how tos
+
+V. TO TEST
+----------
+ - login - google / microsoft / passkey; forgot password
+ - 
