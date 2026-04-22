@@ -58,7 +58,14 @@ export const routes: Routes = [
             (m) => m.ConflictShellComponent
           ),
         children: [
-          { path: '', redirectTo: 'analysis', pathMatch: 'full' },
+          { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+          {
+            path: 'dashboard',
+            loadComponent: () =>
+              import('./modules/conflict/conflict-dashboard-home/conflict-dashboard-home.component').then(
+                (m) => m.ConflictDashboardHomeComponent
+              ),
+          },
           {
             path: 'analysis',
             loadComponent: () =>
@@ -78,13 +85,6 @@ export const routes: Routes = [
             loadComponent: () =>
               import('./modules/conflict/conflict-skill-dev/conflict-skill-dev.component').then(
                 (m) => m.ConflictSkillDevComponent
-              ),
-          },
-          {
-            path: 'skill-building',
-            loadComponent: () =>
-              import('./modules/conflict/conflict-skill-building/conflict-skill-building.component').then(
-                (m) => m.ConflictSkillBuildingComponent
               ),
           },
         ],
