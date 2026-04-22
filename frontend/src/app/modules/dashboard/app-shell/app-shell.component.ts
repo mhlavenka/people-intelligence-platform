@@ -117,12 +117,14 @@ function isGroup(entry: NavEntry): entry is NavGroup {
               <img [src]="'assets/flags/' + flagFile(translateService.currentLang) + '.svg'"
                    [alt]="translateService.currentLang" class="lang-flag" />
             </div>
-            <mat-menu #langMenu="matMenu">
+            <mat-menu #langMenu="matMenu" class="lang-menu-panel">
               @for (l of languages; track l.code) {
                 @if (l.code !== translateService.currentLang) {
                   <button mat-menu-item (click)="switchLang(l.code)">
-                    <img [src]="'assets/flags/' + flagFile(l.code) + '.svg'" [alt]="l.label" class="lang-flag" />
-                    <span style="margin-left:8px">{{ l.label }}</span>
+                    <span class="lang-menu-row">
+                      <img [src]="'assets/flags/' + flagFile(l.code) + '.svg'" [alt]="l.label" class="lang-flag" />
+                      <span class="lang-menu-label">{{ l.label }}</span>
+                    </span>
                   </button>
                 }
               }
@@ -379,6 +381,7 @@ function isGroup(entry: NavEntry): entry is NavGroup {
 
     .lang-flag {
       width: 20px; height: 14px; display: block; border-radius: 2px; object-fit: cover;
+      flex-shrink: 0;
     }
 
     .nav-list {
