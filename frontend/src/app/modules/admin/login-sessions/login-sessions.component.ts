@@ -6,7 +6,7 @@ import { MatTableModule } from '@angular/material/table';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ApiService } from '../../../core/api.service';
 import { AuthService } from '../../../core/auth.service';
 
@@ -32,38 +32,38 @@ interface OrgLoginSession {
       <div class="header-row">
         <h2>
           <mat-icon>devices</mat-icon>
-          Active Login Sessions
+          {{ 'SESSIONS.pageTitle' | translate }}
         </h2>
         <div class="header-actions">
           <button mat-stroked-button (click)="loadSessions()" [disabled]="loading()">
-            <mat-icon>refresh</mat-icon> Refresh
+            <mat-icon>refresh</mat-icon> {{ 'SESSIONS.refresh' | translate }}
           </button>
           <button mat-stroked-button color="warn" (click)="cleanStale()" [disabled]="cleaning()">
             @if (cleaning()) {
               <mat-spinner diameter="18"></mat-spinner>
             } @else {
-              <mat-icon>cleaning_services</mat-icon> Clean Stale
+              <mat-icon>cleaning_services</mat-icon> {{ 'SESSIONS.cleanStale' | translate }}
             }
           </button>
         </div>
       </div>
-      <p class="subtitle">All active sessions across the organization. Revoke sessions to force re-authentication. Stale = inactive for 1+ hour.</p>
+      <p class="subtitle">{{ 'SESSIONS.subtitle' | translate }}</p>
     </div>
 
     @if (loading()) {
       <div class="loading-center"><mat-spinner diameter="32"></mat-spinner></div>
     } @else if (sessions().length === 0) {
-      <p class="empty">No active sessions.</p>
+      <p class="empty">{{ 'SESSIONS.noActive' | translate }}</p>
     } @else {
       <table mat-table [dataSource]="sessions()" class="sessions-table">
         <ng-container matColumnDef="user">
-          <th mat-header-cell *matHeaderCellDef>User</th>
+          <th mat-header-cell *matHeaderCellDef>{{ 'SESSIONS.user' | translate }}</th>
           <td mat-cell *matCellDef="let s">
             <div class="user-cell">
               <strong>
                 {{ s.user.firstName }} {{ s.user.lastName }}
                 @if (isMe(s)) {
-                  <span class="you-badge">You</span>
+                  <span class="you-badge">{{ 'SESSIONS.you' | translate }}</span>
                 }
               </strong>
               <span class="email">{{ s.user.email }}</span>
@@ -72,17 +72,17 @@ interface OrgLoginSession {
         </ng-container>
 
         <ng-container matColumnDef="device">
-          <th mat-header-cell *matHeaderCellDef>Device</th>
+          <th mat-header-cell *matHeaderCellDef>{{ 'SESSIONS.device' | translate }}</th>
           <td mat-cell *matCellDef="let s">{{ s.device }}</td>
         </ng-container>
 
         <ng-container matColumnDef="ip">
-          <th mat-header-cell *matHeaderCellDef>IP</th>
+          <th mat-header-cell *matHeaderCellDef>{{ 'SESSIONS.ip' | translate }}</th>
           <td mat-cell *matCellDef="let s">{{ s.ip || '—' }}</td>
         </ng-container>
 
         <ng-container matColumnDef="lastActive">
-          <th mat-header-cell *matHeaderCellDef>Last Active</th>
+          <th mat-header-cell *matHeaderCellDef>{{ 'SESSIONS.lastActive' | translate }}</th>
           <td mat-cell *matCellDef="let s">{{ s.lastActiveAt | date:'short' }}</td>
         </ng-container>
 
@@ -90,7 +90,7 @@ interface OrgLoginSession {
           <th mat-header-cell *matHeaderCellDef></th>
           <td mat-cell *matCellDef="let s">
             @if (!isMe(s)) {
-              <button mat-icon-button color="warn" matTooltip="Revoke session" (click)="revoke(s._id)">
+              <button mat-icon-button color="warn" [matTooltip]="'SESSIONS.revokeSession' | translate" (click)="revoke(s._id)">
                 <mat-icon>block</mat-icon>
               </button>
             }
@@ -126,6 +126,7 @@ export class LoginSessionsAdminComponent implements OnInit {
   private api = inject(ApiService);
   private snackBar = inject(MatSnackBar);
   private auth = inject(AuthService);
+  private translate = inject(TranslateService);
 
   sessions = signal<OrgLoginSession[]>([]);
   loading = signal(true);
@@ -142,26 +143,28 @@ export class LoginSessionsAdminComponent implements OnInit {
 
   cleanStale() {
     this.cleaning.set(true);
+    const ok = this.translate.instant('COMMON.ok');
     this.api.delete<{ message: string }>('/auth/sessions/org/stale').subscribe({
       next: (res) => {
         this.cleaning.set(false);
-        this.snackBar.open(res.message, 'OK', { duration: 3000 });
+        this.snackBar.open(res.message, ok, { duration: 3000 });
         this.loadSessions();
       },
       error: () => {
         this.cleaning.set(false);
-        this.snackBar.open('Failed to clean stale sessions', 'OK', { duration: 3000 });
+        this.snackBar.open(this.translate.instant('SESSIONS.cleanFailed'), ok, { duration: 3000 });
       },
     });
   }
 
   revoke(id: string) {
+    const ok = this.translate.instant('COMMON.ok');
     this.api.delete(`/auth/sessions/org/${id}`).subscribe({
       next: () => {
         this.sessions.update((list) => list.filter((s) => s._id !== id));
-        this.snackBar.open('Session revoked', 'OK', { duration: 3000 });
+        this.snackBar.open(this.translate.instant('SESSIONS.sessionRevoked'), ok, { duration: 3000 });
       },
-      error: () => this.snackBar.open('Failed to revoke session', 'OK', { duration: 3000 }),
+      error: () => this.snackBar.open(this.translate.instant('SESSIONS.revokeFailed'), ok, { duration: 3000 }),
     });
   }
 

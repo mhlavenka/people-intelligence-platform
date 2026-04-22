@@ -193,6 +193,7 @@ const DEFAULT_SETTINGS: Settings = {
                   <mat-option value="en">English</mat-option>
                   <mat-option value="fr">Fran\u00e7ais</mat-option>
                   <mat-option value="es">Español</mat-option>
+                  <mat-option value="sk">Slovenčina</mat-option>
                 </mat-select>
               </mat-form-field>
 

@@ -1,0 +1,103 @@
+{
+  "booking": {
+    "sessionConfirmedTitle": "Vaše sedenie je potvrdené!",
+    "newSessionBookedTitle": "Nové sedenie rezervované",
+    "coach": "Kouč",
+    "client": "Klient",
+    "email": "E-mail",
+    "phone": "Telefón",
+    "duration": "Trvanie",
+    "durationMinutes": "{{minutes}} minút",
+    "topic": "Téma",
+    "needToCancel": "Potrebujete zrušiť?",
+    "cancelThisSession": "Zrušiť toto sedenie",
+    "confirmedSubject": "Potvrdené: koučovacie sedenie {{date}} s {{coachName}}",
+    "newBookingSubject": "Nová rezervácia: {{clientName}} dňa {{date}} o {{time}}",
+
+    "sessionCancelledTitle": "Sedenie zrušené",
+    "cancelledBody": "Koučovacie sedenie naplánované na <strong>{{date}}</strong> o <strong>{{time}}</strong> ({{timezone}}) bolo zrušené používateľom {{byWhom}}.",
+    "reason": "Dôvod",
+    "cancelledSubject": "Zrušené: koučovacie sedenie {{date}}",
+
+    "sessionRescheduledTitle": "Vaše sedenie bolo preplánované",
+    "rescheduledBody": "Vaše koučovacie sedenie s <strong>{{coachName}}</strong> bolo presunuté.",
+    "previously": "Predtým",
+    "now": "Teraz",
+    "rescheduledSubject": "Preplánované: koučovacie sedenie {{date}}",
+    "coachRescheduledTitle": "Sedenie preplánované",
+    "coachRescheduledByCoachee": "<strong>{{clientName}}</strong> preplánoval svoje sedenie.",
+    "coachRescheduledByAdmin": "Sedenie s <strong>{{clientName}}</strong> bolo presunuté.",
+    "coachRescheduledSubject": "Preplánované: {{clientName}} dňa {{date}}",
+    "messageFrom": "Správa od {{name}}",
+
+    "reminderTitle": "Pripomienka: vaše sedenie je {{timeLabel}}",
+    "tomorrow": "zajtra",
+    "inOneHour": "o 1 hodinu",
+    "reminderSubject": "Pripomienka: koučovacie sedenie {{timeLabel}} s {{coachName}}",
+
+    "joinGoogleMeet": "Pripojiť sa cez Google Meet",
+    "joinTeamsMeeting": "Pripojiť sa cez Teams",
+    "teamsMeeting": "Schôdza Teams",
+    "googleMeet": "Google Meet"
+  },
+  "general": {
+    "resetPasswordTitle": "Obnovte svoje heslo",
+    "resetPasswordBody": "Dostali sme žiadosť o obnovenie vášho hesla. Kliknite na tlačidlo nižšie — tento odkaz vyprší o <strong>1 hodinu</strong>.",
+    "resetPasswordButton": "Obnoviť heslo",
+    "resetPasswordIgnore": "Ak ste obnovenie hesla nepožadovali, môžete tento e-mail pokojne ignorovať. Vaše heslo sa nezmení.",
+    "resetPasswordSubject": "Obnovte svoje heslo ARTES",
+
+    "welcomeTitle": "Vitajte, {{firstName}}!",
+    "welcomeBody": "Boli ste pridaní do organizácie <strong>{{orgName}}</strong> v ARTES. Prihláste sa a začnite.",
+    "welcomeTempPassword": "Dočasné heslo:",
+    "welcomeChangePwd": "(zmeňte ho, prosím, pri prvom prihlásení)",
+    "welcomeButton": "Prihlásiť sa",
+    "welcomeSubject": "Vitajte v {{orgName}} na ARTES",
+
+    "idpReadyTitle": "Váš IDP je pripravený, {{firstName}}!",
+    "idpReadyBody": "Váš kouč vygeneroval nový individuálny rozvojový plán podporovaný AI podľa metodiky GROW. Prihláste sa a prezrite si svoje ciele, míľniky a akčné kroky.",
+    "idpReadyButton": "Zobraziť môj IDP",
+    "idpReadySubject": "Váš individuálny rozvojový plán je pripravený",
+
+    "paymentReminderTitle": "Pripomienka platby",
+    "paymentOverdueTitle": "Platba po splatnosti",
+    "paymentOverdueBody": "Táto faktúra je {{days}} dní po splatnosti. Prosím, uhraďte ju okamžite, aby ste predišli prerušeniu služby.",
+    "paymentDueBody": "Platba je splatná {{date}}. Prosím, zabezpečte včasnú úhradu.",
+    "organization": "Organizácia",
+    "invoice": "Faktúra",
+    "amountDue": "Suma na úhradu",
+    "payNow": "Zaplatiť teraz",
+    "alreadyPaid": "Ak ste už zaplatili, ignorujte prosím túto správu.",
+    "paymentOverdueSubject": "[PO SPLATNOSTI] Faktúra {{invoiceNumber}} — {{total}} po splatnosti",
+    "paymentReminderSubject": "Pripomienka platby — faktúra {{invoiceNumber}} splatná {{dueDate}}",
+
+    "suspensionTitle": "Účet pozastavený",
+    "suspensionBody": "Prístup k organizácii <strong>{{orgName}}</strong> na ARTES bol pozastavený.",
+    "suspensionReason": "Dôvod",
+    "suspensionRelatedInvoice": "Súvisiaca faktúra",
+    "suspensionRestore": "Pre obnovenie prístupu prosím vyrovnajte nedoplatky. Vaše údaje sú v bezpečí a po reaktivácii účtu budú opäť plne dostupné.",
+    "suspensionButton": "Vyriešiť teraz",
+    "suspensionSubject": "[Vyžaduje sa akcia] {{orgName}} — účet pozastavený",
+
+    "newMessageTitle": "Nová správa od {{fromName}}",
+    "newMessageButton": "Otvoriť správy",
+    "newMessageSubject": "Nová správa od {{fromName}}",
+
+    "newEngagementTitle": "Nový koučovací vzťah",
+    "newEngagementBody": "Dobrý deň {{firstName}}, <strong>{{coachName}}</strong> s vami začal koučovací vzťah.",
+    "newEngagementCta": "Svoje sedenia, ciele a pokrok si môžete zobraziť v ARTES.",
+    "newEngagementButton": "Zobraziť v ARTES",
+    "newEngagementSubject": "Začal sa nový koučovací vzťah",
+
+    "newSessionTitle": "Naplánované nové sedenie",
+    "newSessionBody": "Dobrý deň {{firstName}}, <strong>{{coachName}}</strong> s vami naplánoval koučovacie sedenie.",
+    "newSessionButton": "Zobraziť v ARTES",
+    "newSessionSubject": "Naplánované nové koučovacie sedenie — {{date}}",
+
+    "postSessionTitle": "Dobrý deň {{firstName}}, čas na reflexiu",
+    "postSessionBody": "{{coachName}} pre vás pripravil krátku reflexiu po vašom koučovacom sedení dňa <strong>{{date}}</strong>.",
+    "postSessionMotivation": "Pár minút venovaných zachyteniu svojich myšlienok, kým je sedenie ešte čerstvé, pomôže upevniť postrehy a udržať váš rast na správnej ceste.",
+    "postSessionButton": "Dokončiť reflexiu po sedení",
+    "postSessionSubject": "Reflexia po sedení — {{date}}"
+  }
+}

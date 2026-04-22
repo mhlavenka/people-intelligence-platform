@@ -613,7 +613,7 @@ export class SurveyTakeComponent implements OnInit {
   }
 
   private loadTranslationsAndAutoSwitch(templateId: string, templateLang: string): void {
-    const langLabels: Record<string, string> = { en: 'English', fr: 'Français', es: 'Español' };
+    const langLabels: Record<string, string> = { en: 'English', fr: 'Français', es: 'Español', sk: 'Slovenčina' };
 
     this.api.get<TranslationRef[]>(`/surveys/templates/${templateId}/translations`).subscribe({
       next: (siblings) => {

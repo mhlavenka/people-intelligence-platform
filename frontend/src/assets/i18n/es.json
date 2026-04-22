@@ -1035,7 +1035,10 @@
     "templateHeader": "Plantilla",
     "responsesHeader": "Respuestas",
     "surveyIntakeActivity": "Actividad de encuestas y admisiones",
-    "surveyIntakeActivityDesc": "Uso de plantillas y tendencias de respuestas"
+    "surveyIntakeActivityDesc": "Uso de plantillas y tendencias de respuestas",
+    "orgLogoHint": "PNG, JPG o SVG · máx. 2 MB · se muestra en el encabezado de la plataforma",
+    "departmentsHint": "Defina los departamentos de su organización. Se usan en el análisis de Conflict Intelligence y en el organigrama.",
+    "taxIdHint": "Se usa en las facturas para el cumplimiento fiscal"
   },
   "SURVEY": {
     "intakeManagement": "Gestión de admisión",
@@ -1927,14 +1930,26 @@
   },
   "ORGCHART": {
     "title": "Organigrama",
+    "pageTitle": "Organigrama",
     "subtitle": "Jerarquía visual de la estructura de su equipo",
+    "pageSubtitle": "Arrastre una tarjeta de persona sobre otra para definir la línea jerárquica. Suéltela en un área vacía para convertirla en un nodo de nivel superior.",
     "noData": "No hay datos de organigrama disponibles. Agregue usuarios con asignaciones de gerente para construir el organigrama.",
     "zoomIn": "Acercar",
     "zoomOut": "Alejar",
     "resetZoom": "Restablecer zoom",
     "fitToScreen": "Ajustar a pantalla",
     "dragToReassign": "Arrastrar para reasignar",
-    "removeFromReportingLine": "Quitar de la línea jerárquica"
+    "removeFromReportingLine": "Quitar de la línea jerárquica",
+    "filterAll": "Todos",
+    "removeFromHierarchy": "Quitar de la jerarquía",
+    "loadFailed": "Error al cargar el organigrama",
+    "saved": "Organigrama guardado",
+    "saveFailed": "Error al guardar — por favor, inténtelo de nuevo",
+    "roleAdmin": "Administrador",
+    "roleHrManager": "Gerente de RR. HH.",
+    "roleManager": "Mánager",
+    "roleCoach": "Coach",
+    "roleEmployee": "Empleado"
   },
   "BOOKING": {
     "availability": "Disponibilidad",
@@ -2568,5 +2583,27 @@
     "coacheeFeedbackForCoachPlaceholder": "¿Qué funcionó bien? ¿Qué podría ser diferente?",
     "coacheeSaved": "Guardado",
     "coacheeOk": "OK"
+  },
+  "SESSIONS": {
+    "pageTitle": "Sesiones de inicio activas",
+    "subtitle": "Todas las sesiones activas de la organización. Revoque sesiones para forzar una nueva autenticación. Obsoleta = inactiva durante más de 1 hora.",
+    "refresh": "Actualizar",
+    "cleanStale": "Limpiar obsoletas",
+    "noActive": "No hay sesiones activas.",
+    "noActiveFound": "No se encontraron sesiones activas.",
+    "user": "Usuario",
+    "you": "Tú",
+    "device": "Dispositivo",
+    "ip": "IP",
+    "lastActive": "Última actividad",
+    "lastActivePrefix": "Última actividad",
+    "unknownIp": "IP desconocida",
+    "current": "Actual",
+    "revokeSession": "Revocar sesión",
+    "revokeThisSession": "Revocar esta sesión",
+    "revokeAllOthers": "Revocar todas las demás sesiones",
+    "sessionRevoked": "Sesión revocada",
+    "revokeFailed": "Error al revocar la sesión",
+    "cleanFailed": "Error al limpiar sesiones obsoletas"
   }
 }

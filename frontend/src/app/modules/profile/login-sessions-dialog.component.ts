@@ -32,7 +32,7 @@ interface LoginSessionItem {
       @if (loading()) {
         <div class="loading-center"><mat-spinner diameter="32"></mat-spinner></div>
       } @else if (sessions().length === 0) {
-        <p class="empty">No active sessions found.</p>
+        <p class="empty">{{ 'SESSIONS.noActiveFound' | translate }}</p>
       } @else {
         <div class="session-list">
           @for (session of sessions(); track session._id) {
@@ -44,17 +44,17 @@ interface LoginSessionItem {
                 <div class="device-name">
                   {{ session.device }}
                   @if (session.isCurrent) {
-                    <span class="current-badge">Current</span>
+                    <span class="current-badge">{{ 'SESSIONS.current' | translate }}</span>
                   }
                 </div>
                 <div class="session-meta">
-                  {{ session.ip || 'Unknown IP' }} &middot;
-                  Last active {{ session.lastActiveAt | date:'short' }}
+                  {{ session.ip || ('SESSIONS.unknownIp' | translate) }} &middot;
+                  {{ 'SESSIONS.lastActivePrefix' | translate }} {{ session.lastActiveAt | date:'short' }}
                 </div>
               </div>
               @if (!session.isCurrent) {
                 <button mat-icon-button color="warn"
-                  [matTooltip]="'Revoke this session'"
+                  [matTooltip]="'SESSIONS.revokeThisSession' | translate"
                   (click)="revokeSession(session._id)"
                   [disabled]="revoking() === session._id">
                   @if (revoking() === session._id) {
@@ -77,7 +77,7 @@ interface LoginSessionItem {
           @if (revokingAll()) {
             <mat-spinner diameter="18"></mat-spinner>
           } @else {
-            Revoke All Other Sessions
+            {{ 'SESSIONS.revokeAllOthers' | translate }}
           }
         </button>
       }
