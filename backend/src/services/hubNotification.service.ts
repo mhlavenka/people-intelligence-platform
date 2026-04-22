@@ -227,6 +227,7 @@ function coacheeLink(engagementId?: string | mongoose.Types.ObjectId): string {
 }
 
 function fmtDate(d: Date, language = 'en'): string {
-  const locale = language === 'fr' ? 'fr-FR' : 'en-GB';
+  const localeMap: Record<string, string> = { fr: 'fr-FR', es: 'es-ES', sk: 'sk-SK' };
+  const locale = localeMap[language] ?? 'en-GB';
   return d.toLocaleDateString(locale, { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 }

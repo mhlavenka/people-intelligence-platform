@@ -350,7 +350,7 @@ const SurveyTemplateSchema = new Schema<ISurveyTemplate>(
 
         analysisPrompt: { type: String },
 
-        language: { type: String, enum: ['en', 'fr', 'es'], default: 'en' },
+        language: { type: String, enum: ['en', 'fr', 'es', 'sk'], default: 'en' },
         sourceTemplateId: { type: Schema.Types.ObjectId, ref: 'SurveyTemplate' },
     },
     { timestamps: true }
