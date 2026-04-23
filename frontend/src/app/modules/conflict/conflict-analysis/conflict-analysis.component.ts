@@ -100,7 +100,10 @@ interface ConflictAnalysis {
               @if (a.conflictTypes.length) {
                 <div class="type-chips">
                   @for (t of a.conflictTypes; track t) {
-                    <span class="type-chip">{{ t }}</span>
+                    <span class="type-chip">
+                      <mat-icon>{{ typeIcon(t) }}</mat-icon>
+                      {{ t }}
+                    </span>
                   }
                 </div>
               }
@@ -166,38 +169,53 @@ interface ConflictAnalysis {
     }
 
     .analyses-grid {
-      display: grid; grid-template-columns: repeat(auto-fill, minmax(500px, 1fr));
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(550px, 1fr));
       gap: 16px; padding: 16px 20px 20px;
     }
     .analysis-card {
-      background: white; border: 1px solid #e8edf4; border-radius: 14px; padding: 18px;
+      background: white; border: 1px solid #e8edf4; border-radius: 14px; padding: 24px;
       border-left: 4px solid transparent; transition: box-shadow 0.15s; cursor: pointer;
-      display: flex; flex-direction: column; gap: 12px;
+      display: flex; flex-direction: column; gap: 16px;
+      min-height: 210px;
       &:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
       &.accent-low      { border-left-color: #27C4A0; }
       &.accent-medium   { border-left-color: #f0a500; }
       &.accent-high     { border-left-color: #e86c3a; }
       &.accent-critical { border-left-color: #e53e3e; }
     }
-    .analysis-card-top { display: flex; align-items: flex-start; gap: 16px; }
+    .analysis-card-top { display: flex; align-items: flex-start; gap: 20px; }
     .mini-gauge-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; }
     app-mini-gauge { width: 80px; }
     .new-analysis-card {
       border: 2px dashed #d0d8e4; border-left-width: 2px;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
-      gap: 8px; cursor: pointer; min-height: 120px; color: #6b7c93;
+      gap: 10px; cursor: pointer; min-height: 210px; color: #6b7c93;
+      font-size: 15px;
       transition: border-color 0.15s, color 0.15s, background 0.15s;
       &:hover { border-color: var(--artes-accent); color: var(--artes-accent); background: rgba(58,159,214,0.04); }
     }
-    .new-analysis-icon { font-size: 36px; width: 36px; height: 36px; }
-    .analysis-meta { display: flex; flex-direction: column; gap: 5px; min-width: 0; flex: 1; }
-    .meta-name { font-size: 14px; color: var(--artes-primary); strong { font-weight: 600; } }
-    .meta-template { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--artes-accent); mat-icon { font-size: 14px; width: 14px; height: 14px; } }
-    .meta-dept, .meta-period { display: flex; align-items: center; gap: 5px; font-size: 13px; mat-icon { font-size: 14px; width: 14px; height: 14px; color: #9aa5b4; } strong { color: var(--artes-primary); } }
+    .new-analysis-icon { font-size: 44px; width: 44px; height: 44px; }
+    .analysis-meta { display: flex; flex-direction: column; gap: 7px; min-width: 0; flex: 1; }
+    .meta-name { font-size: 17px; color: var(--artes-primary); strong { font-weight: 600; } }
+    .meta-template { display: flex; align-items: center; gap: 6px; font-size: 14px; color: var(--artes-accent); mat-icon { font-size: 16px; width: 16px; height: 16px; } }
+    .meta-dept, .meta-period { display: flex; align-items: center; gap: 6px; font-size: 14px; mat-icon { font-size: 16px; width: 16px; height: 16px; color: #9aa5b4; } strong { color: var(--artes-primary); } }
     .meta-period { color: #5a6a7e; }
-    .type-chips { display: flex; flex-wrap: wrap; gap: 4px; }
-    .type-chip { padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600; text-transform: capitalize; background: #eef2f7; color: #4a5568; }
-    .escalated-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: #e86c3a; font-weight: 600; mat-icon { font-size: 14px; width: 14px; height: 14px; } }
+    .type-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .type-chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 12px 5px 10px; border-radius: 999px;
+      font-size: 12px; font-weight: 600; text-transform: capitalize;
+      background: #eef2f7; color: #4a5568;
+      line-height: 1;
+      mat-icon {
+        font-size: 14px; width: 14px; height: 14px;
+        line-height: 14px;
+        flex-shrink: 0;
+        color: #6b7c93;
+        overflow: visible;
+      }
+    }
+    .escalated-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; color: #e86c3a; font-weight: 600; mat-icon { font-size: 16px; width: 16px; height: 16px; } }
     .analysis-card-actions { display: flex; gap: 8px; padding-top: 4px; border-top: 1px solid #f0f4f8; }
     .delete-analysis-btn { color: #c5d0db; width: 28px; height: 28px; margin-left: auto; flex-shrink: 0; &:hover { color: #e53e3e !important; } }
 
@@ -243,4 +261,27 @@ export class ConflictAnalysisComponent implements OnInit {
     ref.afterClosed().subscribe((result) => { if (result) this.loadAnalyses(); });
   }
 
+  /** Pick a Material icon for a free-form conflict-type label returned by the AI. */
+  typeIcon(type: string): string {
+    const t = type.toLowerCase();
+    if (t.includes('communication'))                            return 'forum';
+    if (t.includes('role') || t.includes('ambig') || t.includes('clarity')) return 'help_outline';
+    if (t.includes('leader') || t.includes('manage'))           return 'supervisor_account';
+    if (t.includes('trust'))                                    return 'handshake';
+    if (t.includes('psych') || t.includes('safety'))            return 'shield';
+    if (t.includes('feel') || t.includes('emotion'))            return 'mood';
+    if (t.includes('identity') || t.includes('belong') || t.includes('inclu')) return 'diversity_3';
+    if (t.includes('workload') || t.includes('burnout') || t.includes('stress')) return 'hourglass_bottom';
+    if (t.includes('process') || t.includes('procedure') || t.includes('structure')) return 'account_tree';
+    if (t.includes('resource'))                                 return 'inventory_2';
+    if (t.includes('recogn') || t.includes('reward'))           return 'emoji_events';
+    if (t.includes('feedback'))                                 return 'rate_review';
+    if (t.includes('change') || t.includes('transition'))       return 'sync_alt';
+    if (t.includes('power') || t.includes('politic'))           return 'gavel';
+    if (t.includes('value') || t.includes('culture'))           return 'compass_calibration';
+    if (t.includes('team') || t.includes('collab'))             return 'groups';
+    if (t.includes('workflow') || t.includes('task'))           return 'task_alt';
+    if (t.includes('goal') || t.includes('mission'))            return 'flag';
+    return 'label';
+  }
 }
