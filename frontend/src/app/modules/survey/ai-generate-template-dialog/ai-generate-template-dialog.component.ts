@@ -57,10 +57,10 @@ interface GeneratedTemplate {
 
           <div class="row">
             <mat-form-field appearance="outline">
-              <mat-label>{{ 'SURVEY.module' | translate }}</mat-label>
+              <mat-label>{{ 'SURVEY.moduleType' | translate }}</mat-label>
               <mat-select [(ngModel)]="moduleType">
                 <mat-option value="conflict">{{ 'SURVEY.moduleConflict' | translate }}</mat-option>
-                <mat-option value="neuroinclusion">{{ 'SURVEY.moduleNeuroinclusion' | translate }}</mat-option>
+                <mat-option value="neuroinclusion">{{ 'SURVEY.moduleNeuroInclusion' | translate }}</mat-option>
                 <mat-option value="succession">{{ 'SURVEY.moduleSuccession' | translate }}</mat-option>
                 <mat-option value="coaching">{{ 'SURVEY.moduleCoaching' | translate }}</mat-option>
               </mat-select>
