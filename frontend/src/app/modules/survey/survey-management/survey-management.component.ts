@@ -72,9 +72,6 @@ interface SurveyTemplate {
           <h1>{{ "SURVEY.intakeManagement" | translate }}</h1>
           <p>{{ "SURVEY.intakeManagementDesc" | translate }}</p>
         </div>
-        <button mat-raised-button color="primary" class="ai-generate-btn" (click)="openAiGenerateDialog()">
-          <mat-icon>auto_awesome</mat-icon> {{ "SURVEY.aiGenerateBtn" | translate }}
-        </button>
       </div>
 
       <!-- Filter rows -->
@@ -140,11 +137,21 @@ interface SurveyTemplate {
         </div>
       } @else {
         <div class="templates-grid">
-          <button class="template-card create-card" type="button" (click)="openCreateDialog()">
+          <div class="template-card create-card">
             <div class="create-plus"><mat-icon>add</mat-icon></div>
             <div class="create-title">{{ 'SURVEY.newTemplateCard' | translate }}</div>
             <div class="create-sub">{{ 'SURVEY.createBlankHint' | translate }}</div>
-          </button>
+            <div class="create-options">
+              <button mat-stroked-button class="create-opt" (click)="openCreateDialog()">
+                <mat-icon>edit_note</mat-icon>
+                {{ 'SURVEY.startFromScratch' | translate }}
+              </button>
+              <button mat-flat-button color="primary" class="create-opt ai" (click)="openAiGenerateDialog()">
+                <mat-icon>auto_awesome</mat-icon>
+                {{ 'SURVEY.aiGenerateShort' | translate }}
+              </button>
+            </div>
+          </div>
 
           @for (t of filteredTemplates(); track t._id) {
             <div class="template-card"
@@ -265,6 +272,11 @@ interface SurveyTemplate {
                         [matTooltip]="'SURVEY.assignIntake' | translate">
                   <mat-icon>upload</mat-icon>
                 </button>
+                <button mat-icon-button (click)="previewTemplate(t)"
+                        [disabled]="!t.questions.length"
+                        [matTooltip]="'SURVEY.preview' | translate">
+                  <mat-icon>visibility</mat-icon>
+                </button>
                 <button mat-icon-button (click)="openEditDialog(t)"
                         [matTooltip]="'COMMON.edit' | translate">
                   <mat-icon>edit</mat-icon>
@@ -366,29 +378,39 @@ interface SurveyTemplate {
       &.inactive { opacity: 0.65; }
     }
 
-    /* "+ Create new" empty card slotted at the start of the grid. */
+    /* "+ Create new" empty card slotted at the start of the grid.
+       Offers two paths: start from scratch (manual editor) or AI generate. */
     .template-card.create-card {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
-      gap: 8px; padding: 32px 20px; min-height: 180px;
+      gap: 10px; padding: 28px 20px; min-height: 180px;
       background: #fbfdff; border: 2px dashed #c7d6e8; box-shadow: none;
-      cursor: pointer; text-align: center;
-      transition: background 0.18s, border-color 0.18s, transform 0.18s;
-      &:hover {
-        background: #f4f9ff; border-color: var(--artes-accent);
-        transform: translateY(-2px);
-        box-shadow: 0 4px 18px rgba(58,159,214,0.14);
-      }
+      text-align: center;
+      transition: background 0.18s, border-color 0.18s;
+      &:hover { background: #f4f9ff; border-color: var(--artes-accent); }
+
       .create-plus {
-        width: 56px; height: 56px; border-radius: 50%;
+        width: 52px; height: 52px; border-radius: 50%;
         display: flex; align-items: center; justify-content: center;
         background: linear-gradient(135deg, rgba(58,159,214,0.12), rgba(39,196,160,0.12));
-        mat-icon { font-size: 30px; width: 30px; height: 30px; color: var(--artes-accent); }
+        mat-icon { font-size: 28px; width: 28px; height: 28px; color: var(--artes-accent); }
       }
       .create-title {
         font-size: 15px; font-weight: 700; color: var(--artes-primary);
       }
       .create-sub {
-        font-size: 12px; color: #7f8ea3; max-width: 260px; line-height: 1.5;
+        font-size: 12px; color: #7f8ea3; max-width: 260px; line-height: 1.5; margin-bottom: 4px;
+      }
+      .create-options {
+        display: flex; flex-direction: column; gap: 8px; width: 100%; max-width: 260px;
+      }
+      .create-opt {
+        width: 100%; justify-content: center; font-size: 13px; height: 36px;
+        mat-icon { font-size: 18px; width: 18px; height: 18px; margin-right: 4px; }
+      }
+      .create-opt.ai {
+        background: linear-gradient(135deg, #3A9FD6 0%, #27C4A0 100%) !important;
+        color: white !important;
+        mat-icon { color: white; }
       }
     }
 
@@ -402,10 +424,6 @@ interface SurveyTemplate {
       background: linear-gradient(135deg, rgba(124,58,237,0.10), rgba(58,159,214,0.10));
       color: #6b3aa0; border: 1px solid rgba(124,58,237,0.22);
       mat-icon { font-size: 13px; width: 13px; height: 13px; color: #7c3aed; }
-    }
-
-    .ai-generate-btn {
-      mat-icon { margin-right: 4px; }
     }
 
     /* Standardized instrument card — distinct blue-tinted style */
@@ -656,6 +674,30 @@ export class SurveyManagementComponent implements OnInit {
         width: '640px', maxWidth: '92vw', maxHeight: '92vh',
       });
       ref.afterClosed().subscribe((result) => { if (result) this.loadTemplates(); });
+    });
+  }
+
+  /** Open the same walkthrough preview the editor uses, hydrated from a saved
+   *  template — non-saving, just a respondent-eye view. */
+  previewTemplate(t: SurveyTemplate): void {
+    if (!t.questions?.length) return;
+    import('../survey-preview-dialog/survey-preview-dialog.component').then((m) => {
+      this.dialog.open(m.SurveyPreviewDialogComponent, {
+        width: '780px', maxWidth: '94vw', maxHeight: '92vh',
+        data: {
+          title: t.title,
+          description: t.description,
+          instructions: t.instructions,
+          questions: t.questions.map((q) => ({
+            id: q.id,
+            text: q.text,
+            type: q.type,
+            category: q.category,
+            options: (q as { options?: { value: string; text: string }[] }).options,
+            scale_range: (q as { scale_range?: { min: number; max: number; labels?: Record<string, string> } }).scale_range,
+          })),
+        },
+      });
     });
   }
 
