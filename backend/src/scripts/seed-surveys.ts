@@ -365,6 +365,37 @@ const coachingPreSession: {
   ],
 };
 
+const coachingPostSession: {
+  title: string;
+  moduleType: 'coaching';
+  intakeType: 'assessment';
+  description: string;
+  instructions: string;
+  questions: IQuestion[];
+} = {
+  title: 'Coaching — Post-Session Reflection',
+  moduleType: 'coaching',
+  intakeType: 'assessment',
+  description:
+    'A short reflection for the coachee to complete shortly after a coaching session. ' +
+    'Captures insights while they are fresh and helps both coach and coachee track progress.',
+  instructions:
+    'Take 5 minutes after your session to capture what landed, what shifted, and what you commit to next. ' +
+    'There are no right or wrong answers — your honest reflection is what makes coaching work.',
+  questions: [
+    { id: 'cposs01', category: 'Insight', type: 'text',
+      text: 'What is the single most important thing you are taking away from this session?' },
+    { id: 'cposs02', category: 'Insight', type: 'text',
+      text: 'What shifted in your thinking, feeling, or perspective during the session?' },
+    { id: 'cposs03', category: 'Action', type: 'text',
+      text: 'What specific action or commitment will you take before our next session, and by when?' },
+    { id: 'cposs04', category: 'Support', type: 'text',
+      text: 'What support or resources do you need to follow through on this commitment?' },
+    { id: 'cposs05', category: 'Session Quality', type: 'scale',
+      text: 'How valuable was this session for you? (1 = not valuable, 5 = highly valuable)' },
+  ],
+};
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Seeder
 // ─────────────────────────────────────────────────────────────────────────────
@@ -390,6 +421,7 @@ async function seed(): Promise<void> {
     leadershipReadiness,
     successionBench,
     coachingPreSession,
+    coachingPostSession,
   ];
 
   // Remove any old org-scoped copies created by a previous seed run

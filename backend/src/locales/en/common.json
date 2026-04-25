@@ -86,6 +86,7 @@
     "preSessionIntakeInactive": "Pre-session intake template is inactive",
     "preSessionIntakeMustBeAssessment": "Pre-session intake must be an assessment-type template",
     "postSessionFormAlreadyGenerated": "Post-session form already generated for this session.",
+    "sessionLockedCompleted": "This session is marked as completed and its journal is locked. Notes, templates and ratings can no longer be edited.",
     "coacheeNotFoundOrNoEmail": "Coachee not found or has no email.",
     "noSessionContext": "No session context available. Please provide a summary of the topics discussed.",
     "aiInvalidQuestionFormat": "AI returned invalid question format. Please try again.",

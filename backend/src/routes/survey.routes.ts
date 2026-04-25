@@ -8,7 +8,9 @@ import { SurveyAssignment } from '../models/SurveyAssignment.model';
 import { CoachingSession } from '../models/CoachingSession.model';
 import { User } from '../models/User.model';
 import { callClaude } from '../services/ai.service';
-import { createHubNotification } from '../services/hubNotification.service';
+import { createHubNotification, notifyCoachIntakeSubmitted } from '../services/hubNotification.service';
+import { sendEmail } from '../services/email.service';
+import { config } from '../config/env';
 
 function makeSubmissionToken(userId: string, templateId: string, sessionId?: string): string {
   const payload = sessionId ? `${userId}:${templateId}:${sessionId}` : `${userId}:${templateId}`;
@@ -463,11 +465,85 @@ router.post('/respond', async (req: AuthRequest, res: Response, next: NextFuncti
     }
 
     const response = await SurveyResponse.create(doc);
+
+    // Coach-facing notification when a coachee completes a session intake.
+    // Fire-and-forget; never delay the 201 response.
+    if (sessionId) {
+      notifyCoachOnSessionIntakeSubmit({
+        sessionId: String(sessionId),
+        templateId: String(templateId),
+        actingUserId: req.user!.userId.toString(),
+        language: req.language || 'en',
+      }).catch((err) => console.error('[Survey] Failed to notify coach of intake:', err));
+    }
+
     res.status(201).json({ message: 'Response recorded', id: response._id });
   } catch (e) {
     next(e);
   }
 });
+
+/** Compare a session's pre/post-session template to the just-submitted one and
+ *  notify the coach (hub + email) when a coachee finishes their intake. */
+async function notifyCoachOnSessionIntakeSubmit(p: {
+  sessionId: string;
+  templateId: string;
+  actingUserId: string;
+  language: string;
+}): Promise<void> {
+  const session = await CoachingSession.findById(p.sessionId)
+    .select('coachId coacheeId organizationId engagementId date preSessionIntakeTemplateId postSessionIntakeTemplateId')
+    .setOptions({ bypassTenantCheck: true });
+  if (!session) return;
+
+  const isPre = session.preSessionIntakeTemplateId?.toString() === p.templateId;
+  const isPost = session.postSessionIntakeTemplateId?.toString() === p.templateId;
+  if (!isPre && !isPost) return;
+
+  // Don't notify the coach for their own coach-led submissions
+  if (session.coachId.toString() === p.actingUserId) return;
+
+  const [coach, coachee] = await Promise.all([
+    User.findById(session.coachId).select('firstName lastName email preferredLanguage'),
+    User.findById(session.coacheeId).select('firstName lastName'),
+  ]);
+  if (!coach?.email || !coachee) return;
+
+  const lang = coach.preferredLanguage || p.language || 'en';
+  const sessionDate = session.date.toLocaleDateString(lang, {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+  });
+  const coacheeName = `${coachee.firstName} ${coachee.lastName}`;
+  const kind: 'pre' | 'post' = isPre ? 'pre' : 'post';
+  const link = `${config.frontendUrl}/coaching/${session.engagementId}`;
+
+  await notifyCoachIntakeSubmitted({
+    coachId: session.coachId,
+    organizationId: session.organizationId,
+    coacheeName,
+    kind,
+    sessionDate,
+    engagementId: session.engagementId,
+  });
+
+  const subject = isPre
+    ? `Pre-session form completed — ${sessionDate}`
+    : `Post-session reflection completed — ${sessionDate}`;
+  const headline = isPre
+    ? `${coacheeName} completed the pre-session form`
+    : `${coacheeName} completed the post-session reflection`;
+
+  await sendEmail({
+    to: coach.email,
+    subject,
+    html: `<h2 style="color:#1B2A47;margin:0 0 12px;font-size:22px;">${headline}</h2>
+           <p style="color:#5a6a7e;margin:0 0 16px;line-height:1.6;">
+             Your coachee has just submitted their ${isPre ? 'pre-session form' : 'post-session reflection'}
+             for the session on <strong>${sessionDate}</strong>.
+           </p>
+           <a href="${link}" style="display:inline-block;background:#3A9FD6;color:#ffffff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:600;font-size:14px;">View in ARTES</a>`,
+  });
+}
 
 router.get(
   '/responses/:templateId/count',

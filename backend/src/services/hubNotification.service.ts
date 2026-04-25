@@ -222,6 +222,29 @@ export async function notifyPostSessionForm(p: {
   });
 }
 
+/** Notify the coach that the coachee has submitted a pre- or post-session form. */
+export async function notifyCoachIntakeSubmitted(p: {
+  coachId: string | mongoose.Types.ObjectId;
+  organizationId: string | mongoose.Types.ObjectId;
+  coacheeName: string;
+  kind: 'pre' | 'post';
+  sessionDate: string;
+  engagementId?: string | mongoose.Types.ObjectId;
+}): Promise<void> {
+  const isPre = p.kind === 'pre';
+  await createHubNotification({
+    userId: p.coachId,
+    organizationId: p.organizationId,
+    type: 'survey_response',
+    title: isPre ? 'Pre-Session Form Completed' : 'Post-Session Reflection Completed',
+    body: isPre
+      ? `${p.coacheeName} completed the pre-session form for ${p.sessionDate}.`
+      : `${p.coacheeName} completed the post-session reflection for ${p.sessionDate}.`,
+    link: p.engagementId ? `/coaching/${p.engagementId}` : '/coaching',
+    category: 'sessionForms',
+  });
+}
+
 function coacheeLink(engagementId?: string | mongoose.Types.ObjectId): string {
   return engagementId ? `/coaching/${engagementId}` : '/coaching';
 }
