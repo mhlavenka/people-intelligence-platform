@@ -20,6 +20,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { ApiService } from '../../../core/api.service';
 import { AuthService } from '../../../core/auth.service';
 import { SurveyResponsesDialogComponent } from '../../survey/survey-responses-dialog/survey-responses-dialog.component';
+import { SubAnalysisDialogComponent, SubAnalysisDialogData } from '../sub-analysis-dialog/sub-analysis-dialog.component';
 import { MiniGaugeComponent } from '../../../shared/mini-gauge/mini-gauge.component';
 import { RiskBadgeComponent } from '../../../shared/risk-badge/risk-badge.component';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -154,81 +155,205 @@ interface RecommendedActions {
               <mat-icon>auto_awesome</mat-icon>
               <span>{{ "CONFLICT.aiAnalysis" | translate }}</span>
             </ng-template>
-            <div class="tab-body">
-              <div class="section">
-                <h3><mat-icon>auto_awesome</mat-icon> {{ "CONFLICT.aiNarrative" | translate }}</h3>
-                <div class="narrative">
-                  @for (para of splitParagraphs(analysis()!.aiNarrative); track $index) {
-                    <p>{{ para }}</p>
+            <div class="tab-body ai-analysis-tab">
+              <!-- ── HERO: overall risk snapshot ─────────────────────── -->
+              <div class="ai-hero" [class]="'risk-' + analysis()!.riskLevel">
+                <div class="ai-hero-glow"></div>
+
+                <div class="ai-hero-gauge">
+                  <svg class="big-ring" viewBox="0 0 180 180">
+                    <defs>
+                      <linearGradient [attr.id]="'gradient-' + analysis()!._id" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" [attr.stop-color]="riskColor(analysis()!.riskLevel)" stop-opacity="0.7"/>
+                        <stop offset="100%" [attr.stop-color]="riskColor(analysis()!.riskLevel)"/>
+                      </linearGradient>
+                    </defs>
+                    <circle class="ring-bg" cx="90" cy="90" r="78" fill="none" stroke-width="14"/>
+                    <circle class="ring-val" cx="90" cy="90" r="78" fill="none" stroke-width="14"
+                            [attr.stroke]="'url(#gradient-' + analysis()!._id + ')'"
+                            [style.stroke-dasharray]="490"
+                            [style.stroke-dashoffset]="490 - (analysis()!.riskScore / 100) * 490"
+                            stroke-linecap="round"/>
+                  </svg>
+                  <div class="big-ring-inner">
+                    <div class="big-score">{{ analysis()!.riskScore }}</div>
+                    <div class="big-score-of">/ 100</div>
+                  </div>
+                </div>
+
+                <div class="ai-hero-center">
+                  <div class="ai-hero-eyebrow">{{ "CONFLICT.overallRiskAssessment" | translate }}</div>
+                  <div class="ai-hero-risk" [class]="analysis()!.riskLevel">
+                    <mat-icon>{{ riskIcon(analysis()!.riskLevel) }}</mat-icon>
+                    <span>{{ (analysis()!.riskLevel | titlecase) + ' Risk' }}</span>
+                  </div>
+                  @if (firstSentence(); as lead) {
+                    <div class="ai-hero-lead">{{ lead }}</div>
+                  }
+                </div>
+
+                <div class="ai-hero-stats">
+                  <div class="ai-stat-card">
+                    <div class="ai-stat-icon"><mat-icon>scatter_plot</mat-icon></div>
+                    <div class="ai-stat-num">{{ analysis()!.conflictTypes.length }}</div>
+                    <div class="ai-stat-lbl">{{ "CONFLICT.conflictTypesDetected" | translate }}</div>
+                  </div>
+                  <div class="ai-stat-card">
+                    <div class="ai-stat-icon"><mat-icon>fact_check</mat-icon></div>
+                    <div class="ai-stat-num">
+                      <span class="stat-big">{{ completedSubCount() }}</span>
+                      <span class="stat-of">/ {{ analysis()!.conflictTypes.length }}</span>
+                    </div>
+                    <div class="ai-stat-lbl">{{ "CONFLICT.deepDivesCompleted" | translate }}</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ── AI NARRATIVE CARD ────────────────────────────────── -->
+              <div class="ai-narrative-card">
+                <div class="ai-narrative-head">
+                  <div class="ai-avatar">
+                    <mat-icon>auto_awesome</mat-icon>
+                    <span class="pulse-ring"></span>
+                  </div>
+                  <div class="ai-head-text">
+                    <div class="ai-head-title">{{ "CONFLICT.aiAssessment" | translate }}</div>
+                    <div class="ai-head-sub">
+                      <mat-icon class="tiny">event</mat-icon>
+                      {{ analysis()!.createdAt | date:'MMM d, y · h:mm a' }}
+                    </div>
+                  </div>
+                </div>
+
+                <div class="ai-narrative-body">
+                  @if (firstParagraph(); as lead) {
+                    <blockquote class="ai-pullquote">
+                      <mat-icon class="quote-mark">format_quote</mat-icon>
+                      {{ lead }}
+                    </blockquote>
+                  }
+                  @for (para of remainingParagraphs(); track $index) {
+                    <p class="ai-para" [style.animation-delay.ms]="80 + $index * 60">{{ para }}</p>
                   }
                 </div>
               </div>
 
-              @if (analysis()!.conflictTypes.length) {
-                <mat-divider />
-                <div class="section">
-                  <h3><mat-icon>manage_search</mat-icon> {{ "CONFLICT.drillDown" | translate }}</h3>
-                  <p class="drill-hint">Run a focused sub-analysis for each detected conflict type.</p>
-                  <div class="sub-analyses-list">
-                    @for (ct of analysis()!.conflictTypes; track ct) {
-                      <div class="sub-card" [class]="subAnalysisFor(ct)?.riskLevel || ''">
-                        <div class="sub-row" [class.clickable]="!!subAnalysisFor(ct)"
-                             (click)="subAnalysisFor(ct) && toggleNarrative(ct)">
-                          <div class="sub-left">
-                            <app-mini-gauge [score]="subAnalysisFor(ct)?.riskScore ?? 0"
-                                            [riskLevel]="subAnalysisFor(ct)?.riskLevel ?? ''"
-                                            size="sm" />
-                          </div>
-                          <div class="sub-center">
-                            <div class="sub-type-label">{{ ct }}</div>
-                            @if (subAnalysisFor(ct); as sub) {
-                              <div class="sub-score-bar-wrap">
-                                <div class="sub-score-bar" [style.width.%]="sub.riskScore" [style.background]="riskColor(sub.riskLevel)"></div>
-                              </div>
-                            } @else {
-                              <div class="sub-score-bar-wrap empty">
-                                <div class="sub-score-bar-placeholder">No sub-analysis yet</div>
-                              </div>
-                            }
-                          </div>
-                          <div class="sub-right">
-                            @if (subAnalysisFor(ct); as sub) {
-                              <app-risk-badge [level]="sub.riskLevel" [label]="sub.riskLevel | titlecase" />
-                              <mat-icon class="expand-icon" [class.expanded]="expandedNarratives().has(ct)">expand_more</mat-icon>
-                            }
-                            @if (!subAnalysisFor(ct)) {
-                              <button mat-stroked-button color="primary"
-                                      [disabled]="runningFor() === ct"
-                                      (click)="runSubAnalysis(ct); $event.stopPropagation()">
-                                @if (runningFor() === ct) {
-                                  <mat-spinner diameter="16" />
-                                } @else {
-                                  <mat-icon>play_arrow</mat-icon>
-                                }
-                                {{ runningFor() === ct ? 'Analyzing…' : 'Run' }}
-                              </button>
-                            }
-                          </div>
+              <!-- ── RISK DISTRIBUTION BAR ────────────────────────────── -->
+              @if (analysis()!.conflictTypes.length >= 2 && completedSubCount() > 0) {
+                <div class="risk-dist-card">
+                  <div class="risk-dist-head">
+                    <h4><mat-icon>equalizer</mat-icon> {{ "CONFLICT.riskDistribution" | translate }}</h4>
+                    <span class="risk-dist-hint">{{ completedSubCount() }}/{{ analysis()!.conflictTypes.length }}</span>
+                  </div>
+                  <div class="dist-bar">
+                    @for (ct of analyzedTypes(); track ct) {
+                      @if (subAnalysisFor(ct); as sub) {
+                        <div class="dist-segment"
+                             [style.width.%]="distWeight(ct)"
+                             [style.background]="riskColor(sub.riskLevel)"
+                             [style.animation-delay.ms]="$index * 90"
+                             [matTooltip]="ct + ' — ' + sub.riskScore + '/100'">
                         </div>
-                        @if (subAnalysisFor(ct); as sub) {
-                          @if (expandedNarratives().has(ct)) {
-                            <div class="sub-narrative-panel">
-                              @for (para of splitParagraphs(sub.aiNarrative); track $index) {
-                                <p>{{ para }}</p>
-                              }
-                            </div>
+                      }
+                    }
+                  </div>
+                  <div class="dist-legend">
+                    @for (ct of analyzedTypes(); track ct) {
+                      @if (subAnalysisFor(ct); as sub) {
+                        <span class="legend-item">
+                          <span class="legend-dot" [style.background]="riskColor(sub.riskLevel)"></span>
+                          <span class="legend-label">{{ ct }}</span>
+                          <span class="legend-val">{{ sub.riskScore }}</span>
+                        </span>
+                      }
+                    }
+                  </div>
+                </div>
+              }
+
+              <!-- ── CONFLICT TYPE CARDS GRID ────────────────────────── -->
+              @if (analysis()!.conflictTypes.length) {
+                <div class="types-section">
+                  <div class="types-head">
+                    <h3><mat-icon>manage_search</mat-icon> {{ "CONFLICT.drillDown" | translate }}</h3>
+                    <p class="drill-hint">{{ "CONFLICT.drillHint" | translate }}</p>
+                  </div>
+
+                  <div class="types-grid">
+                    @for (ct of analysis()!.conflictTypes; track ct) {
+                      <div class="type-card"
+                           [class]="subAnalysisFor(ct)?.riskLevel || 'pending'"
+                           [class.analyzed]="!!subAnalysisFor(ct)"
+                           [style.animation-delay.ms]="$index * 70">
+
+                        <div class="type-topline">
+                          <div class="type-icon-wrap" [class]="subAnalysisFor(ct)?.riskLevel || 'pending'">
+                            <mat-icon>{{ typeIcon(ct) }}</mat-icon>
+                          </div>
+                          @if (subAnalysisFor(ct); as sub) {
+                            <span class="risk-pill" [class]="sub.riskLevel">{{ sub.riskLevel | titlecase }}</span>
+                          } @else {
+                            <span class="risk-pill pending">{{ "CONFLICT.awaitingAnalysis" | translate }}</span>
                           }
+                        </div>
+
+                        <div class="type-title">{{ ct }}</div>
+
+                        @if (subAnalysisFor(ct); as sub) {
+                          <div class="type-ring-wrap">
+                            <svg class="type-ring" viewBox="0 0 96 96">
+                              <circle cx="48" cy="48" r="40" fill="none" stroke-width="8" class="tr-bg"/>
+                              <circle cx="48" cy="48" r="40" fill="none" stroke-width="8"
+                                      [style.stroke]="riskColor(sub.riskLevel)"
+                                      [style.stroke-dasharray]="251.3"
+                                      [style.stroke-dashoffset]="251.3 - (sub.riskScore / 100) * 251.3"
+                                      stroke-linecap="round"
+                                      class="tr-val"/>
+                            </svg>
+                            <div class="type-ring-inner">
+                              <div class="type-ring-num" [style.color]="riskColor(sub.riskLevel)">{{ sub.riskScore }}</div>
+                              <div class="type-ring-lbl">{{ "CONFLICT.riskScore" | translate }}</div>
+                            </div>
+                          </div>
+
+                          <button mat-stroked-button class="type-toggle" (click)="openSubAnalysis(ct)">
+                            <mat-icon>open_in_full</mat-icon>
+                            {{ "CONFLICT.viewAnalysis" | translate }}
+                          </button>
+                        } @else {
+                          <div class="type-empty">
+                            <div class="type-empty-icon"><mat-icon>hourglass_empty</mat-icon></div>
+                            <div class="type-empty-lbl">{{ "CONFLICT.awaitingAnalysis" | translate }}</div>
+                          </div>
+                          <button mat-flat-button color="primary" class="type-run-btn"
+                                  [disabled]="runningFor() === ct"
+                                  (click)="runSubAnalysis(ct)">
+                            @if (runningFor() === ct) {
+                              <mat-spinner diameter="16" />
+                              <span>{{ "CONFLICT.analyzing" | translate }}</span>
+                            } @else {
+                              <mat-icon>auto_awesome</mat-icon>
+                              <span>{{ "CONFLICT.runDeepDive" | translate }}</span>
+                            }
+                          </button>
                         }
                       </div>
                     }
                   </div>
                 </div>
               }
+            </div>
+          </mat-tab>
 
+          <!-- Tab 2: Manager Conversation Guide -->
+          <mat-tab [disabled]="!analysis()!.managerScript">
+            <ng-template mat-tab-label>
+              <mat-icon>record_voice_over</mat-icon>
+              <span>{{ "CONFLICT.managerGuide" | translate }}</span>
+            </ng-template>
+            <div class="tab-body">
               @if (analysis()!.managerScript) {
-                <mat-divider />
                 <div class="section">
-                  <h3><mat-icon>record_voice_over</mat-icon> {{ "CONFLICT.managerGuide" | translate }}</h3>
                   @if (scriptSections().length > 0) {
                     <div class="script-sections">
                       @for (section of scriptSections(); track section.key) {
@@ -260,11 +385,17 @@ interface RecommendedActions {
                     <div class="script-box"><pre class="script-text">{{ analysis()!.managerScript }}</pre></div>
                   }
                 </div>
+              } @else {
+                <div class="placeholder-state">
+                  <mat-icon>record_voice_over</mat-icon>
+                  <h3>{{ "CONFLICT.managerGuide" | translate }}</h3>
+                  <p>No manager conversation guide available for this analysis yet.</p>
+                </div>
               }
             </div>
           </mat-tab>
 
-          <!-- Tab 2: AI Recommended Actions -->
+          <!-- Tab 3: AI Recommended Actions -->
           <mat-tab>
             <ng-template mat-tab-label>
               <mat-icon>lightbulb</mat-icon>
@@ -451,7 +582,7 @@ interface RecommendedActions {
             </div>
           </mat-tab>
 
-          <!-- Tab 3: Professional Review -->
+          <!-- Tab 4: Professional Review -->
           <mat-tab>
             <ng-template mat-tab-label>
               <mat-icon>rate_review</mat-icon>
@@ -529,7 +660,7 @@ interface RecommendedActions {
             </div>
           </mat-tab>
 
-          <!-- Tab 3: Resolution Plan -->
+          <!-- Tab 5: Resolution Plan -->
           <mat-tab>
             <ng-template mat-tab-label>
               <mat-icon>task_alt</mat-icon>
@@ -822,6 +953,412 @@ interface RecommendedActions {
     .actions-bar {
       display: flex; justify-content: flex-end; gap: 12px; padding: 16px 0;
     }
+
+    /* ════════════════════════════════════════════════════════════════
+       REDESIGNED AI ANALYSIS TAB — hero, narrative, distribution, grid
+       ════════════════════════════════════════════════════════════════ */
+    .ai-analysis-tab {
+      display: flex; flex-direction: column; gap: 20px;
+      padding: 24px 4px 8px;
+    }
+
+    /* ── Hero ─────────────────────────────────────────────────────── */
+    .ai-hero {
+      position: relative; overflow: hidden;
+      display: grid; grid-template-columns: auto 1fr auto; gap: 28px; align-items: center;
+      padding: 28px 32px; border-radius: 20px;
+      background: linear-gradient(135deg, #fbfcfe 0%, #f2f7fb 100%);
+      border: 1px solid rgba(27, 42, 71, 0.06);
+      box-shadow: 0 4px 20px -10px rgba(27, 42, 71, 0.08);
+      animation: hero-fade 0.5s ease both;
+
+      &.risk-low    { background: linear-gradient(135deg, #fbfefd 0%, #e9f9f4 100%); }
+      &.risk-medium { background: linear-gradient(135deg, #fffdf6 0%, #fdf2dc 100%); }
+      &.risk-high   { background: linear-gradient(135deg, #fff9f6 0%, #fde5d8 100%); }
+      &.risk-critical {
+        background: linear-gradient(135deg, #fff7f7 0%, #fbdede 100%);
+        border-color: rgba(229, 62, 62, 0.15);
+      }
+    }
+    .ai-hero-glow {
+      position: absolute; inset: -40% -20% auto auto; width: 60%; height: 140%;
+      background: radial-gradient(circle, rgba(255,255,255,0.55) 0%, transparent 60%);
+      pointer-events: none; animation: glow-drift 8s ease-in-out infinite alternate;
+    }
+    @keyframes glow-drift {
+      0%   { transform: translate(0, 0) rotate(0deg); }
+      100% { transform: translate(-30px, 20px) rotate(10deg); }
+    }
+    @keyframes hero-fade {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Big animated ring gauge */
+    .ai-hero-gauge {
+      position: relative; width: 180px; height: 180px; flex-shrink: 0;
+    }
+    .big-ring { width: 100%; height: 100%; transform: rotate(-90deg); }
+    .big-ring .ring-bg { stroke: rgba(27, 42, 71, 0.08); }
+    .big-ring .ring-val {
+      animation: ring-draw 1.1s cubic-bezier(0.22, 1, 0.36, 1) both;
+      filter: drop-shadow(0 2px 6px rgba(0,0,0,0.08));
+    }
+    @keyframes ring-draw {
+      from { stroke-dashoffset: 490; }
+    }
+    .big-ring-inner {
+      position: absolute; inset: 0; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 0;
+    }
+    .big-score {
+      font-size: 52px; font-weight: 800; line-height: 1;
+      color: var(--artes-primary); letter-spacing: -1.5px;
+      animation: score-pop 0.6s 0.2s ease both;
+    }
+    .big-score-of {
+      font-size: 12px; color: #8a99ad; margin-top: 6px;
+      font-weight: 500; letter-spacing: 0.8px;
+    }
+    @keyframes score-pop {
+      from { transform: scale(0.7); opacity: 0; }
+      to   { transform: scale(1); opacity: 1; }
+    }
+
+    /* Hero center: risk label + summary */
+    .ai-hero-center {
+      min-width: 0; display: flex; flex-direction: column; gap: 10px;
+      animation: slide-in 0.5s 0.1s ease both;
+    }
+    @keyframes slide-in {
+      from { opacity: 0; transform: translateX(-8px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+    .ai-hero-eyebrow {
+      font-size: 11px; text-transform: uppercase; letter-spacing: 1.2px;
+      color: #7f8ea3; font-weight: 600;
+    }
+    .ai-hero-risk {
+      display: inline-flex; align-items: center; gap: 10px;
+      font-size: 26px; font-weight: 700; line-height: 1.1;
+      mat-icon { font-size: 28px; width: 28px; height: 28px; }
+      &.low    { color: #1a9678; }
+      &.medium { color: #b07800; }
+      &.high   { color: #c04a14; }
+      &.critical { color: #c53030; animation: pulse-critical 2.2s ease-in-out infinite; }
+    }
+    @keyframes pulse-critical {
+      0%, 100% { text-shadow: 0 0 0 rgba(197,48,48,0); }
+      50%      { text-shadow: 0 0 12px rgba(197,48,48,0.35); }
+    }
+    .ai-hero-lead {
+      font-size: 14px; color: #4a5a74; line-height: 1.6;
+      max-width: 420px; font-weight: 500;
+    }
+
+    /* Hero stats */
+    .ai-hero-stats {
+      display: flex; flex-direction: column; gap: 10px; flex-shrink: 0;
+    }
+    .ai-stat-card {
+      position: relative; min-width: 148px;
+      display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto;
+      column-gap: 10px; align-items: center;
+      padding: 12px 16px; border-radius: 12px;
+      background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(6px);
+      border: 1px solid rgba(27, 42, 71, 0.06);
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
+      animation: stat-in 0.5s ease both;
+      &:nth-child(1) { animation-delay: 0.2s; }
+      &:nth-child(2) { animation-delay: 0.3s; }
+      &:hover { transform: translateY(-2px); box-shadow: 0 6px 18px -8px rgba(27, 42, 71, 0.15); }
+    }
+    @keyframes stat-in {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .ai-stat-icon {
+      grid-row: 1 / 3; width: 36px; height: 36px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(135deg, rgba(58,159,214,0.14), rgba(39,196,160,0.14));
+      mat-icon { font-size: 20px; width: 20px; height: 20px; color: var(--artes-accent); }
+    }
+    .ai-stat-num {
+      font-size: 22px; font-weight: 700; color: var(--artes-primary);
+      line-height: 1.1; display: flex; align-items: baseline; gap: 2px;
+      .stat-big { font-size: 22px; }
+      .stat-of { font-size: 13px; color: #9aa5b4; font-weight: 500; }
+    }
+    .ai-stat-lbl {
+      font-size: 11px; color: #7f8ea3; font-weight: 500;
+      text-transform: uppercase; letter-spacing: 0.4px;
+    }
+
+    /* ── Narrative card ───────────────────────────────────────────── */
+    .ai-narrative-card {
+      background: #ffffff; border-radius: 18px; padding: 24px 28px;
+      border: 1px solid #edf1f6;
+      box-shadow: 0 2px 12px -6px rgba(27, 42, 71, 0.06);
+      animation: card-in 0.5s 0.1s ease both;
+    }
+    @keyframes card-in {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .ai-narrative-head {
+      display: flex; align-items: center; gap: 14px; margin-bottom: 18px;
+    }
+    .ai-avatar {
+      position: relative; width: 44px; height: 44px; flex-shrink: 0;
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(135deg, #3A9FD6 0%, #27C4A0 100%);
+      box-shadow: 0 4px 14px -4px rgba(58, 159, 214, 0.45);
+      mat-icon { color: #fff; font-size: 22px; width: 22px; height: 22px; }
+    }
+    .pulse-ring {
+      position: absolute; inset: -4px; border-radius: 50%;
+      border: 2px solid rgba(58, 159, 214, 0.35);
+      animation: pulse-ring 2.4s ease-out infinite;
+    }
+    @keyframes pulse-ring {
+      0%   { transform: scale(1);   opacity: 0.8; }
+      100% { transform: scale(1.3); opacity: 0; }
+    }
+    .ai-head-text { display: flex; flex-direction: column; gap: 3px; }
+    .ai-head-title { font-size: 15px; font-weight: 700; color: var(--artes-primary); }
+    .ai-head-sub {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 12px; color: #9aa5b4;
+      .tiny { font-size: 13px; width: 13px; height: 13px; }
+    }
+
+    .ai-narrative-body { display: flex; flex-direction: column; gap: 14px; }
+    .ai-pullquote {
+      position: relative; margin: 0;
+      padding: 18px 20px 18px 52px;
+      background: linear-gradient(135deg, rgba(58,159,214,0.06) 0%, rgba(39,196,160,0.04) 100%);
+      border-left: 4px solid var(--artes-accent);
+      border-radius: 0 12px 12px 0;
+      font-size: 15px; line-height: 1.7; color: #2d3748; font-weight: 500;
+      font-style: italic;
+      animation: quote-in 0.55s 0.15s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+    @keyframes quote-in {
+      from { opacity: 0; transform: translateX(-6px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+    .ai-pullquote .quote-mark {
+      position: absolute; left: 14px; top: 14px;
+      font-size: 30px; width: 30px; height: 30px;
+      color: var(--artes-accent); opacity: 0.35;
+    }
+    .ai-para {
+      font-size: 14px; color: #374151; line-height: 1.75; margin: 0;
+      animation: para-in 0.5s ease both;
+    }
+    @keyframes para-in {
+      from { opacity: 0; transform: translateY(4px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Risk distribution bar ───────────────────────────────────── */
+    .risk-dist-card {
+      background: #ffffff; border-radius: 16px; padding: 20px 24px;
+      border: 1px solid #edf1f6;
+      box-shadow: 0 2px 12px -6px rgba(27, 42, 71, 0.06);
+      animation: card-in 0.5s 0.15s ease both;
+    }
+    .risk-dist-head {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 12px;
+      h4 {
+        display: flex; align-items: center; gap: 6px; margin: 0;
+        font-size: 14px; font-weight: 600; color: var(--artes-primary);
+        mat-icon { font-size: 18px; width: 18px; height: 18px; color: var(--artes-accent); }
+      }
+    }
+    .risk-dist-hint {
+      font-size: 12px; color: #9aa5b4; background: #f0f4f8;
+      padding: 2px 10px; border-radius: 999px; font-weight: 600;
+    }
+    .dist-bar {
+      display: flex; width: 100%; height: 14px;
+      border-radius: 8px; overflow: hidden; background: #f0f4f8;
+      margin-bottom: 12px;
+    }
+    .dist-segment {
+      height: 100%; transform-origin: left center;
+      animation: dist-grow 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+      transition: filter 0.2s;
+      &:hover { filter: brightness(1.08); }
+    }
+    @keyframes dist-grow {
+      from { transform: scaleX(0); }
+      to   { transform: scaleX(1); }
+    }
+    .dist-legend {
+      display: flex; flex-wrap: wrap; gap: 14px 20px;
+    }
+    .legend-item {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 12px; color: #4a5a74;
+    }
+    .legend-dot {
+      width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0;
+    }
+    .legend-label { font-weight: 500; }
+    .legend-val {
+      font-variant-numeric: tabular-nums; font-weight: 700;
+      color: var(--artes-primary); margin-left: 2px;
+    }
+
+    /* ── Conflict type cards grid ────────────────────────────────── */
+    .types-section { margin-top: 4px; }
+    .types-head {
+      margin-bottom: 14px;
+      h3 {
+        display: flex; align-items: center; gap: 6px;
+        font-size: 15px; font-weight: 600; color: var(--artes-primary); margin: 0 0 4px;
+        mat-icon { font-size: 18px; width: 18px; height: 18px; color: var(--artes-accent); }
+      }
+      .drill-hint { font-size: 13px; color: #6b7280; margin: 0; line-height: 1.5; }
+    }
+    .types-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      gap: 16px;
+    }
+    .type-card {
+      position: relative; overflow: hidden;
+      display: flex; flex-direction: column; gap: 12px;
+      padding: 18px; border-radius: 16px;
+      background: #ffffff; border: 1px solid #edf1f6;
+      box-shadow: 0 2px 10px -6px rgba(27, 42, 71, 0.06);
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+      animation: card-in 0.55s ease both;
+
+      &::before {
+        content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
+        background: #e8edf4; transition: background 0.2s;
+      }
+      &.low::before      { background: linear-gradient(180deg, #27C4A0, #1a9678); }
+      &.medium::before   { background: linear-gradient(180deg, #f0a500, #b07800); }
+      &.high::before     { background: linear-gradient(180deg, #e86c3a, #c04a14); }
+      &.critical::before { background: linear-gradient(180deg, #e53e3e, #9b2c2c); }
+
+      &:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 28px -12px rgba(27, 42, 71, 0.18);
+        border-color: #d8e2ee;
+      }
+      &.pending { background: linear-gradient(135deg, #fbfcfe, #f5f8fb); }
+    }
+    .type-topline {
+      display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;
+    }
+    .type-icon-wrap {
+      width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: #f0f4f8; transition: background 0.2s, transform 0.2s;
+      mat-icon { font-size: 22px; width: 22px; height: 22px; color: #5a6a7e; }
+
+      &.low      { background: rgba(39,196,160,0.12);  mat-icon { color: #1a9678; } }
+      &.medium   { background: rgba(240,165,0,0.12);   mat-icon { color: #b07800; } }
+      &.high     { background: rgba(232,108,58,0.12);  mat-icon { color: #c04a14; } }
+      &.critical { background: rgba(229,62,62,0.12);   mat-icon { color: #c53030; } }
+    }
+    .type-card:hover .type-icon-wrap { transform: scale(1.06) rotate(-2deg); }
+
+    .risk-pill {
+      display: inline-flex; align-items: center;
+      font-size: 10px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.5px; padding: 4px 10px; border-radius: 999px;
+      background: #eef2f7; color: #7f8ea3;
+      &.low      { background: rgba(39,196,160,0.15); color: #1a9678; }
+      &.medium   { background: rgba(240,165,0,0.15);  color: #b07800; }
+      &.high     { background: rgba(232,108,58,0.15); color: #c04a14; }
+      &.critical { background: rgba(229,62,62,0.15);  color: #c53030;
+                   animation: pill-pulse 1.8s ease-in-out infinite; }
+      &.pending  { background: rgba(154,165,180,0.12); color: #7f8ea3;
+                   text-transform: none; letter-spacing: 0.2px; font-weight: 600; }
+    }
+    @keyframes pill-pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(229,62,62,0); }
+      50%      { box-shadow: 0 0 0 6px rgba(229,62,62,0.1); }
+    }
+    .type-title {
+      font-size: 15px; font-weight: 600; color: var(--artes-primary);
+      line-height: 1.35;
+    }
+
+    /* Small per-type ring */
+    .type-ring-wrap {
+      position: relative; width: 96px; height: 96px; align-self: center;
+    }
+    .type-ring {
+      width: 100%; height: 100%; transform: rotate(-90deg);
+      .tr-bg { stroke: rgba(27, 42, 71, 0.08); }
+      .tr-val { animation: ring-draw-sm 0.9s cubic-bezier(0.22, 1, 0.36, 1) both; }
+    }
+    @keyframes ring-draw-sm { from { stroke-dashoffset: 251.3; } }
+    .type-ring-inner {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+    }
+    .type-ring-num {
+      font-size: 26px; font-weight: 800; line-height: 1; letter-spacing: -0.5px;
+      animation: score-pop 0.5s 0.15s ease both;
+    }
+    .type-ring-lbl {
+      font-size: 9px; text-transform: uppercase; letter-spacing: 0.8px;
+      color: #9aa5b4; margin-top: 3px; font-weight: 600;
+    }
+
+    .type-toggle {
+      align-self: stretch; font-size: 12px; height: 32px;
+      mat-icon { font-size: 18px; width: 18px; height: 18px; margin-right: 2px; }
+    }
+    /* Empty / pending state inside type card */
+    .type-empty {
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      padding: 18px 10px 8px;
+    }
+    .type-empty-icon {
+      width: 52px; height: 52px; border-radius: 50%;
+      background: #f0f4f8; display: flex; align-items: center; justify-content: center;
+      mat-icon {
+        font-size: 26px; width: 26px; height: 26px; color: #9aa5b4;
+        animation: hourglass-spin 3.5s ease-in-out infinite;
+      }
+    }
+    @keyframes hourglass-spin {
+      0%, 45% { transform: rotate(0deg); }
+      50%     { transform: rotate(180deg); }
+      95%, 100% { transform: rotate(180deg); }
+    }
+    .type-empty-lbl {
+      font-size: 12px; color: #9aa5b4; font-weight: 500;
+      text-transform: uppercase; letter-spacing: 0.4px;
+    }
+    .type-run-btn {
+      align-self: stretch; font-size: 13px;
+      mat-icon { margin-right: 4px; font-size: 18px; width: 18px; height: 18px; }
+      mat-spinner { margin-right: 6px; }
+    }
+
+    /* ── Responsive ──────────────────────────────────────────────── */
+    @media (max-width: 860px) {
+      .ai-hero { grid-template-columns: 1fr; text-align: center; gap: 16px; padding: 22px 18px; }
+      .ai-hero-gauge { margin: 0 auto; }
+      .ai-hero-center { align-items: center; }
+      .ai-hero-stats { flex-direction: row; justify-content: center; flex-wrap: wrap; }
+      .ai-stat-card { flex: 1 1 160px; max-width: 220px; }
+    }
+    @media (max-width: 520px) {
+      .types-grid { grid-template-columns: 1fr; }
+      .ai-narrative-card { padding: 18px 16px; }
+      .ai-pullquote { padding: 14px 14px 14px 44px; }
+    }
   `],
 })
 export class ConflictDetailComponent implements OnInit {
@@ -837,7 +1374,6 @@ export class ConflictDetailComponent implements OnInit {
   analysis = signal<ConflictAnalysis | null>(null);
   subAnalyses = signal<ConflictAnalysis[]>([]);
   runningFor = signal<string | null>(null);
-  expandedNarratives = signal<Set<string>>(new Set());
 
   // AI Recommended Actions
   recommendedActions = signal<RecommendedActions | null>(null);
@@ -945,6 +1481,7 @@ export class ConflictDetailComponent implements OnInit {
           return idx >= 0 ? list.map((s, i) => i === idx ? sub : s) : [...list, sub];
         });
         this.runningFor.set(null);
+        this.openSubAnalysis(ct);
       },
       error: () => this.runningFor.set(null),
     });
@@ -954,20 +1491,104 @@ export class ConflictDetailComponent implements OnInit {
     return text.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
   }
 
-  isNarrativeExpanded(ct: string): boolean { return this.expandedNarratives().has(ct); }
-
-  toggleNarrative(ct: string): void {
-    this.expandedNarratives.update((set) => {
-      const next = new Set(set);
-      next.has(ct) ? next.delete(ct) : next.add(ct);
-      return next;
+  openSubAnalysis(ct: string): void {
+    const sub = this.subAnalysisFor(ct);
+    if (!sub) return;
+    this.dialog.open<SubAnalysisDialogComponent, SubAnalysisDialogData>(SubAnalysisDialogComponent, {
+      width: '720px',
+      maxWidth: '92vw',
+      panelClass: 'sub-analysis-dialog-panel',
+      data: {
+        focusConflictType: sub.focusConflictType || ct,
+        riskScore: sub.riskScore,
+        riskLevel: sub.riskLevel,
+        aiNarrative: sub.aiNarrative,
+        conflictTypes: sub.conflictTypes || [],
+        icon: this.typeIcon(ct),
+        createdAt: sub.createdAt,
+      },
     });
   }
-
 
   riskColor(level: string): string {
     const map: Record<string, string> = { low: '#27C4A0', medium: '#f0a500', high: '#e86c3a', critical: '#e53e3e' };
     return map[level] ?? '#9aa5b4';
+  }
+
+  riskIcon(level: string): string {
+    const map: Record<string, string> = {
+      low: 'check_circle',
+      medium: 'info',
+      high: 'warning',
+      critical: 'report',
+    };
+    return map[level] ?? 'help';
+  }
+
+  /** Map a free-form conflict type label to a Material icon. */
+  typeIcon(type: string): string {
+    const t = (type || '').toLowerCase();
+    if (t.includes('communication'))                                              return 'forum';
+    if (t.includes('role') || t.includes('ambig') || t.includes('clarity'))       return 'help_outline';
+    if (t.includes('leader') || t.includes('manage'))                             return 'supervisor_account';
+    if (t.includes('trust'))                                                      return 'handshake';
+    if (t.includes('psych') || t.includes('safety'))                              return 'shield';
+    if (t.includes('feel') || t.includes('emotion'))                              return 'mood';
+    if (t.includes('identity') || t.includes('belong') || t.includes('inclu'))    return 'diversity_3';
+    if (t.includes('workload') || t.includes('burnout') || t.includes('stress'))  return 'hourglass_bottom';
+    if (t.includes('process') || t.includes('procedure') || t.includes('structure'))  return 'account_tree';
+    if (t.includes('resource'))                                                   return 'inventory_2';
+    if (t.includes('recogn') || t.includes('reward'))                             return 'emoji_events';
+    if (t.includes('feedback'))                                                   return 'rate_review';
+    if (t.includes('change') || t.includes('transition'))                         return 'sync_alt';
+    if (t.includes('power') || t.includes('politic'))                             return 'gavel';
+    if (t.includes('value') || t.includes('culture'))                             return 'compass_calibration';
+    if (t.includes('team') || t.includes('collab'))                               return 'groups';
+    if (t.includes('workflow') || t.includes('task'))                             return 'task_alt';
+    if (t.includes('goal') || t.includes('mission'))                              return 'flag';
+    return 'label';
+  }
+
+  completedSubCount(): number {
+    return this.subAnalyses().length;
+  }
+
+  analyzedTypes(): string[] {
+    const a = this.analysis();
+    if (!a) return [];
+    return a.conflictTypes.filter((ct) => !!this.subAnalysisFor(ct));
+  }
+
+  /** Weight for the stacked risk-distribution bar — each segment proportional to its score. */
+  distWeight(ct: string): number {
+    const sub = this.subAnalysisFor(ct);
+    if (!sub) return 0;
+    const total = this.analyzedTypes().reduce((acc, c) => acc + (this.subAnalysisFor(c)?.riskScore || 0), 0);
+    if (total <= 0) return 0;
+    return (sub.riskScore / total) * 100;
+  }
+
+  private narrativeParagraphs(): string[] {
+    const a = this.analysis();
+    if (!a) return [];
+    return this.splitParagraphs(a.aiNarrative);
+  }
+
+  firstParagraph(): string {
+    return this.narrativeParagraphs()[0] ?? '';
+  }
+
+  remainingParagraphs(): string[] {
+    return this.narrativeParagraphs().slice(1);
+  }
+
+  /** First sentence of the narrative — used as the hero lead. Clipped at 220 chars. */
+  firstSentence(): string {
+    const first = this.firstParagraph();
+    if (!first) return '';
+    const match = first.match(/[^.!?]+[.!?]/);
+    const sentence = (match ? match[0] : first).trim();
+    return sentence.length > 220 ? sentence.slice(0, 217).trimEnd() + '…' : sentence;
   }
 
   private splitWords(s: string): string {
