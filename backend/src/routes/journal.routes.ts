@@ -154,6 +154,14 @@ router.put(
       });
       if (!note) { res.status(404).json({ error: req.t('errors.noteNotFound') }); return; }
 
+      // Once a coach finalises a note (status='complete') the journal is
+      // locked. Coachee-facing fields stay editable so the coachee can still
+      // submit their pre/post-session reflection. Coach edits are rejected.
+      if (note.status === 'complete' && req.user!.role !== 'coachee') {
+        res.status(409).json({ error: req.t('errors.noteLockedComplete') });
+        return;
+      }
+
       if (req.user!.role === 'coachee') {
         if (req.body.coacheePre !== undefined) note.coacheePre = req.body.coacheePre;
         if (req.body.coacheePost !== undefined) note.coacheePost = req.body.coacheePost;
