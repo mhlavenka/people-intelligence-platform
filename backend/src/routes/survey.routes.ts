@@ -19,12 +19,38 @@ function makeSubmissionToken(userId: string, templateId: string, sessionId?: str
 
 const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
 
-async function isSessionIntakeAccessible(sessionId: string): Promise<{ ok: boolean; reason?: string }> {
+async function isSessionIntakeAccessible(
+  sessionId: string,
+  templateId?: string,
+): Promise<{ ok: boolean; reason?: string }> {
   const session = await CoachingSession.findById(sessionId)
-    .select('date preSessionIntakeSentAt status')
+    .select('date preSessionIntakeSentAt postSessionIntakeSentAt preSessionIntakeTemplateId postSessionIntakeTemplateId status')
     .setOptions({ bypassTenantCheck: true });
   if (!session) return { ok: false, reason: 'Session not found.' };
-  if (session.status !== 'scheduled') return { ok: false, reason: 'Session is no longer scheduled.' };
+
+  const isPostSession = !!templateId
+    && session.postSessionIntakeTemplateId?.toString() === templateId;
+  const isPreSession = !!templateId
+    && session.preSessionIntakeTemplateId?.toString() === templateId;
+
+  if (isPostSession) {
+    // Post-session form is gated by dispatch (postSessionIntakeSentAt is set
+    // when the coach marks the session complete). Status will be 'completed'
+    // or 'no_show' at that point — both should remain submittable.
+    if (!session.postSessionIntakeSentAt) {
+      return { ok: false, reason: 'Post-session form has not been sent yet.' };
+    }
+    return { ok: true };
+  }
+
+  // Default / pre-session path: session must still be scheduled and either
+  // dispatched OR within the 24-hour pre-window.
+  if (session.status !== 'scheduled' && !isPreSession) {
+    return { ok: false, reason: 'Session is no longer scheduled.' };
+  }
+  if (isPreSession && session.status !== 'scheduled') {
+    return { ok: false, reason: 'Session is no longer scheduled.' };
+  }
   const hoursUntil = (session.date.getTime() - Date.now()) / (60 * 60 * 1000);
   if (session.preSessionIntakeSentAt) return { ok: true };
   if (hoursUntil <= 24) return { ok: true };
@@ -395,7 +421,7 @@ router.get('/check/:templateId', async (req: AuthRequest, res: Response, next: N
     const sessionId = typeof req.query['sessionId'] === 'string' ? req.query['sessionId'] : undefined;
 
     if (sessionId) {
-      const access = await isSessionIntakeAccessible(sessionId);
+      const access = await isSessionIntakeAccessible(sessionId, req.params['templateId']);
       if (!access.ok) {
         res.json({ alreadySubmitted: false, locked: true, lockedReason: access.reason });
         return;
@@ -421,10 +447,11 @@ router.post('/respond', async (req: AuthRequest, res: Response, next: NextFuncti
       coacheeId, sessionFormat, targetName, sessionId, respondentLanguage,
     } = req.body;
 
-    // 24h gate: coachees can only submit session-bound intakes within 24h of the session.
-    // Coaches submitting on behalf of a coachee bypass this check.
+    // 24h gate (pre-session) / dispatch gate (post-session): coachees can only
+    // submit session-bound intakes once they're available. Coaches submitting
+    // on behalf of a coachee bypass this check.
     if (sessionId && !coacheeId) {
-      const access = await isSessionIntakeAccessible(sessionId);
+      const access = await isSessionIntakeAccessible(sessionId, templateId);
       if (!access.ok) {
         res.status(403).json({ error: access.reason });
         return;

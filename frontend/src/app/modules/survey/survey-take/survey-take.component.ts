@@ -10,7 +10,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ApiService } from '../../../core/api.service';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 interface QuestionOption {
   value: string;
@@ -90,6 +90,17 @@ const DEPARTMENTS = [
             </div>
             <h2>{{ 'SURVEY.alreadySubmitted' | translate }}</h2>
             <p>{{ 'SURVEY.alreadySubmittedDesc' | translate }}</p>
+            <button mat-raised-button color="primary" (click)="goToDashboard()">
+              {{ 'SURVEY.backToDashboard' | translate }}
+            </button>
+          </div>
+        } @else if (surveyLocked()) {
+          <div class="thank-you">
+            <div class="thank-you-icon already">
+              <mat-icon>lock_clock</mat-icon>
+            </div>
+            <h2>{{ 'SURVEY.surveyLockedTitle' | translate }}</h2>
+            <p>{{ surveyLocked() }}</p>
             <button mat-raised-button color="primary" (click)="goToDashboard()">
               {{ 'SURVEY.backToDashboard' | translate }}
             </button>
@@ -287,6 +298,12 @@ const DEPARTMENTS = [
                   </button>
                 }
               </div>
+              @if (submitError(); as err) {
+                <div class="submit-error">
+                  <mat-icon>error_outline</mat-icon>
+                  <span>{{ err }}</span>
+                </div>
+              }
             }
           }
 
@@ -489,6 +506,13 @@ const DEPARTMENTS = [
       text-align: center; padding: 48px; color: #9aa5b4;
       mat-icon { font-size: 48px; width: 48px; height: 48px; margin-bottom: 12px; }
     }
+    .submit-error {
+      display: flex; align-items: center; gap: 8px;
+      margin-top: 12px; padding: 10px 14px; border-radius: 8px;
+      background: rgba(229,62,62,0.08); border: 1px solid rgba(229,62,62,0.24);
+      color: #c53030; font-size: 13px; line-height: 1.5;
+      mat-icon { font-size: 18px; width: 18px; height: 18px; flex-shrink: 0; }
+    }
   `],
 })
 export class SurveyTakeComponent implements OnInit {
@@ -498,6 +522,8 @@ export class SurveyTakeComponent implements OnInit {
   submitting = signal(false);
   alreadySubmitted = signal(false);
   surveyInactive = signal(false);
+  surveyLocked = signal<string | null>(null);
+  submitError = signal<string | null>(null);
   phase = signal<'dept' | 'instructions' | 'questions'>('dept');
   currentIndex = signal(0);
   answers = signal<Record<string, string | number | boolean>>({});
@@ -567,7 +593,8 @@ export class SurveyTakeComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private api: ApiService
+    private api: ApiService,
+    private translate: TranslateService,
   ) {}
 
   sessionId: string | null = null;
@@ -581,10 +608,15 @@ export class SurveyTakeComponent implements OnInit {
       ? `/surveys/check/${id}?sessionId=${encodeURIComponent(this.sessionId)}`
       : `/surveys/check/${id}`;
 
-    this.api.get<{ alreadySubmitted: boolean }>(checkUrl).subscribe({
+    this.api.get<{ alreadySubmitted: boolean; locked?: boolean; lockedReason?: string }>(checkUrl).subscribe({
       next: (result) => {
         if (result.alreadySubmitted) {
           this.alreadySubmitted.set(true);
+          this.loading.set(false);
+          return;
+        }
+        if (result.locked) {
+          this.surveyLocked.set(result.lockedReason || this.translate.instant('SURVEY.surveyLockedDefault'));
           this.loading.set(false);
           return;
         }
@@ -712,10 +744,19 @@ export class SurveyTakeComponent implements OnInit {
     }
 
     this.api.post('/surveys/respond', body).subscribe({
-      next: () => { this.submitting.set(false); this.submitted.set(true); },
+      next: () => { this.submitting.set(false); this.submitted.set(true); this.submitError.set(null); },
       error: (err) => {
         this.submitting.set(false);
-        if (err.status === 409) { this.alreadySubmitted.set(true); }
+        if (err.status === 409) {
+          this.alreadySubmitted.set(true);
+          return;
+        }
+        if (err.status === 403) {
+          this.surveyLocked.set(err?.error?.error || this.translate.instant('SURVEY.surveyLockedDefault'));
+          return;
+        }
+        const msg = err?.error?.error || this.translate.instant('SURVEY.submitFailed');
+        this.submitError.set(msg);
       },
     });
   }

@@ -185,6 +185,20 @@ export async function notifyBookingReminder(p: {
   });
 }
 
+/** Hub links must be relative app paths (e.g. "/intake/:id?sessionId=:sid").
+ *  Absolute URLs starting with http are converted in case a caller passes one
+ *  by mistake — Angular Router cannot navigate to absolute URLs. */
+function toAppPath(link: string): string {
+  if (!link) return link;
+  if (!/^https?:\/\//i.test(link)) return link;
+  try {
+    const u = new URL(link);
+    return `${u.pathname}${u.search}${u.hash}`;
+  } catch {
+    return link;
+  }
+}
+
 export async function notifyPreSessionForm(p: {
   coacheeId: string | mongoose.Types.ObjectId;
   organizationId: string | mongoose.Types.ObjectId;
@@ -199,7 +213,7 @@ export async function notifyPreSessionForm(p: {
     type: 'survey_response',
     title: 'Pre-Session Form Ready',
     body: `${p.coachName} has a pre-session form for your session on ${p.sessionDate}: ${p.templateTitle}`,
-    link: p.intakeUrl,
+    link: toAppPath(p.intakeUrl),
     category: 'sessionForms',
   });
 }
@@ -217,7 +231,7 @@ export async function notifyPostSessionForm(p: {
     type: 'survey_response',
     title: 'Post-Session Reflection',
     body: `Please complete your reflection for the session on ${p.sessionDate} with ${p.coachName}.`,
-    link: p.intakeUrl,
+    link: toAppPath(p.intakeUrl),
     category: 'sessionForms',
   });
 }
