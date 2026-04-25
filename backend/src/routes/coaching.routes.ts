@@ -188,6 +188,86 @@ async function assertValidPreSessionIntake(
   }
 }
 
+/** Same rules as the pre-session validator. Kept as a separate function for
+ *  clear error messages and future divergence. */
+async function assertValidPostSessionIntake(
+  templateId: unknown,
+  organizationId: string,
+): Promise<void> {
+  if (!templateId) return;
+  const tpl = await SurveyTemplate.findById(templateId as string)
+    .setOptions({ bypassTenantCheck: true });
+  if (!tpl) {
+    throw Object.assign(new Error('Post-session intake template not found'), { statusCode: 400 });
+  }
+  const sameOrg = tpl.organizationId?.toString() === organizationId;
+  if (!tpl.isGlobal && !sameOrg) {
+    throw Object.assign(new Error('Post-session intake template not accessible'), { statusCode: 400 });
+  }
+  if (!tpl.isActive) {
+    throw Object.assign(new Error('Post-session intake template is inactive'), { statusCode: 400 });
+  }
+  if (tpl.intakeType !== 'assessment') {
+    throw Object.assign(
+      new Error('Post-session intake must be an assessment-type template'),
+      { statusCode: 400 },
+    );
+  }
+}
+
+/** Send a coach-assigned post-session form to the coachee (email + hub).
+ *  Sets postSessionIntakeSentAt; does NOT create a new template. */
+async function dispatchAssignedPostSessionForm(
+  session: InstanceType<typeof CoachingSession>,
+  language: string = 'en',
+): Promise<void> {
+  if (!session.postSessionIntakeTemplateId) return;
+  const [coachee, coach, template] = await Promise.all([
+    User.findById(session.coacheeId).select('firstName lastName email preferredLanguage'),
+    User.findById(session.coachId).select('firstName lastName'),
+    SurveyTemplate.findById(session.postSessionIntakeTemplateId).select('title'),
+  ]);
+  if (!coachee?.email || !coach || !template) return;
+
+  const lang = coachee.preferredLanguage || language || 'en';
+  const sessionDate = session.date.toLocaleDateString(lang, {
+    day: 'numeric', month: 'short', year: 'numeric',
+  });
+  const coachName = `${coach.firstName} ${coach.lastName}`;
+  const intakeUrl = `${config.frontendUrl}/intake/${template._id}?sessionId=${session._id}`;
+
+  await sendEmail({
+    to: coachee.email,
+    subject: `Post-session reflection — ${sessionDate}`,
+    html: buildPostSessionEmailHtml({
+      coacheeName: coachee.firstName,
+      coachName,
+      sessionDate,
+      intakeUrl,
+    }),
+  }).catch((err) => console.error('[PostSession] Email failed:', err));
+
+  await notifyPostSessionForm({
+    coacheeId: session.coacheeId,
+    organizationId: session.organizationId as any,
+    coachName,
+    sessionDate,
+    intakeUrl,
+  }).catch((err) => console.error('[PostSession] Hub notification failed:', err));
+
+  session.postSessionIntakeSentAt = new Date();
+  await session.save();
+}
+
+/** Fields that become read-only once a session is `completed`. Editing any of
+ *  these on a completed session must reject — coaches finalise the journal at
+ *  completion time. */
+const SESSION_LOCKED_FIELDS: ReadonlyArray<keyof InstanceType<typeof CoachingSession>> = [
+  'coachNotes', 'sharedNotes', 'topics', 'growFocus', 'frameworks',
+  'preSessionIntakeTemplateId', 'postSessionIntakeTemplateId',
+  'preSessionRating', 'postSessionRating',
+];
+
 // ═══════════════════════════════════════════════════════════════════════════
 // ENGAGEMENTS
 // ═══════════════════════════════════════════════════════════════════════════
@@ -556,12 +636,44 @@ router.put(
       });
       if (!existing) { res.status(404).json({ error: req.t('errors.sessionNotFound') }); return; }
 
+      // Once a session is `completed`, the journal is locked. Block edits to
+      // notes/templates/ratings, and block status changes (Mark Complete is a
+      // one-way transition — re-pressing or re-cancelling is rejected).
+      if (existing.status === 'completed') {
+        const incomingStatus = req.body.status;
+        if (incomingStatus !== undefined && incomingStatus !== 'completed') {
+          res.status(409).json({ error: req.t('errors.sessionLockedCompleted') });
+          return;
+        }
+        for (const field of SESSION_LOCKED_FIELDS) {
+          if (!(field in req.body)) continue;
+          const next = req.body[field];
+          const cur = (existing as any)[field];
+          const changed = Array.isArray(cur)
+            ? JSON.stringify([...cur].sort()) !== JSON.stringify([...(next ?? [])].sort())
+            : String(cur ?? '') !== String(next ?? '');
+          if (changed) {
+            res.status(409).json({ error: req.t('errors.sessionLockedCompleted') });
+            return;
+          }
+        }
+      }
+
       if (
         req.body.preSessionIntakeTemplateId
         && req.body.preSessionIntakeTemplateId !== existing.preSessionIntakeTemplateId?.toString()
       ) {
         await assertValidPreSessionIntake(
           req.body.preSessionIntakeTemplateId,
+          req.user!.organizationId,
+        );
+      }
+      if (
+        req.body.postSessionIntakeTemplateId
+        && req.body.postSessionIntakeTemplateId !== existing.postSessionIntakeTemplateId?.toString()
+      ) {
+        await assertValidPostSessionIntake(
+          req.body.postSessionIntakeTemplateId,
           req.user!.organizationId,
         );
       }
@@ -619,14 +731,16 @@ router.put(
         console.error('[BookingSync] Failed to propagate session update:', err),
       );
 
-      // If status changed to completed, increment engagement counter
+      // If status changed to completed, increment engagement counter and send
+      // the post-session form. Coach-assigned template wins; otherwise we fall
+      // back to AI auto-generation when context is available.
       if (wasNotCompleted && existing.status === 'completed') {
         await CoachingEngagement.findByIdAndUpdate(existing.engagementId, { $inc: { sessionsUsed: 1 } });
 
-        // Auto-generate post-session reflection if context is available and
-        // no post-session form has been created yet. Fire-and-forget so the
-        // PUT response is not delayed by the AI call.
-        if (!existing.postSessionIntakeTemplateId) {
+        if (existing.postSessionIntakeTemplateId && !existing.postSessionIntakeSentAt) {
+          dispatchAssignedPostSessionForm(existing, req.language)
+            .catch((err) => console.error('[PostSession] Assigned dispatch failed:', err));
+        } else if (!existing.postSessionIntakeTemplateId) {
           const hasCtx = existing.topics.length > 0
             || (existing.sharedNotes ?? '').trim()
             || (existing.coachNotes ?? '').trim();

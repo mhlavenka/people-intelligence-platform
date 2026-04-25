@@ -86,6 +86,7 @@
     "preSessionIntakeInactive": "Šablóna úvodného dotazníka pred sedením je neaktívna",
     "preSessionIntakeMustBeAssessment": "Úvodný dotazník pred sedením musí byť šablónou typu hodnotenie",
     "postSessionFormAlreadyGenerated": "Formulár po sedení už bol pre toto sedenie vygenerovaný.",
+    "sessionLockedCompleted": "Toto sedenie je označené ako dokončené a jeho denník je uzamknutý. Poznámky, šablóny a hodnotenia už nie je možné upravovať.",
     "coacheeNotFoundOrNoEmail": "Koučovaný sa nenašiel alebo nemá e-mail.",
     "noSessionContext": "Nie je dostupný žiadny kontext sedenia. Prosím, poskytnite zhrnutie prediskutovaných tém.",
     "aiInvalidQuestionFormat": "AI vrátila neplatný formát otázok. Skúste to znova.",
