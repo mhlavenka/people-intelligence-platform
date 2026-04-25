@@ -15,9 +15,10 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatDialog, MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { JournalService, SessionNote, AccountabilityItem } from '../journal.service';
 import { ApiService } from '../../../core/api.service';
+import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog.component';
 
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
@@ -38,23 +39,44 @@ export interface SessionNoteEditorDialogData {
     TranslateModule,
   ],
   template: `
-    <div class="journal-page" [class.in-dialog]="isInDialog">
+    <div class="journal-page" [class.in-dialog]="isInDialog" [class.locked]="noteStatus === 'complete'">
       <div class="page-header">
-        @if (isInDialog) {
-          <button mat-stroked-button class="show-all-btn" (click)="showAllNotes()">
-            <mat-icon>list_alt</mat-icon> {{ 'JOURNAL.showAllNotes' | translate }}
-          </button>
-          <button mat-icon-button class="dialog-close-btn" (click)="closeDialog()" [matTooltip]="'COMMON.close' | translate">
-            <mat-icon>close</mat-icon>
-          </button>
-        } @else {
+        @if (!isInDialog) {
           <a [routerLink]="backLink" class="back-link"><mat-icon>arrow_back</mat-icon> {{ 'COMMON.back' | translate }}</a>
         }
-        <h1>{{ isEdit ? ('JOURNAL.editSessionNote' | translate) : ('JOURNAL.newSessionNoteTitle' | translate) }}</h1>
-        <div class="lifecycle-hint">
-          <mat-icon>info_outline</mat-icon>
-          <span>{{ 'JOURNAL.lifecycleHint' | translate }}</span>
+        <div class="page-header-row">
+          <h1>{{ isEdit ? ('JOURNAL.editSessionNote' | translate) : ('JOURNAL.newSessionNoteTitle' | translate) }}</h1>
+          @if (isInDialog) {
+            <div class="page-header-actions">
+              <button mat-stroked-button class="show-all-btn"
+                      [matTooltip]="'JOURNAL.showAllNotes' | translate"
+                      (click)="showAllNotes()">
+                <mat-icon>list_alt</mat-icon>
+                {{ 'JOURNAL.allNotesShort' | translate }}
+              </button>
+              <button mat-icon-button class="dialog-close-btn"
+                      [matTooltip]="'COMMON.close' | translate"
+                      (click)="closeDialog()">
+                <mat-icon>close</mat-icon>
+              </button>
+            </div>
+          }
         </div>
+        @if (isInDialog && noteStatus !== 'complete') {
+          <div class="lifecycle-hint">
+            <mat-icon>info_outline</mat-icon>
+            <span>{{ 'JOURNAL.lifecycleHint' | translate }}</span>
+          </div>
+        }
+        @if (noteStatus === 'complete') {
+          <div class="locked-banner">
+            <mat-icon>lock</mat-icon>
+            <div>
+              <div class="locked-title">{{ 'JOURNAL.noteLockedTitle' | translate }}</div>
+              <div class="locked-sub">{{ 'JOURNAL.noteLockedDesc' | translate }}</div>
+            </div>
+          </div>
+        }
       </div>
 
       @if (loading()) {
@@ -232,12 +254,14 @@ export interface SessionNoteEditorDialogData {
 
         <!-- Action bar -->
         <div class="action-bar" [class.in-dialog]="isInDialog">
-          <button mat-flat-button class="draft-btn" (click)="save('draft')" [disabled]="saving()">
-            <mat-icon>save</mat-icon> {{ 'JOURNAL.saveDraft' | translate }}
-          </button>
-          <button mat-flat-button color="primary" (click)="save('complete')" [disabled]="saving()">
-            <mat-icon>check_circle</mat-icon> {{ 'JOURNAL.finaliseNote' | translate }}
-          </button>
+          @if (noteStatus !== 'complete') {
+            <button mat-flat-button class="draft-btn" (click)="save('draft')" [disabled]="saving()">
+              <mat-icon>save</mat-icon> {{ 'JOURNAL.saveDraft' | translate }}
+            </button>
+            <button mat-flat-button color="primary" (click)="confirmFinalise()" [disabled]="saving()">
+              <mat-icon>check_circle</mat-icon> {{ 'JOURNAL.finaliseNote' | translate }}
+            </button>
+          }
           <button mat-stroked-button (click)="generateAi()" [disabled]="saving() || aiLoading() || noteStatus !== 'complete'">
             <mat-icon>auto_awesome</mat-icon> {{ 'JOURNAL.generateAiSummary' | translate }}
           </button>
@@ -262,28 +286,43 @@ export interface SessionNoteEditorDialogData {
       mat-form-field { flex: 1; }
     }
 
+    .page-header { display: flex; flex-direction: column; gap: 10px; }
+    .page-header-row {
+      display: flex; align-items: center; gap: 12px; justify-content: space-between;
+      h1 { flex: 1 1 auto; min-width: 0; margin: 0; }
+    }
+    .page-header-actions {
+      display: flex; align-items: center; gap: 4px;
+      flex: 0 0 auto; margin-left: auto;
+    }
+
     /* Dialog mode overrides — fits inside MatDialog without padding doubling. */
     .journal-page.in-dialog {
       padding: 20px 24px; max-width: none; min-height: auto;
       background: #F8F6F1;
-      .page-header {
-        position: relative; padding-right: 40px;
-        h1 { margin-top: 4px; }
-      }
+      .page-header { margin-bottom: 12px; }
       .show-all-btn {
-        font-size: 12px; height: 30px; line-height: 28px; padding: 0 12px;
+        font-size: 12px; height: 30px; line-height: 28px; padding: 0 12px; min-width: 0;
         mat-icon { font-size: 16px; width: 16px; height: 16px; margin-right: 4px; }
-      }
-      .dialog-close-btn {
-        position: absolute; top: -4px; right: -4px;
       }
     }
     .lifecycle-hint {
       display: flex; align-items: center; gap: 8px; padding: 8px 12px;
       background: rgba(58,159,214,0.08); border: 1px solid rgba(58,159,214,0.24);
-      border-radius: 8px; margin-top: 10px;
+      border-radius: 8px;
       font-size: 12px; color: #2080b0; line-height: 1.5;
       mat-icon { font-size: 16px; width: 16px; height: 16px; color: var(--artes-accent); flex-shrink: 0; }
+    }
+    .locked-banner {
+      display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px;
+      background: linear-gradient(135deg, #f5f0e8 0%, #ede4d3 100%);
+      border: 1px solid #d4c5a8; border-radius: 10px;
+      mat-icon { color: #8b6f3a; flex-shrink: 0; margin-top: 2px; }
+      .locked-title { font-size: 13px; font-weight: 700; color: #6b5430; margin-bottom: 2px; }
+      .locked-sub { font-size: 12px; color: #8b7349; line-height: 1.5; }
+    }
+    .journal-page.locked {
+      .meta-row, mat-tab-group { pointer-events: none; opacity: 0.85; }
     }
     .action-bar.in-dialog {
       position: static; box-shadow: 0 1px 0 #e8edf4 inset;
@@ -407,6 +446,7 @@ export class SessionNoteEditorComponent implements OnInit {
    *  button + a close (X) button, and the action-bar loses its sticky positioning. */
   private dialogRef = inject(MatDialogRef<SessionNoteEditorComponent>, { optional: true });
   private dialogData = inject<SessionNoteEditorDialogData | null>(MAT_DIALOG_DATA, { optional: true });
+  private matDialog = inject(MatDialog);
   isInDialog = !!this.dialogRef;
 
   constructor(
@@ -536,6 +576,23 @@ export class SessionNoteEditorComponent implements OnInit {
 
   closeDialog(): void {
     if (this.dialogRef) this.dialogRef.close();
+  }
+
+  /** Two-step Finalise: open a confirmation explaining the lock is one-way,
+   *  then save with status='complete'. */
+  confirmFinalise(): void {
+    this.matDialog.open(ConfirmDialogComponent, {
+      width: '440px',
+      data: {
+        title: this.translate.instant('JOURNAL.finaliseConfirmTitle'),
+        message: this.translate.instant('JOURNAL.finaliseConfirmDesc'),
+        confirmLabel: this.translate.instant('JOURNAL.finaliseNote'),
+        confirmColor: 'primary',
+        icon: 'lock',
+      },
+    }).afterClosed().subscribe((ok) => {
+      if (ok) this.save('complete');
+    });
   }
 
   generateAi(): void {

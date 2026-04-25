@@ -87,6 +87,7 @@
     "preSessionIntakeMustBeAssessment": "L'admission pré-séance doit être un modèle de type évaluation",
     "postSessionFormAlreadyGenerated": "Le formulaire post-séance a déjà été généré pour cette séance.",
     "sessionLockedCompleted": "Cette séance est marquée comme terminée et son journal est verrouillé. Les notes, modèles et évaluations ne peuvent plus être modifiés.",
+    "noteLockedComplete": "Cette note de journal est finalisée et verrouillée. Les modifications ne sont plus acceptées.",
     "coacheeNotFoundOrNoEmail": "Coaché introuvable ou sans adresse courriel.",
     "noSessionContext": "Aucun contexte de séance disponible. Veuillez fournir un résumé des sujets abordés.",
     "aiInvalidQuestionFormat": "L'IA a retourné un format de questions invalide. Veuillez réessayer.",

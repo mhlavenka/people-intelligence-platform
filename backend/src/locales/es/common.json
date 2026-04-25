@@ -87,6 +87,7 @@
     "preSessionIntakeMustBeAssessment": "La evaluación previa a la sesión debe ser una plantilla de tipo evaluación",
     "postSessionFormAlreadyGenerated": "El formulario posterior a la sesión ya fue generado para esta sesión.",
     "sessionLockedCompleted": "Esta sesión está marcada como completada y su diario está bloqueado. Las notas, plantillas y valoraciones ya no se pueden editar.",
+    "noteLockedComplete": "Esta nota del diario está finalizada y bloqueada. Las ediciones ya no se aceptan.",
     "coacheeNotFoundOrNoEmail": "Coachee no encontrado o sin correo electrónico.",
     "noSessionContext": "No hay contexto de sesión disponible. Proporcione un resumen de los temas tratados.",
     "aiInvalidQuestionFormat": "La IA devolvió un formato de pregunta no válido. Inténtelo de nuevo.",
