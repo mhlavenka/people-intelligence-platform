@@ -99,9 +99,9 @@
     "leadershipSuccession": "Líderstvo a nástupníctvo",
     "succession": "Plánovanie nástupníctva",
     "surveys": "Prieskumy",
-    "intakes": "Úvodné dotazníky",
+    "intakes": "Centrum hodnotení",
     "conductInterview": "Viesť rozhovor",
-    "intakeManagement": "Správa úvodných dotazníkov",
+    "intakeManagement": "Spravovať šablóny",
     "admin": "Administrácia",
     "users": "Používatelia",
     "roles": "Roly",
@@ -1090,7 +1090,7 @@
     "taxIdHint": "Používané na faktúrach pre daňovú compliance"
   },
   "SURVEY": {
-    "intakeManagement": "Správa úvodných dotazníkov",
+    "intakeManagement": "Šablóny Centra hodnotení",
     "intakeManagementDesc": "Vytvárajte a spravujte šablóny úvodných dotazníkov naprieč všetkými modulmi",
     "newIntake": "Nový úvodný dotazník",
     "templateCreated": "Šablóna vytvorená",

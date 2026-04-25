@@ -99,9 +99,9 @@
     "leadershipSuccession": "Leadership et relève",
     "succession": "Planification de la relève",
     "surveys": "Enquêtes",
-    "intakes": "Prises en charge",
+    "intakes": "Hub d'évaluation",
     "conductInterview": "Mener un entretien",
-    "intakeManagement": "Gestion des prises en charge",
+    "intakeManagement": "Gérer les modèles",
     "admin": "Administration",
     "users": "Utilisateurs",
     "roles": "Rôles",
@@ -1090,7 +1090,7 @@
     "taxIdHint": "Utilisé sur les factures pour conformité fiscale"
   },
   "SURVEY": {
-    "intakeManagement": "Gestion des prises en charge",
+    "intakeManagement": "Modèles du Hub d'évaluation",
     "intakeManagementDesc": "Créez et gérez les modèles de prise en charge pour tous les modules",
     "newIntake": "Nouvelle prise en charge",
     "templateCreated": "Modèle créé",

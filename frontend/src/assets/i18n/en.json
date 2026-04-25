@@ -99,9 +99,9 @@
     "leadershipSuccession": "Leadership & Succession",
     "succession": "Succession Planning",
     "surveys": "Surveys",
-    "intakes": "Intakes",
+    "intakes": "Assessment Hub",
     "conductInterview": "Conduct Interview",
-    "intakeManagement": "Intake Management",
+    "intakeManagement": "Manage Templates",
     "admin": "Administration",
     "users": "Users",
     "roles": "Roles",
@@ -1090,7 +1090,7 @@
     "taxIdHint": "Used on invoices for tax compliance"
   },
   "SURVEY": {
-    "intakeManagement": "Intake Management",
+    "intakeManagement": "Assessment Hub Templates",
     "intakeManagementDesc": "Create and manage intake templates across all modules",
     "newIntake": "New Intake",
     "templateCreated": "Template created",

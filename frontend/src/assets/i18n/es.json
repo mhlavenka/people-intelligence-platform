@@ -99,9 +99,9 @@
     "leadershipSuccession": "Liderazgo y sucesión",
     "succession": "Planificación de sucesión",
     "surveys": "Encuestas",
-    "intakes": "Formularios de admisión",
+    "intakes": "Centro de evaluación",
     "conductInterview": "Realizar entrevista",
-    "intakeManagement": "Gestión de admisión",
+    "intakeManagement": "Gestionar plantillas",
     "admin": "Administración",
     "users": "Usuarios",
     "roles": "Roles",
@@ -1090,7 +1090,7 @@
     "taxIdHint": "Se usa en las facturas para el cumplimiento fiscal"
   },
   "SURVEY": {
-    "intakeManagement": "Gestión de admisión",
+    "intakeManagement": "Plantillas del Centro de evaluación",
     "intakeManagementDesc": "Cree y administre plantillas de admisión en todos los módulos",
     "newIntake": "Nueva admisión",
     "templateCreated": "Plantilla creada",
