@@ -1,7 +1,7 @@
 import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormArray, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatDialog, MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
@@ -681,6 +681,12 @@ interface SurveyTemplate {
     </mat-dialog-content>
 
     <mat-dialog-actions align="end">
+      <button mat-stroked-button (click)="openPreview()"
+              [disabled]="saving() || !questionsArray.length"
+              [matTooltip]="!questionsArray.length ? ('SURVEY.previewNeedsQuestions' | translate) : ''">
+        <mat-icon>visibility</mat-icon> {{ "SURVEY.preview" | translate }}
+      </button>
+      <span class="actions-spacer"></span>
       <button mat-button mat-dialog-close [disabled]="saving()">{{ "COMMON.cancel" | translate }}</button>
       <button mat-raised-button color="primary"
               (click)="save()" [disabled]="form.invalid || saving()">
@@ -697,6 +703,10 @@ interface SurveyTemplate {
     h2[mat-dialog-title] {
       display: flex; align-items: center; gap: 8px; color: var(--artes-primary);
       mat-icon { color: var(--artes-accent); }
+    }
+
+    mat-dialog-actions {
+      .actions-spacer { flex: 1; }
     }
 
     mat-dialog-content {
@@ -879,6 +889,7 @@ interface SurveyTemplate {
 export class SurveyTemplateDialogComponent implements OnInit {
   private fb = inject(FormBuilder);
   private api = inject(ApiService);
+  private dialog = inject(MatDialog);
   private dialogRef = inject(MatDialogRef<SurveyTemplateDialogComponent>);
   private existingData = inject<SurveyTemplate | null>(MAT_DIALOG_DATA, { optional: true });
   private translate = inject(TranslateService);
@@ -1082,6 +1093,46 @@ export class SurveyTemplateDialogComponent implements OnInit {
         this.translating.set(false);
         this.error.set(err.error?.error || this.translate.instant('SURVEY.translateFailed'));
       },
+    });
+  }
+
+  /** Open a non-saving preview dialog with the current (unsaved) form state.
+   *  Useful to walk through the template as a respondent would before saving. */
+  openPreview(): void {
+    const v = this.form.value;
+    const questions = (this.questionsArray.value as Array<Record<string, unknown>>).map((q, idx) => {
+      const optionsRaw = q['options'] as Array<{ value?: unknown; text?: unknown }> | undefined;
+      const options = Array.isArray(optionsRaw)
+        ? optionsRaw.map((o) => ({ value: String(o?.value ?? ''), text: String(o?.text ?? '') })).filter((o) => o.value || o.text)
+        : undefined;
+      const range = q['scale_range'] as { min?: unknown; max?: unknown; labels?: Record<string, string> } | undefined;
+      const scale_range = range && (range.min !== undefined || range.max !== undefined) ? {
+        min: Number(range.min ?? 1),
+        max: Number(range.max ?? 5),
+        labels: range.labels && typeof range.labels === 'object' ? range.labels : undefined,
+      } : undefined;
+      return {
+        id: String(q['id'] ?? `q${idx + 1}`),
+        text: String(q['text'] ?? ''),
+        type: String(q['type'] ?? 'text'),
+        category: q['category'] ? String(q['category']) : undefined,
+        options,
+        scale_range,
+      };
+    }).filter((q) => q.text.trim().length > 0);
+
+    if (questions.length === 0) return;
+
+    import('../survey-preview-dialog/survey-preview-dialog.component').then((m) => {
+      this.dialog.open(m.SurveyPreviewDialogComponent, {
+        width: '780px', maxWidth: '94vw', maxHeight: '92vh',
+        data: {
+          title: v.title || this.translate.instant('SURVEY.previewTitleFallback'),
+          description: v.description || undefined,
+          instructions: v.instructions || undefined,
+          questions,
+        },
+      });
     });
   }
 
