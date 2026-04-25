@@ -249,6 +249,19 @@ interface Session {
                         </span>
                       }
                       @if (canManage()) {
+                        @if (s.status === 'scheduled') {
+                          <button mat-stroked-button class="mark-complete-btn"
+                                  [matTooltip]="'COACHING.markCompleteTooltip' | translate"
+                                  (click)="markSessionComplete(s)"
+                                  [disabled]="markingCompleteFor() === s._id">
+                            @if (markingCompleteFor() === s._id) {
+                              <mat-spinner diameter="14" />
+                            } @else {
+                              <mat-icon>task_alt</mat-icon>
+                            }
+                            {{ 'COACHING.markSessionComplete' | translate }}
+                          </button>
+                        }
                         <button mat-icon-button [matTooltip]="'COACHING.editTooltip' | translate" (click)="editSession(s)"><mat-icon>edit</mat-icon></button>
                         @if (s.status === 'scheduled' && s.bookingId) {
                           <button mat-icon-button [matTooltip]="'COACHING.cancelSession' | translate" class="del-btn"
@@ -435,9 +448,9 @@ interface Session {
                           <span class="journal-label">{{ 'COACHING.noteLabel' | translate:{ number: note.sessionNumber } }}</span>
                           <span class="journal-status" [class]="note.status">{{ translateJournalStatus(note.status) }}</span>
                           @if (canManage()) {
-                            <a mat-icon-button [routerLink]="['/journal/note', note._id, 'edit']" [matTooltip]="'COACHING.openJournalNote' | translate" class="journal-open-btn">
+                            <button mat-icon-button (click)="openJournalNote(note._id)" [matTooltip]="'COACHING.openJournalNote' | translate" class="journal-open-btn">
                               <mat-icon>open_in_new</mat-icon>
-                            </a>
+                            </button>
                           } @else {
                             <a mat-icon-button [routerLink]="'/my-journal/engagement/' + engId"
                                [queryParams]="{ sessionId: s._id }"
@@ -508,9 +521,9 @@ interface Session {
                         <mat-icon>auto_stories</mat-icon>
                         <span>{{ 'COACHING.noJournalNote' | translate }}</span>
                         @if (canManage()) {
-                          <a class="add-journal-link" [routerLink]="'/journal/note/new/' + engId" [queryParams]="{ sessionId: s._id }">
+                          <button class="add-journal-link" type="button" (click)="openJournalNoteNew(s._id)">
                             <mat-icon>add</mat-icon> {{ 'COACHING.addNote' | translate }}
-                          </a>
+                          </button>
                         } @else {
                           <a class="add-journal-link" [routerLink]="'/my-journal/engagement/' + engId"
                              [queryParams]="{ sessionId: s._id }">
@@ -673,6 +686,21 @@ interface Session {
       &.no_show { background: #fef2f2; color: #e53e3e; }
     }
     .del-btn { color: #c5d0db; &:hover { color: #e53e3e; } }
+    .mark-complete-btn {
+      margin-left: auto !important;
+      background: rgba(39,196,160,0.08) !important;
+      border-color: rgba(39,196,160,0.4) !important;
+      color: #1a9678 !important;
+      font-size: 12px !important;
+      height: 30px !important;
+      line-height: 28px !important;
+      padding: 0 12px !important;
+      transition: background 0.15s !important;
+      mat-icon { color: #27C4A0; font-size: 16px; width: 16px; height: 16px; margin-right: 4px; }
+      mat-spinner { display: inline-block; margin-right: 6px; }
+      &:hover:not([disabled]) { background: rgba(39,196,160,0.16) !important; }
+      &[disabled] { opacity: 0.6; }
+    }
 
     .source-chip {
       display: inline-flex; align-items: center; gap: 3px;
@@ -989,6 +1017,75 @@ export class EngagementDetailComponent implements OnInit {
   }
 
   generatingPostFor = signal<string | null>(null);
+  markingCompleteFor = signal<string | null>(null);
+
+  /** Opens an existing journal note in a dialog (instead of routing to a full
+   *  page). Refreshes engagement state on close so any new content shows up. */
+  openJournalNote(noteId: string): void {
+    import('../../journal/session-note-editor/session-note-editor.component').then((m) => {
+      const ref = this.dialog.open(m.SessionNoteEditorComponent, {
+        width: '960px', maxWidth: '96vw', maxHeight: '92vh',
+        panelClass: 'journal-note-dialog-panel',
+        data: { noteId, engagementId: this.engId },
+      });
+      ref.afterClosed().subscribe(() => this.load());
+    });
+  }
+
+  /** Opens the journal note editor in dialog mode for a new note bound to the
+   *  given session. */
+  openJournalNoteNew(sessionId: string): void {
+    import('../../journal/session-note-editor/session-note-editor.component').then((m) => {
+      const ref = this.dialog.open(m.SessionNoteEditorComponent, {
+        width: '960px', maxWidth: '96vw', maxHeight: '92vh',
+        panelClass: 'journal-note-dialog-panel',
+        data: { engagementId: this.engId, sessionId },
+      });
+      ref.afterClosed().subscribe(() => this.load());
+    });
+  }
+
+  markSessionComplete(s: Session): void {
+    if (this.markingCompleteFor()) return;
+
+    const hasAssignedPost = !!s.postSessionIntakeTemplateId;
+    const hasContext = (s.topics?.length ?? 0) > 0
+      || !!(s.sharedNotes || '').trim()
+      || !!(s.coachNotes || '').trim();
+    const messageKey = hasAssignedPost
+      ? 'COACHING.markCompleteConfirmAssigned'
+      : (hasContext ? 'COACHING.markCompleteConfirmAi' : 'COACHING.markCompleteConfirmNoForm');
+
+    this.dialog.open(ConfirmDialogComponent, {
+      width: '460px',
+      data: {
+        title: this.translate.instant('COACHING.markCompleteConfirmTitle'),
+        message: this.translate.instant(messageKey),
+        confirmLabel: this.translate.instant('COACHING.markSessionComplete'),
+        confirmColor: 'primary',
+        icon: 'task_alt',
+      },
+    }).afterClosed().subscribe((ok) => {
+      if (!ok) return;
+      this.markingCompleteFor.set(s._id);
+      this.api.put(`/coaching/sessions/${s._id}`, { status: 'completed' }).subscribe({
+        next: () => {
+          this.markingCompleteFor.set(null);
+          this.snack.open(
+            this.translate.instant('COACHING.sessionMarkedCompleteSnack'),
+            this.translate.instant('COMMON.ok'),
+            { duration: 3000 },
+          );
+          this.load();
+        },
+        error: (err: any) => {
+          this.markingCompleteFor.set(null);
+          const msg = err?.error?.error || this.translate.instant('COACHING.failedSaveSession');
+          this.snack.open(msg, this.translate.instant('COMMON.ok'), { duration: 4000 });
+        },
+      });
+    });
+  }
 
   generatePostSessionForm(s: Session): void {
     if (this.generatingPostFor()) return;

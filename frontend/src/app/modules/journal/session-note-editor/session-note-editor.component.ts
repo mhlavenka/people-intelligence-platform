@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -14,10 +14,18 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { JournalService, SessionNote, AccountabilityItem } from '../journal.service';
 import { ApiService } from '../../../core/api.service';
 
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+
+export interface SessionNoteEditorDialogData {
+  noteId?: string;
+  engagementId?: string;
+  sessionId?: string;
+}
 @Component({
   selector: 'app-session-note-editor',
   standalone: true,
@@ -25,14 +33,28 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
     CommonModule, DatePipe, FormsModule, RouterLink,
     MatIconModule, MatButtonModule, MatTabsModule, MatFormFieldModule, MatInputModule,
     MatSelectModule, MatDatepickerModule, MatNativeDateModule, MatChipsModule,
-    MatCheckboxModule, MatProgressSpinnerModule, MatSnackBarModule,
+    MatCheckboxModule, MatProgressSpinnerModule, MatSnackBarModule, MatDialogModule,
+    MatTooltipModule,
     TranslateModule,
   ],
   template: `
-    <div class="journal-page">
+    <div class="journal-page" [class.in-dialog]="isInDialog">
       <div class="page-header">
-        <a [routerLink]="backLink" class="back-link"><mat-icon>arrow_back</mat-icon> {{ 'COMMON.back' | translate }}</a>
+        @if (isInDialog) {
+          <button mat-stroked-button class="show-all-btn" (click)="showAllNotes()">
+            <mat-icon>list_alt</mat-icon> {{ 'JOURNAL.showAllNotes' | translate }}
+          </button>
+          <button mat-icon-button class="dialog-close-btn" (click)="closeDialog()" [matTooltip]="'COMMON.close' | translate">
+            <mat-icon>close</mat-icon>
+          </button>
+        } @else {
+          <a [routerLink]="backLink" class="back-link"><mat-icon>arrow_back</mat-icon> {{ 'COMMON.back' | translate }}</a>
+        }
         <h1>{{ isEdit ? ('JOURNAL.editSessionNote' | translate) : ('JOURNAL.newSessionNoteTitle' | translate) }}</h1>
+        <div class="lifecycle-hint">
+          <mat-icon>info_outline</mat-icon>
+          <span>{{ 'JOURNAL.lifecycleHint' | translate }}</span>
+        </div>
       </div>
 
       @if (loading()) {
@@ -209,12 +231,12 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
         </mat-tab-group>
 
         <!-- Action bar -->
-        <div class="action-bar">
+        <div class="action-bar" [class.in-dialog]="isInDialog">
           <button mat-flat-button class="draft-btn" (click)="save('draft')" [disabled]="saving()">
             <mat-icon>save</mat-icon> {{ 'JOURNAL.saveDraft' | translate }}
           </button>
           <button mat-flat-button color="primary" (click)="save('complete')" [disabled]="saving()">
-            <mat-icon>check_circle</mat-icon> {{ 'JOURNAL.markComplete' | translate }}
+            <mat-icon>check_circle</mat-icon> {{ 'JOURNAL.finaliseNote' | translate }}
           </button>
           <button mat-stroked-button (click)="generateAi()" [disabled]="saving() || aiLoading() || noteStatus !== 'complete'">
             <mat-icon>auto_awesome</mat-icon> {{ 'JOURNAL.generateAiSummary' | translate }}
@@ -238,6 +260,33 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
     .meta-row {
       display: flex; gap: 12px; margin-bottom: 8px;
       mat-form-field { flex: 1; }
+    }
+
+    /* Dialog mode overrides — fits inside MatDialog without padding doubling. */
+    .journal-page.in-dialog {
+      padding: 20px 24px; max-width: none; min-height: auto;
+      background: #F8F6F1;
+      .page-header {
+        position: relative; padding-right: 40px;
+        h1 { margin-top: 4px; }
+      }
+      .show-all-btn {
+        font-size: 12px; height: 30px; line-height: 28px; padding: 0 12px;
+        mat-icon { font-size: 16px; width: 16px; height: 16px; margin-right: 4px; }
+      }
+      .dialog-close-btn {
+        position: absolute; top: -4px; right: -4px;
+      }
+    }
+    .lifecycle-hint {
+      display: flex; align-items: center; gap: 8px; padding: 8px 12px;
+      background: rgba(58,159,214,0.08); border: 1px solid rgba(58,159,214,0.24);
+      border-radius: 8px; margin-top: 10px;
+      font-size: 12px; color: #2080b0; line-height: 1.5;
+      mat-icon { font-size: 16px; width: 16px; height: 16px; color: var(--artes-accent); flex-shrink: 0; }
+    }
+    .action-bar.in-dialog {
+      position: static; box-shadow: 0 1px 0 #e8edf4 inset;
     }
 
     .tab-content { padding: 20px 0; }
@@ -353,6 +402,13 @@ export class SessionNoteEditorComponent implements OnInit {
     return [p.commitment1, p.commitment2, p.commitment3].filter(Boolean) as string[];
   }
 
+  /** Set when this component is opened via MatDialog rather than the router.
+   *  In dialog mode the back-link is replaced with a "Show all journal notes"
+   *  button + a close (X) button, and the action-bar loses its sticky positioning. */
+  private dialogRef = inject(MatDialogRef<SessionNoteEditorComponent>, { optional: true });
+  private dialogData = inject<SessionNoteEditorDialogData | null>(MAT_DIALOG_DATA, { optional: true });
+  isInDialog = !!this.dialogRef;
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -363,9 +419,15 @@ export class SessionNoteEditorComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    const params = this.route.snapshot.params;
-    this.noteId = params['noteId'] || '';
-    this.engagementId = params['engagementId'] || '';
+    if (this.dialogData) {
+      this.noteId = this.dialogData.noteId || '';
+      this.engagementId = this.dialogData.engagementId || '';
+      this.sessionId = this.dialogData.sessionId || '';
+    } else {
+      const params = this.route.snapshot.params;
+      this.noteId = params['noteId'] || '';
+      this.engagementId = params['engagementId'] || '';
+    }
     this.isEdit = !!this.noteId;
 
     if (this.isEdit) {
@@ -403,7 +465,7 @@ export class SessionNoteEditorComponent implements OnInit {
         error: () => this.loading.set(false),
       });
     } else {
-      this.sessionId = this.route.snapshot.queryParams['sessionId'] || '';
+      if (!this.dialogData) this.sessionId = this.route.snapshot.queryParams['sessionId'] || '';
       this.backLink = `/coaching/${this.engagementId}`;
       // Pre-fill from linked coaching session if provided
       if (this.sessionId) {
@@ -461,10 +523,19 @@ export class SessionNoteEditorComponent implements OnInit {
         this.noteStatus = note.status;
         this.noteId = note._id;
         this.isEdit = true;
-        this.snack.open(status === 'complete' ? this.translate.instant('JOURNAL.sessionMarkedComplete') : this.translate.instant('JOURNAL.draftSaved'), '', { duration: 2000 });
+        this.snack.open(status === 'complete' ? this.translate.instant('JOURNAL.noteFinalisedSnack') : this.translate.instant('JOURNAL.draftSaved'), '', { duration: 2000 });
       },
       error: () => { this.saving.set(false); this.snack.open(this.translate.instant('JOURNAL.failedSave'), '', { duration: 3000 }); },
     });
+  }
+
+  showAllNotes(): void {
+    if (this.dialogRef) this.dialogRef.close({ navigateTo: 'all' });
+    if (this.engagementId) this.router.navigate(['/journal/engagement', this.engagementId]);
+  }
+
+  closeDialog(): void {
+    if (this.dialogRef) this.dialogRef.close();
   }
 
   generateAi(): void {

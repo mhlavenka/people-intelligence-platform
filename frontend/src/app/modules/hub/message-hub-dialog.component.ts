@@ -643,8 +643,25 @@ export class MessageHubDialogComponent implements OnInit {
     }
     if (n.link) {
       this.dialogRef.close();
-      this.router.navigate([n.link]);
+      this.navigateToHubLink(n.link);
     }
+  }
+
+  /** Hub links may be stored as absolute URLs (legacy) or relative app paths.
+   *  Angular Router can only navigate to in-app paths, so split off the path
+   *  + query and use navigateByUrl which handles them in one shot. */
+  private navigateToHubLink(link: string): void {
+    let target = link;
+    if (/^https?:\/\//i.test(link)) {
+      try {
+        const u = new URL(link);
+        target = `${u.pathname}${u.search}${u.hash}`;
+      } catch {
+        window.location.href = link;
+        return;
+      }
+    }
+    this.router.navigateByUrl(target);
   }
 
   toggleNotifRead(n: NotificationDoc, event: Event): void {

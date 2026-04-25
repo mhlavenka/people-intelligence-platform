@@ -1,7 +1,7 @@
 import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MatDialog, MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
@@ -13,7 +13,6 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ApiService } from '../../../core/api.service';
-import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog.component';
 
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 const GROW_PHASES = [
@@ -198,15 +197,7 @@ const FRAMEWORKS = [
       </div>
     </mat-dialog-content>
 
-    <mat-dialog-actions align="end" class="dialog-actions">
-      @if (isEdit && !isLocked() && form.status === 'scheduled') {
-        <button mat-stroked-button color="primary" class="mark-complete-btn"
-                (click)="markComplete()" [disabled]="saving()">
-          <mat-icon>task_alt</mat-icon>
-          {{ 'COACHING.markSessionComplete' | translate }}
-        </button>
-      }
-      <span class="actions-spacer"></span>
+    <mat-dialog-actions align="end">
       <button mat-button mat-dialog-close [disabled]="saving()">{{ 'COMMON.cancel' | translate }}</button>
       @if (!isLocked()) {
         <button mat-raised-button color="primary" (click)="save()" [disabled]="saving()">
@@ -297,24 +288,10 @@ const FRAMEWORKS = [
       mat-form-field { pointer-events: none; }
     }
     .grow-check.disabled { opacity: 0.5; cursor: not-allowed; }
-
-    .dialog-actions {
-      display: flex; align-items: center; gap: 8px; padding: 12px 24px !important;
-    }
-    .actions-spacer { flex: 1; }
-    .mark-complete-btn {
-      background: rgba(39,196,160,0.08);
-      border-color: rgba(39,196,160,0.4) !important;
-      color: #1a9678 !important;
-      transition: background 0.15s;
-      mat-icon { color: #27C4A0; margin-right: 4px; }
-      &:hover:not([disabled]) { background: rgba(39,196,160,0.16); }
-    }
   `],
 })
 export class SessionDialogComponent implements OnInit {
   private api = inject(ApiService);
-  private dialog = inject(MatDialog);
   private snack = inject(MatSnackBar);
   private translate = inject(TranslateService);
   private dialogRef = inject(MatDialogRef<SessionDialogComponent>);
@@ -447,30 +424,4 @@ export class SessionDialogComponent implements OnInit {
     });
   }
 
-  /** Two-step Mark Complete: open a confirmation explaining the irreversible
-   *  side-effects (locked notes, post-session form dispatch), then save with
-   *  status='completed'. */
-  markComplete(): void {
-    const hasAssignedPost = !!this.form.postSessionIntakeTemplateId;
-    const hasAnyContext = (this.form.topics?.length ?? 0) > 0
-      || !!(this.form.sharedNotes || '').trim()
-      || !!(this.form.coachNotes || '').trim()
-      || !!this.topicsRaw.trim();
-    const formMessageKey = hasAssignedPost
-      ? 'COACHING.markCompleteConfirmAssigned'
-      : (hasAnyContext ? 'COACHING.markCompleteConfirmAi' : 'COACHING.markCompleteConfirmNoForm');
-
-    this.dialog.open(ConfirmDialogComponent, {
-      width: '460px',
-      data: {
-        title: this.translate.instant('COACHING.markCompleteConfirmTitle'),
-        message: this.translate.instant(formMessageKey),
-        confirmLabel: this.translate.instant('COACHING.markSessionComplete'),
-        confirmColor: 'primary',
-        icon: 'task_alt',
-      },
-    }).afterClosed().subscribe((ok) => {
-      if (ok) this.save('completed');
-    });
-  }
 }
