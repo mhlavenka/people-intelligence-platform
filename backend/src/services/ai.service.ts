@@ -539,3 +539,62 @@ Provide a supervision preparation digest with:
 Respond with ONLY valid JSON — no markdown, no code fences.
 Required JSON shape: { "coachThemes": string[], "crossEngagementPatterns": string, "questionsForSupervisor": string[], "developmentAreas": string[] }` + languageInstruction(language);
 }
+
+export function buildAITemplatePrompt(
+  description: string,
+  options: {
+    moduleType: 'conflict' | 'neuroinclusion' | 'succession' | 'coaching';
+    intakeType: 'survey' | 'interview' | 'assessment';
+    questionCount?: number;
+  },
+  language: string = 'en',
+): string {
+  const count = Math.min(Math.max(options.questionCount ?? 8, 3), 20);
+
+  const moduleHint: Record<string, string> = {
+    conflict: 'Workplace conflict, team dynamics, psychological safety, communication breakdowns.',
+    neuroinclusion: 'Neurodiversity, accessibility, sensory load, cognitive style, accommodations.',
+    succession: 'Career growth, leadership readiness, skill development, IDP / GROW model.',
+    coaching: 'Coaching session reflection, GROW model, mood, intentions, commitments.',
+  };
+  const intakeHint: Record<string, string> = {
+    survey: 'Self-service, anonymous, completed by many respondents and aggregated.',
+    interview: 'Coach-led, captured on behalf of a single coachee in a 1:1 conversation.',
+    assessment: 'Coach-led or self-completed structured assessment for an individual.',
+  };
+
+  return `You are an expert organisational psychologist designing a custom intake template for the ARTES platform.
+
+Coach's description of what they want:
+"""
+${description.slice(0, 2000)}
+"""
+
+Module: ${options.moduleType} — ${moduleHint[options.moduleType]}
+Intake type: ${options.intakeType} — ${intakeHint[options.intakeType]}
+
+Generate a complete intake template. Return ONLY valid JSON — no markdown, no code fences — matching this exact shape:
+{
+  "title": "<short, descriptive title (max 80 chars)>",
+  "description": "<one-sentence purpose of this intake (max 200 chars)>",
+  "instructions": "<2-3 sentence instructions shown to the respondent before they begin>",
+  "questions": [
+    {
+      "id": "<short stable id like q1, q2, q3...>",
+      "text": "<the question text>",
+      "type": "<one of: scale, text, boolean>",
+      "category": "<thematic grouping like 'Communication', 'Trust', 'Workload'>"
+    }
+  ]
+}
+
+Rules:
+- ${count} questions total
+- Mix question types: 50–70% scale (1–5 Likert), 20–40% text (open-ended), 0–20% boolean (yes/no)
+- Group questions by category — aim for 3–5 distinct categories
+- Each question must be unambiguous, single-barrelled, and behaviourally observable where possible
+- Use a warm, respectful, neutral tone
+- For scale questions, frame them so a higher number consistently means a more positive state
+- ID must be a stable short identifier (q1, q2, ... or category-prefixed like comm1, comm2)
+- Title and description should reflect the coach's described intent` + languageInstruction(language);
+}
