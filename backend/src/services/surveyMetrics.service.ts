@@ -22,6 +22,8 @@ import {
   IItemMetric,
   IDimensionMetric,
   IResponseQuality,
+  ISubgroupAnalysis,
+  IClusterStat,
 } from '../models/ConflictAnalysis.model';
 
 // ── Quality policy ──────────────────────────────────────────────────────────
@@ -204,6 +206,137 @@ export function teamAlignmentScore(itemMetrics: IItemMetric[]): number {
   return round(clamp(r * 100, 0, 100), 0);
 }
 
+// ── Layer 4: subgroup detection (Phase 2) ───────────────────────────────────
+
+export interface SubgroupPolicy {
+  minTotalN: number;        // global gate: don't even attempt clustering below this
+  minSubgroupN: number;     // anonymity guard: drop analysis if any cluster smaller
+  minSilhouette: number;    // quality gate: drop analysis if best k below this
+  kCandidates: number[];    // typically [2, 3]
+  restarts: number;         // k-means random restarts; best inertia wins
+  maxIterations: number;
+  seed: number;             // RNG seed so re-running an analysis is deterministic
+}
+
+export const DEFAULT_SUBGROUP_POLICY: SubgroupPolicy = {
+  minTotalN: 10,
+  minSubgroupN: 3,
+  minSilhouette: 0.5,
+  kCandidates: [2, 3],
+  restarts: 10,
+  maxIterations: 100,
+  seed: 42,
+};
+
+/**
+ * Cluster respondents on their full response vector using k-means with
+ * k-means++ init and silhouette-driven k selection. Returns null when:
+ * - total N < minTotalN, or
+ * - no k yields silhouette ≥ minSilhouette, or
+ * - any cluster at the chosen k is smaller than minSubgroupN
+ *   (anonymity floor — never publish a 1- or 2-person cluster).
+ *
+ * The output never carries respondent identifiers — only cluster sizes
+ * and aggregated per-dimension means.
+ */
+export function computeSubgroupAnalysis(
+  responses: Array<Pick<ISurveyResponse, 'responses' | 'acceptedInAnalysis'>>,
+  template: ISurveyTemplate,
+  policy: SubgroupPolicy = DEFAULT_SUBGROUP_POLICY,
+): ISubgroupAnalysis | null {
+  const accepted = responses.filter((r) => r.acceptedInAnalysis !== false);
+  if (accepted.length < policy.minTotalN) return null;
+
+  // Build numeric feature vectors from scoreable questions only.
+  const scoreable = template.questions.filter(
+    (q) => q.type === 'scale' || q.type === 'boolean',
+  );
+  if (scoreable.length < 2) return null;
+
+  const vectors: number[][] = [];
+  for (const r of accepted) {
+    const vec = scoreable.map((q) => {
+      const ans = r.responses.find((x) => x.questionId === q.id);
+      if (!ans) return NaN;
+      if (typeof ans.value === 'number') return ans.value;
+      if (typeof ans.value === 'boolean') return ans.value ? 1 : 0;
+      return NaN;
+    });
+    // Skip respondents with too many missing scoreable answers.
+    const present = vec.filter((v) => !Number.isNaN(v)).length;
+    if (present / vec.length < 0.5) continue;
+    // Mean-impute missing entries within the respondent.
+    const respMean = mean(vec.filter((v) => !Number.isNaN(v)));
+    vectors.push(vec.map((v) => (Number.isNaN(v) ? respMean : v)));
+  }
+  if (vectors.length < policy.minTotalN) return null;
+
+  // Try each candidate k; keep the one with the best silhouette.
+  let best: { k: number; labels: number[]; silhouette: number } | null = null;
+  for (const k of policy.kCandidates) {
+    if (k > vectors.length) continue;
+    const labels = bestKMeansRun(vectors, k, policy);
+    if (!labels) continue;
+    const sil = silhouetteScore(vectors, labels);
+    if (!best || sil > best.silhouette) {
+      best = { k, labels, silhouette: sil };
+    }
+  }
+
+  if (!best || best.silhouette < policy.minSilhouette) return null;
+
+  // Anonymity floor — every cluster must have at least minSubgroupN members.
+  const sizes = new Map<number, number>();
+  for (const l of best.labels) sizes.set(l, (sizes.get(l) ?? 0) + 1);
+  for (const size of sizes.values()) {
+    if (size < policy.minSubgroupN) return null;
+  }
+
+  // Build per-cluster stats. Computed against the original respondent set
+  // (matched by index — vectors[i] came from accepted[matched[i]]) so we can
+  // compute per-dimension means using the existing item metrics machinery.
+  const clusters: IClusterStat[] = [];
+  const labelSet = [...new Set(best.labels)].sort((a, b) => a - b);
+  for (const lbl of labelSet) {
+    const inCluster = accepted.filter((_, i) => best!.labels[i] === lbl);
+    const itemMetrics = template.questions
+      .map((q) => computeItemMetrics(inCluster, q))
+      .filter((m): m is IItemMetric => m !== null);
+    const dimRows = rollupByDimension(itemMetrics);
+    const meanByDimension: Record<string, number> = {};
+    for (const d of dimRows) meanByDimension[d.dimension] = d.mean;
+
+    // Distinguishing items: items where THIS cluster's mean differs most
+    // (absolute) from the global accepted-set mean. Top 3.
+    const globalMetricsMap = new Map<string, IItemMetric>();
+    for (const q of template.questions) {
+      const m = computeItemMetrics(accepted, q);
+      if (m) globalMetricsMap.set(q.id, m);
+    }
+    const distinguishing = itemMetrics
+      .map((m) => ({
+        id: m.questionId,
+        delta: Math.abs(m.mean - (globalMetricsMap.get(m.questionId)?.mean ?? m.mean)),
+      }))
+      .sort((a, b) => b.delta - a.delta)
+      .slice(0, 3)
+      .map((x) => x.id);
+
+    clusters.push({
+      label: String.fromCharCode(65 + lbl),  // 0 → 'A', 1 → 'B', 2 → 'C'
+      size: sizes.get(lbl) ?? 0,
+      meanByDimension,
+      distinguishingItemIds: distinguishing,
+    });
+  }
+
+  return {
+    k: best.k,
+    silhouette: round(best.silhouette, 3),
+    clusters,
+  };
+}
+
 // ── Top-level convenience ───────────────────────────────────────────────────
 
 export interface FullSurveyMetrics {
@@ -211,16 +344,19 @@ export interface FullSurveyMetrics {
   itemMetrics: IItemMetric[];
   dimensionMetrics: IDimensionMetric[];
   teamAlignmentScore: number;
+  subgroupAnalysis: ISubgroupAnalysis | null;
 }
 
 /**
- * Compute everything Phase 1 needs from a freshly-fetched response set.
- * Caller is expected to have already persisted per-response qualityScore
- * (via computeQuality at submit time); we only summarize them here.
+ * Compute everything Phase 1 + Phase 2 needs from a freshly-fetched response
+ * set. Caller is expected to have already persisted per-response qualityScore
+ * (via computeQuality at submit time); we only summarize them here. Subgroup
+ * analysis is gated on policy (callable can pass null to disable).
  */
 export function computeAllMetrics(
   responses: ISurveyResponse[],
   template: ISurveyTemplate,
+  subgroupPolicy: SubgroupPolicy | null = DEFAULT_SUBGROUP_POLICY,
 ): FullSurveyMetrics {
   const accepted = responses.filter((r) => r.acceptedInAnalysis !== false);
   const itemMetrics = template.questions
@@ -232,7 +368,144 @@ export function computeAllMetrics(
     itemMetrics,
     dimensionMetrics: rollupByDimension(itemMetrics),
     teamAlignmentScore: teamAlignmentScore(itemMetrics),
+    subgroupAnalysis: subgroupPolicy
+      ? computeSubgroupAnalysis(responses, template, subgroupPolicy)
+      : null,
   };
+}
+
+// ── k-means + silhouette ────────────────────────────────────────────────────
+
+/** mulberry32 PRNG — deterministic seed → reproducible cluster assignments. */
+function makeRng(seed: number): () => number {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6D2B79F5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function squaredDistance(a: number[], b: number[]): number {
+  let s = 0;
+  for (let i = 0; i < a.length; i++) { const d = a[i] - b[i]; s += d * d; }
+  return s;
+}
+
+/** k-means++ seeding: spread initial centroids by squared-distance probability. */
+function kMeansPlusPlus(vectors: number[][], k: number, rng: () => number): number[][] {
+  const centroids: number[][] = [];
+  centroids.push([...vectors[Math.floor(rng() * vectors.length)]]);
+  for (let i = 1; i < k; i++) {
+    const distances = vectors.map((v) =>
+      Math.min(...centroids.map((c) => squaredDistance(v, c))),
+    );
+    const total = distances.reduce((s, d) => s + d, 0);
+    if (total === 0) { centroids.push([...vectors[Math.floor(rng() * vectors.length)]]); continue; }
+    let r = rng() * total;
+    let pick = 0;
+    for (let j = 0; j < distances.length; j++) {
+      r -= distances[j];
+      if (r <= 0) { pick = j; break; }
+    }
+    centroids.push([...vectors[pick]]);
+  }
+  return centroids;
+}
+
+/** One k-means restart. Returns labels + total inertia (sum sq-distance to centroid). */
+function lloydsAlgorithm(
+  vectors: number[][],
+  initial: number[][],
+  maxIter: number,
+): { labels: number[]; inertia: number } {
+  const k = initial.length;
+  let centroids = initial.map((c) => [...c]);
+  let labels = new Array<number>(vectors.length).fill(0);
+
+  for (let iter = 0; iter < maxIter; iter++) {
+    let changed = false;
+    for (let i = 0; i < vectors.length; i++) {
+      let best = 0, bestDist = Infinity;
+      for (let c = 0; c < k; c++) {
+        const d = squaredDistance(vectors[i], centroids[c]);
+        if (d < bestDist) { bestDist = d; best = c; }
+      }
+      if (labels[i] !== best) { labels[i] = best; changed = true; }
+    }
+    if (!changed) break;
+
+    // Recompute centroids as mean of assigned points.
+    const dim = vectors[0].length;
+    const sums = Array.from({ length: k }, () => new Array<number>(dim).fill(0));
+    const counts = new Array<number>(k).fill(0);
+    for (let i = 0; i < vectors.length; i++) {
+      const c = labels[i];
+      counts[c]++;
+      for (let d = 0; d < dim; d++) sums[c][d] += vectors[i][d];
+    }
+    for (let c = 0; c < k; c++) {
+      if (counts[c] === 0) continue;
+      for (let d = 0; d < dim; d++) centroids[c][d] = sums[c][d] / counts[c];
+    }
+  }
+
+  let inertia = 0;
+  for (let i = 0; i < vectors.length; i++) inertia += squaredDistance(vectors[i], centroids[labels[i]]);
+  return { labels, inertia };
+}
+
+/** Run k-means for `policy.restarts` times; keep the labelling with lowest inertia. */
+function bestKMeansRun(
+  vectors: number[][],
+  k: number,
+  policy: SubgroupPolicy,
+): number[] | null {
+  let best: { labels: number[]; inertia: number } | null = null;
+  for (let r = 0; r < policy.restarts; r++) {
+    const rng = makeRng(policy.seed + r);
+    const initial = kMeansPlusPlus(vectors, k, rng);
+    const result = lloydsAlgorithm(vectors, initial, policy.maxIterations);
+    if (!best || result.inertia < best.inertia) best = result;
+  }
+  return best?.labels ?? null;
+}
+
+/** Mean silhouette score across all points. s_i ∈ [-1, 1]; >0.5 ⇒ strong structure. */
+function silhouetteScore(vectors: number[][], labels: number[]): number {
+  if (vectors.length < 2) return 0;
+  const labelSet = [...new Set(labels)];
+  if (labelSet.length < 2) return 0;
+
+  let total = 0;
+  for (let i = 0; i < vectors.length; i++) {
+    const ownLabel = labels[i];
+    let aSum = 0, aCount = 0;
+    const bSums = new Map<number, { sum: number; count: number }>();
+    for (let j = 0; j < vectors.length; j++) {
+      if (i === j) continue;
+      const dist = Math.sqrt(squaredDistance(vectors[i], vectors[j]));
+      if (labels[j] === ownLabel) { aSum += dist; aCount++; }
+      else {
+        const cur = bSums.get(labels[j]) ?? { sum: 0, count: 0 };
+        cur.sum += dist; cur.count++;
+        bSums.set(labels[j], cur);
+      }
+    }
+    const a = aCount > 0 ? aSum / aCount : 0;
+    let b = Infinity;
+    for (const { sum, count } of bSums.values()) {
+      if (count === 0) continue;
+      const mean = sum / count;
+      if (mean < b) b = mean;
+    }
+    if (!Number.isFinite(b)) continue;
+    const s = b === 0 && a === 0 ? 0 : (b - a) / Math.max(a, b);
+    total += s;
+  }
+  return total / vectors.length;
 }
 
 // ── Math primitives ─────────────────────────────────────────────────────────

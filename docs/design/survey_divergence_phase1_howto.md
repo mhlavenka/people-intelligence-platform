@@ -169,16 +169,60 @@ reporting reality more accurately than the majority.
 
 ---
 
-## 4. What this *doesn't* do (Phase 2/3 roadmap)
+## 4. Phase 2 — subgroup detection (NOW SHIPPED)
 
-- **No subgroup clustering yet.** Phase 2 will add k-means clustering
-  on the response vector with a min-3-per-cluster guard.
+A new **Subgroup Patterns** card appears inside the Divergence Signals
+tab when k-means clustering on the response vectors yields a
+significant structure. Conditions:
+
+- ≥10 accepted responses in the analysis (org policy can raise but
+  not lower the floor; default 10).
+- Best k (tried at k=2 and k=3) yields silhouette score ≥0.5.
+- Every cluster has ≥`minSubgroupN` members (default 3, configurable
+  in Org Settings → Survey Quality Policy).
+
+If any of those gates fail, no subgroup card appears — the rest of
+the divergence tab still renders.
+
+### What you see
+- A stacked bar showing relative cluster sizes (e.g. "A · 6  B · 5").
+- Per-cluster cards with the cluster's mean across each tagged
+  dimension and the top 3 items where this cluster differs most
+  from the overall mean.
+- A persistent disclaimer: *"Subgroup patterns are statistical
+  clusters, not social groupings. They may reflect role, shift,
+  tenure, or recent experience — they do not identify 'sides' of a
+  conflict."*
+
+### What we never publish
+- Cluster membership (which respondent is in which cluster).
+- Cluster IDs that could be cross-referenced with assignment lists.
+- Anything below the minimum-N floor.
+
+### AI prompt
+The user-message divergence block now includes a SUBGROUP STRUCTURE
+section when subgroup analysis is present. The INTERPRETATION GUIDANCE
+paragraph instructs Claude to treat clusters as statistical patterns,
+not social factions, and never to speculate about who belongs to which
+cluster.
+
+### Org-level admin controls (Settings → Organization)
+A new **Survey Quality Policy** card exposes:
+- Quality threshold (default 0.35) — exclusion floor for the
+  per-response quality score.
+- Max same-answer fraction (default 80%) — long-string flag.
+- Show subgroup analysis (default ON) — disable to suppress Phase 2
+  output entirely.
+- Minimum members per subgroup (default 3) — the anonymity floor.
+
+## 5. What this *still* doesn't do (Phase 3 roadmap)
+
 - **No trap items / consistency pairs.** Phase 3 will let templates
   embed attention checks and reverse-coded item pairs.
 - **No timing-based "speeding" flag in production yet.** The `survey-take`
-  page now captures per-item timing on every submission, but the
-  speeding check is conservative until we have a baseline of timings
-  to calibrate against.
+  page captures per-item timing on every submission, but the speeding
+  check is conservative until we have a baseline of timings to
+  calibrate against.
 - **No Bayesian Truth Serum or longitudinal calibration.** Phase 4
   research item.
 

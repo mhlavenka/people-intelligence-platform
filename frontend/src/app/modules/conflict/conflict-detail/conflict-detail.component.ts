@@ -73,6 +73,23 @@ interface ConflictAnalysis {
   itemMetrics?: ItemMetric[];
   dimensionMetrics?: DimensionMetric[];
   teamAlignmentScore?: number;
+
+  // Phase 2 subgroup analysis (only present when N≥10, silhouette ≥0.5, and
+  // every cluster has ≥minSubgroupN members)
+  subgroupAnalysis?: SubgroupAnalysis;
+}
+
+interface SubgroupAnalysis {
+  k: number;
+  silhouette: number;
+  clusters: ClusterStat[];
+}
+
+interface ClusterStat {
+  label: string;                          // 'A', 'B', 'C'
+  size: number;
+  meanByDimension: Record<string, number>;
+  distinguishingItemIds: string[];
 }
 
 interface ItemMetric {
@@ -381,6 +398,167 @@ interface RecommendedActions {
             </div>
           </mat-tab>
 
+          <!-- Tab 1.5: Divergence Signals (only when metrics are present) -->
+          @if (analysis()!.itemMetrics?.length) {
+            <mat-tab>
+              <ng-template mat-tab-label>
+                <mat-icon>analytics</mat-icon>
+                <span>{{ 'CONFLICT.divergenceTab' | translate }}</span>
+              </ng-template>
+              <div class="tab-body">
+                <!-- Response-quality card -->
+                @if (analysis()!.responseQuality; as q) {
+                  <div class="div-quality">
+                    <mat-icon>verified_user</mat-icon>
+                    <span [innerHTML]="'CONFLICT.responseQualitySummary' | translate:{
+                      accepted: q.acceptedCount, total: q.totalSubmitted,
+                      dropped: q.droppedCount
+                    }"></span>
+                    <mat-icon class="div-info"
+                              [matTooltip]="'CONFLICT.responseQualityTooltip' | translate">info_outline</mat-icon>
+                  </div>
+                }
+
+                <!-- Team alignment meter -->
+                @if (analysis()!.teamAlignmentScore !== undefined) {
+                  <div class="div-card div-alignment-card">
+                    <div class="div-card-head">
+                      <h3>{{ 'CONFLICT.teamAlignment' | translate }}</h3>
+                      <span class="div-band" [class]="alignmentBand(analysis()!.teamAlignmentScore!)">
+                        {{ ('CONFLICT.alignmentBand_' + alignmentBand(analysis()!.teamAlignmentScore!)) | translate }}
+                      </span>
+                    </div>
+                    <div class="div-meter">
+                      <div class="div-meter-bar">
+                        <div class="div-meter-fill" [style.width.%]="analysis()!.teamAlignmentScore"></div>
+                      </div>
+                      <span class="div-meter-num">{{ analysis()!.teamAlignmentScore }}/100</span>
+                    </div>
+                  </div>
+                }
+
+                <!-- Dimensional roll-up -->
+                @if (analysis()!.dimensionMetrics?.length) {
+                  <div class="div-card">
+                    <h3>{{ 'CONFLICT.dimensionalDivergence' | translate }}</h3>
+                    <table class="div-table">
+                      <thead>
+                        <tr>
+                          <th>{{ 'CONFLICT.dimColDimension' | translate }}</th>
+                          <th class="num">{{ 'CONFLICT.dimColItems' | translate }}</th>
+                          <th class="num">{{ 'CONFLICT.dimColMean' | translate }}</th>
+                          <th class="num">{{ 'CONFLICT.dimColRwg' | translate }}</th>
+                          <th class="num">{{ 'CONFLICT.dimColDisagreement' | translate }}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        @for (d of analysis()!.dimensionMetrics; track d.dimension) {
+                          <tr>
+                            <td>{{ d.dimension }}</td>
+                            <td class="num">{{ d.itemCount }}</td>
+                            <td class="num">{{ d.mean }}</td>
+                            <td class="num" [class.muted]="d.rwg >= 0.7">{{ d.rwg }}</td>
+                            <td class="num">
+                              <span class="div-disagreement-pill" [class]="alignmentBand(100 - d.disagreementScore)">
+                                {{ d.disagreementScore }}
+                              </span>
+                            </td>
+                          </tr>
+                        }
+                      </tbody>
+                    </table>
+                  </div>
+                }
+
+                <!-- Per-item heat map (top divergent + flagged splits) -->
+                <div class="div-card">
+                  <h3>{{ 'CONFLICT.itemDivergence' | translate }}</h3>
+                  <div class="div-items">
+                    @for (m of sortedItemMetrics(); track m.questionId) {
+                      <div class="div-item" [class.split]="m.bimodalityCoef > 0.555">
+                        <div class="div-item-head">
+                          <span class="div-item-text">{{ m.text || m.questionId }}</span>
+                          @if (m.bimodalityCoef > 0.555) {
+                            <span class="div-split-badge" [matTooltip]="'CONFLICT.itemSplitTooltip' | translate">
+                              <mat-icon>call_split</mat-icon> {{ 'CONFLICT.itemSplit' | translate }}
+                            </span>
+                          }
+                        </div>
+                        <div class="div-item-stats">
+                          <span><strong>μ</strong> {{ m.mean }}</span>
+                          <span><strong>σ</strong> {{ m.sd }}</span>
+                          <span><strong>r<sub>wg</sub></strong> {{ m.rwg }}</span>
+                          @if (m.dimension) { <span class="div-item-dim">{{ m.dimension }}</span> }
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
+
+                <!-- Subgroups panel (Phase 2) — only when k-means yielded a significant clustering -->
+                @if (analysis()!.subgroupAnalysis; as sa) {
+                  <div class="div-card">
+                    <div class="div-card-head">
+                      <h3>{{ 'CONFLICT.subgroupsTitle' | translate }}</h3>
+                      <span class="div-band aligned">
+                        k={{ sa.k }} · silhouette {{ sa.silhouette }}
+                      </span>
+                    </div>
+                    <p class="sub-intro" [innerHTML]="'CONFLICT.subgroupsIntro' | translate:{ count: sa.clusters.length }"></p>
+
+                    <!-- Stacked bar of cluster sizes -->
+                    <div class="sub-stack" [matTooltip]="'CONFLICT.subgroupsStackTooltip' | translate">
+                      @for (c of sa.clusters; track c.label) {
+                        <div class="sub-stack-seg" [style.flex]="c.size"
+                             [class]="'sub-cluster-' + clusterColor($index)">
+                          <span>{{ c.label }} · {{ c.size }}</span>
+                        </div>
+                      }
+                    </div>
+
+                    <!-- Per-cluster profile -->
+                    <div class="sub-clusters">
+                      @for (c of sa.clusters; track c.label; let i = $index) {
+                        <div class="sub-cluster-card">
+                          <div class="sub-cluster-head">
+                            <span class="sub-cluster-badge" [class]="'sub-cluster-' + clusterColor(i)">{{ c.label }}</span>
+                            <span class="sub-cluster-size">{{ c.size }} {{ 'CONFLICT.respondents' | translate }}</span>
+                          </div>
+                          <div class="sub-cluster-body">
+                            @for (kv of clusterDimensionRows(c); track kv.dimension) {
+                              <div class="sub-dim-row">
+                                <span class="sub-dim-label">{{ kv.dimension }}</span>
+                                <div class="sub-dim-bar"><div class="sub-dim-fill" [style.width.%]="kv.percent"></div></div>
+                                <span class="sub-dim-value">{{ kv.value }}</span>
+                              </div>
+                            }
+                            @if (c.distinguishingItemIds.length) {
+                              <div class="sub-distinguishing">
+                                <span class="sub-distinguishing-label">{{ 'CONFLICT.distinguishingItems' | translate }}</span>
+                                <span class="sub-distinguishing-ids">{{ c.distinguishingItemIds.join(', ') }}</span>
+                              </div>
+                            }
+                          </div>
+                        </div>
+                      }
+                    </div>
+
+                    <div class="div-disclaimer sub-disclaimer">
+                      <mat-icon>shield</mat-icon>
+                      <span>{{ 'CONFLICT.subgroupsDisclaimer' | translate }}</span>
+                    </div>
+                  </div>
+                }
+
+                <!-- Disclaimer (always present in this tab) -->
+                <div class="div-disclaimer">
+                  <mat-icon>info</mat-icon>
+                  <span>{{ 'CONFLICT.divergenceDisclaimer' | translate }}</span>
+                </div>
+              </div>
+            </mat-tab>
+          }
+
           <!-- Tab 2: Manager Conversation Guide -->
           <mat-tab [disabled]="!analysis()!.managerScript">
             <ng-template mat-tab-label>
@@ -617,112 +795,6 @@ interface RecommendedActions {
               }
             </div>
           </mat-tab>
-
-          <!-- Tab 3.5: Divergence Signals (only when metrics are present) -->
-          @if (analysis()!.itemMetrics?.length) {
-            <mat-tab>
-              <ng-template mat-tab-label>
-                <mat-icon>analytics</mat-icon>
-                <span>{{ 'CONFLICT.divergenceTab' | translate }}</span>
-              </ng-template>
-              <div class="tab-body">
-                <!-- Response-quality card -->
-                @if (analysis()!.responseQuality; as q) {
-                  <div class="div-quality">
-                    <mat-icon>verified_user</mat-icon>
-                    <span [innerHTML]="'CONFLICT.responseQualitySummary' | translate:{
-                      accepted: q.acceptedCount, total: q.totalSubmitted,
-                      dropped: q.droppedCount
-                    }"></span>
-                    <mat-icon class="div-info"
-                              [matTooltip]="'CONFLICT.responseQualityTooltip' | translate">info_outline</mat-icon>
-                  </div>
-                }
-
-                <!-- Team alignment meter -->
-                @if (analysis()!.teamAlignmentScore !== undefined) {
-                  <div class="div-card div-alignment-card">
-                    <div class="div-card-head">
-                      <h3>{{ 'CONFLICT.teamAlignment' | translate }}</h3>
-                      <span class="div-band" [class]="alignmentBand(analysis()!.teamAlignmentScore!)">
-                        {{ ('CONFLICT.alignmentBand_' + alignmentBand(analysis()!.teamAlignmentScore!)) | translate }}
-                      </span>
-                    </div>
-                    <div class="div-meter">
-                      <div class="div-meter-bar">
-                        <div class="div-meter-fill" [style.width.%]="analysis()!.teamAlignmentScore"></div>
-                      </div>
-                      <span class="div-meter-num">{{ analysis()!.teamAlignmentScore }}/100</span>
-                    </div>
-                  </div>
-                }
-
-                <!-- Dimensional roll-up -->
-                @if (analysis()!.dimensionMetrics?.length) {
-                  <div class="div-card">
-                    <h3>{{ 'CONFLICT.dimensionalDivergence' | translate }}</h3>
-                    <table class="div-table">
-                      <thead>
-                        <tr>
-                          <th>{{ 'CONFLICT.dimColDimension' | translate }}</th>
-                          <th class="num">{{ 'CONFLICT.dimColItems' | translate }}</th>
-                          <th class="num">{{ 'CONFLICT.dimColMean' | translate }}</th>
-                          <th class="num">{{ 'CONFLICT.dimColRwg' | translate }}</th>
-                          <th class="num">{{ 'CONFLICT.dimColDisagreement' | translate }}</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        @for (d of analysis()!.dimensionMetrics; track d.dimension) {
-                          <tr>
-                            <td>{{ d.dimension }}</td>
-                            <td class="num">{{ d.itemCount }}</td>
-                            <td class="num">{{ d.mean }}</td>
-                            <td class="num" [class.muted]="d.rwg >= 0.7">{{ d.rwg }}</td>
-                            <td class="num">
-                              <span class="div-disagreement-pill" [class]="alignmentBand(100 - d.disagreementScore)">
-                                {{ d.disagreementScore }}
-                              </span>
-                            </td>
-                          </tr>
-                        }
-                      </tbody>
-                    </table>
-                  </div>
-                }
-
-                <!-- Per-item heat map (top divergent + flagged splits) -->
-                <div class="div-card">
-                  <h3>{{ 'CONFLICT.itemDivergence' | translate }}</h3>
-                  <div class="div-items">
-                    @for (m of sortedItemMetrics(); track m.questionId) {
-                      <div class="div-item" [class.split]="m.bimodalityCoef > 0.555">
-                        <div class="div-item-head">
-                          <span class="div-item-text">{{ m.text || m.questionId }}</span>
-                          @if (m.bimodalityCoef > 0.555) {
-                            <span class="div-split-badge" [matTooltip]="'CONFLICT.itemSplitTooltip' | translate">
-                              <mat-icon>call_split</mat-icon> {{ 'CONFLICT.itemSplit' | translate }}
-                            </span>
-                          }
-                        </div>
-                        <div class="div-item-stats">
-                          <span><strong>μ</strong> {{ m.mean }}</span>
-                          <span><strong>σ</strong> {{ m.sd }}</span>
-                          <span><strong>r<sub>wg</sub></strong> {{ m.rwg }}</span>
-                          @if (m.dimension) { <span class="div-item-dim">{{ m.dimension }}</span> }
-                        </div>
-                      </div>
-                    }
-                  </div>
-                </div>
-
-                <!-- Disclaimer (always present in this tab) -->
-                <div class="div-disclaimer">
-                  <mat-icon>info</mat-icon>
-                  <span>{{ 'CONFLICT.divergenceDisclaimer' | translate }}</span>
-                </div>
-              </div>
-            </mat-tab>
-          }
 
           <!-- Tab 4: Professional Review -->
           <mat-tab>
@@ -1587,6 +1659,55 @@ interface RecommendedActions {
       font-size: 12px; line-height: 1.5; margin-top: 8px;
       mat-icon { color: #7f8ea3; flex-shrink: 0; font-size: 18px; width: 18px; height: 18px; margin-top: 1px; }
     }
+
+    /* Subgroups panel (Phase 2) ─────────────────────────────────── */
+    .sub-intro { font-size: 13px; color: #5a6a7e; margin: 0 0 14px; line-height: 1.5; }
+    .sub-stack {
+      display: flex; height: 32px; border-radius: 6px; overflow: hidden;
+      margin-bottom: 18px; background: #f0f4f8;
+    }
+    .sub-stack-seg {
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-size: 12px; font-weight: 600; min-width: 60px;
+      span { padding: 0 8px; }
+    }
+    .sub-clusters { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+    .sub-cluster-card {
+      border: 1px solid #edf1f6; border-radius: 8px; padding: 14px;
+      background: #fafcff;
+    }
+    .sub-cluster-head {
+      display: flex; align-items: center; gap: 10px; margin-bottom: 12px;
+      .sub-cluster-size { font-size: 12px; color: #7f8ea3; }
+    }
+    .sub-cluster-badge {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 28px; height: 28px; border-radius: 50%;
+      color: white; font-weight: 700; font-size: 13px;
+    }
+    .sub-cluster-a { background: #3A9FD6; }
+    .sub-cluster-b { background: #27C4A0; }
+    .sub-cluster-c { background: #f0a500; }
+    .sub-cluster-d { background: #7c5cbf; }
+    .sub-dim-row {
+      display: grid; grid-template-columns: 1fr 1.4fr 36px;
+      align-items: center; gap: 8px; font-size: 12px; margin-bottom: 6px;
+    }
+    .sub-dim-label { color: #5a6a7e; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .sub-dim-bar { height: 6px; background: #e8edf4; border-radius: 999px; overflow: hidden; }
+    .sub-dim-fill { height: 100%; background: var(--artes-accent); border-radius: 999px; transition: width 0.3s ease; }
+    .sub-dim-value { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--artes-primary); text-align: right; }
+    .sub-distinguishing {
+      margin-top: 10px; padding-top: 10px; border-top: 1px dashed #e0e7ef;
+      display: flex; flex-wrap: wrap; gap: 6px; font-size: 11px;
+      .sub-distinguishing-label { color: #7f8ea3; font-weight: 600; }
+      .sub-distinguishing-ids { color: var(--artes-primary); font-family: Consolas, monospace; }
+    }
+    .sub-disclaimer {
+      margin-top: 14px;
+      background: rgba(124,92,191,0.06); color: #5a3ea0;
+      mat-icon { color: #7c5cbf; }
+    }
   `],
 })
 export class ConflictDetailComponent implements OnInit {
@@ -1829,6 +1950,30 @@ export class ConflictDetailComponent implements OnInit {
     if (score >= 70) return 'aligned';
     if (score >= 40) return 'mixed';
     return 'fractured';
+  }
+
+  /** Cycle through 4 colours for cluster badges; rare to have more than 3. */
+  clusterColor(idx: number): 'a' | 'b' | 'c' | 'd' {
+    return (['a', 'b', 'c', 'd'] as const)[idx % 4];
+  }
+
+  /** Convert the per-dimension means into rendered rows for a cluster card.
+   *  Bar width is normalised against the highest scaleMax found in itemMetrics
+   *  (typically 5 or 7), falling back to 5 when nothing usable is present. */
+  clusterDimensionRows(c: ClusterStat): Array<{ dimension: string; value: number; percent: number }> {
+    const scaleMax = Math.max(
+      5,
+      ...(this.analysis()?.itemMetrics ?? [])
+        .map((m) => m.scaleMax ?? 0)
+        .filter((n): n is number => Number.isFinite(n) && n > 0),
+    );
+    return Object.entries(c.meanByDimension)
+      .map(([dimension, value]) => ({
+        dimension,
+        value,
+        percent: Math.max(0, Math.min(100, (value / scaleMax) * 100)),
+      }))
+      .sort((a, b) => a.value - b.value);
   }
 
   /** Items sorted lowest rwg first, with split items prioritised. Cap at 10

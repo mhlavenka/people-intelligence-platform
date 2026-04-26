@@ -8,7 +8,7 @@ import { ConflictAnalysis, IConflictAnalysis } from '../models/ConflictAnalysis.
 import { Organization } from '../models/Organization.model';
 import { User } from '../models/User.model';
 import { buildConflictAnalysisPrompt, buildConflictSubAnalysisPrompt, buildConflictRecommendedActionsPrompt, callClaude } from '../services/ai.service';
-import { computeAllMetrics } from '../services/surveyMetrics.service';
+import { computeAllMetrics, DEFAULT_SUBGROUP_POLICY } from '../services/surveyMetrics.service';
 import { sendEmail } from '../services/email.service';
 import { createHubNotification } from '../services/hubNotification.service';
 
@@ -59,15 +59,22 @@ export async function analyzeConflict(
       averages[qId] = Math.round((values.reduce((a, b) => a + b, 0) / values.length) * 100) / 100;
     }
 
-    // Layers 2 + 3 + headline alignment: computed once, used by the AI prompt
-    // builder AND persisted on the ConflictAnalysis for the UI panels.
-    const metrics = template ? computeAllMetrics(allResponses, template) : null;
-
+    // Need the org first so we can honour its surveyQualityPolicy when
+    // deciding whether to run subgroup detection (Phase 2 admin toggle).
     const org = await Organization.findById(organizationId);
     if (!org) {
       res.status(404).json({ error: t(req, 'errors.organizationNotFound') });
       return;
     }
+
+    // Layers 2 + 3 + headline alignment + Layer 4 subgroups: computed once,
+    // used by the AI prompt builder AND persisted on the ConflictAnalysis.
+    const orgPolicy = org.surveyQualityPolicy ?? {};
+    const subgroupPolicy = orgPolicy.showSubgroupAnalysis === false ? null : {
+      ...DEFAULT_SUBGROUP_POLICY,
+      minSubgroupN: orgPolicy.minSubgroupN ?? DEFAULT_SUBGROUP_POLICY.minSubgroupN,
+    };
+    const metrics = template ? computeAllMetrics(allResponses, template, subgroupPolicy) : null;
 
     const prompt = buildConflictAnalysisPrompt(
       {
@@ -78,6 +85,7 @@ export async function analyzeConflict(
         responseQuality: metrics?.responseQuality,
         itemMetrics: metrics?.itemMetrics,
         dimensionMetrics: metrics?.dimensionMetrics,
+        subgroupAnalysis: metrics?.subgroupAnalysis,
       },
       { name: org.name, industry: org.industry, employeeCount: org.employeeCount },
       req.language
@@ -131,6 +139,7 @@ export async function analyzeConflict(
         itemMetrics:        metrics.itemMetrics,
         dimensionMetrics:   metrics.dimensionMetrics,
         teamAlignmentScore: metrics.teamAlignmentScore,
+        ...(metrics.subgroupAnalysis && { subgroupAnalysis: metrics.subgroupAnalysis }),
       }),
     });
 

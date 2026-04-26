@@ -145,6 +145,14 @@ export function buildConflictAnalysisPrompt(
     dimensionMetrics?: Array<{
       dimension: string; mean: number; rwg: number; disagreementScore: number;
     }>;
+    subgroupAnalysis?: {
+      k: number; silhouette: number;
+      clusters: Array<{
+        label: string; size: number;
+        meanByDimension: Record<string, number>;
+        distinguishingItemIds: string[];
+      }>;
+    } | null;
   },
   orgContext: { name: string; industry?: string; employeeCount?: number },
   language: string = 'en'
@@ -181,9 +189,29 @@ export function buildConflictAnalysisPrompt(
       ).join('\n') + '\n'
     : '';
 
-  const interpretationGuidance = (qualityBlock || itemBlock || dimensionBlock)
+  const subgroupBlock = surveyData.subgroupAnalysis
+    ? `\nSUBGROUP STRUCTURE\n` +
+      `- ${surveyData.subgroupAnalysis.clusters.length} distinct response patterns detected (k=${surveyData.subgroupAnalysis.k}, silhouette ${surveyData.subgroupAnalysis.silhouette}).\n` +
+      surveyData.subgroupAnalysis.clusters.map((c) => {
+        const dims = Object.entries(c.meanByDimension)
+          .sort((a, b) => a[1] - b[1])
+          .slice(0, 5)
+          .map(([d, m]) => `${d} ${m}`)
+          .join(', ');
+        const distinguishing = c.distinguishingItemIds.length
+          ? ` Distinguishing items: ${c.distinguishingItemIds.join(', ')}.`
+          : '';
+        return `- Cluster ${c.label} (${c.size} respondents): ${dims}.${distinguishing}`;
+      }).join('\n') + '\n'
+    : '';
+
+  const interpretationGuidance = (qualityBlock || itemBlock || dimensionBlock || subgroupBlock)
     ? `\nINTERPRETATION GUIDANCE
-Treat divergence as STRUCTURAL signal, not individual blame. A split team is reporting different experiences of the same workplace — possible drivers include role, shift, tenure, team membership, or recent events. Minority voices may reflect the truth rather than dysfunction. Use the rwg + bimodality data to CALIBRATE confidence in your interpretation and to suggest interventions that do NOT single out individuals.\n`
+Treat divergence as STRUCTURAL signal, not individual blame. A split team is reporting different experiences of the same workplace — possible drivers include role, shift, tenure, team membership, or recent events. Minority voices may reflect the truth rather than dysfunction. Use the rwg + bimodality data to CALIBRATE confidence in your interpretation and to suggest interventions that do NOT single out individuals.${
+        surveyData.subgroupAnalysis
+          ? ' When SUBGROUP STRUCTURE is present, treat the clusters as STATISTICAL response patterns, not as social factions or sides of a conflict — they likely reflect role, shift, tenure, or recent experience. Never speculate about who belongs to which cluster (membership is never disclosed). Use the cluster profiles to surface the structural drivers of disagreement and propose interventions that respect the differing experiences each cluster reports.'
+          : ''
+      }\n`
     : '';
 
   return `Analyze the following workplace survey data for conflict risk assessment.
@@ -192,7 +220,7 @@ Organization: ${orgContext.name} (${orgContext.industry || 'Unknown industry'}, 
 Department: ${surveyData.departmentId}
 Intake Period: ${surveyData.surveyPeriod}
 Respondent Count: ${surveyData.responseCount} (aggregated — no individual data)
-${qualityBlock}${itemBlock}${dimensionBlock}${interpretationGuidance}
+${qualityBlock}${itemBlock}${dimensionBlock}${subgroupBlock}${interpretationGuidance}
 Aggregated Survey Results (per-item means):
 ${JSON.stringify(surveyData.aggregatedResponses, null, 2)}
 
