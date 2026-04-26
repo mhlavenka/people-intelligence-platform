@@ -1045,6 +1045,7 @@
     "createRole": "Create Role",
     "orgProfile": "Organization Profile",
     "orgProfileSaved": "Organization profile saved",
+    "regeneratePassword": "Regenerate password",
     "orgLogo": "Organization Logo",
     "brandTheme": "Brand & Theme",
     "colors": "Colors",

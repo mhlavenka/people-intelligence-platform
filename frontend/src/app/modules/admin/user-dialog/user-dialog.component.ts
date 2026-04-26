@@ -9,6 +9,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { ApiService } from '../../../core/api.service';
 import { AuthService } from '../../../core/auth.service';
 import { environment } from '../../../../environments/environment';
@@ -61,6 +62,7 @@ const ROLES = [
     MatIconModule,
     MatProgressSpinnerModule,
     MatCheckboxModule,
+    MatTooltipModule,
     TranslateModule,
   ],
   template: `
@@ -189,6 +191,11 @@ const ROLES = [
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>{{ 'AUTH.password' | translate }}</mat-label>
             <input matInput formControlName="password" [type]="showPwd ? 'text' : 'password'" />
+            <button mat-icon-button matSuffix type="button"
+                    [matTooltip]="'ADMIN.regeneratePassword' | translate"
+                    (click)="regeneratePassword()">
+              <mat-icon>refresh</mat-icon>
+            </button>
             <button mat-icon-button matSuffix type="button" (click)="showPwd = !showPwd">
               <mat-icon>{{ showPwd ? 'visibility_off' : 'visibility' }}</mat-icon>
             </button>
@@ -297,6 +304,9 @@ export class UserDialogComponent implements OnInit {
   customRolesAvailable = signal<CustomRoleOption[]>([]);
   avatarPreview = signal('');
   showPwd = false;
+  emailDomain = '';
+  private emailManuallyEdited = false;
+  private lastAutoEmail = '';
   roles = ROLES;
 
   private readonly BASE_LABELS: Record<string, string> = {
@@ -337,12 +347,28 @@ export class UserDialogComponent implements OnInit {
           : null,
       ],
       ...(this.isEdit() ? {} : {
-        password: ['', [Validators.required, Validators.minLength(8)]],
+        password: [this.makePassword(), [Validators.required, Validators.minLength(8)]],
       }),
     });
 
-    this.api.get<{ departments: string[] }>('/organizations/me').subscribe({
-      next: (org) => this.departments.set(org.departments ?? []),
+    if (!this.isEdit()) {
+      this.showPwd = true;
+      this.form.get('firstName')!.valueChanges.subscribe(() => this.maybeAutofillEmail());
+      this.form.get('lastName')!.valueChanges.subscribe(() => this.maybeAutofillEmail());
+      this.form.get('email')!.valueChanges.subscribe((v: string) => {
+        if (v && v !== this.lastAutoEmail) this.emailManuallyEdited = true;
+      });
+    }
+
+    this.api.get<{ departments?: string[]; billingEmail?: string }>('/organizations/me').subscribe({
+      next: (org) => {
+        this.departments.set(org.departments ?? []);
+        const dom = (org.billingEmail || '').split('@')[1] ?? '';
+        if (dom) {
+          this.emailDomain = dom;
+          this.maybeAutofillEmail();
+        }
+      },
     });
 
     this.api.get<CustomRoleOption[]>('/roles').subscribe({
@@ -353,6 +379,31 @@ export class UserDialogComponent implements OnInit {
       next: (s) => this.sponsors.set(s),
       error: () => {},
     });
+  }
+
+  // Excludes look-alike characters (0/O, 1/l/I) so admins can read it out loud safely.
+  private makePassword(): string {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
+    let pw = '';
+    for (let i = 0; i < 12; i++) pw += chars[Math.floor(Math.random() * chars.length)];
+    return pw;
+  }
+
+  regeneratePassword(): void {
+    this.form.patchValue({ password: this.makePassword() });
+    this.showPwd = true;
+  }
+
+  private maybeAutofillEmail(): void {
+    if (this.isEdit() || this.emailManuallyEdited || !this.emailDomain) return;
+    const norm = (s: unknown) => String(s ?? '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+    const fn = norm(this.form.get('firstName')?.value);
+    const ln = norm(this.form.get('lastName')?.value);
+    if (!fn && !ln) return;
+    const local = [fn, ln].filter(Boolean).join('.');
+    const generated = `${local}@${this.emailDomain}`;
+    this.lastAutoEmail = generated;
+    this.form.get('email')!.setValue(generated, { emitEvent: false });
   }
 
   uploadAvatar(event: Event): void {
