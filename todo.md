@@ -5,11 +5,16 @@ I. MODULES
 ----------
 
 **Intakes**
+ - Bi-weekly pulse does not have scale description
+ - Look at reverse scale calculation
+ - forced choices should have option to add many options
+ - optional questions should not force me to put anything 
 
 **Conflict Intelligence**
  - Conflict intelligence flow:
    - Plan based or org based selection for AI recommendations or professional recommendations 
    - How do recommendations flow into action items and IDPs?
+   - employees are missing intake menu option
 
 **Coaching Module**
  - add mentoring to coaching module
@@ -28,10 +33,14 @@ II. SYSTEM
 ----------
 **Organization setup** 
  - put together users / departments / orgchart in more logical way. Make me a proposed solution before implementing so I can approve
+ - new user - default email to org email, not headsoftuser1@onkwe.com; also generate default password
+ - user system role is missing employee (org chart does not work)
+ - 
 **Google Test Env**
  - need to switch to prod and have the app approved by google
 **Multilingual**
- - missing translations: New org: ADMIN.placaholderStreetAddress, ADMIN.placaholderSuiteFloor
+ - missing translations: New org: ADMIN.placaholderStreetAddress, ADMIN.placaholderSuiteFloor, ADMIN.orgeProfile, SURVEY.generateLabels
+ - login page missing texts on intake slide (AUTH.slides.) maybe result of itake to assessment renaming?
 **Sysadmin**
  - sponsor invoicing should include the "from" address - the organization name and address.
 **Placeholders**

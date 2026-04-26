@@ -43,11 +43,6 @@ interface TranslationRef {
   language: string;
 }
 
-const DEPARTMENTS = [
-  'Engineering', 'Product', 'Design', 'Marketing', 'Sales',
-  'Customer Success', 'Finance', 'HR', 'Operations', 'Leadership',
-];
-
 @Component({
   selector: 'app-survey-take',
   standalone: true,
@@ -157,7 +152,7 @@ const DEPARTMENTS = [
               <mat-form-field appearance="outline" class="full-width">
                 <mat-label>{{ 'SURVEY.yourDepartment' | translate }}</mat-label>
                 <mat-select [(value)]="selectedDept">
-                  @for (dept of departments; track dept) {
+                  @for (dept of departments(); track dept) {
                     <mat-option [value]="dept">{{ dept }}</mat-option>
                   }
                 </mat-select>
@@ -528,7 +523,7 @@ export class SurveyTakeComponent implements OnInit {
   currentIndex = signal(0);
   answers = signal<Record<string, string | number | boolean>>({});
   selectedDept = '';
-  departments = DEPARTMENTS;
+  departments = signal<string[]>([]);
 
   availableLanguages = signal<{ id: string; language: string; label: string }[]>([]);
   currentLang = signal('en');
@@ -600,6 +595,22 @@ export class SurveyTakeComponent implements OnInit {
   sessionId: string | null = null;
 
   ngOnInit(): void {
+    this.api.get<{ departments?: string[] }>('/organizations/me').subscribe({
+      next: (org) => this.departments.set(org.departments ?? []),
+    });
+
+    // Skip the dept-selection step when the user already has one on profile.
+    this.api.get<{ department?: string }>('/users/me').subscribe({
+      next: (u) => {
+        if (!u.department) return;
+        this.selectedDept = u.department;
+        const t = this.template();
+        if (t && this.phase() === 'dept') {
+          this.phase.set(t.instructions ? 'instructions' : 'questions');
+        }
+      },
+    });
+
     const id = this.route.snapshot.paramMap.get('id');
     this.sessionId = this.route.snapshot.queryParamMap.get('sessionId');
     if (!id) { this.loading.set(false); return; }
@@ -632,7 +643,7 @@ export class SurveyTakeComponent implements OnInit {
         this.originalTemplateId = id;
         this.currentLang.set(t.language || 'en');
         this.template.set(t);
-        if (this.sessionId) {
+        if (this.sessionId || this.selectedDept) {
           this.phase.set(t.instructions ? 'instructions' : 'questions');
         }
         this.loadTranslationsAndAutoSwitch(id, t.language || 'en');
