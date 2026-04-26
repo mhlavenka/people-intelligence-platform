@@ -133,25 +133,74 @@ export function buildConflictAnalysisPrompt(
     surveyPeriod: string;
     aggregatedResponses: Record<string, number | string>;
     responseCount: number;
+    // Layer 1–3 divergence metrics. All optional; legacy callers still work.
+    responseQuality?: {
+      totalSubmitted: number; acceptedCount: number; droppedCount: number;
+      droppedReasons: Record<string, number | undefined>;
+    };
+    itemMetrics?: Array<{
+      questionId: string; text?: string; dimension?: string;
+      mean: number; sd: number; bimodalityCoef: number; rwg: number;
+    }>;
+    dimensionMetrics?: Array<{
+      dimension: string; mean: number; rwg: number; disagreementScore: number;
+    }>;
   },
   orgContext: { name: string; industry?: string; employeeCount?: number },
   language: string = 'en'
 ): string {
+  const qualityBlock = surveyData.responseQuality
+    ? `\nQUALITY\n- ${surveyData.responseQuality.totalSubmitted} responses submitted; ${surveyData.responseQuality.acceptedCount} accepted, ${surveyData.responseQuality.droppedCount} dropped${
+        surveyData.responseQuality.droppedCount > 0
+          ? ' (' + Object.entries(surveyData.responseQuality.droppedReasons)
+              .filter(([, n]) => (n ?? 0) > 0)
+              .map(([k, n]) => `${k}: ${n}`)
+              .join(', ') + ')'
+          : ''
+      }.\n`
+    : '';
+
+  // Top-3 most-divergent items (lowest rwg). Helps Claude calibrate which items
+  // are noisy/split vs. unanimously low.
+  const topDivergent = (surveyData.itemMetrics ?? [])
+    .slice()
+    .sort((a, b) => a.rwg - b.rwg)
+    .slice(0, 3);
+  const itemBlock = topDivergent.length
+    ? '\nPER-ITEM DIVERGENCE (top 3 by disagreement)\n' +
+      topDivergent.map((m) => {
+        const split = m.bimodalityCoef > 0.555 ? `, bimodal (BC ${m.bimodalityCoef.toFixed(2)}) — team is split` : '';
+        return `- ${m.questionId}${m.text ? ' "' + m.text.slice(0, 110) + '"' : ''} — mean ${m.mean}, sd ${m.sd}, rwg ${m.rwg}${split}`;
+      }).join('\n') + '\n'
+    : '';
+
+  const dimensionBlock = (surveyData.dimensionMetrics ?? []).length
+    ? '\nDIMENSIONAL DIVERGENCE (rwg ≥0.7 = good agreement, <0.5 = low)\n' +
+      surveyData.dimensionMetrics!.map((d) =>
+        `- ${d.dimension}: mean ${d.mean}, rwg ${d.rwg} (disagreement ${d.disagreementScore}/100)`
+      ).join('\n') + '\n'
+    : '';
+
+  const interpretationGuidance = (qualityBlock || itemBlock || dimensionBlock)
+    ? `\nINTERPRETATION GUIDANCE
+Treat divergence as STRUCTURAL signal, not individual blame. A split team is reporting different experiences of the same workplace — possible drivers include role, shift, tenure, team membership, or recent events. Minority voices may reflect the truth rather than dysfunction. Use the rwg + bimodality data to CALIBRATE confidence in your interpretation and to suggest interventions that do NOT single out individuals.\n`
+    : '';
+
   return `Analyze the following workplace survey data for conflict risk assessment.
 
 Organization: ${orgContext.name} (${orgContext.industry || 'Unknown industry'}, ~${orgContext.employeeCount || 'unknown'} employees)
 Department: ${surveyData.departmentId}
 Intake Period: ${surveyData.surveyPeriod}
 Respondent Count: ${surveyData.responseCount} (aggregated — no individual data)
-
-Aggregated Survey Results:
+${qualityBlock}${itemBlock}${dimensionBlock}${interpretationGuidance}
+Aggregated Survey Results (per-item means):
 ${JSON.stringify(surveyData.aggregatedResponses, null, 2)}
 
 Please provide:
 1. **Risk Score** (0-100): Overall conflict risk level
 2. **Risk Level**: low/medium/high/critical
 3. **Conflict Types Detected**: List specific conflict patterns observed
-4. **AI Narrative** (2-3 paragraphs): Professional analysis of team dynamics and conflict indicators
+4. **AI Narrative** (2-3 paragraphs): Professional analysis of team dynamics and conflict indicators. Where divergence metrics are present, reference the structure of disagreement (which dimensions are split vs. uniformly low) WITHOUT speculating about individual respondents.
 5. **Manager Script**: Practical talking points for the manager to address the situation (use interest-based negotiation principles)
 
 Format your response as JSON with keys: riskScore, riskLevel, conflictTypes, aiNarrative, managerScript` + languageInstruction(language);

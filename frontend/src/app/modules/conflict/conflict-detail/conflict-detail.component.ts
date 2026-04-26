@@ -62,6 +62,42 @@ interface ConflictAnalysis {
   focusConflictType?: string;
   parentId?: string;
   createdAt: string;
+
+  // Phase 1 divergence metrics (all optional — legacy analyses render fine)
+  responseQuality?: {
+    totalSubmitted: number;
+    acceptedCount: number;
+    droppedCount: number;
+    droppedReasons: Record<string, number | undefined>;
+  };
+  itemMetrics?: ItemMetric[];
+  dimensionMetrics?: DimensionMetric[];
+  teamAlignmentScore?: number;
+}
+
+interface ItemMetric {
+  questionId: string;
+  text?: string;
+  dimension?: string;
+  mean: number;
+  median: number;
+  sd: number;
+  iqr: number;
+  bimodalityCoef: number;
+  entropy: number;
+  rwg: number;
+  outlierCount: number;
+  scaleMin?: number;
+  scaleMax?: number;
+}
+
+interface DimensionMetric {
+  dimension: string;
+  itemCount: number;
+  mean: number;
+  rwg: number;
+  disagreementScore: number;
+  mostDivergentItemIds: string[];
 }
 
 interface ActionItem {
@@ -581,6 +617,112 @@ interface RecommendedActions {
               }
             </div>
           </mat-tab>
+
+          <!-- Tab 3.5: Divergence Signals (only when metrics are present) -->
+          @if (analysis()!.itemMetrics?.length) {
+            <mat-tab>
+              <ng-template mat-tab-label>
+                <mat-icon>analytics</mat-icon>
+                <span>{{ 'CONFLICT.divergenceTab' | translate }}</span>
+              </ng-template>
+              <div class="tab-body">
+                <!-- Response-quality card -->
+                @if (analysis()!.responseQuality; as q) {
+                  <div class="div-quality">
+                    <mat-icon>verified_user</mat-icon>
+                    <span [innerHTML]="'CONFLICT.responseQualitySummary' | translate:{
+                      accepted: q.acceptedCount, total: q.totalSubmitted,
+                      dropped: q.droppedCount
+                    }"></span>
+                    <mat-icon class="div-info"
+                              [matTooltip]="'CONFLICT.responseQualityTooltip' | translate">info_outline</mat-icon>
+                  </div>
+                }
+
+                <!-- Team alignment meter -->
+                @if (analysis()!.teamAlignmentScore !== undefined) {
+                  <div class="div-card div-alignment-card">
+                    <div class="div-card-head">
+                      <h3>{{ 'CONFLICT.teamAlignment' | translate }}</h3>
+                      <span class="div-band" [class]="alignmentBand(analysis()!.teamAlignmentScore!)">
+                        {{ ('CONFLICT.alignmentBand_' + alignmentBand(analysis()!.teamAlignmentScore!)) | translate }}
+                      </span>
+                    </div>
+                    <div class="div-meter">
+                      <div class="div-meter-bar">
+                        <div class="div-meter-fill" [style.width.%]="analysis()!.teamAlignmentScore"></div>
+                      </div>
+                      <span class="div-meter-num">{{ analysis()!.teamAlignmentScore }}/100</span>
+                    </div>
+                  </div>
+                }
+
+                <!-- Dimensional roll-up -->
+                @if (analysis()!.dimensionMetrics?.length) {
+                  <div class="div-card">
+                    <h3>{{ 'CONFLICT.dimensionalDivergence' | translate }}</h3>
+                    <table class="div-table">
+                      <thead>
+                        <tr>
+                          <th>{{ 'CONFLICT.dimColDimension' | translate }}</th>
+                          <th class="num">{{ 'CONFLICT.dimColItems' | translate }}</th>
+                          <th class="num">{{ 'CONFLICT.dimColMean' | translate }}</th>
+                          <th class="num">{{ 'CONFLICT.dimColRwg' | translate }}</th>
+                          <th class="num">{{ 'CONFLICT.dimColDisagreement' | translate }}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        @for (d of analysis()!.dimensionMetrics; track d.dimension) {
+                          <tr>
+                            <td>{{ d.dimension }}</td>
+                            <td class="num">{{ d.itemCount }}</td>
+                            <td class="num">{{ d.mean }}</td>
+                            <td class="num" [class.muted]="d.rwg >= 0.7">{{ d.rwg }}</td>
+                            <td class="num">
+                              <span class="div-disagreement-pill" [class]="alignmentBand(100 - d.disagreementScore)">
+                                {{ d.disagreementScore }}
+                              </span>
+                            </td>
+                          </tr>
+                        }
+                      </tbody>
+                    </table>
+                  </div>
+                }
+
+                <!-- Per-item heat map (top divergent + flagged splits) -->
+                <div class="div-card">
+                  <h3>{{ 'CONFLICT.itemDivergence' | translate }}</h3>
+                  <div class="div-items">
+                    @for (m of sortedItemMetrics(); track m.questionId) {
+                      <div class="div-item" [class.split]="m.bimodalityCoef > 0.555">
+                        <div class="div-item-head">
+                          <span class="div-item-text">{{ m.text || m.questionId }}</span>
+                          @if (m.bimodalityCoef > 0.555) {
+                            <span class="div-split-badge" [matTooltip]="'CONFLICT.itemSplitTooltip' | translate">
+                              <mat-icon>call_split</mat-icon> {{ 'CONFLICT.itemSplit' | translate }}
+                            </span>
+                          }
+                        </div>
+                        <div class="div-item-stats">
+                          <span><strong>μ</strong> {{ m.mean }}</span>
+                          <span><strong>σ</strong> {{ m.sd }}</span>
+                          <span><strong>r<sub>wg</sub></strong> {{ m.rwg }}</span>
+                          @if (m.dimension) { <span class="div-item-dim">{{ m.dimension }}</span> }
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
+
+                <!-- Disclaimer (always present in this tab) -->
+                <div class="div-disclaimer">
+                  <mat-icon>info</mat-icon>
+                  <span>{{ 'CONFLICT.divergenceDisclaimer' | translate }}</span>
+                </div>
+              </div>
+            </mat-tab>
+          }
 
           <!-- Tab 4: Professional Review -->
           <mat-tab>
@@ -1359,6 +1501,92 @@ interface RecommendedActions {
       .ai-narrative-card { padding: 18px 16px; }
       .ai-pullquote { padding: 14px 14px 14px 44px; }
     }
+
+    /* ── Divergence tab ─────────────────────────────────────────────── */
+    .div-quality {
+      display: flex; align-items: center; gap: 10px;
+      background: rgba(58,159,214,0.06);
+      border: 1px solid rgba(58,159,214,0.18);
+      padding: 12px 16px; border-radius: 8px;
+      margin-bottom: 18px;
+      font-size: 14px; color: #2080b0;
+      mat-icon { color: #3A9FD6; flex-shrink: 0; }
+      .div-info { font-size: 16px; width: 16px; height: 16px; color: #9aa5b4; cursor: help; margin-left: auto; }
+    }
+    .div-card {
+      background: white; border: 1px solid #edf1f6; border-radius: 10px;
+      padding: 18px 20px; margin-bottom: 16px;
+      h3 { margin: 0 0 14px; font-size: 14px; font-weight: 700; color: var(--artes-primary); text-transform: uppercase; letter-spacing: 0.5px; }
+    }
+    .div-alignment-card {
+      .div-card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;
+        h3 { margin: 0; }
+      }
+      .div-meter { display: flex; align-items: center; gap: 12px; }
+      .div-meter-bar { flex: 1; height: 10px; border-radius: 999px; background: #f0f4f8; overflow: hidden; }
+      .div-meter-fill {
+        height: 100%; border-radius: 999px;
+        background: linear-gradient(90deg, #e53e3e 0%, #f0a500 50%, #27C4A0 100%);
+        transition: width 0.3s ease;
+      }
+      .div-meter-num { font-size: 13px; font-weight: 700; color: var(--artes-primary); font-variant-numeric: tabular-nums; min-width: 60px; text-align: right; }
+    }
+    .div-band {
+      font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px;
+      padding: 3px 10px; border-radius: 999px;
+      &.aligned   { background: rgba(39,196,160,0.15); color: #1a9678; }
+      &.mixed     { background: rgba(240,165,0,0.15);  color: #b07800; }
+      &.fractured { background: rgba(229,62,62,0.15);  color: #c53030; }
+    }
+    .div-table {
+      width: 100%; border-collapse: collapse; font-size: 13px;
+      th { text-align: left; padding: 8px 12px; color: #7f8ea3; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #edf1f6; }
+      th.num, td.num { text-align: right; font-variant-numeric: tabular-nums; }
+      td { padding: 10px 12px; border-bottom: 1px solid #f5f7fa; color: #374151; }
+      td.muted { color: #9aa5b4; }
+      tr:last-child td { border-bottom: none; }
+    }
+    .div-disagreement-pill {
+      display: inline-block; min-width: 36px; padding: 2px 8px; border-radius: 999px;
+      font-weight: 700; font-size: 12px; text-align: center;
+      &.aligned   { background: rgba(39,196,160,0.15); color: #1a9678; }
+      &.mixed     { background: rgba(240,165,0,0.15);  color: #b07800; }
+      &.fractured { background: rgba(229,62,62,0.15);  color: #c53030; }
+    }
+    .div-items { display: flex; flex-direction: column; gap: 8px; }
+    .div-item {
+      padding: 12px 14px; border-radius: 8px;
+      border: 1px solid #edf1f6; background: #fafcff;
+      &.split { border-color: rgba(229,62,62,0.3); background: rgba(229,62,62,0.04); }
+    }
+    .div-item-head {
+      display: flex; align-items: flex-start; gap: 10px; margin-bottom: 6px;
+      .div-item-text { flex: 1; font-size: 13px; color: #374151; line-height: 1.5; }
+    }
+    .div-split-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      flex-shrink: 0;
+      font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+      padding: 2px 8px; border-radius: 999px;
+      background: rgba(229,62,62,0.10); color: #c53030;
+      mat-icon { font-size: 13px; width: 13px; height: 13px; }
+    }
+    .div-item-stats {
+      display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; color: #5a6a7e;
+      strong { color: var(--artes-primary); margin-right: 3px; font-weight: 600; }
+      .div-item-dim {
+        margin-left: auto;
+        padding: 1px 8px; border-radius: 999px;
+        background: rgba(58,159,214,0.10); color: #2080b0; font-weight: 600; font-size: 11px;
+      }
+    }
+    .div-disclaimer {
+      display: flex; align-items: flex-start; gap: 10px;
+      padding: 12px 14px; border-radius: 8px;
+      background: rgba(154,165,180,0.08); color: #5a6a7e;
+      font-size: 12px; line-height: 1.5; margin-top: 8px;
+      mat-icon { color: #7f8ea3; flex-shrink: 0; font-size: 18px; width: 18px; height: 18px; margin-top: 1px; }
+    }
   `],
 })
 export class ConflictDetailComponent implements OnInit {
@@ -1594,6 +1822,27 @@ export class ConflictDetailComponent implements OnInit {
   private splitWords(s: string): string {
     return s.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2')
       .replace(/[_\-]+/g, ' ').replace(/\s+/g, ' ').trim().replace(/^./, (c) => c.toUpperCase());
+  }
+
+  /** Map a 0-100 alignment score to a band: 70+ aligned, 40-69 mixed, <40 fractured. */
+  alignmentBand(score: number): 'aligned' | 'mixed' | 'fractured' {
+    if (score >= 70) return 'aligned';
+    if (score >= 40) return 'mixed';
+    return 'fractured';
+  }
+
+  /** Items sorted lowest rwg first, with split items prioritised. Cap at 10
+   *  so the heat-map list doesn't sprawl on long instruments (e.g. 30-item TKI). */
+  sortedItemMetrics(): ItemMetric[] {
+    const items = this.analysis()?.itemMetrics ?? [];
+    return [...items]
+      .sort((a, b) => {
+        const aSplit = a.bimodalityCoef > 0.555 ? 1 : 0;
+        const bSplit = b.bimodalityCoef > 0.555 ? 1 : 0;
+        if (aSplit !== bSplit) return bSplit - aSplit;
+        return a.rwg - b.rwg;
+      })
+      .slice(0, 10);
   }
 
   scriptSections(): ScriptSection[] {

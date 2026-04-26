@@ -65,6 +65,12 @@ export interface IQuestion {
     // Optional questions can be skipped — the response simply omits this id.
     // Defaults to false (i.e. required) for backward compat.
     optional?: boolean;
+
+    // Layer 3 dimensional roll-up tag (e.g. 'Psychological Safety', 'Communication').
+    // Free-form so orgs can add custom dimensions; analytics groups items
+    // sharing the same dimension. When all questions on a template lack a
+    // dimension, metrics fall back to a single 'Ungrouped' bucket.
+    dimension?: string;
 }
 
 // ── Subscale detail (CDP, de Dreu) ───────────────────────────────────────────
@@ -243,6 +249,8 @@ const QuestionSchema = new Schema<IQuestion>(
         reference_period: { type: String },
 
         optional: { type: Boolean, default: false },
+
+        dimension: { type: String, trim: true },
     },
     { _id: false }
 );

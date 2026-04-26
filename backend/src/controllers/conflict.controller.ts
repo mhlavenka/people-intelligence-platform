@@ -8,6 +8,7 @@ import { ConflictAnalysis, IConflictAnalysis } from '../models/ConflictAnalysis.
 import { Organization } from '../models/Organization.model';
 import { User } from '../models/User.model';
 import { buildConflictAnalysisPrompt, buildConflictSubAnalysisPrompt, buildConflictRecommendedActionsPrompt, callClaude } from '../services/ai.service';
+import { computeAllMetrics } from '../services/surveyMetrics.service';
 import { sendEmail } from '../services/email.service';
 import { createHubNotification } from '../services/hubNotification.service';
 
@@ -25,11 +26,17 @@ export async function analyzeConflict(
     const responseFilter: Record<string, unknown> = { organizationId, templateId };
     if (departmentId) responseFilter['departmentId'] = departmentId;
 
-    const responses = await SurveyResponse.find(responseFilter);
+    const allResponses = await SurveyResponse.find(responseFilter);
 
     const template = await SurveyTemplate.findById(templateId).setOptions({ bypassTenantCheck: true });
     const isSurvey = !template || template.intakeType === 'survey';
     const minRequired = template?.minResponsesForAnalysis ?? (isSurvey ? MIN_GROUP_SIZE : 1);
+
+    // Layer 1: filter out responses flagged as low-quality. Legacy responses
+    // (acceptedInAnalysis=undefined) pass through. The minimum-N gate runs
+    // against the post-filter set so quality drops don't sneak past it.
+    const responses = allResponses.filter((r) => r.acceptedInAnalysis !== false);
+
     if (responses.length < minRequired) {
       res.status(400).json({
         error: t(req, 'errors.minimumResponsesRequired', { min: minRequired, count: responses.length }),
@@ -52,6 +59,10 @@ export async function analyzeConflict(
       averages[qId] = Math.round((values.reduce((a, b) => a + b, 0) / values.length) * 100) / 100;
     }
 
+    // Layers 2 + 3 + headline alignment: computed once, used by the AI prompt
+    // builder AND persisted on the ConflictAnalysis for the UI panels.
+    const metrics = template ? computeAllMetrics(allResponses, template) : null;
+
     const org = await Organization.findById(organizationId);
     if (!org) {
       res.status(404).json({ error: t(req, 'errors.organizationNotFound') });
@@ -64,6 +75,9 @@ export async function analyzeConflict(
         surveyPeriod: name,
         aggregatedResponses: averages,
         responseCount: responses.length,
+        responseQuality: metrics?.responseQuality,
+        itemMetrics: metrics?.itemMetrics,
+        dimensionMetrics: metrics?.dimensionMetrics,
       },
       { name: org.name, industry: org.industry, employeeCount: org.employeeCount },
       req.language
@@ -112,6 +126,12 @@ export async function analyzeConflict(
       aiNarrative: parsed.aiNarrative,
       managerScript,
       escalationRequested: false,
+      ...(metrics && {
+        responseQuality:    metrics.responseQuality,
+        itemMetrics:        metrics.itemMetrics,
+        dimensionMetrics:   metrics.dimensionMetrics,
+        teamAlignmentScore: metrics.teamAlignmentScore,
+      }),
     });
 
     // Populate the template reference before returning so the client

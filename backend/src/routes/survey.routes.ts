@@ -613,6 +613,7 @@ router.post('/respond', async (req: AuthRequest, res: Response, next: NextFuncti
     const {
       templateId, isAnonymous = true, departmentId, responses,
       coacheeId, sessionFormat, targetName, sessionId, respondentLanguage,
+      timingMsPerItem,
     } = req.body;
 
     // 24h gate (pre-session) / dispatch gate (post-session): coachees can only
@@ -648,6 +649,28 @@ router.post('/respond', async (req: AuthRequest, res: Response, next: NextFuncti
     };
 
     if (sessionId) doc['sessionId'] = sessionId;
+    if (Array.isArray(timingMsPerItem)) doc['timingMsPerItem'] = timingMsPerItem;
+
+    // Layer 1 (response quality) — compute on submit so it's persisted with the
+    // response and the analyzer doesn't have to recompute. Uses org policy when
+    // present, otherwise the default permissive thresholds.
+    try {
+      const { computeQuality, DEFAULT_QUALITY_POLICY } = await import('../services/surveyMetrics.service');
+      const org = await (await import('../models/Organization.model')).Organization
+        .findById(req.user!.organizationId).select('surveyQualityPolicy');
+      const policy = {
+        qualityThreshold:      org?.surveyQualityPolicy?.qualityThreshold      ?? DEFAULT_QUALITY_POLICY.qualityThreshold,
+        longStringMaxFraction: org?.surveyQualityPolicy?.longStringMaxFraction ?? DEFAULT_QUALITY_POLICY.longStringMaxFraction,
+        speedingMsPerItemFloor: DEFAULT_QUALITY_POLICY.speedingMsPerItemFloor,
+      };
+      const q = computeQuality({ responses, timingMsPerItem }, policy);
+      doc['qualityScore'] = q.qualityScore;
+      doc['qualityFlags'] = q.qualityFlags;
+      doc['acceptedInAnalysis'] = q.acceptedInAnalysis;
+    } catch (qe) {
+      // Quality scoring is best-effort — never block a submission on it.
+      console.error('[Survey] computeQuality failed:', qe);
+    }
 
     // Coach-led submission: attribute to the coachee
     if (coacheeId) {
