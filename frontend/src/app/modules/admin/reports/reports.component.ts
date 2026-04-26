@@ -193,8 +193,8 @@ const ROLE_LABELS: Record<string, string> = {
           <div class="report-header">
             <mat-icon>assignment</mat-icon>
             <div>
-              <h2>{{ 'ADMIN.surveyIntakeActivity' | translate }}</h2>
-              <p>{{ 'ADMIN.surveyIntakeActivityDesc' | translate }}</p>
+              <h2>{{ 'ADMIN.surveyAssessmentActivity' | translate }}</h2>
+              <p>{{ 'ADMIN.surveyAssessmentActivityDesc' | translate }}</p>
             </div>
             @if (survey()) {
               <span class="report-total">{{ survey()!.totalResponses }} responses</span>

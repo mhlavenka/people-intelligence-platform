@@ -343,8 +343,8 @@ interface Session {
                           <div class="intake-body">
                             <div class="intake-title">
                               {{ s.preSessionIntakeCompleted
-                                ? ('COACHING.preSessionIntakeCompleted' | translate)
-                                : ('COACHING.preSessionIntakePending' | translate) }}
+                                ? ('COACHING.preSessionAssessmentCompleted' | translate)
+                                : ('COACHING.preSessionAssessmentPending' | translate) }}
                             </div>
                             <div class="intake-sub">{{ intakeTitle }}</div>
                           </div>
@@ -1000,7 +1000,7 @@ export class EngagementDetailComponent implements OnInit {
   preSessionIntakeTitle(s: Session): string | null {
     const tpl = s.preSessionIntakeTemplateId;
     if (!tpl) return null;
-    const fallback = this.translate.instant('COACHING.preSessionIntakeDefault');
+    const fallback = this.translate.instant('COACHING.preSessionAssessmentDefault');
     return typeof tpl === 'string' ? fallback : (tpl.title || fallback);
   }
 
@@ -1158,7 +1158,7 @@ export class EngagementDetailComponent implements OnInit {
           data: { template, sessionId: s._id },
         });
       },
-      error: () => this.snack.open(this.translate.instant('COACHING.failedLoadIntake'), this.translate.instant('COMMON.close'), { duration: 3000 }),
+      error: () => this.snack.open(this.translate.instant('COACHING.failedLoadAssessment'), this.translate.instant('COMMON.close'), { duration: 3000 }),
     });
   }
 

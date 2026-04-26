@@ -662,14 +662,14 @@ export class AppShellComponent implements OnInit, OnDestroy {
     },
     { label: 'NAV.booking',            icon: 'event_available', route: '/booking',     roles: ['admin', 'hr_manager', 'coach'],              module: 'coaching' },
     {
-      label: 'NAV.intakes',
+      label: 'NAV.assessments',
       icon: 'record_voice_over',
       children: [
         { label: 'NAV.conductInterview', icon: 'mic',        route: '/coach/interview', roles: ['coach'] as AppRole[] },
-        { label: 'NAV.intakeManagement', icon: 'assignment', route: '/intakes',         roles: ['coach'] as AppRole[] },
+        { label: 'NAV.assessmentManagement', icon: 'assignment', route: '/intakes',         roles: ['coach'] as AppRole[] },
       ],
     },
-    { label: 'NAV.intakeManagement', icon: 'assignment',           route: '/intakes',              roles: ['admin', 'hr_manager'] },
+    { label: 'NAV.assessmentManagement', icon: 'assignment',           route: '/intakes',              roles: ['admin', 'hr_manager'] },
     { label: 'NAV.eqiAssessments',    icon: 'psychology',          route: '/eq-import/records',    roles: ['admin'] },
     { label: 'NAV.reports',           icon: 'assessment',          route: '/admin/reports',        roles: ['admin', 'hr_manager'] },
     {

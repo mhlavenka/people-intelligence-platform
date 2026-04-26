@@ -99,7 +99,7 @@ interface SurveyTemplate {
   template: `
     <h2 mat-dialog-title>
       <mat-icon>{{ isEdit() ? 'edit' : 'add_circle' }}</mat-icon>
-      {{ isEdit() ? ("SURVEY.editIntakeTemplate" | translate) : ("SURVEY.newIntakeTemplate" | translate) }}
+      {{ isEdit() ? ("SURVEY.editAssessmentTemplate" | translate) : ("SURVEY.newAssessmentTemplate" | translate) }}
     </h2>
 
     <mat-dialog-content>
@@ -163,7 +163,7 @@ interface SurveyTemplate {
                 </mat-form-field>
 
                 <mat-form-field appearance="outline" class="half-width">
-                  <mat-label>{{ 'SURVEY.intakeTypeLabel' | translate }}</mat-label>
+                  <mat-label>{{ 'SURVEY.assessmentTypeLabel' | translate }}</mat-label>
                   <mat-select formControlName="intakeType" (selectionChange)="onIntakeTypeChange($event.value)">
                     <mat-option value="survey">{{ "SURVEY.surveyTypeSelfCompleted" | translate }}</mat-option>
                     <mat-option value="interview">{{ "SURVEY.interviewTypeCoachLed" | translate }}</mat-option>
@@ -180,7 +180,7 @@ interface SurveyTemplate {
                 </mat-form-field>
 
                 <mat-form-field appearance="outline" class="half-width">
-                  <mat-label>{{ 'SURVEY.intakeLanguage' | translate }}</mat-label>
+                  <mat-label>{{ 'SURVEY.assessmentLanguage' | translate }}</mat-label>
                   <mat-select formControlName="language">
                     <mat-option value="en">English</mat-option>
                     <mat-option value="fr">Français</mat-option>
@@ -218,7 +218,7 @@ interface SurveyTemplate {
                             [disabled]="translating() || !translateTargetLang">
                       @if (translating()) { <mat-spinner diameter="16" /> }
                       @else { <mat-icon>translate</mat-icon> }
-                      {{ 'SURVEY.translateIntake' | translate }}
+                      {{ 'SURVEY.translateAssessment' | translate }}
                     </button>
                   </div>
                 }

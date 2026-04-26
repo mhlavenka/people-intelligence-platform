@@ -42,6 +42,8 @@ interface SurveyTemplate {
   scoring?: unknown;
   rater_type?: string;
   analysisPrompt?: string;
+  language?: string;
+  sourceTemplateId?: string;
   createdAt: string;
   responseCount?: number;
 }
@@ -69,8 +71,8 @@ interface SurveyTemplate {
     <div class="surveys-page">
       <div class="page-header">
         <div>
-          <h1>{{ "SURVEY.intakeManagement" | translate }}</h1>
-          <p>{{ "SURVEY.intakeManagementDesc" | translate }}</p>
+          <h1>{{ "SURVEY.assessmentManagement" | translate }}</h1>
+          <p>{{ "SURVEY.assessmentManagementDesc" | translate }}</p>
         </div>
       </div>
 
@@ -116,7 +118,7 @@ interface SurveyTemplate {
       <div class="search-bar">
         <mat-icon>search</mat-icon>
         <input [ngModel]="searchQuery()" (ngModelChange)="searchQuery.set($event)"
-               [placeholder]="'SURVEY.searchIntakes' | translate" class="search-input">
+               [placeholder]="'SURVEY.searchAssessments' | translate" class="search-input">
         @if (searchQuery()) {
           <button mat-icon-button (click)="searchQuery.set('')" class="search-clear">
             <mat-icon>close</mat-icon>
@@ -132,7 +134,7 @@ interface SurveyTemplate {
           <h3>{{ 'SURVEY.noTemplates' | translate }}</h3>
           <p>{{ 'SURVEY.createFirstTemplate' | translate }}</p>
           <button mat-raised-button color="primary" (click)="openCreateDialog()">
-            <mat-icon>add</mat-icon> {{ 'SURVEY.newIntake' | translate }}
+            <mat-icon>add</mat-icon> {{ 'SURVEY.newAssessment' | translate }}
           </button>
         </div>
       } @else {
@@ -269,7 +271,7 @@ interface SurveyTemplate {
                   <mat-icon>link</mat-icon>
                 </button>
                 <button mat-icon-button (click)="assignIntake(t)" [disabled]="!t.isActive"
-                        [matTooltip]="'SURVEY.assignIntake' | translate">
+                        [matTooltip]="'SURVEY.assignAssessment' | translate">
                   <mat-icon>upload</mat-icon>
                 </button>
                 <button mat-icon-button (click)="previewTemplate(t)"
@@ -678,9 +680,29 @@ export class SurveyManagementComponent implements OnInit {
   }
 
   /** Open the same walkthrough preview the editor uses, hydrated from a saved
-   *  template — non-saving, just a respondent-eye view. */
+   *  template — non-saving, just a respondent-eye view. If a sibling translation
+   *  matching the user's UI language exists, preview that instead of the source. */
   previewTemplate(t: SurveyTemplate): void {
     if (!t.questions?.length) return;
+    const uiLang = this.translateSvc.currentLang || 'en';
+    if (t.language === uiLang) { this.openPreviewDialog(t); return; }
+
+    this.api.get<{ _id: string; title: string; language: string }[]>(
+      `/surveys/templates/${t._id}/translations`,
+    ).subscribe({
+      next: (siblings) => {
+        const match = siblings?.find((s) => s.language === uiLang);
+        if (!match) { this.openPreviewDialog(t); return; }
+        this.api.get<SurveyTemplate>(`/surveys/templates/${match._id}`).subscribe({
+          next: (full) => this.openPreviewDialog(full),
+          error: () => this.openPreviewDialog(t),
+        });
+      },
+      error: () => this.openPreviewDialog(t),
+    });
+  }
+
+  private openPreviewDialog(t: SurveyTemplate): void {
     import('../survey-preview-dialog/survey-preview-dialog.component').then((m) => {
       this.dialog.open(m.SurveyPreviewDialogComponent, {
         width: '780px', maxWidth: '94vw', maxHeight: '92vh',

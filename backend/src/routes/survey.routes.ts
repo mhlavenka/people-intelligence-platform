@@ -324,6 +324,7 @@ router.post(
         en: 'English',
         fr: 'French (use formal "vous" register)',
         es: 'Spanish (Latin American)',
+        sk: 'Slovak',
       };
 
       const questionsForAI = template.questions.map((q) => ({
@@ -373,8 +374,18 @@ Rules:
 - Return ONLY the JSON object, no markdown fences`;
 
       const raw = await callClaude(prompt, undefined, 4096, req.user!.organizationId);
-      const jsonStr = raw.slice(raw.indexOf('{'), raw.lastIndexOf('}') + 1);
-      const translated = JSON.parse(jsonStr);
+      let translated: any;
+      try {
+        const clean = raw.replace(/```(?:json)?\r?\n?/g, '').replace(/```/g, '').trim();
+        const objStart = clean.indexOf('{');
+        const objEnd = clean.lastIndexOf('}');
+        if (objStart === -1 || objEnd <= objStart) throw new Error('no JSON object in response');
+        translated = JSON.parse(clean.slice(objStart, objEnd + 1));
+      } catch (parseErr) {
+        console.error('[Translate] AI response parse failed:', parseErr, '\nRaw:', raw.slice(0, 500));
+        res.status(502).json({ error: req.t('errors.aiInvalidQuestionFormat') });
+        return;
+      }
 
       const updatedQuestions = template.questions.map((q) => {
         const tq = translated.questions?.find((t: { id: string }) => t.id === q.id);

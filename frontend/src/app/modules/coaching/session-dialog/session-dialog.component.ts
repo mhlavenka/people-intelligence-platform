@@ -108,7 +108,7 @@ const FRAMEWORKS = [
           }
         </div>
 
-        <div class="section-label">{{ 'COACHING.preSessionIntake' | translate }}</div>
+        <div class="section-label">{{ 'COACHING.preSessionAssessment' | translate }}</div>
         <div class="intake-hint">
           <mat-icon>assignment_turned_in</mat-icon>
           <span>{{ 'COACHING.attachAssessmentHint' | translate }}</span>
@@ -124,23 +124,23 @@ const FRAMEWORKS = [
           </mat-select>
           <mat-hint>
             {{ intakeStatus() === 'completed'
-                ? ('COACHING.intakeLocked' | translate)
+                ? ('COACHING.assessmentLocked' | translate)
                 : ('COACHING.assessmentOnlyHint' | translate) }}
           </mat-hint>
         </mat-form-field>
         @if (intakeStatus() === 'completed') {
           <div class="intake-status completed">
             <mat-icon>check_circle</mat-icon>
-            <span>{{ 'COACHING.intakeCompletedMsg' | translate }}</span>
+            <span>{{ 'COACHING.assessmentCompletedMsg' | translate }}</span>
           </div>
         } @else if (intakeStatus() === 'pending') {
           <div class="intake-status">
             <mat-icon>schedule</mat-icon>
-            <span>{{ 'COACHING.intakePendingMsg' | translate }}</span>
+            <span>{{ 'COACHING.assessmentPendingMsg' | translate }}</span>
           </div>
         }
 
-        <div class="section-label">{{ 'COACHING.postSessionIntake' | translate }}</div>
+        <div class="section-label">{{ 'COACHING.postSessionAssessment' | translate }}</div>
         <div class="intake-hint post">
           <mat-icon>rate_review</mat-icon>
           <span>{{ 'COACHING.attachPostAssessmentHint' | translate }}</span>
@@ -156,19 +156,19 @@ const FRAMEWORKS = [
           </mat-select>
           <mat-hint>
             {{ postIntakeStatus() === 'sent'
-                ? ('COACHING.postIntakeLocked' | translate)
+                ? ('COACHING.postAssessmentLocked' | translate)
                 : ('COACHING.postAssessmentHint' | translate) }}
           </mat-hint>
         </mat-form-field>
         @if (postIntakeStatus() === 'completed') {
           <div class="intake-status completed">
             <mat-icon>check_circle</mat-icon>
-            <span>{{ 'COACHING.postIntakeCompletedMsg' | translate }}</span>
+            <span>{{ 'COACHING.postAssessmentCompletedMsg' | translate }}</span>
           </div>
         } @else if (postIntakeStatus() === 'sent') {
           <div class="intake-status">
             <mat-icon>schedule</mat-icon>
-            <span>{{ 'COACHING.postIntakeSentMsg' | translate }}</span>
+            <span>{{ 'COACHING.postAssessmentSentMsg' | translate }}</span>
           </div>
         }
 

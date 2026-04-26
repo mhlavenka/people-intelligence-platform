@@ -442,13 +442,13 @@ interface RecommendedActions {
                             @if (generatingIntakeFor() === $index) {
                               <div class="intake-overlay">
                                 <mat-spinner diameter="28" />
-                                <span>{{ 'CONFLICT.generatingIntake' | translate }}</span>
+                                <span>{{ 'CONFLICT.generatingAssessment' | translate }}</span>
                               </div>
                             }
                             @if (intakeGeneratedFor() === $index) {
                               <div class="intake-overlay done">
                                 <mat-icon>check_circle</mat-icon>
-                                <span>{{ 'CONFLICT.intakeReady' | translate }}</span>
+                                <span>{{ 'CONFLICT.assessmentReady' | translate }}</span>
                               </div>
                             }
                             <div class="action-header">
@@ -462,15 +462,15 @@ interface RecommendedActions {
                               @if (hasGeneratedIntake($index)) {
                                 <button mat-stroked-button class="gen-intake-btn done"
                                         (click)="openGeneratedIntake($index)"
-                                        [matTooltip]="'CONFLICT.viewGeneratedIntake' | translate">
-                                  <mat-icon>open_in_new</mat-icon> {{ 'CONFLICT.viewIntake' | translate }}
+                                        [matTooltip]="'CONFLICT.viewGeneratedAssessment' | translate">
+                                  <mat-icon>open_in_new</mat-icon> {{ 'CONFLICT.viewAssessment' | translate }}
                                 </button>
                               } @else {
                                 <button mat-stroked-button class="gen-intake-btn"
                                         (click)="generateActionIntake(a, $index)"
                                         [disabled]="generatingIntakeFor() !== null"
-                                        [matTooltip]="'CONFLICT.generateIntakeTooltip' | translate">
-                                  <mat-icon>assignment</mat-icon> {{ 'CONFLICT.generateIntake' | translate }}
+                                        [matTooltip]="'CONFLICT.generateAssessmentTooltip' | translate">
+                                  <mat-icon>assignment</mat-icon> {{ 'CONFLICT.generateAssessment' | translate }}
                                 </button>
                               }
                             </div>
@@ -1721,7 +1721,7 @@ export class ConflictDetailComponent implements OnInit {
         const updated = { ...a, generatedIntakeIds: { ...(a.generatedIntakeIds || {}), [`immediate_${index}`]: template._id } };
         this.analysis.set(updated);
         this.snack.open(
-          this.translateSvc.instant('CONFLICT.intakeGenerated', { title: template.title }),
+          this.translateSvc.instant('CONFLICT.assessmentGenerated', { title: template.title }),
           this.translateSvc.instant('COMMON.close'),
           { duration: 4000 },
         );
@@ -1731,7 +1731,7 @@ export class ConflictDetailComponent implements OnInit {
       },
       error: () => {
         this.generatingIntakeFor.set(null);
-        this.snack.open(this.translateSvc.instant('CONFLICT.intakeGenerateFailed'), 'OK', { duration: 3000 });
+        this.snack.open(this.translateSvc.instant('CONFLICT.assessmentGenerateFailed'), 'OK', { duration: 3000 });
       },
     });
   }

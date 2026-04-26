@@ -353,8 +353,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
         roles: ['admin', 'hr_manager', 'coach', 'coachee'],
       },
       {
-        title: t('DASHBOARD.intakesTitle'),
-        subtitle: t('DASHBOARD.intakesSubtitle'),
+        title: t('DASHBOARD.assessmentsTitle'),
+        subtitle: t('DASHBOARD.assessmentsSubtitle'),
         icon: 'assignment',
         color: 'linear-gradient(135deg, #9aa5b4, #5a6a7e)',
         route: '/intakes',
@@ -382,7 +382,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       }
       if (card.route === '/intakes') {
         const { responses, activeSurveys } = stats.surveys;
-        return { ...card, metric: String(activeSurveys), metricLabel: this.translateSvc.instant('DASHBOARD.activeIntakesResponses', { responses }) };
+        return { ...card, metric: String(activeSurveys), metricLabel: this.translateSvc.instant('DASHBOARD.activeAssessmentsResponses', { responses }) };
       }
       return card;
     }));
