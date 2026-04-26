@@ -42,6 +42,7 @@ export interface LoginResponse {
 
 const INACTIVITY_MS = 30 * 60 * 1000;       // 30 minutes
 const WARN_BEFORE_MS = 2 * 60 * 1000;        // warn 2 minutes before logout
+const INACTIVITY_POLL_MS = 30 * 1000;        // safety-net poll interval
 // Scroll + touchmove don't bubble from inner containers, so listeners are
 // registered with { capture: true } to pick them up in the capture phase.
 const ACTIVITY_EVENTS = [
@@ -61,9 +62,11 @@ export class AuthService {
   private inactivityTimer: ReturnType<typeof setTimeout> | null = null;
   private warnTimer: ReturnType<typeof setTimeout> | null = null;
   private refreshTimer: ReturnType<typeof setTimeout> | null = null;
+  private inactivityPoll: ReturnType<typeof setInterval> | null = null;
   private boundLocalActivity!: () => void;
   private boundStorage!: (ev: StorageEvent) => void;
   private boundVisibility!: () => void;
+  private boundFocus!: () => void;
   private lastActivityWrite = 0;
   private readonly ACTIVITY_KEY = 'pip_last_activity';
 
@@ -98,6 +101,25 @@ export class AuthService {
     };
     document.addEventListener('visibilitychange', this.boundVisibility);
 
+    // Window focus also re-arms (timers are throttled when the tab is in the
+    // foreground but unfocused — `visibilitychange` doesn't fire in that case).
+    this.boundFocus = () => this.armInactivityTimer();
+    window.addEventListener('focus', this.boundFocus);
+
+    // Safety net: a low-frequency interval that re-checks the elapsed time.
+    // Browsers can heavily throttle long setTimeouts in unfocused tabs, so the
+    // inactivity timer alone can fire late; this polling ensures we still log
+    // out roughly on time without waiting for user activity.
+    this.ngZone.runOutsideAngular(() => {
+      this.inactivityPoll = setInterval(() => {
+        if (document.hidden) return;
+        const last = Number(localStorage.getItem(this.ACTIVITY_KEY)) || Date.now();
+        if (Date.now() - last >= INACTIVITY_MS) {
+          this.ngZone.run(() => this.logout());
+        }
+      }, INACTIVITY_POLL_MS);
+    });
+
     this.onLocalActivity();
   }
 
@@ -109,6 +131,8 @@ export class AuthService {
     }
     if (this.boundStorage)    window.removeEventListener('storage', this.boundStorage);
     if (this.boundVisibility) document.removeEventListener('visibilitychange', this.boundVisibility);
+    if (this.boundFocus)      window.removeEventListener('focus', this.boundFocus);
+    if (this.inactivityPoll)  { clearInterval(this.inactivityPoll); this.inactivityPoll = null; }
     this.clearTimers();
   }
 

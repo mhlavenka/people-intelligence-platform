@@ -65,7 +65,7 @@ interface OrgResponse {
           </mat-form-field>
 
           <mat-form-field appearance="outline" class="full-width">
-            <mat-label>{{ "CONFLICT.intakeTemplate" | translate }}</mat-label>
+            <mat-label>{{ "CONFLICT.assessmentTemplate" | translate }}</mat-label>
             <mat-select formControlName="templateId" (selectionChange)="selectedTemplateId.set($event.value)">
               @for (t of templates(); track t._id) {
                 <mat-option [value]="t._id">

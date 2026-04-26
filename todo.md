@@ -31,7 +31,7 @@ II. SYSTEM
 **Google Test Env**
  - need to switch to prod and have the app approved by google
 **Multilingual**
- - missing translations: 
+ - missing translations: New org: ADMIN.placaholderStreetAddress, ADMIN.placaholderSuiteFloor
 **Sysadmin**
  - sponsor invoicing should include the "from" address - the organization name and address.
 **Placeholders**

@@ -67,7 +67,7 @@ interface GeneratedTemplate {
             </mat-form-field>
 
             <mat-form-field appearance="outline">
-              <mat-label>{{ 'SURVEY.intakeType' | translate }}</mat-label>
+              <mat-label>{{ 'SURVEY.assessmentType' | translate }}</mat-label>
               <mat-select [(ngModel)]="intakeType">
                 <mat-option value="survey">{{ 'SURVEY.typeSurvey' | translate }}</mat-option>
                 <mat-option value="interview">{{ 'SURVEY.typeInterview' | translate }}</mat-option>

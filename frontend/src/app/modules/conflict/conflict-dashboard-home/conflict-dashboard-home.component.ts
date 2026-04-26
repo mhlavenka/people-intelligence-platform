@@ -575,7 +575,7 @@ export class ConflictDashboardHomeComponent implements OnInit {
   ];
 
   processSteps: ProcessStep[] = [
-    { icon: 'poll',               color: '#27C4A0', titleKey: 'CONFLICT.processIntakeTitle',     descKey: 'CONFLICT.processIntakeDesc' },
+    { icon: 'poll',               color: '#27C4A0', titleKey: 'CONFLICT.processAssessmentTitle',     descKey: 'CONFLICT.processAssessmentDesc' },
     { icon: 'psychology',         color: '#3A9FD6', titleKey: 'CONFLICT.processAITitle',         descKey: 'CONFLICT.processAIDesc' },
     { icon: 'task_alt',           color: '#f0a500', titleKey: 'CONFLICT.processActionsTitle',    descKey: 'CONFLICT.processActionsDesc' },
     { icon: 'escalator_warning',  color: '#e86c3a', titleKey: 'CONFLICT.processEscalationTitle', descKey: 'CONFLICT.processEscalationDesc' },

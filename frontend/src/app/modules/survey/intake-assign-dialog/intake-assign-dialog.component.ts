@@ -36,7 +36,7 @@ interface UserOption {
   template: `
     <h2 mat-dialog-title>
       <mat-icon>send</mat-icon>
-      {{ 'SURVEY.assignIntake' | translate }}
+      {{ 'SURVEY.assignAssessment' | translate }}
     </h2>
     <p class="subtitle">{{ data.title }}</p>
 
