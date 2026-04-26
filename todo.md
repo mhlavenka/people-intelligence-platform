@@ -32,8 +32,6 @@ I. MODULES
 II. SYSTEM
 ----------
 **Organization setup** 
- - put together users / departments / orgchart in more logical way. Make me a proposed solution before implementing so I can approve
- - create new user - default email to org email domain, not headsoft; Generate default password as random alphanumeric and show it by default. Add "regenerate"
  - role issue between employee and coachee / external coachee. The flag for external coachee is in user list, what role should this type user have? What role should a regular user/employee have? Org chart does not show some roles.
  - 
 **Google Test Env**
