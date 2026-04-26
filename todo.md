@@ -6,7 +6,7 @@ I. MODULES
 
 **Intakes**
  - Bi-weekly pulse does not have scale description
- - Look at reverse scale calculation
+ - Look at reverse scale calculation - how to set it up so that 1 is good and 10 is bad? What does max_plus_one_minus_raw mean?
  - forced choices should have option to add many options
  - optional questions should not force me to put anything 
 
