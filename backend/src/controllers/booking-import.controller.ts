@@ -214,8 +214,11 @@ export async function preview(req: AuthRequest, res: Response, next: NextFunctio
 
     // Load matching reference data up-front so per-event matching is O(1).
     const [coacheeDocs, eventTypeDocs] = await Promise.all([
-      User.find({ organizationId, role: 'coachee', isActive: true })
-        .select('_id firstName lastName email'),
+      User.find({
+        organizationId,
+        isActive: true,
+        $or: [{ role: 'coachee' }, { isCoachee: true }],
+      }).select('_id firstName lastName email'),
       AvailabilityConfig.find({ coachId, organizationId })
         .select('_id name color appointmentDuration'),
     ]);
@@ -396,8 +399,8 @@ export async function execute(req: AuthRequest, res: Response, next: NextFunctio
         let eventTypeName: string | undefined;
         if (resolvedCoacheeId) {
           const coachee = await User.findById(resolvedCoacheeId)
-            .select('firstName lastName email organizationId role');
-          if (coachee && coachee.role === 'coachee'
+            .select('firstName lastName email organizationId role isCoachee');
+          if (coachee && (coachee.role === 'coachee' || coachee.isCoachee === true)
               && String(coachee.organizationId) === String(organizationId)) {
             finalName = `${coachee.firstName} ${coachee.lastName}`.trim() || finalName;
             finalEmail = coachee.email ?? finalEmail;

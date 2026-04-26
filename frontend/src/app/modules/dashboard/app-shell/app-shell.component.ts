@@ -648,13 +648,13 @@ export class AppShellComponent implements OnInit, OnDestroy {
       ],
     },
     { label: 'NAV.neuroinclusion',         icon: 'psychology',   route: '/neuroinclusion', roles: ['admin', 'hr_manager', 'manager'],               module: 'neuroinclusion' },
-    { label: 'NAV.leadershipSuccession',   icon: 'trending_up',  route: '/succession',  roles: ['admin', 'hr_manager', 'coach', 'coachee'],        module: 'succession' },
+    { label: 'NAV.leadershipSuccession',   icon: 'trending_up',  route: '/succession',  roles: ['admin', 'hr_manager', 'coach', 'employee', 'coachee'], module: 'succession' },
     {
       label: 'NAV.coaching',
       icon: 'psychology_alt',
       module: 'coaching',
       children: [
-        { label: 'NAV.engagements', icon: 'groups_2',     route: '/coaching',  roles: ['admin', 'hr_manager', 'coach', 'coachee'] as AppRole[], module: 'coaching' },
+        { label: 'NAV.engagements', icon: 'groups_2',     route: '/coaching',  roles: ['admin', 'hr_manager', 'coach', 'employee', 'coachee'] as AppRole[], module: 'coaching' },
         { label: 'NAV.coachees',    icon: 'people_alt',   route: '/coaching/coachees', roles: ['coach'] as AppRole[],                               module: 'coaching' },
         { label: 'NAV.sponsors',    icon: 'account_balance', route: '/sponsors', roles: ['admin', 'hr_manager', 'coach'] as AppRole[],            module: 'coaching' },
         { label: 'NAV.myJournal',   icon: 'menu_book',    route: '/journal',   roles: ['admin', 'hr_manager', 'coach'] as AppRole[],            module: 'coaching' },

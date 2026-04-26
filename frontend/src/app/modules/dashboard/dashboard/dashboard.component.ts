@@ -281,8 +281,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
    *  elsewhere). The backend returns coach-scoped bookings, so admins /
    *  HR see their own — typically empty and that's fine. */
   showUpcoming = computed(() => {
-    const role = this.authService.currentUser()?.role;
-    return !!role && role !== 'coachee';
+    const u = this.authService.currentUser();
+    if (!u?.role) return false;
+    return u.role !== 'coachee' && u.isCoachee !== true;
   });
   moduleCards = signal<ModuleCard[]>(this.defaultCards());
 
@@ -338,7 +339,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         metricLabel: t('DASHBOARD.activeIDPs'),
         status: 'active',
         module: 'succession',
-        roles: ['admin', 'hr_manager', 'coach', 'coachee'],
+        roles: ['admin', 'hr_manager', 'coach', 'employee', 'coachee'],
       },
       {
         title: t('DASHBOARD.coachingTitle'),
@@ -350,7 +351,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         metricLabel: t('DASHBOARD.activeEngagements'),
         status: 'active',
         module: 'coaching',
-        roles: ['admin', 'hr_manager', 'coach', 'coachee'],
+        roles: ['admin', 'hr_manager', 'coach', 'employee', 'coachee'],
       },
       {
         title: t('DASHBOARD.assessmentsTitle'),

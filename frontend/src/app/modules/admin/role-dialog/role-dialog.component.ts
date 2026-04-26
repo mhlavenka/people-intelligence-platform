@@ -82,11 +82,12 @@ const PERMISSION_GROUPS: PermissionGroup[] = [
 ];
 
 const BASE_ROLES = [
-  { value: 'admin',      label: 'Admin',      description: 'Full platform management access' },
-  { value: 'hr_manager', label: 'HR Manager', description: 'HR operations and people analytics' },
-  { value: 'manager',    label: 'Manager',    description: 'Team-level analytics and escalation' },
-  { value: 'coach',      label: 'Coach',      description: 'Interview, coaching, and succession' },
-  { value: 'coachee',    label: 'Coachee',    description: 'Survey participation and own IDP' },
+  { value: 'admin',      label: 'Admin',            description: 'Full platform management access' },
+  { value: 'hr_manager', label: 'HR Manager',       description: 'HR operations and people analytics' },
+  { value: 'manager',    label: 'Manager',          description: 'Team-level analytics and escalation' },
+  { value: 'coach',      label: 'Coach',            description: 'Interview, coaching, and succession' },
+  { value: 'employee',   label: 'Employee',         description: 'Default workforce member: take surveys, message hub' },
+  { value: 'coachee',    label: 'External Coachee', description: 'External coaching client only — excluded from org chart' },
 ];
 
 const PRESET_COLORS = [

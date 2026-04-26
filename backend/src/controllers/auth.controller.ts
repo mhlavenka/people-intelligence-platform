@@ -23,6 +23,7 @@ interface TokenPayload {
   organizationId: string;
   role: string;
   email: string;
+  isCoachee?: boolean;
   permissions?: string[];
   customRoleId?: string;
   customRoleName?: string;
@@ -82,6 +83,7 @@ export async function buildPayload(user: IUser): Promise<TokenPayload> {
     organizationId: user.organizationId.toString(),
     role:           user.role,
     email:          user.email,
+    isCoachee:      user.isCoachee === true,
   };
 
   if (user.customRoleId) {

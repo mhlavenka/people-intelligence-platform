@@ -1,7 +1,7 @@
 import mongoose, { Document, Schema } from 'mongoose';
 import { tenantFilterPlugin } from './plugins/tenantFilter.plugin';
 
-export type UserRole = 'admin' | 'hr_manager' | 'manager' | 'coachee' | 'coach' | 'system_admin';
+export type UserRole = 'admin' | 'hr_manager' | 'manager' | 'employee' | 'coachee' | 'coach' | 'system_admin';
 
 export interface IPasskeyCredential {
   credentialId: string;           // base64url-encoded credential ID
@@ -102,7 +102,7 @@ const UserSchema = new Schema<IUser>(
     passwordHash: { type: String, required: true },
     role: {
       type: String,
-      enum: ['admin', 'hr_manager', 'manager', 'coachee', 'coach', 'system_admin'],
+      enum: ['admin', 'hr_manager', 'manager', 'employee', 'coachee', 'coach', 'system_admin'],
       required: true,
     },
     customRoleId: { type: Schema.Types.ObjectId, ref: 'CustomRole', default: null },

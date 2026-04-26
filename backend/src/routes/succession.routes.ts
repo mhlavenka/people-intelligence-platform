@@ -1,5 +1,5 @@
 import { Router, Response, NextFunction } from 'express';
-import { authenticateToken, requirePermission, AuthRequest } from '../middleware/auth.middleware';
+import { authenticateToken, requirePermission, AuthRequest, isCoacheeUser } from '../middleware/auth.middleware';
 import { tenantResolver } from '../middleware/tenant.middleware';
 import { DevelopmentPlan } from '../models/DevelopmentPlan.model';
 import { User } from '../models/User.model';
@@ -192,7 +192,7 @@ router.get('/idps', async (req: AuthRequest, res: Response, next: NextFunction) 
     const filter: Record<string, unknown> = { organizationId };
 
     // Coachees only see their own IDP; all other roles see the full org list
-    if (req.user!.role === 'coachee') {
+    if (isCoacheeUser(req)) {
       filter['coacheeId'] = req.user!.userId;
     }
 
@@ -367,7 +367,7 @@ router.delete(
 router.get('/journal', async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const filter: Record<string, unknown> = { organizationId: req.user!.organizationId };
-    if (req.user!.role === 'coachee') {
+    if (isCoacheeUser(req)) {
       filter['userId'] = req.user!.userId;
     }
     if (req.query['idpId']) {
@@ -410,7 +410,7 @@ router.delete('/journal/:id', async (req: AuthRequest, res: Response, next: Next
       _id: req.params['id'],
       organizationId: req.user!.organizationId,
     };
-    if (req.user!.role === 'coachee') {
+    if (isCoacheeUser(req)) {
       filter['userId'] = req.user!.userId;
     }
     const entry = await JournalEntry.findOneAndDelete(filter);

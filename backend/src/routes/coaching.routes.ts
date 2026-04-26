@@ -1,5 +1,5 @@
 import { Router, Response, NextFunction } from 'express';
-import { authenticateToken, requirePermission, AuthRequest } from '../middleware/auth.middleware';
+import { authenticateToken, requirePermission, AuthRequest, isCoacheeUser } from '../middleware/auth.middleware';
 import { tenantResolver } from '../middleware/tenant.middleware';
 import { CoachingEngagement } from '../models/CoachingEngagement.model';
 import { CoachingSession } from '../models/CoachingSession.model';
@@ -280,7 +280,7 @@ const SESSION_LOCKED_FIELDS: ReadonlyArray<keyof InstanceType<typeof CoachingSes
 function scopeCoachingFilter(req: AuthRequest, base: Record<string, unknown> = {}): Record<string, unknown> {
   const filter: Record<string, unknown> = { ...base, organizationId: req.user!.organizationId };
   if (req.user!.role === 'coach') filter['coachId'] = req.user!.userId;
-  if (req.user!.role === 'coachee') filter['coacheeId'] = req.user!.userId;
+  else if (isCoacheeUser(req)) filter['coacheeId'] = req.user!.userId;
   return filter;
 }
 
@@ -455,7 +455,7 @@ router.get('/sessions', async (req: AuthRequest, res: Response, next: NextFuncti
     if (req.query['engagementId']) base['engagementId'] = req.query['engagementId'];
     const filter = scopeCoachingFilter(req, base);
 
-    const selectFields = req.user!.role === 'coachee'
+    const selectFields = isCoacheeUser(req)
       ? '-coachNotes'   // NEVER expose private coach notes to coachees
       : undefined;
 
@@ -503,7 +503,7 @@ router.get('/sessions', async (req: AuthRequest, res: Response, next: NextFuncti
 /** Get single session (scoped per role). */
 router.get('/sessions/:id', async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const selectFields = req.user!.role === 'coachee' ? '-coachNotes' : undefined;
+    const selectFields = isCoacheeUser(req) ? '-coachNotes' : undefined;
     const session = await CoachingSession.findOne(
       scopeCoachingFilter(req, { _id: req.params['id'] }),
     )

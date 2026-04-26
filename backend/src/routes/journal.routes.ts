@@ -1,5 +1,5 @@
 import { Router, Response, NextFunction } from 'express';
-import { authenticateToken, requirePermission, AuthRequest } from '../middleware/auth.middleware';
+import { authenticateToken, requirePermission, AuthRequest, isCoacheeUser } from '../middleware/auth.middleware';
 import { tenantResolver } from '../middleware/tenant.middleware';
 import { JournalSessionNote } from '../models/JournalSessionNote.model';
 import { JournalReflectiveEntry } from '../models/JournalReflectiveEntry.model';
@@ -19,7 +19,7 @@ router.use(authenticateToken, tenantResolver);
 // journalScope); other roles need the explicit VIEW_JOURNAL permission.
 // This avoids lockout when a SystemRoleOverride strips VIEW_JOURNAL.
 const journalReadAccess = (req: AuthRequest, res: Response, next: NextFunction): void => {
-  if (req.user?.role === 'coachee') { next(); return; }
+  if (req.user && isCoacheeUser(req)) { next(); return; }
   requirePermission('VIEW_JOURNAL')(req, res, next);
 };
 const journalAccess = requirePermission('MANAGE_JOURNAL');
@@ -28,7 +28,7 @@ const journalAccess = requirePermission('MANAGE_JOURNAL');
 function journalScope(req: AuthRequest): Record<string, unknown> {
   const filter: Record<string, unknown> = { organizationId: req.user!.organizationId };
   if (req.user!.role === 'coach') filter['coachId'] = req.user!.userId;
-  else if (req.user!.role === 'coachee') filter['coacheeId'] = req.user!.userId;
+  else if (isCoacheeUser(req)) filter['coacheeId'] = req.user!.userId;
   return filter;
 }
 
@@ -74,7 +74,7 @@ router.post(
 
       // Role-scope: coachees can only create on engagements they're part of;
       // coaches only on engagements they own.
-      if (req.user!.role === 'coachee' && engagement.coacheeId.toString() !== req.user!.userId) {
+      if (isCoacheeUser(req) && engagement.coacheeId.toString() !== req.user!.userId) {
         res.status(403).json({ error: req.t('errors.forbidden') }); return;
       }
       if (req.user!.role === 'coach' && engagement.coachId.toString() !== req.user!.userId) {
@@ -99,7 +99,7 @@ router.post(
 
       // For coachees, strip out any coach-side fields they may have sent.
       const body = { ...req.body };
-      if (req.user!.role === 'coachee') {
+      if (isCoacheeUser(req)) {
         delete body.preSession;
         delete body.inSession;
         delete body.postSession;
@@ -157,12 +157,12 @@ router.put(
       // Once a coach finalises a note (status='complete') the journal is
       // locked. Coachee-facing fields stay editable so the coachee can still
       // submit their pre/post-session reflection. Coach edits are rejected.
-      if (note.status === 'complete' && req.user!.role !== 'coachee') {
+      if (note.status === 'complete' && !isCoacheeUser(req)) {
         res.status(409).json({ error: req.t('errors.noteLockedComplete') });
         return;
       }
 
-      if (req.user!.role === 'coachee') {
+      if (isCoacheeUser(req)) {
         if (req.body.coacheePre !== undefined) note.coacheePre = req.body.coacheePre;
         if (req.body.coacheePost !== undefined) note.coacheePost = req.body.coacheePost;
       } else {

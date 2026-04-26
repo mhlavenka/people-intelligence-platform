@@ -132,4 +132,12 @@ export const SYSTEM_ROLE_PERMISSIONS: Record<string, string[]> = {
     'VIEW_BOOKINGS',
     'VIEW_HUB',
   ],
+  // Default workforce member. Mirrors coachee — coaching-specific surfaces
+  // (own IDP / journal) gate themselves on whether a record exists for the
+  // user, so an employee with isCoachee=false simply sees empty states.
+  employee: [
+    'TAKE_SURVEY', 'VIEW_OWN_IDP', 'VIEW_JOURNAL',
+    'VIEW_BOOKINGS',
+    'VIEW_HUB',
+  ],
 };

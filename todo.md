@@ -4,7 +4,8 @@
 I. MODULES
 ----------
 
-**Intakes**
+**Intakes/Assessments**
+ - menu item renaming
  - Bi-weekly pulse does not have scale description
  - Look at reverse scale calculation - how to set it up so that 1 is good and 10 is bad? What does max_plus_one_minus_raw mean?
  - forced choices should have option to add many options
@@ -32,8 +33,6 @@ I. MODULES
 II. SYSTEM
 ----------
 **Organization setup** 
- - role issue between employee and coachee / external coachee. The flag for external coachee is in user list, what role should this type user have? What role should a regular user/employee have? Org chart does not show some roles.
- - 
 **Google Test Env**
  - need to switch to prod and have the app approved by google
 **Multilingual**

@@ -147,7 +147,7 @@ router.post(
       const coachee = await User.findOne({
         _id: req.params['coacheeId'],
         organizationId: req.user!.organizationId,
-        role: 'coachee',
+        $or: [{ role: 'coachee' }, { isCoachee: true }],
       }).select('_id firstName lastName email');
       if (!coachee) { res.status(404).json({ error: req.t('errors.coacheeNotFoundShort') }); return; }
 

@@ -8,7 +8,7 @@ import { tenantFilterPlugin } from './plugins/tenantFilter.plugin';
  */
 export interface ISystemRoleOverride extends Document {
   organizationId: mongoose.Types.ObjectId;
-  role: string;                // 'admin' | 'hr_manager' | 'manager' | 'coach' | 'coachee'
+  role: string;                // 'admin' | 'hr_manager' | 'manager' | 'coach' | 'employee' | 'coachee'
   permissions: string[];       // overridden permission keys
   updatedBy?: mongoose.Types.ObjectId;
   createdAt: Date;

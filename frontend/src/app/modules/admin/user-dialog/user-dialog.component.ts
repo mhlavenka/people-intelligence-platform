@@ -45,7 +45,8 @@ const ROLES = [
   { value: 'hr_manager',  label: 'HR Manager' },
   { value: 'manager',     label: 'Manager' },
   { value: 'coach',       label: 'Coach' },
-  { value: 'coachee',     label: 'Coachee' },
+  { value: 'employee',    label: 'Employee' },
+  { value: 'coachee',     label: 'External Coachee' },
 ];
 
 @Component({
@@ -311,7 +312,7 @@ export class UserDialogComponent implements OnInit {
 
   private readonly BASE_LABELS: Record<string, string> = {
     admin: 'Admin', hr_manager: 'HR Manager', manager: 'Manager',
-    coach: 'Coach', coachee: 'Coachee',
+    coach: 'Coach', employee: 'Employee', coachee: 'External Coachee',
   };
 
   isEdit = () => !!this.existingUser;
@@ -336,7 +337,7 @@ export class UserDialogComponent implements OnInit {
       firstName:    [this.existingUser?.firstName  ?? '', Validators.required],
       lastName:     [this.existingUser?.lastName   ?? '', Validators.required],
       email:        [this.existingUser?.email      ?? '', [Validators.required, Validators.email]],
-      role:         [this.existingUser?.role        ?? 'coachee', Validators.required],
+      role:         [this.existingUser?.role        ?? 'employee', Validators.required],
       customRoleId: [this.existingUser?.customRoleId ?? ''],
       department:   [this.existingUser?.department ?? ''],
       sponsorId:    [this.normalizeSponsorId(this.existingUser?.sponsorId) ?? ''],
