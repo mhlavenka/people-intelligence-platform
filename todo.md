@@ -33,14 +33,13 @@ II. SYSTEM
 ----------
 **Organization setup** 
  - put together users / departments / orgchart in more logical way. Make me a proposed solution before implementing so I can approve
- - new user - default email to org email, not headsoftuser1@onkwe.com; also generate default password
- - user system role is missing employee (org chart does not work)
+ - create new user - default email to org email domain, not headsoft; Generate default password as random alphanumeric and show it by default. Add "regenerate"
+ - role issue between employee and coachee / external coachee. The flag for external coachee is in user list, what role should this type user have? What role should a regular user/employee have? Org chart does not show some roles.
  - 
 **Google Test Env**
  - need to switch to prod and have the app approved by google
 **Multilingual**
- - missing translations: New org: ADMIN.placaholderStreetAddress, ADMIN.placaholderSuiteFloor, ADMIN.orgeProfile, SURVEY.generateLabels
- - login page missing texts on intake slide (AUTH.slides.) maybe result of itake to assessment renaming?
+ - missing translations: 
 **Sysadmin**
  - sponsor invoicing should include the "from" address - the organization name and address.
 **Placeholders**
