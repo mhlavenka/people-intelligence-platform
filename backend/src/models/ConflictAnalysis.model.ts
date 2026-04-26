@@ -4,6 +4,47 @@ import { tenantFilterPlugin } from './plugins/tenantFilter.plugin';
 export type RiskLevel = 'low' | 'medium' | 'high' | 'critical';
 export type EscalationStatus = 'pending' | 'in_progress' | 'resolved' | 'escalated';
 
+// ─── Layer 1–3 divergence metrics, persisted with each ConflictAnalysis ──
+// All optional so legacy analyses keep rendering. The frontend guards on
+// presence and falls back to the existing aiNarrative + risk score view.
+
+export interface IResponseQuality {
+  totalSubmitted: number;
+  acceptedCount: number;
+  droppedCount: number;
+  droppedReasons: {
+    straightlining?: number;
+    longString?: number;
+    speeding?: number;
+    trapFailed?: number;
+  };
+}
+
+export interface IItemMetric {
+  questionId: string;
+  text?: string;
+  dimension?: string;
+  mean: number;
+  median: number;
+  sd: number;
+  iqr: number;
+  bimodalityCoef: number;        // BC > 0.555 ⇒ likely bimodal ("split")
+  entropy: number;               // Shannon, base e
+  rwg: number;                   // James-Demaree-Wolf within-group agreement
+  outlierCount: number;          // respondents flagged via modified-Z > 3.5
+  scaleMin?: number;
+  scaleMax?: number;
+}
+
+export interface IDimensionMetric {
+  dimension: string;             // 'Psychological Safety', 'Trust', ... or 'Ungrouped'
+  itemCount: number;
+  mean: number;
+  rwg: number;
+  disagreementScore: number;     // 0-100 (100 = max disagreement)
+  mostDivergentItemIds: string[];
+}
+
 export interface IConflictAnalysis extends Document {
   organizationId: mongoose.Types.ObjectId;
   intakeTemplateId?: mongoose.Types.ObjectId;
@@ -34,6 +75,13 @@ export interface IConflictAnalysis extends Document {
     recommendations?: string;
     reviewedAt?: Date;
   };
+
+  // Layer 1–3 divergence metrics (all optional — legacy analyses render fine)
+  responseQuality?: IResponseQuality;
+  itemMetrics?: IItemMetric[];
+  dimensionMetrics?: IDimensionMetric[];
+  teamAlignmentScore?: number;       // 0-100, Layer 5 dashboard tile
+
   createdAt: Date;
   updatedAt: Date;
 }
@@ -74,6 +122,14 @@ const ConflictAnalysisSchema = new Schema<IConflictAnalysis>(
         reviewedAt: Date,
       }, { _id: false }),
     },
+
+    // Stored as Mixed so we don't pay schema-validation overhead on every
+    // numeric field; the controller is the single writer and the shape is
+    // pinned by IItemMetric / IDimensionMetric / IResponseQuality interfaces.
+    responseQuality:    { type: Schema.Types.Mixed },
+    itemMetrics:        { type: [Schema.Types.Mixed], default: undefined },
+    dimensionMetrics:   { type: [Schema.Types.Mixed], default: undefined },
+    teamAlignmentScore: { type: Number, min: 0, max: 100 },
   },
   { timestamps: true }
 );

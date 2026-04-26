@@ -11,6 +11,7 @@ interface AnalysisLite {
   _id: string;
   riskLevel: 'low' | 'medium' | 'high' | 'critical';
   parentId?: string | null;
+  teamAlignmentScore?: number;
 }
 
 interface Pillar {
@@ -99,6 +100,25 @@ interface ToolkitCard {
           </a>
         }
       </div>
+
+      @if (teamAlignment() !== null) {
+        <a class="alignment-tile" [class]="'alignment-tile--' + alignmentBand(teamAlignment()!)" routerLink="/conflict/analysis">
+          <div class="alignment-tile-head">
+            <mat-icon>insights</mat-icon>
+            <div class="alignment-tile-title">
+              <h3>{{ 'CONFLICT.teamAlignment' | translate }}</h3>
+              <p>{{ 'CONFLICT.teamAlignmentDesc' | translate }}</p>
+            </div>
+            <span class="alignment-tile-score">{{ teamAlignment() }}<span class="suffix">/100</span></span>
+          </div>
+          <div class="alignment-tile-bar">
+            <div class="alignment-tile-fill" [style.width.%]="teamAlignment()"></div>
+          </div>
+          <span class="alignment-tile-band">
+            {{ ('CONFLICT.alignmentBand_' + alignmentBand(teamAlignment()!)) | translate }}
+          </span>
+        </a>
+      }
     </section>
 
     <!-- ── Methodology pillars ─────────────────────────────────────────── -->
@@ -478,6 +498,51 @@ interface ToolkitCard {
     .risk-card--high     { border-left-color: #e86c3a; .risk-count { color: #e86c3a; } }
     .risk-card--critical { border-left-color: #e53e3e; .risk-count { color: #e53e3e; } }
 
+    /* Team-alignment tile (Phase 1 divergence — appears below the risk grid) */
+    .alignment-tile {
+      display: block; margin-top: 16px;
+      background: white; border: 1px solid #edf1f6; border-left: 4px solid;
+      border-radius: 10px; padding: 16px 18px;
+      text-decoration: none; color: inherit;
+      transition: box-shadow 0.15s, border-color 0.15s;
+      &:hover { box-shadow: 0 4px 16px rgba(27,42,71,0.06); }
+    }
+    .alignment-tile-head {
+      display: flex; align-items: center; gap: 14px; margin-bottom: 10px;
+      mat-icon { color: var(--artes-accent); flex-shrink: 0; }
+      .alignment-tile-title { flex: 1;
+        h3 { margin: 0; font-size: 14px; font-weight: 700; color: var(--artes-primary); text-transform: uppercase; letter-spacing: 0.5px; }
+        p  { margin: 2px 0 0; font-size: 12px; color: #7f8ea3; }
+      }
+      .alignment-tile-score {
+        font-size: 28px; font-weight: 700; color: var(--artes-primary); font-variant-numeric: tabular-nums;
+        .suffix { font-size: 14px; color: #9aa5b4; font-weight: 500; margin-left: 2px; }
+      }
+    }
+    .alignment-tile-bar {
+      width: 100%; height: 8px; border-radius: 999px; background: #f0f4f8; overflow: hidden;
+      margin-bottom: 8px;
+    }
+    .alignment-tile-fill {
+      height: 100%; border-radius: 999px;
+      background: linear-gradient(90deg, #e53e3e 0%, #f0a500 50%, #27C4A0 100%);
+      transition: width 0.3s ease;
+    }
+    .alignment-tile-band {
+      font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px;
+      padding: 2px 10px; border-radius: 999px;
+      display: inline-block;
+    }
+    .alignment-tile--aligned   { border-left-color: #27C4A0;
+      .alignment-tile-band { background: rgba(39,196,160,0.15); color: #1a9678; }
+    }
+    .alignment-tile--mixed     { border-left-color: #f0a500;
+      .alignment-tile-band { background: rgba(240,165,0,0.15);  color: #b07800; }
+    }
+    .alignment-tile--fractured { border-left-color: #e53e3e;
+      .alignment-tile-band { background: rgba(229,62,62,0.15);  color: #c53030; }
+    }
+
     @media (max-width: 720px) {
       .risk-grid { grid-template-columns: repeat(2, 1fr); }
     }
@@ -559,6 +624,24 @@ export class ConflictDashboardHomeComponent implements OnInit {
     const a = this.analyses();
     return this.BASE_SLICES.map((s) => ({ ...s, count: a.filter((x) => x.riskLevel === s.key).length }));
   };
+
+  /** Org-level rolling team-alignment score: average of teamAlignmentScore
+   *  across the most recent 5 analyses that have one. Returns null when no
+   *  analysis has been scored yet (legacy data, or first run). */
+  teamAlignment(): number | null {
+    const scores = this.analyses()
+      .map((a) => a.teamAlignmentScore)
+      .filter((s): s is number => typeof s === 'number')
+      .slice(0, 5);
+    if (scores.length === 0) return null;
+    return Math.round(scores.reduce((sum, v) => sum + v, 0) / scores.length);
+  }
+
+  alignmentBand(score: number): 'aligned' | 'mixed' | 'fractured' {
+    if (score >= 70) return 'aligned';
+    if (score >= 40) return 'mixed';
+    return 'fractured';
+  }
 
   private readonly BASE_SLICES: RiskSlice[] = [
     { key: 'low',      labelKey: 'CONFLICT.riskLow',      count: 0 },

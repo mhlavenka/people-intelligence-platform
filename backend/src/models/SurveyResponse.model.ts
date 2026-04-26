@@ -20,6 +20,16 @@ export interface ISurveyResponse extends Document {
   responses: IResponseItem[];
   submittedAt: Date;
   isAnonymous: boolean;
+
+  // ── Response-quality signals (Layer 1 of the divergence analysis) ────
+  // 0..1 composite score from straightlining + long-string + (when timing is
+  // captured) speeding. Computed on submit. Pre-existing rows have undefined,
+  // which the analyzer treats as "always accepted" for backward compatibility.
+  qualityScore?: number;
+  qualityFlags?: string[];               // e.g. ['straightlining', 'longString']
+  acceptedInAnalysis?: boolean;          // false = excluded by quality filter
+  timingMsPerItem?: number[];            // optional per-item answer time
+
   createdAt: Date;
   updatedAt: Date;
 }
@@ -52,6 +62,11 @@ const SurveyResponseSchema = new Schema<ISurveyResponse>(
     responses: [ResponseItemSchema],
     submittedAt: { type: Date, default: Date.now },
     isAnonymous: { type: Boolean, default: true },
+
+    qualityScore:        { type: Number, min: 0, max: 1 },
+    qualityFlags:        [{ type: String }],
+    acceptedInAnalysis:  { type: Boolean, default: true },
+    timingMsPerItem:     [{ type: Number }],
   },
   { timestamps: true }
 );

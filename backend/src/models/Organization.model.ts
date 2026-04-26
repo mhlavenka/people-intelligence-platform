@@ -53,6 +53,16 @@ export interface IOrganization extends Document {
   aiGenerationsResetAt?: Date;
   suspendedAt?: Date;
   suspensionReason?: string;
+
+  // Per-org tunables for the survey-divergence quality filter (Layer 1).
+  // Conservative permissive defaults — flag-but-include, never auto-reject.
+  surveyQualityPolicy?: {
+    qualityThreshold?: number;        // default 0.35  (responses below this drop out)
+    longStringMaxFraction?: number;   // default 0.80  (≥80% same answer ⇒ flag)
+    minSubgroupN?: number;            // default 3     (Phase 2 — subgroup detection)
+    showSubgroupAnalysis?: boolean;   // default true
+  };
+
   createdAt: Date;
   updatedAt: Date;
 }
@@ -98,6 +108,15 @@ const OrganizationSchema = new Schema<IOrganization>(
     aiGenerationsResetAt: { type: Date },
     suspendedAt:      { type: Date },
     suspensionReason: { type: String, trim: true },
+
+    surveyQualityPolicy: {
+      type: new Schema({
+        qualityThreshold:      { type: Number, min: 0, max: 1, default: 0.35 },
+        longStringMaxFraction: { type: Number, min: 0, max: 1, default: 0.80 },
+        minSubgroupN:          { type: Number, min: 1, default: 3 },
+        showSubgroupAnalysis:  { type: Boolean, default: true },
+      }, { _id: false }),
+    },
     logoUrl:     { type: String },
     departments: [{ type: String, trim: true }],
     theme: {

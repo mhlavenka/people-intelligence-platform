@@ -1,6 +1,7 @@
 import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormArray, ReactiveFormsModule, Validators } from '@angular/forms';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatDialog, MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -72,6 +73,7 @@ interface SurveyTemplate {
     behavior_cluster?: string;
     reference_period?: string;
     optional?: boolean;
+    dimension?: string;
   }[];
 }
 
@@ -90,6 +92,7 @@ interface SurveyTemplate {
     MatProgressSpinnerModule,
     MatDividerModule,
     MatTooltipModule,
+    MatAutocompleteModule,
     MatCheckboxModule,
     MatExpansionModule,
     MatTabsModule,
@@ -509,6 +512,23 @@ interface SurveyTemplate {
                                     matTooltipPosition="above"
                                     matTooltipClass="tip-wide">info_outline</mat-icon>
                           <mat-hint>{{ 'SURVEY.scoringBucket' | translate }}</mat-hint>
+                        </mat-form-field>
+
+                        <mat-form-field appearance="outline">
+                          <mat-label>{{ 'SURVEY.dimension' | translate }}</mat-label>
+                          <input matInput formControlName="dimension"
+                                 [matAutocomplete]="dimAuto"
+                                 placeholder="e.g. Psychological Safety" />
+                          <mat-autocomplete #dimAuto="matAutocomplete">
+                            @for (d of DIMENSION_SUGGESTIONS; track d) {
+                              <mat-option [value]="d">{{ d }}</mat-option>
+                            }
+                          </mat-autocomplete>
+                          <mat-icon matSuffix class="field-info"
+                                    [matTooltip]="'SURVEY.tipDimension' | translate"
+                                    matTooltipPosition="above"
+                                    matTooltipClass="tip-wide">info_outline</mat-icon>
+                          <mat-hint>{{ 'SURVEY.dimensionHint' | translate }}</mat-hint>
                         </mat-form-field>
                       </div>
 
@@ -974,6 +994,17 @@ export class SurveyTemplateDialogComponent implements OnInit {
   private existingData = inject<SurveyTemplate | null>(MAT_DIALOG_DATA, { optional: true });
   private translate = inject(TranslateService);
 
+  /** Suggested dimension labels for the autocomplete picker; orgs may type
+   *  any free-form value beyond these defaults. */
+  readonly DIMENSION_SUGGESTIONS: string[] = [
+    'Psychological Safety', 'Communication', 'Trust', 'Role Clarity',
+    'Workload & Resources', 'Conflict Resolution Skills',
+    'Conflict Frequency / Tension', 'Management Effectiveness',
+    'Escalation Intent', 'Wellbeing & Belonging',
+    'Conflict Style', 'Conflict Behavior',
+    'Task Conflict', 'Relationship Conflict', 'Process Conflict',
+  ];
+
   form!: FormGroup;
   saving = signal(false);
   translating = signal(false);
@@ -1114,6 +1145,8 @@ export class SurveyTemplateDialogComponent implements OnInit {
         referencePeriod:     [data?.reference_period ?? ''],
         // Whether the respondent can skip this item
         optional:            [data?.optional === true],
+        // Layer 3 dimensional roll-up tag (analytics grouping)
+        dimension:           [data?.dimension ?? ''],
       })
     );
   }
@@ -1265,6 +1298,7 @@ export class SurveyTemplateDialogComponent implements OnInit {
         }
       }
       if (q.optional) base['optional'] = true;
+      if (q.dimension && String(q.dimension).trim()) base['dimension'] = String(q.dimension).trim();
       return base;
     });
 

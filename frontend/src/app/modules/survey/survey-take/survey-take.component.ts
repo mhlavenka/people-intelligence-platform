@@ -723,28 +723,49 @@ export class SurveyTakeComponent implements OnInit {
       this.phase.set('instructions');
     } else {
       this.phase.set('questions');
+      this.questionEnteredAt = Date.now();
     }
   }
 
   beginQuestions(): void {
     this.phase.set('questions');
     this.currentIndex.set(0);
+    this.questionEnteredAt = Date.now();
   }
 
   setAnswer(questionId: string, value: string | number | boolean): void {
     this.answers.set({ ...this.answers(), [questionId]: value });
   }
 
+  // Per-question answer-time capture for divergence quality scoring (Phase 1).
+  // Records ms-since-arrival on each navigate-away event. Stored in
+  // questionIndex-order; missing entries (revisited questions) become 0 and
+  // are ignored downstream by the median-based "speeding" detector.
+  private questionEnteredAt = 0;
+  private timingMsPerItem: number[] = [];
+  private rememberTiming(): void {
+    if (this.questionEnteredAt === 0) return;
+    const idx = this.currentIndex();
+    const elapsed = Date.now() - this.questionEnteredAt;
+    while (this.timingMsPerItem.length <= idx) this.timingMsPerItem.push(0);
+    // Take the longest visit if the question is revisited (more accurate than overwriting).
+    if (elapsed > (this.timingMsPerItem[idx] ?? 0)) this.timingMsPerItem[idx] = elapsed;
+  }
+
   next(): void {
     const t = this.template();
     if (t && this.currentIndex() < t.questions.length - 1) {
+      this.rememberTiming();
       this.currentIndex.set(this.currentIndex() + 1);
+      this.questionEnteredAt = Date.now();
     }
   }
 
   prev(): void {
     if (this.currentIndex() > 0) {
+      this.rememberTiming();
       this.currentIndex.set(this.currentIndex() - 1);
+      this.questionEnteredAt = Date.now();
     } else if (this.template()?.instructions) {
       this.phase.set('instructions');
     } else {
@@ -756,6 +777,9 @@ export class SurveyTakeComponent implements OnInit {
     const t = this.template();
     if (!t) return;
 
+    // Capture timing on the last visible question before we leave it.
+    this.rememberTiming();
+
     this.submitting.set(true);
     const responses = Object.entries(this.answers()).map(([questionId, value]) => ({
       questionId,
@@ -766,6 +790,7 @@ export class SurveyTakeComponent implements OnInit {
       templateId: t._id,
       responses,
       respondentLanguage: localStorage.getItem('artes_language') || 'en',
+      timingMsPerItem: this.timingMsPerItem.slice(0, t.questions.length),
     };
     if (this.sessionId) {
       body['sessionId'] = this.sessionId;
