@@ -1,7 +1,7 @@
 import { Router, Response, NextFunction, Request } from 'express';
 import rateLimit from 'express-rate-limit';
 import {
-  authenticateToken, optionalAuth, requirePermission, AuthRequest,
+  authenticateToken, optionalAuth, requirePermission, AuthRequest, isCoacheeUser,
 } from '../middleware/auth.middleware';
 import { verifyRecaptcha } from '../middleware/recaptcha.middleware';
 import { tenantResolver } from '../middleware/tenant.middleware';
@@ -120,7 +120,7 @@ publicBookingRouter.post(
       // Engagement quota check (only meaningful for authenticated coachees).
       // Runs BEFORE createBooking so a quota-exhausted booking never produces
       // a Booking row or a GCal event.
-      if (req.user && req.user.role === 'coachee') {
+      if (req.user && isCoacheeUser(req)) {
         const quota = await precheckBookingQuota(coachSlug, req.user.userId);
         if (!quota.allowed) {
           res.status(409).json({ error: quota.reason ?? req.t('errors.bookingQuotaExhausted') });
@@ -135,7 +135,7 @@ publicBookingRouter.post(
       // If the booker is an authenticated coachee in the same org, link
       // the booking to a CoachingSession (and create the Engagement if
       // one doesn't yet exist). Anonymous bookers fall through unchanged.
-      if (req.user && req.user.role === 'coachee') {
+      if (req.user && isCoacheeUser(req)) {
         try {
           await linkBookingToCoaching(booking, req.user.userId);
         } catch (linkErr) {
@@ -615,7 +615,7 @@ router.get(
       });
       if (!booking) { res.status(404).json({ error: req.t('errors.bookingNotFound') }); return; }
 
-      if (req.user!.role === 'coachee') {
+      if (isCoacheeUser(req)) {
         if (!booking.coacheeId || String(booking.coacheeId) !== String(req.user!.userId)) {
           res.status(403).json({ error: req.t('errors.notYourBooking') });
           return;
@@ -662,7 +662,7 @@ router.delete(
       });
       if (!booking) { res.status(404).json({ error: req.t('errors.bookingNotFound') }); return; }
 
-      if (req.user!.role === 'coachee') {
+      if (isCoacheeUser(req)) {
         if (!booking.coacheeId || String(booking.coacheeId) !== String(req.user!.userId)) {
           res.status(403).json({ error: req.t('errors.canOnlyCancelOwnBookings') });
           return;
@@ -670,7 +670,7 @@ router.delete(
       }
 
       const cancelledBy: 'client' | 'coach' =
-        req.user!.role === 'coachee' ? 'client' : 'coach';
+        isCoacheeUser(req) ? 'client' : 'coach';
 
       const result = await cancelBooking(
         req.params['id'],
@@ -705,7 +705,7 @@ router.patch(
       });
       if (!booking) { res.status(404).json({ error: req.t('errors.bookingNotFound') }); return; }
 
-      if (req.user!.role === 'coachee') {
+      if (isCoacheeUser(req)) {
         if (!booking.coacheeId || String(booking.coacheeId) !== String(req.user!.userId)) {
           res.status(403).json({ error: req.t('errors.canOnlyRescheduleOwnBookings') });
           return;
@@ -716,7 +716,7 @@ router.patch(
       const newEnd = new Date(newStart.getTime() + durationMs);
 
       const triggeredBy: 'admin' | 'coachee' =
-        req.user!.role === 'coachee' ? 'coachee' : 'admin';
+        isCoacheeUser(req) ? 'coachee' : 'admin';
 
       const updated = await rescheduleBooking(
         req.params['id'], newStart, newEnd, triggeredBy, note,

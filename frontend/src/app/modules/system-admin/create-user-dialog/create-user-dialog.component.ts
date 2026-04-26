@@ -42,7 +42,8 @@ import { TranslateModule } from '@ngx-translate/core';
             <mat-option value="hr_manager">HR Manager</mat-option>
             <mat-option value="manager">Manager</mat-option>
             <mat-option value="coach">Coach</mat-option>
-            <mat-option value="coachee">Employee</mat-option>
+            <mat-option value="employee">Employee</mat-option>
+            <mat-option value="coachee">External Coachee</mat-option>
           </mat-select>
         </mat-form-field>
       </div>
@@ -77,7 +78,7 @@ export class CreateUserDialogComponent {
   lastName = '';
   email = '';
   password = '';
-  role = 'admin';
+  role = 'employee';
 
   save(): void {
     this.saving.set(true);

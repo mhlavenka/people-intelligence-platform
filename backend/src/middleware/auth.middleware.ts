@@ -8,10 +8,19 @@ export interface AuthRequest extends Request {
     organizationId: string;
     role: string;             // system role (or base role when a custom role is active)
     email: string;
+    isCoachee?: boolean;      // true when the user is in (or has been in) a coaching engagement — orthogonal to role
     permissions?: string[];   // all granted permission keys — populated at login for every user
     customRoleId?: string;    // set when the user is on a custom role
     customRoleName?: string;  // display name of the custom role
   };
+}
+
+/** True when the user is being coached, independent of their org role.
+ *  Use this everywhere we previously checked `role === 'coachee'` to mean
+ *  "treat as a coachee" — so internal employees with isCoachee=true are
+ *  handled the same as external coachees. */
+export function isCoacheeUser(req: AuthRequest): boolean {
+  return req.user?.isCoachee === true || req.user?.role === 'coachee';
 }
 
 export function authenticateToken(req: AuthRequest, res: Response, next: NextFunction): void {

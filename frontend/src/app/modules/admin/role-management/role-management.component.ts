@@ -54,11 +54,12 @@ interface PermRow { key: string; feature: string; category: string; }
 const PERM_ROWS: PermRow[] = ALL_PERM_KEYS.map((k) => ({ key: k, ...PERM_LABELS[k] }));
 
 const ROLES = [
-  { key: 'admin',      label: 'Admin',      color: '#1B2A47', icon: 'shield' },
-  { key: 'hr_manager', label: 'HR Manager', color: '#2080b0', icon: 'manage_accounts' },
-  { key: 'manager',    label: 'Manager',    color: '#b07800', icon: 'supervisor_account' },
-  { key: 'coach',      label: 'Coach',      color: '#1a9678', icon: 'psychology_alt' },
-  { key: 'coachee',    label: 'Coachee',    color: '#5a6a7e', icon: 'person' },
+  { key: 'admin',      label: 'Admin',            color: '#1B2A47', icon: 'shield' },
+  { key: 'hr_manager', label: 'HR Manager',       color: '#2080b0', icon: 'manage_accounts' },
+  { key: 'manager',    label: 'Manager',          color: '#b07800', icon: 'supervisor_account' },
+  { key: 'coach',      label: 'Coach',            color: '#1a9678', icon: 'psychology_alt' },
+  { key: 'employee',   label: 'Employee',         color: '#7c5cbf', icon: 'badge' },
+  { key: 'coachee',    label: 'External Coachee', color: '#5a6a7e', icon: 'person' },
 ];
 
 interface SystemRoleData { permissions: string[]; isOverridden: boolean; }
@@ -408,11 +409,12 @@ export class RoleManagementComponent implements OnInit {
   savingSystemRoles = signal(false);
 
   private readonly BASE_ROLE_META: Record<string, { label: string; color: string }> = {
-    admin:      { label: 'Admin',      color: '#1B2A47' },
-    hr_manager: { label: 'HR Manager', color: '#2080b0' },
-    manager:    { label: 'Manager',    color: '#b07800' },
-    coach:      { label: 'Coach',      color: '#1a9678' },
-    coachee:    { label: 'Coachee',    color: '#5a6a7e' },
+    admin:      { label: 'Admin',            color: '#1B2A47' },
+    hr_manager: { label: 'HR Manager',       color: '#2080b0' },
+    manager:    { label: 'Manager',          color: '#b07800' },
+    coach:      { label: 'Coach',            color: '#1a9678' },
+    employee:   { label: 'Employee',         color: '#7c5cbf' },
+    coachee:    { label: 'External Coachee', color: '#5a6a7e' },
   };
 
   ngOnInit(): void {

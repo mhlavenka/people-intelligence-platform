@@ -26,7 +26,7 @@ const CustomRoleSchema = new Schema<ICustomRole>(
     color:       { type: String, default: '#5a6a7e' },
     baseRole: {
       type: String,
-      enum: ['admin', 'hr_manager', 'manager', 'coach', 'coachee'],
+      enum: ['admin', 'hr_manager', 'manager', 'coach', 'employee', 'coachee'],
       required: true,
     },
     permissions: [{ type: String }],

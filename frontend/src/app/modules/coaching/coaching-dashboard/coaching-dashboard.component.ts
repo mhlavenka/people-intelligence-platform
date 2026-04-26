@@ -426,7 +426,10 @@ export class CoachingDashboardComponent implements OnInit {
   ) {}
 
   canManage = () => ['admin', 'hr_manager', 'coach'].includes(this.auth.currentUser()?.role ?? '');
-  isCoachee = () => this.auth.currentUser()?.role === 'coachee';
+  isCoachee = () => {
+    const u = this.auth.currentUser();
+    return u?.isCoachee === true || u?.role === 'coachee';
+  };
 
   isPopulated(c: Engagement['coacheeId']): c is { _id: string; firstName: string; lastName: string; email: string; department?: string; profilePicture?: string } {
     return typeof c === 'object' && c !== null;
@@ -462,7 +465,7 @@ export class CoachingDashboardComponent implements OnInit {
     // Coachees: redirect to their single engagement; otherwise show the
     // list with stats. Stats and sessions load alongside engagements so
     // the dashboard cards aren't all zeros.
-    if (this.auth.currentUser()?.role === 'coachee') {
+    if (this.isCoachee()) {
       this.api.get<DashboardStats>('/coaching/dashboard').subscribe({
         next: (s) => this.stats.set(s),
         error: (err) => console.error('[Coaching] Failed to load dashboard stats (coachee):', err),

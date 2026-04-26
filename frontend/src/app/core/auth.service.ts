@@ -6,7 +6,7 @@ import { TranslateService } from '@ngx-translate/core';
 import { environment } from '../../environments/environment';
 import { ThemeService } from './theme.service';
 
-export type AppRole = 'admin' | 'hr_manager' | 'manager' | 'coachee' | 'coach' | 'system_admin';
+export type AppRole = 'admin' | 'hr_manager' | 'manager' | 'employee' | 'coachee' | 'coach' | 'system_admin';
 
 export interface User {
   id: string;
