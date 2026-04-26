@@ -11,6 +11,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ApiService } from '../../../core/api.service';
 import { RoleDialogComponent, CustomRole } from '../role-dialog/role-dialog.component';
+import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog.component';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 // Permission key → display label mapping
@@ -477,12 +478,22 @@ export class RoleManagementComponent implements OnInit {
   }
 
   resetRole(role: string): void {
-    if (!confirm(`Reset ${this.baseLabel(role)} to default permissions?`)) return;
-    this.api.delete(`/roles/system-roles/${role}`).subscribe({
-      next: () => {
-        this.loadSystemRoles();
-        this.snackBar.open(`${this.baseLabel(role)} reset to defaults`, 'OK', { duration: 3000 });
+    this.dialog.open(ConfirmDialogComponent, {
+      width: '440px',
+      data: {
+        title: this.translate.instant('ADMIN.confirmResetRoleTitle'),
+        message: this.translate.instant('ADMIN.confirmResetRoleMessage', { role: this.baseLabel(role) }),
+        confirmLabel: this.translate.instant('COMMON.reset'),
+        confirmColor: 'primary',
       },
+    }).afterClosed().subscribe((ok) => {
+      if (!ok) return;
+      this.api.delete(`/roles/system-roles/${role}`).subscribe({
+        next: () => {
+          this.loadSystemRoles();
+          this.snackBar.open(`${this.baseLabel(role)} reset to defaults`, 'OK', { duration: 3000 });
+        },
+      });
     });
   }
 
@@ -527,9 +538,18 @@ export class RoleManagementComponent implements OnInit {
   }
 
   deleteRole(role: CustomRole): void {
-    if (!confirm(`Delete role "${role.name}"?`)) return;
-    this.api.delete(`/roles/${role._id}`).subscribe({
-      next: () => this.customRoles.update((list) => list.filter((r) => r._id !== role._id)),
+    this.dialog.open(ConfirmDialogComponent, {
+      width: '440px',
+      data: {
+        title: this.translate.instant('ADMIN.confirmDeleteRoleTitle'),
+        message: this.translate.instant('ADMIN.confirmDeleteRoleMessage', { name: role.name }),
+        confirmLabel: this.translate.instant('COMMON.delete'),
+      },
+    }).afterClosed().subscribe((ok) => {
+      if (!ok) return;
+      this.api.delete(`/roles/${role._id}`).subscribe({
+        next: () => this.customRoles.update((list) => list.filter((r) => r._id !== role._id)),
+      });
     });
   }
 

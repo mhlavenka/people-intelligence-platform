@@ -14,7 +14,7 @@ I. MODULES
 **Coaching Module**
  - add mentoring to coaching module
  - repeating schedules for session creation by coach (weekly / monthly)
- 
+ 1
 **Booking**
 
 **IDPs** 
