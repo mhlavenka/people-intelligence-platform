@@ -12,7 +12,9 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { JournalService, JournalMood, ReflectiveEntry } from '../journal.service';
+import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog.component';
 
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 const MOODS: { value: JournalMood; icon: string; label: string }[] = [
@@ -30,7 +32,7 @@ const MOODS: { value: JournalMood; icon: string; label: string }[] = [
     CommonModule, FormsModule, RouterLink,
     MatIconModule, MatButtonModule, MatFormFieldModule, MatInputModule,
     MatDatepickerModule, MatNativeDateModule, MatChipsModule, MatSlideToggleModule,
-    MatProgressSpinnerModule, MatSnackBarModule,
+    MatProgressSpinnerModule, MatSnackBarModule, MatDialogModule,
     TranslateModule,
   ],
   template: `
@@ -192,6 +194,7 @@ export class ReflectiveEditorComponent implements OnInit {
     private journal: JournalService,
     private snack: MatSnackBar,
     private translate: TranslateService,
+    private dialog: MatDialog,
   ) {}
 
   ngOnInit(): void {
@@ -250,11 +253,20 @@ export class ReflectiveEditorComponent implements OnInit {
   }
 
   deleteEntry(): void {
-    if (!confirm(this.translate.instant('JOURNAL.confirmDeleteReflectiveEntry'))) return;
-    this.saving.set(true);
-    this.journal.deleteReflectiveEntry(this.entryId).subscribe({
-      next: () => { this.router.navigate(['/journal/reflective']); },
-      error: () => { this.saving.set(false); this.snack.open(this.translate.instant('JOURNAL.failedDelete'), '', { duration: 3000 }); },
+    this.dialog.open(ConfirmDialogComponent, {
+      width: '440px',
+      data: {
+        title: this.translate.instant('JOURNAL.confirmDeleteReflectiveEntryTitle'),
+        message: this.translate.instant('JOURNAL.confirmDeleteReflectiveEntry'),
+        confirmLabel: this.translate.instant('COMMON.delete'),
+      },
+    }).afterClosed().subscribe((ok) => {
+      if (!ok) return;
+      this.saving.set(true);
+      this.journal.deleteReflectiveEntry(this.entryId).subscribe({
+        next: () => { this.router.navigate(['/journal/reflective']); },
+        error: () => { this.saving.set(false); this.snack.open(this.translate.instant('JOURNAL.failedDelete'), '', { duration: 3000 }); },
+      });
     });
   }
 }

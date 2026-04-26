@@ -9,6 +9,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { ApiService } from '../../../core/api.service';
 import { ConflictIdpDialogComponent } from '../conflict-idp-dialog/conflict-idp-dialog.component';
+import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog.component';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 interface ConflictMilestone {
@@ -175,10 +176,21 @@ export class ConflictSkillDevComponent implements OnInit {
   }
 
   deleteIdp(idp: ConflictIDP): void {
-    const msg = this.translate.instant('CONFLICT.confirmDeletePlan', { name: this.coacheeName(idp) });
-    if (!confirm(msg)) return;
-    this.api.delete(`/succession/idps/${idp._id}`).subscribe({
-      next: () => { this.idps.update((l) => l.filter((i) => i._id !== idp._id)); this.snackBar.open(this.translate.instant('CONFLICT.planDeleted'), this.translate.instant('COMMON.ok'), { duration: 3000 }); },
+    this.dialog.open(ConfirmDialogComponent, {
+      width: '440px',
+      data: {
+        title: this.translate.instant('CONFLICT.confirmDeletePlanTitle'),
+        message: this.translate.instant('CONFLICT.confirmDeletePlan', { name: this.coacheeName(idp) }),
+        confirmLabel: this.translate.instant('COMMON.delete'),
+      },
+    }).afterClosed().subscribe((ok) => {
+      if (!ok) return;
+      this.api.delete(`/succession/idps/${idp._id}`).subscribe({
+        next: () => {
+          this.idps.update((l) => l.filter((i) => i._id !== idp._id));
+          this.snackBar.open(this.translate.instant('CONFLICT.planDeleted'), this.translate.instant('COMMON.ok'), { duration: 3000 });
+        },
+      });
     });
   }
 

@@ -11,6 +11,7 @@ import { ApiService } from '../../../core/api.service';
 import { MiniGaugeComponent } from '../../../shared/mini-gauge/mini-gauge.component';
 import { RiskBadgeComponent } from '../../../shared/risk-badge/risk-badge.component';
 import { ConflictAnalyzeDialogComponent } from '../conflict-analyze-dialog/conflict-analyze-dialog.component';
+import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog.component';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 interface ConflictAnalysis {
@@ -217,7 +218,7 @@ interface ConflictAnalysis {
     }
     .escalated-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; color: #e86c3a; font-weight: 600; mat-icon { font-size: 16px; width: 16px; height: 16px; } }
     .analysis-card-actions { display: flex; gap: 8px; padding-top: 4px; border-top: 1px solid #f0f4f8; }
-    .delete-analysis-btn { color: #c5d0db; width: 28px; height: 28px; margin-left: auto; flex-shrink: 0; &:hover { color: #e53e3e !important; } }
+    .delete-analysis-btn { color: #c5d0db; width: 38px; height: 38px; margin-left: auto; flex-shrink: 0; &:hover { color: #e53e3e !important; } }
 
   `],
 })
@@ -250,9 +251,24 @@ export class ConflictAnalysisComponent implements OnInit {
   }
 
   deleteAnalysis(a: ConflictAnalysis): void {
-    if (!confirm(`Delete analysis for "${a.departmentId || 'All Departments'}" (${a.name})?`)) return;
-    this.api.delete(`/conflict/analyses/${a._id}`).subscribe({
-      next: () => { this.analyses.update((list) => list.filter((x) => x._id !== a._id)); this.snackBar.open(this.translate.instant('CONFLICT.analysisDeleted'), this.translate.instant('COMMON.ok'), { duration: 3000 }); },
+    this.dialog.open(ConfirmDialogComponent, {
+      width: '440px',
+      data: {
+        title: this.translate.instant('CONFLICT.confirmDeleteAnalysisTitle'),
+        message: this.translate.instant('CONFLICT.confirmDeleteAnalysisMessage', {
+          name: a.name,
+          dept: a.departmentId || this.translate.instant('COMMON.allDepartments'),
+        }),
+        confirmLabel: this.translate.instant('COMMON.delete'),
+      },
+    }).afterClosed().subscribe((ok) => {
+      if (!ok) return;
+      this.api.delete(`/conflict/analyses/${a._id}`).subscribe({
+        next: () => {
+          this.analyses.update((list) => list.filter((x) => x._id !== a._id));
+          this.snackBar.open(this.translate.instant('CONFLICT.analysisDeleted'), this.translate.instant('COMMON.ok'), { duration: 3000 });
+        },
+      });
     });
   }
 

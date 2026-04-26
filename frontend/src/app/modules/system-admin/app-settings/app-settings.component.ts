@@ -11,8 +11,10 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { ApiService } from '../../../core/api.service';
 import { COUNTRIES, CANADIAN_PROVINCES } from '../../../core/geo.constants';
+import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog.component';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 interface AppSettings {
@@ -98,6 +100,7 @@ const REFRESH_EXPIRY_OPTIONS = [
     MatProgressSpinnerModule,
     MatTooltipModule,
     MatSnackBarModule,
+    MatDialogModule,
     TranslateModule,
   ],
   template: `
@@ -481,6 +484,7 @@ export class AppSettingsComponent implements OnInit {
   private api = inject(ApiService);
   private snack = inject(MatSnackBar);
   private translate = inject(TranslateService);
+  private dialog = inject(MatDialog);
 
   form!: FormGroup;
   loading = signal(true);
@@ -572,9 +576,18 @@ export class AppSettingsComponent implements OnInit {
   }
 
   resetDefaults(): void {
-    if (!confirm(this.translate.instant('SYSADMIN.confirmResetDefaults'))) { return; }
-    this.saving.set(true);
-    this.api.post<AppSettings>('/system-admin/settings/reset', {}).subscribe({
+    this.dialog.open(ConfirmDialogComponent, {
+      width: '460px',
+      data: {
+        title: this.translate.instant('SYSADMIN.confirmResetDefaultsTitle'),
+        message: this.translate.instant('SYSADMIN.confirmResetDefaults'),
+        confirmLabel: this.translate.instant('COMMON.reset'),
+        confirmColor: 'primary',
+      },
+    }).afterClosed().subscribe((ok) => {
+      if (!ok) return;
+      this.saving.set(true);
+      this.api.post<AppSettings>('/system-admin/settings/reset', {}).subscribe({
       next: (s) => {
         this.settings.set(s);
         this.form.patchValue(s);
@@ -586,6 +599,7 @@ export class AppSettingsComponent implements OnInit {
         this.saving.set(false);
         this.snack.open('Failed to reset settings', 'Dismiss', { duration: 5000 });
       },
+    });
     });
   }
 

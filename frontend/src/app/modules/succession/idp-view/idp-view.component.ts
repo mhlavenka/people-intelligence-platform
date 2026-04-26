@@ -731,12 +731,21 @@ export class IDPViewComponent implements OnInit {
   }
 
   deleteJournalEntry(entry: JournalEntry): void {
-    if (!confirm(this.translate.instant('SUCCESSION.confirmDeleteJournalEntry'))) return;
-    this.api.delete(`/succession/journal/${entry._id}`).subscribe({
-      next: () => {
-        this.loadJournal();
-        this.snackBar.open(this.translate.instant('SUCCESSION.entryDeleted'), this.translate.instant('COMMON.ok'), { duration: 3000 });
+    this.dialog.open(ConfirmDialogComponent, {
+      width: '440px',
+      data: {
+        title: this.translate.instant('SUCCESSION.confirmDeleteJournalEntryTitle'),
+        message: this.translate.instant('SUCCESSION.confirmDeleteJournalEntry'),
+        confirmLabel: this.translate.instant('COMMON.delete'),
       },
+    }).afterClosed().subscribe((ok) => {
+      if (!ok) return;
+      this.api.delete(`/succession/journal/${entry._id}`).subscribe({
+        next: () => {
+          this.loadJournal();
+          this.snackBar.open(this.translate.instant('SUCCESSION.entryDeleted'), this.translate.instant('COMMON.ok'), { duration: 3000 });
+        },
+      });
     });
   }
 
@@ -834,12 +843,22 @@ export class IDPViewComponent implements OnInit {
   }
 
   deactivateIdp(idp: IDP): void {
-    if (!confirm(this.translate.instant('SUCCESSION.confirmDeactivateIdp'))) return;
-    this.api.put(`/succession/idps/${idp._id}/status`, { status: 'completed' }).subscribe({
-      next: () => {
-        this.idps.update((list) => list.map((i) => i._id === idp._id ? { ...i, status: 'completed' as const } : i));
-        this.snackBar.open(this.translate.instant('SUCCESSION.idpDeactivated'), this.translate.instant('COMMON.ok'), { duration: 3000 });
+    this.dialog.open(ConfirmDialogComponent, {
+      width: '440px',
+      data: {
+        title: this.translate.instant('SUCCESSION.confirmDeactivateIdpTitle'),
+        message: this.translate.instant('SUCCESSION.confirmDeactivateIdp'),
+        confirmLabel: this.translate.instant('COMMON.confirm'),
+        confirmColor: 'primary',
       },
+    }).afterClosed().subscribe((ok) => {
+      if (!ok) return;
+      this.api.put(`/succession/idps/${idp._id}/status`, { status: 'completed' }).subscribe({
+        next: () => {
+          this.idps.update((list) => list.map((i) => i._id === idp._id ? { ...i, status: 'completed' as const } : i));
+          this.snackBar.open(this.translate.instant('SUCCESSION.idpDeactivated'), this.translate.instant('COMMON.ok'), { duration: 3000 });
+        },
+      });
     });
   }
 
