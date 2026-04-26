@@ -44,6 +44,14 @@ interface Organization {
   theme?: OrgTheme;
   logoUrl?: string;
   createdAt: string;
+  surveyQualityPolicy?: SurveyQualityPolicy;
+}
+
+interface SurveyQualityPolicy {
+  qualityThreshold?: number;        // 0-1; default 0.35
+  longStringMaxFraction?: number;   // 0-1; default 0.80
+  minSubgroupN?: number;            // Phase 2; default 3
+  showSubgroupAnalysis?: boolean;   // Phase 2; default true
 }
 
 const DEFAULT_THEME: OrgTheme = {
@@ -646,7 +654,75 @@ const RADIUS_OPTIONS = [
             </div>
           </div>
 
+          <!-- Survey-quality policy card (divergence Phase 1) -->
+          <div class="card">
+            <div class="card-header">
+              <mat-icon>verified_user</mat-icon>
+              <h2>{{ 'ADMIN.qualityPolicyTitle' | translate }}</h2>
+            </div>
+            <mat-divider />
+            <div class="card-body">
+              <p class="modules-hint">{{ 'ADMIN.qualityPolicyHint' | translate }}</p>
 
+              <div class="quality-policy-row">
+                <div class="quality-policy-label">
+                  <span>{{ 'ADMIN.qualityThreshold' | translate }}</span>
+                  <span class="quality-policy-value">{{ qualityPolicy.qualityThreshold | number:'1.2-2' }}</span>
+                </div>
+                <input type="range" min="0" max="1" step="0.05"
+                       [ngModel]="qualityPolicy.qualityThreshold"
+                       (ngModelChange)="qualityPolicy.qualityThreshold = $event"
+                       class="quality-policy-slider" />
+                <p class="quality-policy-desc">{{ 'ADMIN.qualityThresholdDesc' | translate }}</p>
+              </div>
+
+              <div class="quality-policy-row">
+                <div class="quality-policy-label">
+                  <span>{{ 'ADMIN.longStringMaxFraction' | translate }}</span>
+                  <span class="quality-policy-value">{{ (qualityPolicy.longStringMaxFraction * 100) | number:'1.0-0' }}%</span>
+                </div>
+                <input type="range" min="0.5" max="1" step="0.05"
+                       [ngModel]="qualityPolicy.longStringMaxFraction"
+                       (ngModelChange)="qualityPolicy.longStringMaxFraction = $event"
+                       class="quality-policy-slider" />
+                <p class="quality-policy-desc">{{ 'ADMIN.longStringMaxFractionDesc' | translate }}</p>
+              </div>
+
+              <div class="quality-policy-row">
+                <div class="quality-policy-label">
+                  <span>{{ 'ADMIN.showSubgroupAnalysis' | translate }}</span>
+                  <mat-slide-toggle color="primary"
+                    [(ngModel)]="qualityPolicy.showSubgroupAnalysis" />
+                </div>
+                <p class="quality-policy-desc">{{ 'ADMIN.showSubgroupAnalysisDesc' | translate }}</p>
+              </div>
+
+              @if (qualityPolicy.showSubgroupAnalysis) {
+                <div class="quality-policy-row">
+                  <div class="quality-policy-label">
+                    <span>{{ 'ADMIN.minSubgroupN' | translate }}</span>
+                    <span class="quality-policy-value">{{ qualityPolicy.minSubgroupN }}</span>
+                  </div>
+                  <input type="range" min="3" max="10" step="1"
+                         [ngModel]="qualityPolicy.minSubgroupN"
+                         (ngModelChange)="qualityPolicy.minSubgroupN = $event"
+                         class="quality-policy-slider" />
+                  <p class="quality-policy-desc">{{ 'ADMIN.minSubgroupNDesc' | translate }}</p>
+                </div>
+              }
+
+              <div class="form-actions">
+                <button mat-raised-button color="primary"
+                        (click)="saveQualityPolicy()" [disabled]="savingQualityPolicy()">
+                  @if (savingQualityPolicy()) { <mat-spinner diameter="18" /> }
+                  @else { <mat-icon>save</mat-icon> {{ 'ADMIN.saveQualityPolicy' | translate }} }
+                </button>
+                <button mat-stroked-button (click)="resetQualityPolicy()" [disabled]="savingQualityPolicy()">
+                  {{ 'COMMON.reset' | translate }}
+                </button>
+              </div>
+            </div>
+          </div>
 
           </div><!-- /col-right -->
 
@@ -994,6 +1070,39 @@ const RADIUS_OPTIONS = [
       display: flex; align-items: flex-start; gap: 10px;
       .dept-input { flex: 1; max-width: 320px; }
     }
+
+    /* Survey-quality policy card (divergence Phase 1) */
+    .quality-policy-row {
+      padding: 12px 0;
+      border-bottom: 1px solid #f0f4f8;
+      &:last-of-type { border-bottom: none; }
+    }
+    .quality-policy-label {
+      display: flex; justify-content: space-between; align-items: baseline;
+      font-size: 13px; font-weight: 600; color: var(--artes-primary);
+      margin-bottom: 8px;
+    }
+    .quality-policy-value {
+      font-variant-numeric: tabular-nums; font-weight: 700; color: var(--artes-accent);
+    }
+    .quality-policy-slider {
+      width: 100%; appearance: none; height: 6px; border-radius: 999px;
+      background: linear-gradient(to right, #e0e7ef, #c5d2e0);
+      outline: none; cursor: pointer;
+      &::-webkit-slider-thumb {
+        appearance: none; width: 18px; height: 18px; border-radius: 50%;
+        background: var(--artes-accent); cursor: pointer;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+      }
+      &::-moz-range-thumb {
+        width: 18px; height: 18px; border-radius: 50%; border: none;
+        background: var(--artes-accent); cursor: pointer;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+      }
+    }
+    .quality-policy-desc {
+      font-size: 12px; color: #7f8ea3; margin: 8px 0 0; line-height: 1.5;
+    }
   `],
 })
 export class OrganizationSettingsComponent implements OnInit {
@@ -1006,7 +1115,19 @@ export class OrganizationSettingsComponent implements OnInit {
   savingTheme   = signal(false);
   savingBilling = signal(false);
   savingLogo    = signal(false);
+  savingQualityPolicy = signal(false);
   logoPreview   = signal<string | null>(null);
+
+  /** Defaults match backend `DEFAULT_QUALITY_POLICY` in surveyMetrics.service.ts
+   *  and `DEFAULT_SUBGROUP_POLICY` (minSubgroupN, showSubgroupAnalysis).
+   *  Mutated directly by the slider/toggle ngModelChange handlers. */
+  readonly QUALITY_DEFAULTS: Required<SurveyQualityPolicy> = {
+    qualityThreshold: 0.35,
+    longStringMaxFraction: 0.80,
+    minSubgroupN: 3,
+    showSubgroupAnalysis: true,
+  };
+  qualityPolicy: Required<SurveyQualityPolicy> = { ...this.QUALITY_DEFAULTS };
 
   form!: FormGroup;
   themeForm!: FormGroup;
@@ -1066,6 +1187,12 @@ export class OrganizationSettingsComponent implements OnInit {
         this.org.set(org);
         this.departments.set(org.departments ?? []);
         this.logoPreview.set(org.logoUrl ?? null);
+        this.qualityPolicy = {
+          qualityThreshold:      org.surveyQualityPolicy?.qualityThreshold      ?? this.QUALITY_DEFAULTS.qualityThreshold,
+          longStringMaxFraction: org.surveyQualityPolicy?.longStringMaxFraction ?? this.QUALITY_DEFAULTS.longStringMaxFraction,
+          minSubgroupN:          org.surveyQualityPolicy?.minSubgroupN          ?? this.QUALITY_DEFAULTS.minSubgroupN,
+          showSubgroupAnalysis:  org.surveyQualityPolicy?.showSubgroupAnalysis  ?? this.QUALITY_DEFAULTS.showSubgroupAnalysis,
+        };
 
         // Look up the org's plan so the module list below only shows
         // modules the plan actually includes.
@@ -1224,6 +1351,33 @@ export class OrganizationSettingsComponent implements OnInit {
   }
 
   pendingRate: number | null = null;
+
+  saveQualityPolicy(): void {
+    this.savingQualityPolicy.set(true);
+    const payload = {
+      surveyQualityPolicy: {
+        qualityThreshold:      this.qualityPolicy.qualityThreshold,
+        longStringMaxFraction: this.qualityPolicy.longStringMaxFraction,
+        minSubgroupN:          this.qualityPolicy.minSubgroupN,
+        showSubgroupAnalysis:  this.qualityPolicy.showSubgroupAnalysis,
+      },
+    };
+    this.api.put<Organization>('/organizations/me', payload).subscribe({
+      next: (org) => {
+        this.org.set(org);
+        this.savingQualityPolicy.set(false);
+        this.snackBar.open(this.translate.instant('ADMIN.qualityPolicySaved'), this.translate.instant('COMMON.close'), { duration: 2500 });
+      },
+      error: () => {
+        this.savingQualityPolicy.set(false);
+        this.snackBar.open(this.translate.instant('ADMIN.updateFailed'), this.translate.instant('COMMON.close'), { duration: 2500 });
+      },
+    });
+  }
+
+  resetQualityPolicy(): void {
+    this.qualityPolicy = { ...this.QUALITY_DEFAULTS };
+  }
 
   saveDefaultRate(): void {
     if (this.pendingRate == null) return;

@@ -45,6 +45,19 @@ export interface IDimensionMetric {
   mostDivergentItemIds: string[];
 }
 
+export interface IClusterStat {
+  label: string;                              // 'A', 'B', 'C'
+  size: number;                               // ≥ minSubgroupN, never publishes IDs
+  meanByDimension: Record<string, number>;    // per-dimension mean for this cluster
+  distinguishingItemIds: string[];            // items where this cluster differs most
+}
+
+export interface ISubgroupAnalysis {
+  k: number;                                  // chosen cluster count (2 or 3)
+  silhouette: number;                         // ≥0.5 to be considered significant
+  clusters: IClusterStat[];
+}
+
 export interface IConflictAnalysis extends Document {
   organizationId: mongoose.Types.ObjectId;
   intakeTemplateId?: mongoose.Types.ObjectId;
@@ -81,6 +94,11 @@ export interface IConflictAnalysis extends Document {
   itemMetrics?: IItemMetric[];
   dimensionMetrics?: IDimensionMetric[];
   teamAlignmentScore?: number;       // 0-100, Layer 5 dashboard tile
+
+  // Layer 4 subgroup analysis (Phase 2). Present only when N≥10, the chosen
+  // k yields silhouette ≥0.5, AND every cluster has ≥3 members. Absence is
+  // rendered in the UI as "no significant subgroups detected".
+  subgroupAnalysis?: ISubgroupAnalysis;
 
   createdAt: Date;
   updatedAt: Date;
@@ -130,6 +148,7 @@ const ConflictAnalysisSchema = new Schema<IConflictAnalysis>(
     itemMetrics:        { type: [Schema.Types.Mixed], default: undefined },
     dimensionMetrics:   { type: [Schema.Types.Mixed], default: undefined },
     teamAlignmentScore: { type: Number, min: 0, max: 100 },
+    subgroupAnalysis:   { type: Schema.Types.Mixed },
   },
   { timestamps: true }
 );
