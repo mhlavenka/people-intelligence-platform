@@ -32,6 +32,7 @@ interface NavItem {
   route: string;
   roles?: AppRole[];   // undefined = visible to all authenticated users
   module?: string;     // org subscription module required (e.g. 'conflict')
+  badge?: () => number | null | undefined; // dynamic badge value (e.g. pending count)
 }
 
 interface NavGroup {
@@ -166,6 +167,9 @@ function isGroup(entry: NavEntry): entry is NavGroup {
                     <button mat-menu-item [routerLink]="child.route">
                       <mat-icon>{{ child.icon }}</mat-icon>
                       {{ child.label | translate }}
+                      @if (childBadge(child); as n) {
+                        <span class="nav-badge">{{ n }}</span>
+                      }
                     </button>
                   }
                 </mat-menu>
@@ -190,6 +194,9 @@ function isGroup(entry: NavEntry): entry is NavGroup {
                          [class.active]="isChildActive(entry, child)">
                         <mat-icon>{{ child.icon }}</mat-icon>
                         <span class="nav-label">{{ child.label | translate }}</span>
+                        @if (childBadge(child); as n) {
+                          <span class="nav-badge">{{ n }}</span>
+                        }
                       </a>
                     }
                   </div>
@@ -446,6 +453,16 @@ function isGroup(entry: NavEntry): entry is NavGroup {
       mat-icon { font-size: 17px; width: 17px; height: 17px; }
     }
 
+    .nav-badge {
+      margin-left: auto;
+      min-width: 20px; height: 18px;
+      padding: 0 6px; border-radius: 999px;
+      background: var(--artes-accent); color: #fff;
+      font-size: 11px; font-weight: 700; line-height: 18px;
+      display: inline-flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+
     .sidebar-footer {
       padding: 12px 8px;
       border-top: 1px solid rgba(255,255,255,0.08);
@@ -665,11 +682,14 @@ export class AppShellComponent implements OnInit, OnDestroy {
       label: 'NAV.assessments',
       icon: 'record_voice_over',
       children: [
-        { label: 'NAV.conductInterview', icon: 'mic',        route: '/coach/interview', roles: ['coach'] as AppRole[] },
-        { label: 'NAV.assessmentManagement', icon: 'assignment', route: '/intakes',         roles: ['coach'] as AppRole[] },
+        { label: 'NAV.conductInterview', icon: 'mic',             route: '/coach/interview',     roles: ['coach'] as AppRole[] },
+        { label: 'NAV.takeSurvey',       icon: 'edit_note',       route: '/intakes/take',        badge: () => this.pendingIntakesCount() },
+        { label: 'NAV.surveysList',      icon: 'poll',            route: '/intakes/surveys',     roles: ['admin', 'hr_manager', 'coach'] as AppRole[] },
+        { label: 'NAV.interviewsList',   icon: 'mic_external_on', route: '/intakes/interviews',  roles: ['admin', 'hr_manager', 'coach'] as AppRole[] },
+        { label: 'NAV.assessmentsList',  icon: 'assignment',      route: '/intakes/assessments', roles: ['admin', 'hr_manager', 'coach'] as AppRole[] },
+        { label: 'NAV.aiGeneratedList',  icon: 'auto_awesome',    route: '/intakes/ai-generated', roles: ['admin', 'hr_manager', 'coach'] as AppRole[] },
       ],
     },
-    { label: 'NAV.assessmentManagement', icon: 'assignment',           route: '/intakes',              roles: ['admin', 'hr_manager'] },
     { label: 'NAV.eqiAssessments',    icon: 'psychology',          route: '/eq-import/records',    roles: ['admin'] },
     { label: 'NAV.reports',           icon: 'assessment',          route: '/admin/reports',        roles: ['admin', 'hr_manager'] },
     {
@@ -728,6 +748,7 @@ export class AppShellComponent implements OnInit, OnDestroy {
   orgName     = signal('My Organization');
   orgLogo     = signal('');
   unreadCount = signal(0);
+  pendingIntakesCount = signal<number | null>(null);
 
   constructor(
     public authService: AuthService,
@@ -749,6 +770,9 @@ export class AppShellComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.router.events.pipe(filter((e) => e instanceof NavigationEnd)).subscribe((e) => {
       this.currentUrl.set((e as NavigationEnd).urlAfterRedirects.split('?')[0] ?? '/');
+      // Refresh the pending-intake badge whenever the user navigates — cheap
+      // backend call that catches the case where they just submitted one.
+      this.refreshPendingIntakesCount();
     });
 
     // Coachees land on coaching (not dashboard)
@@ -757,6 +781,7 @@ export class AppShellComponent implements OnInit, OnDestroy {
     }
 
     this.orgCtx.load();
+    this.refreshPendingIntakesCount();
     this.api.get<OrgInfo>('/organizations/me').subscribe({
       next: (org) => {
         this.orgName.set(org.name);
@@ -845,6 +870,20 @@ export class AppShellComponent implements OnInit, OnDestroy {
     return group.children.some((c) => this.router.isActive(c.route, {
       paths: 'exact', queryParams: 'ignored', fragment: 'ignored', matrixParams: 'ignored',
     }));
+  }
+
+  /** Resolve a NavItem's badge function to a positive integer or null. */
+  childBadge(item: NavItem): number | null {
+    const v = item.badge?.();
+    return typeof v === 'number' && v > 0 ? v : null;
+  }
+
+  private refreshPendingIntakesCount(): void {
+    if (!this.authService.currentUser()) return;
+    this.api.get<{ count: number }>('/surveys/my-intakes/count').subscribe({
+      next: (r) => this.pendingIntakesCount.set(r.count ?? 0),
+      error: () => this.pendingIntakesCount.set(null),
+    });
   }
 
   /** True iff `child.route` is the longest matching prefix within the

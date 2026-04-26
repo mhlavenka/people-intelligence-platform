@@ -137,8 +137,51 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'intakes/take',
+        loadComponent: () =>
+          import('./modules/survey/take-survey-list/take-survey-list.component').then(
+            (m) => m.TakeSurveyListComponent
+          ),
+      },
+      {
         path: 'intakes',
         canActivate: [roleGuard([...INTAKES])],
+        loadComponent: () =>
+          import('./modules/survey/survey-management/survey-management.component').then(
+            (m) => m.SurveyManagementComponent
+          ),
+      },
+      {
+        path: 'intakes/surveys',
+        canActivate: [roleGuard([...INTAKES])],
+        data: { typeFilter: 'survey' },
+        loadComponent: () =>
+          import('./modules/survey/survey-management/survey-management.component').then(
+            (m) => m.SurveyManagementComponent
+          ),
+      },
+      {
+        path: 'intakes/interviews',
+        canActivate: [roleGuard([...INTAKES])],
+        data: { typeFilter: 'interview' },
+        loadComponent: () =>
+          import('./modules/survey/survey-management/survey-management.component').then(
+            (m) => m.SurveyManagementComponent
+          ),
+      },
+      {
+        path: 'intakes/assessments',
+        canActivate: [roleGuard([...INTAKES])],
+        data: { typeFilter: 'assessment' },
+        loadComponent: () =>
+          import('./modules/survey/survey-management/survey-management.component').then(
+            (m) => m.SurveyManagementComponent
+          ),
+      },
+      {
+        path: 'intakes/ai-generated',
+        canActivate: [roleGuard([...INTAKES])],
+        data: { typeFilter: 'ai_generated' },
         loadComponent: () =>
           import('./modules/survey/survey-management/survey-management.component').then(
             (m) => m.SurveyManagementComponent
