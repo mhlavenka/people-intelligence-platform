@@ -458,3 +458,33 @@ a {
   }
 }
 
+
+// Wider tooltip variant for editor help text (matTooltipClass="tip-wide")
+.mat-mdc-tooltip.tip-wide .mdc-tooltip__surface {
+  max-width: 360px;
+  font-size: 12px;
+  line-height: 1.4;
+  padding: 10px 12px;
+  white-space: normal;
+}
+
+// Wider dropdown panel for the conflict-analyze template picker so the
+// table-style rows (name + question count + response count) fit cleanly.
+.cdk-overlay-pane:has(.template-picker-panel),
+.template-picker-panel.mat-mdc-select-panel {
+  min-width: 540px !important;
+}
+
+// Hide the per-option selected-checkmark slot so the header row and option
+// rows share the same 16px horizontal padding and the columns align.
+.template-picker-panel .mat-mdc-option .mat-pseudo-checkbox,
+.template-picker-panel .mat-mdc-option .mat-mdc-option-pseudo-checkbox {
+  display: none !important;
+}
+.template-picker-panel .mat-mdc-option {
+  padding-left: 16px !important;
+  padding-right: 16px !important;
+}
+.template-picker-panel .mat-mdc-option .mdc-list-item__primary-text {
+  width: 100%;
+}

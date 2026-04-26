@@ -8,6 +8,9 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { forkJoin, of } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 import { ApiService } from '../../../core/api.service';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
@@ -18,6 +21,7 @@ interface SurveyTemplate {
   intakeType: 'survey' | 'interview' | 'assessment';
   minResponsesForAnalysis?: number;
   questions: unknown[];
+  responseCount?: number;
 }
 
 interface OrgResponse {
@@ -37,6 +41,7 @@ interface OrgResponse {
     MatSelectModule,
     MatIconModule,
     MatProgressSpinnerModule,
+    MatTooltipModule,
     TranslateModule,
   ],
   template: `
@@ -66,10 +71,38 @@ interface OrgResponse {
 
           <mat-form-field appearance="outline" class="full-width">
             <mat-label>{{ "CONFLICT.assessmentTemplate" | translate }}</mat-label>
-            <mat-select formControlName="templateId" (selectionChange)="selectedTemplateId.set($event.value)">
+            <mat-select formControlName="templateId"
+                        panelClass="template-picker-panel"
+                        (selectionChange)="selectedTemplateId.set($event.value)">
+              <mat-select-trigger>
+                @if (selectedTemplate(); as t) {
+                  {{ t.title }}
+                }
+              </mat-select-trigger>
+              <mat-option [disabled]="true" class="tpl-header-option">
+                <div class="tpl-row tpl-head">
+                  <span class="tpl-name">{{ 'CONFLICT.tplColName' | translate }}</span>
+                  <span class="tpl-num">{{ 'CONFLICT.tplColQuestions' | translate }}</span>
+                  <span class="tpl-num">{{ 'CONFLICT.tplColResponses' | translate }}</span>
+                </div>
+              </mat-option>
               @for (t of templates(); track t._id) {
-                <mat-option [value]="t._id">
-                  {{ t.title }} ({{ t.questions.length }} questions)
+                <mat-option [value]="t._id"
+                            [disabled]="!meetsMinimum(t)"
+                            class="tpl-option"
+                            [class.tpl-insufficient]="!meetsMinimum(t)">
+                  <div class="tpl-row">
+                    <span class="tpl-name" [matTooltip]="t.title">{{ t.title }}</span>
+                    <span class="tpl-num">{{ t.questions.length }}</span>
+                    <span class="tpl-num"
+                          [class.tpl-bad]="!meetsMinimum(t)"
+                          [matTooltip]="!meetsMinimum(t) ? (('CONFLICT.tplBelowMin' | translate:{ min: minFor(t) })) : ''">
+                      {{ t.responseCount ?? '–' }}
+                      @if (!meetsMinimum(t)) {
+                        <span class="tpl-min-suffix">/ {{ minFor(t) }}</span>
+                      }
+                    </span>
+                  </div>
                 </mat-option>
               }
             </mat-select>
@@ -119,7 +152,26 @@ interface OrgResponse {
       mat-icon { color: #e86c3a; }
     }
 
-    mat-dialog-content { min-width: 480px; padding-top: 8px !important; }
+    mat-dialog-content { min-width: 720px; max-width: 880px; padding-top: 8px !important; }
+
+    .tpl-row {
+      display: grid;
+      grid-template-columns: 1fr 110px 130px;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+    }
+    .tpl-head {
+      font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+      color: #7f8ea3;
+    }
+    .tpl-name {
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .tpl-num { text-align: right; font-variant-numeric: tabular-nums; }
+    .tpl-bad { color: #dc2626; font-weight: 600; }
+    .tpl-min-suffix { color: #9aa5b4; font-weight: 400; margin-left: 2px; }
+    .tpl-insufficient .tpl-name { color: #9aa5b4; }
 
     .error-banner {
       background: #fef2f2; border: 1px solid #fecaca; color: #dc2626;
@@ -159,6 +211,19 @@ export class ConflictAnalyzeDialogComponent implements OnInit {
     if (!t) return 5;
     return t.minResponsesForAnalysis ?? (t.intakeType === 'survey' ? 5 : 1);
   });
+  selectedTemplate = computed(() =>
+    this.templates().find((t) => t._id === this.selectedTemplateId()) ?? null,
+  );
+
+  /** Per-template minimum response count required to run an analysis. */
+  minFor(t: SurveyTemplate): number {
+    return t.minResponsesForAnalysis ?? (t.intakeType === 'survey' ? 5 : 1);
+  }
+
+  /** True iff the template has enough responses to run analysis on. */
+  meetsMinimum(t: SurveyTemplate): boolean {
+    return (t.responseCount ?? 0) >= this.minFor(t);
+  }
   loadingTemplates = signal(true);
   analyzing = signal(false);
   error = signal('');
@@ -179,9 +244,8 @@ export class ConflictAnalyzeDialogComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.api.get<SurveyTemplate[]>('/surveys/templates').subscribe({
-      next: (templates) => {
-        const conflictTemplates = templates.filter((t) => t.moduleType === 'conflict');
+    this.api.get<SurveyTemplate[]>('/surveys/templates?moduleType=conflict').subscribe({
+      next: (conflictTemplates) => {
         this.templates.set(conflictTemplates);
         this.noTemplates.set(conflictTemplates.length === 0);
         if (conflictTemplates.length === 1) {
@@ -189,6 +253,22 @@ export class ConflictAnalyzeDialogComponent implements OnInit {
           this.selectedTemplateId.set(conflictTemplates[0]._id);
         }
         this.loadingTemplates.set(false);
+
+        // Fetch response count per template in parallel so the picker can flag
+        // templates that don't meet their minimum-response threshold.
+        if (conflictTemplates.length === 0) return;
+        const counts$ = conflictTemplates.map((t) =>
+          this.api.get<{ count: number }>(`/surveys/responses/${t._id}/count`).pipe(
+            map((r) => ({ id: t._id, count: r.count ?? 0 })),
+            catchError(() => of({ id: t._id, count: 0 })),
+          ),
+        );
+        forkJoin(counts$).subscribe((results) => {
+          const map = new Map(results.map((r) => [r.id, r.count]));
+          this.templates.update((list) =>
+            list.map((t) => ({ ...t, responseCount: map.get(t._id) ?? 0 })),
+          );
+        });
       },
       error: () => this.loadingTemplates.set(false),
     });

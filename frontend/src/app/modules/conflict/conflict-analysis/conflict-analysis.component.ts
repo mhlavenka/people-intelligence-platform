@@ -257,7 +257,7 @@ export class ConflictAnalysisComponent implements OnInit {
   }
 
   runNewAnalysis(): void {
-    const ref = this.dialog.open(ConflictAnalyzeDialogComponent, { width: '560px', disableClose: true });
+    const ref = this.dialog.open(ConflictAnalyzeDialogComponent, { width: '780px', maxWidth: '94vw', disableClose: true });
     ref.afterClosed().subscribe((result) => { if (result) this.loadAnalyses(); });
   }
 

@@ -25,6 +25,7 @@ interface Question {
   category: string;
   options?: QuestionOption[];
   scale_range?: { min: number; max: number; labels?: Record<string, string> };
+  optional?: boolean;
 }
 
 interface SurveyTemplate {
@@ -181,7 +182,12 @@ interface TranslationRef {
             @if (currentQuestion(); as q) {
               <div class="question-block">
                 @if (q.text) {
-                  <p class="question-text">{{ q.text }}</p>
+                  <p class="question-text">
+                    {{ q.text }}
+                    @if (q.optional) {
+                      <span class="optional-tag">{{ 'SURVEY.questionOptional' | translate }}</span>
+                    }
+                  </p>
                 }
 
                 <!-- Scale -->
@@ -278,13 +284,18 @@ interface TranslationRef {
                 @if (currentIndex() < template()!.questions.length - 1) {
                   <button mat-raised-button color="primary"
                           (click)="next()"
-                          [disabled]="!isAnswered(q)">
-                    {{ 'COMMON.next' | translate }} <mat-icon>arrow_forward</mat-icon>
+                          [disabled]="!canAdvance(q)">
+                    @if (q.optional && !isAnswered(q)) {
+                      {{ 'COMMON.skip' | translate }}
+                    } @else {
+                      {{ 'COMMON.next' | translate }}
+                    }
+                    <mat-icon>arrow_forward</mat-icon>
                   </button>
                 } @else {
                   <button mat-raised-button color="primary"
                           (click)="submit()"
-                          [disabled]="submitting() || !isAnswered(q)">
+                          [disabled]="submitting() || !canAdvance(q)">
                     @if (submitting()) {
                       <mat-spinner diameter="18" />
                     } @else {
@@ -406,6 +417,12 @@ interface TranslationRef {
       font-weight: 500;
       line-height: 1.5;
       margin-bottom: 28px;
+      .optional-tag {
+        display: inline-block; margin-left: 8px;
+        font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+        padding: 2px 8px; border-radius: 999px;
+        background: rgba(154,165,180,0.15); color: #5a6a7e;
+      }
     }
 
     .scale-container {
@@ -584,6 +601,10 @@ export class SurveyTakeComponent implements OnInit {
     const ans = this.answers()[q.id];
     return ans !== undefined && ans !== '' && ans !== null;
   };
+
+  /** Whether the respondent can advance from this question — answered, or
+   *  the question is explicitly optional. */
+  canAdvance = (q: Question): boolean => q.optional === true || this.isAnswered(q);
 
   constructor(
     private route: ActivatedRoute,

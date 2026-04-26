@@ -71,6 +71,7 @@ interface SurveyTemplate {
     behavior_temperature?: string;
     behavior_cluster?: string;
     reference_period?: string;
+    optional?: boolean;
   }[];
 }
 
@@ -483,18 +484,30 @@ interface SurveyTemplate {
                             <mat-option value="text">{{ 'SURVEY.typeOpenText' | translate }}</mat-option>
                             <mat-option value="forced_choice">{{ 'SURVEY.typeForcedChoice' | translate }}</mat-option>
                           </mat-select>
+                          <mat-icon matSuffix class="field-info"
+                                    [matTooltip]="'SURVEY.tipType' | translate"
+                                    matTooltipPosition="above"
+                                    matTooltipClass="tip-wide">info_outline</mat-icon>
                         </mat-form-field>
 
                         <mat-form-field appearance="outline">
                           <mat-label>{{ 'SURVEY.category' | translate }}</mat-label>
                           <input matInput formControlName="category"
                             placeholder="e.g. conflict_mode" />
+                          <mat-icon matSuffix class="field-info"
+                                    [matTooltip]="'SURVEY.tipCategory' | translate"
+                                    matTooltipPosition="above"
+                                    matTooltipClass="tip-wide">info_outline</mat-icon>
                         </mat-form-field>
 
                         <mat-form-field appearance="outline">
                           <mat-label>{{ 'SURVEY.subscale' | translate }}</mat-label>
                           <input matInput formControlName="subscale"
                             placeholder="e.g. collaborating" />
+                          <mat-icon matSuffix class="field-info"
+                                    [matTooltip]="'SURVEY.tipSubscale' | translate"
+                                    matTooltipPosition="above"
+                                    matTooltipClass="tip-wide">info_outline</mat-icon>
                           <mat-hint>{{ 'SURVEY.scoringBucket' | translate }}</mat-hint>
                         </mat-form-field>
                       </div>
@@ -508,17 +521,29 @@ interface SurveyTemplate {
                               <mat-form-field appearance="outline" style="width:110px">
                                 <mat-label>{{ 'SURVEY.pairId' | translate }}</mat-label>
                                 <input matInput type="number" formControlName="pairId" />
+                                <mat-icon matSuffix class="field-info"
+                                          [matTooltip]="'SURVEY.tipPairId' | translate"
+                                          matTooltipPosition="above"
+                                          matTooltipClass="tip-wide">info_outline</mat-icon>
                                 <mat-hint>{{ 'SURVEY.pairIdHint' | translate }}</mat-hint>
                               </mat-form-field>
                               <mat-form-field appearance="outline" style="width:180px">
                                 <mat-label>{{ 'SURVEY.scaleDescriptor' | translate }}</mat-label>
                                 <input matInput formControlName="scaleDescriptor"
                                   placeholder="forced_choice_dyad" />
+                                <mat-icon matSuffix class="field-info"
+                                          [matTooltip]="'SURVEY.tipScaleDescriptor' | translate"
+                                          matTooltipPosition="above"
+                                          matTooltipClass="tip-wide">info_outline</mat-icon>
                               </mat-form-field>
                               <mat-form-field appearance="outline" class="grow">
                                 <mat-label>{{ 'SURVEY.modesContrasted' | translate }}</mat-label>
                                 <input matInput formControlName="modesContrasted"
                                   placeholder="e.g. competing, avoiding" />
+                                <mat-icon matSuffix class="field-info"
+                                          [matTooltip]="'SURVEY.tipModesContrasted' | translate"
+                                          matTooltipPosition="above"
+                                          matTooltipClass="tip-wide">info_outline</mat-icon>
                                 <mat-hint>{{ 'SURVEY.modesContrastedHint' | translate }}</mat-hint>
                               </mat-form-field>
                             </div>
@@ -534,6 +559,10 @@ interface SurveyTemplate {
                               <mat-label>{{ 'SURVEY.toSubscale' | translate }}</mat-label>
                               <input matInput formControlName="optionASubscale"
                                 placeholder="e.g. competing" />
+                              <mat-icon matSuffix class="field-info"
+                                        [matTooltip]="'SURVEY.tipOptionSubscale' | translate"
+                                        matTooltipPosition="above"
+                                        matTooltipClass="tip-wide">info_outline</mat-icon>
                             </mat-form-field>
                           </div>
                           <div class="fc-row">
@@ -546,6 +575,10 @@ interface SurveyTemplate {
                               <mat-label>{{ 'SURVEY.toSubscale' | translate }}</mat-label>
                               <input matInput formControlName="optionBSubscale"
                                 placeholder="e.g. avoiding" />
+                              <mat-icon matSuffix class="field-info"
+                                        [matTooltip]="'SURVEY.tipOptionSubscale' | translate"
+                                        matTooltipPosition="above"
+                                        matTooltipClass="tip-wide">info_outline</mat-icon>
                             </mat-form-field>
                           </div>
                         </div>
@@ -569,10 +602,18 @@ interface SurveyTemplate {
                                   <mat-form-field appearance="outline" style="width:110px">
                                     <mat-label>{{ 'SURVEY.scaleMin' | translate }}</mat-label>
                                     <input matInput type="number" formControlName="scaleMin" />
+                                    <mat-icon matSuffix class="field-info"
+                                              [matTooltip]="'SURVEY.tipScaleMin' | translate"
+                                              matTooltipPosition="above"
+                                              matTooltipClass="tip-wide">info_outline</mat-icon>
                                   </mat-form-field>
                                   <mat-form-field appearance="outline" style="width:110px">
                                     <mat-label>{{ 'SURVEY.scaleMax' | translate }}</mat-label>
                                     <input matInput type="number" formControlName="scaleMax" />
+                                    <mat-icon matSuffix class="field-info"
+                                              [matTooltip]="'SURVEY.tipScaleMax' | translate"
+                                              matTooltipPosition="above"
+                                              matTooltipClass="tip-wide">info_outline</mat-icon>
                                   </mat-form-field>
                                   <button mat-stroked-button type="button"
                                           class="gen-labels-btn"
@@ -586,13 +627,20 @@ interface SurveyTemplate {
                                   <textarea matInput formControlName="scaleLabels" rows="4"
                                     class="mono"
                                     placeholder='{&#10;  "1": "Strongly Disagree",&#10;  "5": "Strongly Agree"&#10;}'></textarea>
+                                  <mat-icon matSuffix class="field-info"
+                                            [matTooltip]="'SURVEY.tipScaleLabels' | translate"
+                                            matTooltipPosition="above"
+                                            matTooltipClass="tip-wide">info_outline</mat-icon>
                                   <mat-hint>{{ 'SURVEY.scaleLabelsHint' | translate }}</mat-hint>
                                 </mat-form-field>
                               </div>
 
                               <!-- Reverse scoring -->
                               <div class="checkbox-row">
-                                <mat-checkbox formControlName="reverseScored" color="primary">
+                                <mat-checkbox formControlName="reverseScored" color="primary"
+                                              [matTooltip]="'SURVEY.tipReverseScored' | translate"
+                                              matTooltipPosition="above"
+                                              matTooltipClass="tip-wide">
                                   {{ 'SURVEY.reverseScoredItem' | translate }}
                                 </mat-checkbox>
                               </div>
@@ -601,6 +649,10 @@ interface SurveyTemplate {
                                   <mat-label>{{ 'SURVEY.reverseScoreFormula' | translate }}</mat-label>
                                   <input matInput formControlName="reverseScoreFormula"
                                     placeholder="max_plus_one_minus_raw" />
+                                  <mat-icon matSuffix class="field-info"
+                                            [matTooltip]="'SURVEY.tipReverseScoreFormula' | translate"
+                                            matTooltipPosition="above"
+                                            matTooltipClass="tip-wide">info_outline</mat-icon>
                                   <mat-hint>{{ 'SURVEY.reverseScoreFormulaHint' | translate }}</mat-hint>
                                 </mat-form-field>
                               }
@@ -611,6 +663,10 @@ interface SurveyTemplate {
                               <mat-label>{{ 'SURVEY.referencePeriod' | translate }}</mat-label>
                               <input matInput formControlName="referencePeriod"
                                 placeholder="e.g. past_month, past_quarter" />
+                              <mat-icon matSuffix class="field-info"
+                                        [matTooltip]="'SURVEY.tipReferencePeriod' | translate"
+                                        matTooltipPosition="above"
+                                        matTooltipClass="tip-wide">info_outline</mat-icon>
                               <mat-hint>{{ 'SURVEY.referencePeriodHint' | translate }}</mat-hint>
                             </mat-form-field>
 
@@ -623,17 +679,32 @@ interface SurveyTemplate {
                                   <mat-option value="hot">{{ 'SURVEY.tempHot' | translate }}</mat-option>
                                   <mat-option value="cool">{{ 'SURVEY.tempCool' | translate }}</mat-option>
                                 </mat-select>
+                                <mat-icon matSuffix class="field-info"
+                                          [matTooltip]="'SURVEY.tipBehaviorTemperature' | translate"
+                                          matTooltipPosition="above"
+                                          matTooltipClass="tip-wide">info_outline</mat-icon>
                               </mat-form-field>
                               <mat-form-field appearance="outline" class="half-width">
                                 <mat-label>{{ 'SURVEY.behaviorCluster' | translate }}</mat-label>
                                 <input matInput formControlName="behaviorCluster"
                                   placeholder="e.g. perspective_taking" />
+                                <mat-icon matSuffix class="field-info"
+                                          [matTooltip]="'SURVEY.tipBehaviorCluster' | translate"
+                                          matTooltipPosition="above"
+                                          matTooltipClass="tip-wide">info_outline</mat-icon>
                               </mat-form-field>
                             </div>
 
                           </div>
                         </mat-expansion-panel>
                       }
+
+                      <div class="q-optional-row">
+                        <mat-checkbox formControlName="optional" color="primary"
+                                      [matTooltip]="'SURVEY.questionOptionalHint' | translate">
+                          {{ 'SURVEY.questionOptional' | translate }}
+                        </mat-checkbox>
+                      </div>
 
                     </div><!-- /q-fields -->
 
@@ -884,6 +955,15 @@ interface SurveyTemplate {
 
     .remove-btn { color: #9aa5b4; flex-shrink: 0; margin-top: 6px; }
     .add-q-btn { width: 100%; margin-top: 4px; color: var(--artes-accent); border-color: var(--artes-accent); }
+    .q-optional-row {
+      display: flex; align-items: center; padding: 4px 2px; margin-top: 4px;
+      mat-checkbox { font-size: 13px; color: #5a6a7e; }
+    }
+    .field-info {
+      font-size: 16px; width: 16px; height: 16px;
+      color: #9aa5b4; cursor: help;
+      &:hover { color: var(--artes-accent); }
+    }
   `],
 })
 export class SurveyTemplateDialogComponent implements OnInit {
@@ -1032,6 +1112,8 @@ export class SurveyTemplateDialogComponent implements OnInit {
         behaviorCluster:     [data?.behavior_cluster ?? ''],
         // Temporal
         referencePeriod:     [data?.reference_period ?? ''],
+        // Whether the respondent can skip this item
+        optional:            [data?.optional === true],
       })
     );
   }
@@ -1182,6 +1264,7 @@ export class SurveyTemplateDialogComponent implements OnInit {
           base['scale_range'] = scaleRange;
         }
       }
+      if (q.optional) base['optional'] = true;
       return base;
     });
 

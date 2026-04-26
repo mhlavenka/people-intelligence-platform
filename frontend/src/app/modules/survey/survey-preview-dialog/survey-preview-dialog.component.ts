@@ -16,6 +16,7 @@ interface PreviewQuestion {
   category?: string;
   options?: { value: string; text: string }[];
   scale_range?: { min: number; max: number; labels?: Record<string, string> };
+  optional?: boolean;
 }
 
 export interface SurveyPreviewDialogData {

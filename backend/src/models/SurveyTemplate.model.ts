@@ -61,6 +61,10 @@ export interface IQuestion {
 
     // Temporal anchor for frequency-based items (de Dreu, ROCI-II, etc.)
     reference_period?: string; // e.g. "past_month", "past_quarter"
+
+    // Optional questions can be skipped — the response simply omits this id.
+    // Defaults to false (i.e. required) for backward compat.
+    optional?: boolean;
 }
 
 // ── Subscale detail (CDP, de Dreu) ───────────────────────────────────────────
@@ -237,6 +241,8 @@ const QuestionSchema = new Schema<IQuestion>(
         behavior_cluster:     { type: String },
 
         reference_period: { type: String },
+
+        optional: { type: Boolean, default: false },
     },
     { _id: false }
 );
