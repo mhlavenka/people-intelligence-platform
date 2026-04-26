@@ -6,9 +6,9 @@ I. MODULES
 
 **Intakes/Assessments**
  - menu item renaming
- - Bi-weekly pulse does not have scale description
+ - need scale description - what is the best and what the worst score - be aware of reverse scales
  - Look at reverse scale calculation - how to set it up so that 1 is good and 10 is bad? What does max_plus_one_minus_raw mean?
- - forced choices should have option to add many options
+ - forced choices should have option to add many options - currently have just 2. What do the pairs indicate?
  - optional questions should not force me to put anything 
 
 **Conflict Intelligence**
