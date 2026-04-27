@@ -31,13 +31,18 @@ import {
 export interface QualityPolicy {
   qualityThreshold: number;       // 0..1
   longStringMaxFraction: number;  // 0..1 — fraction of items at the same value
-  speedingMsPerItemFloor?: number; // optional, only used when timing exists
+  speedingMsPerItemFloor?: number;       // hard implausibility floor (per-response)
+  speedingGroupZThreshold?: number;      // cohort modified-Z (more negative = slower than cohort).
+                                         // Responses with z < threshold are cohort speeders.
+  speedingMinCohortN?: number;           // gate cohort-Z check below this N (MAD unstable on small N)
 }
 
 export const DEFAULT_QUALITY_POLICY: QualityPolicy = {
   qualityThreshold: 0.35,
   longStringMaxFraction: 0.80,
   speedingMsPerItemFloor: 2_000,
+  speedingGroupZThreshold: -3.5,
+  speedingMinCohortN: 10,
 };
 
 // ── Layer 1: per-response quality ───────────────────────────────────────────
@@ -98,6 +103,46 @@ export function computeQuality(
   const qualityScore = clamp(1 - penalty, 0, 1);
   const acceptedInAnalysis = qualityScore >= policy.qualityThreshold;
   return { qualityScore, qualityFlags: flags, acceptedInAnalysis };
+}
+
+/**
+ * Cohort-relative speeding detection. Operates over a set of responses (the
+ * caller is expected to pass the post-per-response-quality cohort, so we don't
+ * double-flag anyone already dropped). Returns indices into the input array
+ * for responses whose per-respondent median ms/item is more than |threshold|
+ * MAD-units below the cohort median — i.e. they finished items markedly
+ * faster than the rest of the team.
+ *
+ * Returns an empty Set when the cohort is too small for MAD to be stable
+ * (< speedingMinCohortN), when fewer than 3 responses carry timing data, or
+ * when the cohort's MAD is zero (no spread to compare against).
+ */
+export function detectCohortSpeeders(
+  responses: Array<Pick<ISurveyResponse, 'timingMsPerItem'>>,
+  policy: QualityPolicy = DEFAULT_QUALITY_POLICY,
+): Set<number> {
+  const flags = new Set<number>();
+  const minN = policy.speedingMinCohortN ?? 10;
+  const threshold = policy.speedingGroupZThreshold ?? -3.5;
+  if (responses.length < minN) return flags;
+
+  const medians: Array<{ idx: number; med: number }> = [];
+  for (let i = 0; i < responses.length; i++) {
+    const t = responses[i].timingMsPerItem;
+    if (!t || t.length < 3) continue;
+    medians.push({ idx: i, med: median(t) });
+  }
+  if (medians.length < 3) return flags;
+
+  const cohortMed = median(medians.map((m) => m.med));
+  const mad = median(medians.map((m) => Math.abs(m.med - cohortMed)));
+  if (mad === 0) return flags;
+
+  for (const { idx, med } of medians) {
+    const z = (0.6745 * (med - cohortMed)) / mad;
+    if (z < threshold) flags.add(idx);
+  }
+  return flags;
 }
 
 /** Aggregate per-response quality flags into the IResponseQuality summary. */
@@ -352,24 +397,48 @@ export interface FullSurveyMetrics {
  * set. Caller is expected to have already persisted per-response qualityScore
  * (via computeQuality at submit time); we only summarize them here. Subgroup
  * analysis is gated on policy (callable can pass null to disable).
+ *
+ * Cohort-relative speeding: responses passing per-response quality but whose
+ * timing is far below the rest of the cohort are dropped from THIS analysis
+ * only (we never mutate the SurveyResponse documents). They are counted in
+ * responseQuality.droppedReasons.speeding so the response-quality card stays
+ * truthful.
  */
 export function computeAllMetrics(
   responses: ISurveyResponse[],
   template: ISurveyTemplate,
   subgroupPolicy: SubgroupPolicy | null = DEFAULT_SUBGROUP_POLICY,
+  qualityPolicy: QualityPolicy = DEFAULT_QUALITY_POLICY,
 ): FullSurveyMetrics {
-  const accepted = responses.filter((r) => r.acceptedInAnalysis !== false);
+  const preAccepted = responses.filter((r) => r.acceptedInAnalysis !== false);
+  const cohortSpeeders = detectCohortSpeeders(preAccepted, qualityPolicy);
+  const accepted = preAccepted.filter((_, i) => !cohortSpeeders.has(i));
+
+  // Fold cohort-flagged speeders into the responseQuality summary so the UI
+  // attributes them correctly. Per-response drops are still counted by their
+  // own flags (straightlining / longString / per-response speeding floor).
+  const baseQuality = summarizeQuality(responses);
+  const responseQuality: IResponseQuality = {
+    ...baseQuality,
+    acceptedCount: baseQuality.acceptedCount - cohortSpeeders.size,
+    droppedCount: baseQuality.droppedCount + cohortSpeeders.size,
+    droppedReasons: {
+      ...baseQuality.droppedReasons,
+      speeding: (baseQuality.droppedReasons.speeding ?? 0) + cohortSpeeders.size,
+    },
+  };
+
   const itemMetrics = template.questions
     .map((q) => computeItemMetrics(accepted, q))
     .filter((m): m is IItemMetric => m !== null);
 
   return {
-    responseQuality: summarizeQuality(responses),
+    responseQuality,
     itemMetrics,
     dimensionMetrics: rollupByDimension(itemMetrics),
     teamAlignmentScore: teamAlignmentScore(itemMetrics),
     subgroupAnalysis: subgroupPolicy
-      ? computeSubgroupAnalysis(responses, template, subgroupPolicy)
+      ? computeSubgroupAnalysis(accepted, template, subgroupPolicy)
       : null,
   };
 }

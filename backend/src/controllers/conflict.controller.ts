@@ -8,7 +8,7 @@ import { ConflictAnalysis, IConflictAnalysis } from '../models/ConflictAnalysis.
 import { Organization } from '../models/Organization.model';
 import { User } from '../models/User.model';
 import { buildConflictAnalysisPrompt, buildConflictSubAnalysisPrompt, buildConflictRecommendedActionsPrompt, callClaude } from '../services/ai.service';
-import { computeAllMetrics, DEFAULT_SUBGROUP_POLICY } from '../services/surveyMetrics.service';
+import { computeAllMetrics, DEFAULT_SUBGROUP_POLICY, DEFAULT_QUALITY_POLICY } from '../services/surveyMetrics.service';
 import { sendEmail } from '../services/email.service';
 import { createHubNotification } from '../services/hubNotification.service';
 
@@ -74,7 +74,15 @@ export async function analyzeConflict(
       ...DEFAULT_SUBGROUP_POLICY,
       minSubgroupN: orgPolicy.minSubgroupN ?? DEFAULT_SUBGROUP_POLICY.minSubgroupN,
     };
-    const metrics = template ? computeAllMetrics(allResponses, template, subgroupPolicy) : null;
+    const qualityPolicy = {
+      ...DEFAULT_QUALITY_POLICY,
+      qualityThreshold:        orgPolicy.qualityThreshold        ?? DEFAULT_QUALITY_POLICY.qualityThreshold,
+      longStringMaxFraction:   orgPolicy.longStringMaxFraction   ?? DEFAULT_QUALITY_POLICY.longStringMaxFraction,
+      speedingMsPerItemFloor:  orgPolicy.speedingMsPerItemFloor  ?? DEFAULT_QUALITY_POLICY.speedingMsPerItemFloor,
+      speedingGroupZThreshold: orgPolicy.speedingGroupZThreshold ?? DEFAULT_QUALITY_POLICY.speedingGroupZThreshold,
+      speedingMinCohortN:      orgPolicy.speedingMinCohortN      ?? DEFAULT_QUALITY_POLICY.speedingMinCohortN,
+    };
+    const metrics = template ? computeAllMetrics(allResponses, template, subgroupPolicy, qualityPolicy) : null;
 
     const prompt = buildConflictAnalysisPrompt(
       {
