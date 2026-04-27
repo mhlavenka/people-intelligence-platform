@@ -180,6 +180,7 @@ export function computeItemMetrics(
   if (values.length < 2) return null;
 
   const range = effectiveScaleRange(question, values);
+  const histogram = buildHistogram(values, range.min, range.max);
 
   return {
     questionId: question.id,
@@ -195,7 +196,23 @@ export function computeItemMetrics(
     outlierCount: countOutliersModifiedZ(values),
     scaleMin: range.min,
     scaleMax: range.max,
+    histogram,
   };
+}
+
+/** Bin integer-valued responses into a dense per-scale-point count array.
+ *  Length = scaleMax - scaleMin + 1, values rounded to nearest integer for
+ *  binning (Likert + boolean responses are integer; defensive otherwise). */
+function buildHistogram(values: number[], scaleMin: number, scaleMax: number): number[] {
+  const lo = Math.round(scaleMin);
+  const hi = Math.round(scaleMax);
+  const len = Math.max(1, hi - lo + 1);
+  const bins = new Array<number>(len).fill(0);
+  for (const v of values) {
+    const idx = Math.round(v) - lo;
+    if (idx >= 0 && idx < len) bins[idx]++;
+  }
+  return bins;
 }
 
 // ── Layer 3: dimensional roll-up ────────────────────────────────────────────

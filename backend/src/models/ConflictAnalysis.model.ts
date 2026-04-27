@@ -34,6 +34,10 @@ export interface IItemMetric {
   outlierCount: number;          // respondents flagged via modified-Z > 3.5
   scaleMin?: number;
   scaleMax?: number;
+  // Dense answer histogram, indexed [0 .. scaleMax-scaleMin]. counts[i] is the
+  // number of respondents who answered (scaleMin + i). Used for the per-item
+  // strip / bar inline visualisation. Optional so legacy analyses keep rendering.
+  histogram?: number[];
 }
 
 export interface IDimensionMetric {
