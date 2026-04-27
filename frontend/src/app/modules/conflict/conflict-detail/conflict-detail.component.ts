@@ -556,29 +556,7 @@ interface RecommendedActions {
                 <!-- Dimensional roll-up -->
                 @if (displayDimensionMetrics().length) {
                   <div class="div-card">
-                    <div class="div-card-head-row">
-                      <h3>{{ 'CONFLICT.dimensionalDivergence' | translate }}</h3>
-                      <button mat-stroked-button class="div-explain-toggle"
-                              (click)="rwgExplainerOpen.set(!rwgExplainerOpen())"
-                              [attr.aria-expanded]="rwgExplainerOpen()">
-                        <mat-icon>{{ rwgExplainerOpen() ? 'close' : 'help_outline' }}</mat-icon>
-                        {{ 'CONFLICT.rwgExplainerToggle' | translate }}
-                      </button>
-                    </div>
-
-                    @if (rwgExplainerOpen()) {
-                      <div class="div-explainer">
-                        <h4>{{ 'CONFLICT.rwgExplainerTitle' | translate }}</h4>
-                        <p [innerHTML]="'CONFLICT.rwgExplainerWhat' | translate"></p>
-                        <p [innerHTML]="'CONFLICT.rwgExplainerHow' | translate"></p>
-                        <pre class="div-explainer-formula">r<sub>wg</sub> = 1 − σ²<sub>observed</sub> / σ²<sub>eu</sub>
-σ²<sub>eu</sub> = (A² − 1) / 12     (A = number of scale points)</pre>
-                        <p [innerHTML]="'CONFLICT.rwgExplainerRead' | translate"></p>
-                        <p class="div-explainer-caveat" [innerHTML]="'CONFLICT.rwgExplainerCaveat' | translate"></p>
-                        <p class="div-explainer-cite">{{ 'CONFLICT.rwgExplainerCite' | translate }}</p>
-                      </div>
-                    }
-
+                    <h3>{{ 'CONFLICT.dimensionalDivergence' | translate }}</h3>
                     <table class="div-table">
                       <thead>
                         <tr>
@@ -750,6 +728,17 @@ interface RecommendedActions {
                       <section class="div-sidebar-section">
                         <h5>{{ 'CONFLICT.divergenceSidebarItemsTitle' | translate }}</h5>
                         <p [innerHTML]="'CONFLICT.divergenceSidebarItems' | translate"></p>
+                      </section>
+                      <section class="div-sidebar-section div-sidebar-rwg">
+                        <h5>{{ 'CONFLICT.rwgExplainerTitle' | translate }}</h5>
+                        <p [innerHTML]="'CONFLICT.rwgExplainerWhat' | translate"></p>
+                        <p [innerHTML]="'CONFLICT.rwgExplainerHow' | translate"></p>
+                        <pre class="div-sidebar-formula">r<sub>wg</sub> = 1 − σ²<sub>observed</sub> / σ²<sub>eu</sub>
+σ²<sub>eu</sub> = (A² − 1) / 12
+A = number of scale points</pre>
+                        <p [innerHTML]="'CONFLICT.rwgExplainerRead' | translate"></p>
+                        <p class="div-sidebar-caveat" [innerHTML]="'CONFLICT.rwgExplainerCaveat' | translate"></p>
+                        <p class="div-sidebar-cite">{{ 'CONFLICT.rwgExplainerCite' | translate }}</p>
                       </section>
                       <section class="div-sidebar-section div-sidebar-use">
                         <h5>{{ 'CONFLICT.divergenceSidebarUseTitle' | translate }}</h5>
@@ -1820,56 +1809,6 @@ interface RecommendedActions {
       &.mixed     { background: rgba(240,165,0,0.15);  color: #b07800; }
       &.fractured { background: rgba(229,62,62,0.15);  color: #c53030; }
     }
-    .div-card-head-row {
-      display: flex; align-items: center; justify-content: space-between;
-      gap: 12px; margin-bottom: 14px;
-      h3 { margin: 0; }
-    }
-    .div-explain-toggle {
-      min-width: 0;
-      font-size: 12px; font-weight: 600;
-      padding: 0 12px; height: 28px;
-      mat-icon { font-size: 16px; width: 16px; height: 16px; margin-right: 4px; }
-    }
-    .div-explainer {
-      background: #f8fbff;
-      border: 1px solid #dde7f3;
-      border-radius: 8px;
-      padding: 16px 18px;
-      margin-bottom: 14px;
-      font-size: 13px; line-height: 1.55; color: #2d3a4f;
-      h4 {
-        margin: 0 0 10px;
-        font-size: 12px; font-weight: 700;
-        color: var(--artes-primary);
-        text-transform: uppercase; letter-spacing: 0.5px;
-      }
-      p { margin: 0 0 10px; }
-      strong { color: var(--artes-primary); font-weight: 600; }
-    }
-    .div-explainer-formula {
-      background: white;
-      border: 1px solid #edf1f6;
-      border-radius: 6px;
-      padding: 10px 12px;
-      margin: 0 0 10px;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Cascadia Mono", monospace;
-      font-size: 12.5px; line-height: 1.7; color: #1B2A47;
-      white-space: pre;
-      overflow-x: auto;
-    }
-    .div-explainer-caveat {
-      padding: 8px 10px; border-radius: 6px;
-      background: rgba(240,165,0,0.08);
-      border-left: 3px solid #f0a500;
-      color: #6a4500;
-      font-size: 12.5px;
-    }
-    .div-explainer-cite {
-      font-size: 11px !important; color: #7f8ea3 !important; font-style: italic;
-      margin-top: 8px !important;
-    }
-
     .div-th-with-tip {
       display: inline-flex; align-items: center; gap: 4px;
       cursor: help;
@@ -2054,6 +1993,30 @@ interface RecommendedActions {
       strong { color: var(--artes-primary); font-weight: 600; }
     }
     .div-sidebar-use p { color: #2d3a4f; }
+    .div-sidebar-rwg p { margin: 0 0 8px !important; }
+    .div-sidebar-rwg p:last-child { margin: 0 !important; }
+    .div-sidebar-formula {
+      display: block;
+      background: white;
+      border: 1px solid #dde7f3;
+      border-radius: 6px;
+      padding: 8px 10px;
+      margin: 0 0 8px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Cascadia Mono", monospace;
+      font-size: 11.5px; line-height: 1.7; color: #1B2A47;
+      white-space: pre-wrap;
+      overflow-x: auto;
+    }
+    .div-sidebar-caveat {
+      padding: 8px 10px; border-radius: 6px;
+      background: rgba(240,165,0,0.08);
+      border-left: 3px solid #f0a500;
+      color: #6a4500 !important;
+      font-size: 11.5px !important;
+    }
+    .div-sidebar-cite {
+      font-size: 10.5px !important; color: #9aa5b4 !important; font-style: italic;
+    }
     @media (max-width: 1100px) {
       .div-layout { grid-template-columns: 1fr; }
       .div-sidebar { position: static; }
@@ -2140,9 +2103,6 @@ export class ConflictDetailComponent implements OnInit {
   // programmatically (e.g. from the sub-analysis dialog's "see parent
   // divergence panel" CTA).
   activeTab = signal(0);
-
-  // Inline expander for the r_wg explainer above the dimensional table.
-  rwgExplainerOpen = signal(false);
 
   // Escalation / Coach selection
   coaches = signal<CoachOption[]>([]);
