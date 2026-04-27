@@ -736,6 +736,7 @@
     "itemHistogramLabel": "Distribution des réponses pour cet item",
     "dimensionalDivergence": "Divergence par dimension",
     "rwgExplainerToggle": "À propos de r_wg",
+    "rwgTooltip": "r_wg = accord intra-groupe.\n0 = réponses aussi dispersées qu'au hasard ; 1 = tout le monde a choisi la même valeur.\n≥0,70 est le seuil conventionnel de « bon accord » ; <0,40 indique une équipe fracturée.\nCliquez sur « À propos de r_wg » pour la formule et les détails.",
     "rwgExplainerTitle": "À propos de r_wg (accord intra-groupe)",
     "rwgExplainerWhat": "<strong>r<sub>wg</sub></strong> mesure le degré d'accord des membres de l'équipe sur une question. La valeur va de <strong>0</strong> (les réponses sont aussi dispersées que pour des réponses aléatoires uniformes) à <strong>1</strong> (tout le monde a choisi la même valeur).",
     "rwgExplainerHow": "Le calcul correspond à 1 moins le rapport entre la <strong>variance observée</strong> de l'équipe et la variance attendue d'une réponse purement aléatoire sur la même échelle (la variance « uniforme attendue », σ²<sub>eu</sub>) :",

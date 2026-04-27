@@ -585,7 +585,15 @@ interface RecommendedActions {
                           <th>{{ 'CONFLICT.dimColDimension' | translate }}</th>
                           <th class="num">{{ 'CONFLICT.dimColItems' | translate }}</th>
                           <th class="num">{{ 'CONFLICT.dimColMean' | translate }}</th>
-                          <th class="num">{{ 'CONFLICT.dimColRwg' | translate }}</th>
+                          <th class="num">
+                            <span class="div-th-with-tip"
+                                  [matTooltip]="'CONFLICT.rwgTooltip' | translate"
+                                  matTooltipClass="div-rwg-tip"
+                                  matTooltipPosition="above">
+                              {{ 'CONFLICT.dimColRwg' | translate }}
+                              <mat-icon class="div-th-info">help_outline</mat-icon>
+                            </span>
+                          </th>
                           <th class="num">{{ 'CONFLICT.dimColDisagreement' | translate }}</th>
                         </tr>
                       </thead>
@@ -647,7 +655,12 @@ interface RecommendedActions {
                           <div class="div-item-stats">
                             <span><strong>μ</strong> {{ m.mean }}</span>
                             <span><strong>σ</strong> {{ m.sd }}</span>
-                            <span><strong>r<sub>wg</sub></strong> {{ m.rwg }}</span>
+                            <span class="div-rwg-stat"
+                                  [matTooltip]="'CONFLICT.rwgTooltip' | translate"
+                                  matTooltipPosition="above">
+                              <strong>r<sub>wg</sub></strong> {{ m.rwg }}
+                              <mat-icon class="div-th-info">help_outline</mat-icon>
+                            </span>
                             @if (m.dimension) { <span class="div-item-dim">{{ m.dimension }}</span> }
                           </div>
                         </div>
@@ -1857,6 +1870,28 @@ interface RecommendedActions {
       margin-top: 8px !important;
     }
 
+    .div-th-with-tip {
+      display: inline-flex; align-items: center; gap: 4px;
+      cursor: help;
+    }
+    .div-th-info {
+      font-size: 13px !important; width: 13px !important; height: 13px !important;
+      color: #9aa5b4;
+      vertical-align: middle;
+    }
+    .div-rwg-stat {
+      display: inline-flex; align-items: center; gap: 4px;
+      cursor: help;
+    }
+    /* Multi-line tooltip styling — applied via matTooltipClass */
+    ::ng-deep .div-rwg-tip .mdc-tooltip__surface {
+      max-width: 320px !important;
+      white-space: pre-line !important;
+      font-size: 12px !important;
+      line-height: 1.55 !important;
+      padding: 10px 14px !important;
+    }
+
     .div-table {
       width: 100%; border-collapse: collapse; font-size: 13px;
       th { text-align: left; padding: 8px 12px; color: #7f8ea3; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #edf1f6; }
@@ -2409,8 +2444,13 @@ export class ConflictDetailComponent implements OnInit {
 
   /** Build the radar chart data: a Team series across the dimensions, plus
    *  one overlay per cluster when subgroup analysis is available. Returns
-   *  null when there are fewer than 3 dimensions (radar shapes degenerate). */
-  radarChartData(): ChartData<'radar'> | null {
+   *  null when there are fewer than 3 dimensions (radar shapes degenerate).
+   *
+   *  Memoised as a computed signal so Chart.js sees the same object reference
+   *  between change-detection cycles — without this, every mouse movement
+   *  triggers CD, the function reruns, returns a fresh ChartData object, and
+   *  ng2-charts re-renders / re-animates the canvas continuously. */
+  radarChartData = computed<ChartData<'radar'> | null>(() => {
     const dims = this.displayDimensionMetrics();
     if (dims.length < 3) return null;
 
@@ -2448,7 +2488,7 @@ export class ConflictDetailComponent implements OnInit {
     }
 
     return { labels, datasets };
-  }
+  });
 
   radarChartOptions: ChartConfiguration<'radar'>['options'] = {
     responsive: true,

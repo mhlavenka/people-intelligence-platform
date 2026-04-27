@@ -736,6 +736,7 @@
     "itemHistogramLabel": "Rozloženie odpovedí na túto položku",
     "dimensionalDivergence": "Divergencia podľa dimenzií",
     "rwgExplainerToggle": "O r_wg",
+    "rwgTooltip": "r_wg = vnútroskupinová zhoda.\n0 = odpovede sú rovnako rozptýlené ako pri náhode; 1 = všetci zvolili rovnakú hodnotu.\n≥0,70 je konvenčná hranica „dobrej zhody“; <0,40 znamená rozštiepený tím.\nKliknite na „O r_wg“ pre vzorec a detaily.",
     "rwgExplainerTitle": "O r_wg (vnútroskupinová zhoda)",
     "rwgExplainerWhat": "<strong>r<sub>wg</sub></strong> meria, ako veľmi sa členovia tímu zhodujú v odpovedi na otázku. Hodnota sa pohybuje od <strong>0</strong> (odpovede sú rovnako rozptýlené ako pri náhodnom rovnomernom odpovedaní) po <strong>1</strong> (všetci zvolili rovnakú hodnotu).",
     "rwgExplainerHow": "Vypočíta sa ako 1 mínus pomer <strong>pozorovaného rozptylu</strong> tímu k rozptylu, ktorý by ste získali pri čisto náhodných odpovediach na rovnakej škále (tzv. „očakávaný rovnomerný“ rozptyl, σ²<sub>eu</sub>):",
