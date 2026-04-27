@@ -25,6 +25,25 @@ import { MiniGaugeComponent } from '../../../shared/mini-gauge/mini-gauge.compon
 import { RiskBadgeComponent } from '../../../shared/risk-badge/risk-badge.component';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { parseConflictType } from '../conflict-type.util';
+import { BaseChartDirective } from 'ng2-charts';
+import {
+  Chart,
+  RadarController, LineController,
+  LineElement, PointElement, ArcElement,
+  RadialLinearScale, LinearScale, CategoryScale,
+  Filler, Tooltip, Legend,
+  ChartConfiguration, ChartData,
+} from 'chart.js';
+
+// Tree-shaken Chart.js registration. Add chart types here as we add them
+// to the app — this is the single registration point so every chart in the
+// app can rely on the same set of registered controllers/scales/plugins.
+Chart.register(
+  RadarController, LineController,
+  LineElement, PointElement, ArcElement,
+  RadialLinearScale, LinearScale, CategoryScale,
+  Filler, Tooltip, Legend,
+);
 
 type ScriptSection =
   | { key: string; label: string; type: 'string'; value: string }
@@ -161,6 +180,7 @@ interface RecommendedActions {
     MatFormFieldModule, MatInputModule, MatListModule, MatMenuModule,
     MiniGaugeComponent, RiskBadgeComponent,
     TranslateModule,
+    BaseChartDirective,
   ],
   template: `
     @if (loading()) {
@@ -506,6 +526,21 @@ interface RecommendedActions {
                       <span class="div-heatmap-legend-label">{{ 'CONFLICT.heatmapAgreement' | translate }}</span>
                       <span class="div-heatmap-legend-bar"></span>
                       <span class="div-heatmap-legend-label">{{ 'CONFLICT.heatmapDisagreement' | translate }}</span>
+                    </div>
+                  </div>
+                }
+
+                <!-- Dimensional radar — overall + per-cluster overlay when subgroups exist -->
+                @if (radarChartData(); as data) {
+                  <div class="div-card">
+                    <h3>{{ 'CONFLICT.dimensionalRadar' | translate }}</h3>
+                    <div class="div-radar-wrap">
+                      <canvas baseChart
+                              type="radar"
+                              [data]="data"
+                              [options]="radarChartOptions"
+                              aria-label="Dimensional radar chart"
+                              role="img"></canvas>
                     </div>
                   </div>
                 }
@@ -1806,6 +1841,14 @@ interface RecommendedActions {
       .div-item-stats { grid-column: 1; grid-row: auto; }
     }
 
+    /* Dimensional radar */
+    .div-radar-wrap {
+      position: relative;
+      height: 360px;
+      max-width: 520px;
+      margin: 0 auto;
+    }
+
     /* Disagreement heatmap */
     .div-heatmap { display: flex; flex-direction: column; gap: 10px; }
     .div-heatmap-group {
@@ -2261,6 +2304,86 @@ export class ConflictDetailComponent implements OnInit {
     const a = this.analysis();
     if (!a) return undefined;
     return this.auditActive() ? a.unfilteredMetrics?.subgroupAnalysis : a.subgroupAnalysis;
+  }
+
+  /** Build the radar chart data: a Team series across the dimensions, plus
+   *  one overlay per cluster when subgroup analysis is available. Returns
+   *  null when there are fewer than 3 dimensions (radar shapes degenerate). */
+  radarChartData(): ChartData<'radar'> | null {
+    const dims = this.displayDimensionMetrics();
+    if (dims.length < 3) return null;
+
+    const labels = dims.map((d) => d.dimension);
+    const teamMeans = dims.map((d) => d.mean);
+    const datasets: ChartData<'radar'>['datasets'] = [
+      {
+        label: this.tx('CONFLICT.radarTeamLabel'),
+        data: teamMeans,
+        backgroundColor: 'rgba(27, 42, 71, 0.18)',
+        borderColor: '#1B2A47',
+        pointBackgroundColor: '#1B2A47',
+        pointRadius: 3,
+        borderWidth: 2,
+      },
+    ];
+
+    const sa = this.displaySubgroupAnalysis();
+    if (sa?.clusters?.length) {
+      const palette = ['#3A9FD6', '#27C4A0', '#e86c3a'];
+      sa.clusters.forEach((c, i) => {
+        const data = dims.map((d) => c.meanByDimension[d.dimension] ?? 0);
+        const stroke = palette[i % palette.length];
+        datasets.push({
+          label: this.tx('CONFLICT.radarClusterLabel', { label: c.label, size: c.size }),
+          data,
+          backgroundColor: this.toAlpha(stroke, 0.10),
+          borderColor: stroke,
+          pointBackgroundColor: stroke,
+          pointRadius: 2,
+          borderWidth: 1.5,
+          borderDash: [4, 4],
+        });
+      });
+    }
+
+    return { labels, datasets };
+  }
+
+  radarChartOptions: ChartConfiguration<'radar'>['options'] = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'bottom', labels: { font: { size: 11 }, boxWidth: 12 } },
+      tooltip: { callbacks: {
+        label: (ctx) => `${ctx.dataset.label}: ${ctx.parsed.r}`,
+      } },
+    },
+    scales: {
+      r: {
+        beginAtZero: true,
+        suggestedMax: 10,
+        ticks: { stepSize: 2, backdropColor: 'transparent', font: { size: 10 } },
+        grid: { color: 'rgba(154, 165, 180, 0.20)' },
+        angleLines: { color: 'rgba(154, 165, 180, 0.30)' },
+        pointLabels: { font: { size: 11, weight: 600 }, color: '#374151' },
+      },
+    },
+    elements: { line: { tension: 0.0 } },
+  };
+
+  /** Tiny translate helper that returns the synchronous translation string,
+   *  with optional interpolation params. Used inside chart configuration
+   *  where the translate pipe isn't available. */
+  private tx(key: string, params?: Record<string, unknown>): string {
+    return this.translateSvc.instant(key, params);
+  }
+
+  /** "#3A9FD6" → "rgba(58, 159, 214, 0.10)" — used for radar dataset fills. */
+  private toAlpha(hex: string, alpha: number): string {
+    const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    if (!m) return hex;
+    const r = parseInt(m[1], 16), g = parseInt(m[2], 16), b = parseInt(m[3], 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
   }
 
   /** Bar height in SVG units (max 24px) for the inline per-item histogram. */

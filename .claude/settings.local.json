@@ -57,7 +57,8 @@
       "Bash(git -C D:/CUSTOMERS/HeadSoft/people-intelligence-platform branch -d feat/user-dialog-defaults)",
       "Bash(git -C D:/CUSTOMERS/HeadSoft/people-intelligence-platform push origin master)",
       "Bash(git -C D:/CUSTOMERS/HeadSoft/people-intelligence-platform merge --no-ff chore/append-divergence-prompt-script -m \"merge: append-divergence-prompt script\")",
-      "Bash(git -C D:/CUSTOMERS/HeadSoft/people-intelligence-platform branch -d chore/append-divergence-prompt-script)"
+      "Bash(git -C D:/CUSTOMERS/HeadSoft/people-intelligence-platform branch -d chore/append-divergence-prompt-script)",
+      "Bash(npm view *)"
     ]
   }
 }

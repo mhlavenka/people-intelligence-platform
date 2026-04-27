@@ -24,15 +24,13 @@ Phase 3 — not started
 - Timing-based speeding flag in production — pairs with the baseline question above.
 
 Phase 4 — research
-
+ groups 
 - Bayesian Truth Serum item on opt-in instruments
 - Longitudinal respondent calibration — explicitly avoided so far (would require persistent respondent
   linking, conflicts with anonymity contract)
 
 Loose ends visible in the Onkwe data
 
-- The conflictTypes array on the parent stores long descriptive sentences. On frontend split into conflictType (label) +
-  conflictTypeRationale (sentence) - the plitter is dash.  Then diplay the label on the analysis card and analyses detail top pills. Display both on the sub-analysis cards with the label in bold and the sentence in italic. 
 - The sub-analysis documents (Pulse with Divergence rows that are children) don't re-persist the metric
   blocks. The divergence tab on those rows correctly hides itself today, but a one-line "see parent for
   the full divergence panel" link in the sub-analysis dialog would be friendlier than silence.
