@@ -725,6 +725,8 @@
     "alignmentBand_aligned": "Aligned",
     "alignmentBand_mixed": "Mixed",
     "alignmentBand_fractured": "Fractured",
+    "subParentDivergenceHint": "This focused deep-dive doesn't carry its own divergence metrics — they live on the parent analysis.",
+    "subParentDivergenceCta": "View parent divergence",
     "dimensionalRadar": "Dimensional Radar",
     "radarTeamLabel": "Team mean",
     "radarClusterLabel": "Cluster {{label}} (n={{size}})",

@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatDialogModule, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatDialogModule, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { TranslateModule } from '@ngx-translate/core';
@@ -14,6 +14,12 @@ export interface SubAnalysisDialogData {
   conflictTypes: string[];
   icon: string;
   createdAt: string;
+  // Parent-divergence link: present when this sub-analysis was opened from
+  // its parent's detail page and the parent carries the divergence metric
+  // blocks. The dialog renders a "see parent for full divergence panel"
+  // hint; closing with result 'show-divergence' is the host's signal to
+  // switch the parent page to the Divergence Signals tab.
+  parentHasDivergence?: boolean;
 }
 
 @Component({
@@ -90,6 +96,17 @@ export interface SubAnalysisDialogData {
         }
       </div>
     </mat-dialog-content>
+
+    @if (data.parentHasDivergence) {
+      <div class="dlg-parent-link">
+        <mat-icon>insights</mat-icon>
+        <span class="dlg-parent-link-text">{{ "CONFLICT.subParentDivergenceHint" | translate }}</span>
+        <button mat-stroked-button class="dlg-parent-link-btn" (click)="showParentDivergence()">
+          <mat-icon>arrow_forward</mat-icon>
+          {{ "CONFLICT.subParentDivergenceCta" | translate }}
+        </button>
+      </div>
+    }
 
     <mat-dialog-actions align="end" class="dlg-actions">
       <button mat-raised-button color="primary" mat-dialog-close>
@@ -256,10 +273,35 @@ export interface SubAnalysisDialogData {
       padding: 12px 20px !important;
       border-top: 1px solid #edf1f6;
     }
+
+    /* Parent-divergence hint shown when this sub was opened from a parent
+       that carries divergence metric blocks. */
+    .dlg-parent-link {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 20px;
+      background: rgba(58,159,214,0.06);
+      border-top: 1px solid rgba(58,159,214,0.18);
+      border-bottom: 1px solid rgba(58,159,214,0.18);
+      mat-icon { color: #3A9FD6; flex-shrink: 0; }
+      .dlg-parent-link-text { flex: 1; font-size: 13px; color: #2080b0; line-height: 1.4; }
+      .dlg-parent-link-btn {
+        flex-shrink: 0;
+        font-size: 12px; font-weight: 600;
+        mat-icon { font-size: 16px; width: 16px; height: 16px; margin-right: 4px; color: inherit; }
+      }
+    }
+    @media (max-width: 600px) {
+      .dlg-parent-link { flex-wrap: wrap; }
+    }
   `],
 })
 export class SubAnalysisDialogComponent {
   data = inject<SubAnalysisDialogData>(MAT_DIALOG_DATA);
+  private dialogRef = inject(MatDialogRef<SubAnalysisDialogComponent, 'show-divergence' | undefined>);
+
+  showParentDivergence(): void {
+    this.dialogRef.close('show-divergence');
+  }
 
   private static COLORS: Record<string, string> = {
     low: '#27C4A0', medium: '#f0a500', high: '#e86c3a', critical: '#e53e3e',
