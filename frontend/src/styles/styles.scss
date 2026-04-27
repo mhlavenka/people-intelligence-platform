@@ -428,6 +428,19 @@ a {
 // Card border radius follows theme
 .mat-mdc-card { border-radius: var(--artes-radius) !important; }
 
+// Button border radius follows theme (sharp / rounded / pill)
+// Icon buttons and FABs intentionally excluded so they stay circular.
+.mat-mdc-button,
+.mat-mdc-raised-button,
+.mat-mdc-unelevated-button,
+.mat-mdc-outlined-button {
+  --mdc-text-button-container-shape:      var(--artes-btn-radius);
+  --mdc-filled-button-container-shape:    var(--artes-btn-radius);
+  --mdc-protected-button-container-shape: var(--artes-btn-radius);
+  --mdc-outlined-button-container-shape:  var(--artes-btn-radius);
+  border-radius: var(--artes-btn-radius) !important;
+}
+
 // Hide the floating reCAPTCHA v3 badge — inline attribution is shown on forms instead
 .grecaptcha-badge { visibility: hidden !important; }
 
