@@ -443,6 +443,47 @@ export function computeAllMetrics(
   };
 }
 
+/**
+ * Audit-mode counterpart to computeAllMetrics: ignores per-response quality
+ * flags AND cohort speeders, computing the metric blocks against every
+ * submitted response. Intended for the admin "show without quality filter"
+ * toggle on the divergence panel — never feeds the AI narrative.
+ *
+ * The responseQuality summary on this view reports totalSubmitted == accepted
+ * and droppedCount == 0, since no filtering was applied. Audit context (how
+ * many WOULD have been dropped, and why) lives on the filtered metrics
+ * persisted alongside.
+ */
+export function computeAllMetricsUnfiltered(
+  responses: ISurveyResponse[],
+  template: ISurveyTemplate,
+  subgroupPolicy: SubgroupPolicy | null = DEFAULT_SUBGROUP_POLICY,
+): FullSurveyMetrics {
+  const itemMetrics = template.questions
+    .map((q) => computeItemMetrics(responses, q))
+    .filter((m): m is IItemMetric => m !== null);
+
+  // Subgroup detection still honours its own anonymity floor; we just bypass
+  // the acceptedInAnalysis filter by mapping every response to an accepted
+  // shape before passing it in.
+  const allAccepted = responses.map((r) => ({ ...r, acceptedInAnalysis: true }));
+
+  return {
+    responseQuality: {
+      totalSubmitted: responses.length,
+      acceptedCount: responses.length,
+      droppedCount: 0,
+      droppedReasons: {},
+    },
+    itemMetrics,
+    dimensionMetrics: rollupByDimension(itemMetrics),
+    teamAlignmentScore: teamAlignmentScore(itemMetrics),
+    subgroupAnalysis: subgroupPolicy
+      ? computeSubgroupAnalysis(allAccepted as ISurveyResponse[], template, subgroupPolicy)
+      : null,
+  };
+}
+
 // ── k-means + silhouette ────────────────────────────────────────────────────
 
 /** mulberry32 PRNG — deterministic seed → reproducible cluster assignments. */

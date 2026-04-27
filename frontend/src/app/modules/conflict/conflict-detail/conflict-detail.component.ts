@@ -24,6 +24,7 @@ import { SubAnalysisDialogComponent, SubAnalysisDialogData } from '../sub-analys
 import { MiniGaugeComponent } from '../../../shared/mini-gauge/mini-gauge.component';
 import { RiskBadgeComponent } from '../../../shared/risk-badge/risk-badge.component';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { parseConflictType } from '../conflict-type.util';
 
 type ScriptSection =
   | { key: string; label: string; type: 'string'; value: string }
@@ -77,6 +78,22 @@ interface ConflictAnalysis {
   // Phase 2 subgroup analysis (only present when N≥10, silhouette ≥0.5, and
   // every cluster has ≥minSubgroupN members)
   subgroupAnalysis?: SubgroupAnalysis;
+
+  // §8.4 audit view — same metric blocks recomputed on ALL submitted
+  // responses, ignoring quality filtering. Persisted only when at least
+  // one response was filtered out.
+  unfilteredMetrics?: {
+    responseQuality: {
+      totalSubmitted: number;
+      acceptedCount: number;
+      droppedCount: number;
+      droppedReasons: Record<string, number | undefined>;
+    };
+    itemMetrics: ItemMetric[];
+    dimensionMetrics: DimensionMetric[];
+    teamAlignmentScore: number;
+    subgroupAnalysis?: SubgroupAnalysis;
+  };
 }
 
 interface SubgroupAnalysis {
@@ -191,11 +208,11 @@ interface RecommendedActions {
           </div>
         </div>
 
-        <!-- Conflict type chips -->
+        <!-- Conflict type chips: label only at the top of the page -->
         @if (analysis()!.conflictTypes.length) {
           <div class="chips-row">
             @for (t of analysis()!.conflictTypes; track t) {
-              <span class="chip">{{ t }}</span>
+              <span class="chip" [matTooltip]="parseType(t).rationale || null">{{ parseType(t).label }}</span>
             }
           </div>
         }
@@ -341,7 +358,7 @@ interface RecommendedActions {
 
                         <div class="type-topline">
                           <div class="type-icon-wrap" [class]="subAnalysisFor(ct)?.riskLevel || 'pending'">
-                            <mat-icon>{{ typeIcon(ct) }}</mat-icon>
+                            <mat-icon>{{ typeIcon(parseType(ct).label) }}</mat-icon>
                           </div>
                           @if (subAnalysisFor(ct); as sub) {
                             <span class="risk-pill" [class]="sub.riskLevel">{{ sub.riskLevel | titlecase }}</span>
@@ -350,7 +367,12 @@ interface RecommendedActions {
                           }
                         </div>
 
-                        <div class="type-title">{{ ct }}</div>
+                        <div class="type-title">
+                          <strong>{{ parseType(ct).label }}</strong>
+                          @if (parseType(ct).rationale) {
+                            <em class="type-rationale">{{ parseType(ct).rationale }}</em>
+                          }
+                        </div>
 
                         @if (subAnalysisFor(ct); as sub) {
                           <div class="type-ring-wrap">
@@ -408,7 +430,8 @@ interface RecommendedActions {
               <div class="tab-body">
                 <div class="div-layout">
                   <div class="div-main">
-                <!-- Response-quality card -->
+                <!-- Response-quality card (always shows the FILTERED summary,
+                     even in audit mode — that's the audit signal admins need). -->
                 @if (analysis()!.responseQuality; as q) {
                   <div class="div-quality">
                     <mat-icon>verified_user</mat-icon>
@@ -418,29 +441,47 @@ interface RecommendedActions {
                     }"></span>
                     <mat-icon class="div-info"
                               [matTooltip]="'CONFLICT.responseQualityTooltip' | translate">info_outline</mat-icon>
+                    @if (hasAuditView()) {
+                      <button mat-stroked-button class="div-audit-toggle"
+                              (click)="auditMode.set(!auditMode())">
+                        <mat-icon>{{ auditMode() ? 'visibility_off' : 'visibility' }}</mat-icon>
+                        {{ (auditMode() ? 'CONFLICT.auditExit' : 'CONFLICT.auditEnter') | translate }}
+                      </button>
+                    }
+                  </div>
+                }
+
+                <!-- Audit-mode banner -->
+                @if (auditActiveForBanner()) {
+                  <div class="div-audit-banner">
+                    <mat-icon>visibility</mat-icon>
+                    <span [innerHTML]="'CONFLICT.auditBanner' | translate:{
+                      dropped: analysis()!.responseQuality?.droppedCount,
+                      total: analysis()!.responseQuality?.totalSubmitted
+                    }"></span>
                   </div>
                 }
 
                 <!-- Team alignment meter -->
-                @if (analysis()!.teamAlignmentScore !== undefined) {
+                @if (displayTeamAlignmentScore() !== undefined) {
                   <div class="div-card div-alignment-card">
                     <div class="div-card-head">
                       <h3>{{ 'CONFLICT.teamAlignment' | translate }}</h3>
-                      <span class="div-band" [class]="alignmentBand(analysis()!.teamAlignmentScore!)">
-                        {{ ('CONFLICT.alignmentBand_' + alignmentBand(analysis()!.teamAlignmentScore!)) | translate }}
+                      <span class="div-band" [class]="alignmentBand(displayTeamAlignmentScore()!)">
+                        {{ ('CONFLICT.alignmentBand_' + alignmentBand(displayTeamAlignmentScore()!)) | translate }}
                       </span>
                     </div>
                     <div class="div-meter">
                       <div class="div-meter-bar">
-                        <div class="div-meter-fill" [style.width.%]="analysis()!.teamAlignmentScore"></div>
+                        <div class="div-meter-fill" [style.width.%]="displayTeamAlignmentScore()"></div>
                       </div>
-                      <span class="div-meter-num">{{ analysis()!.teamAlignmentScore }}/100</span>
+                      <span class="div-meter-num">{{ displayTeamAlignmentScore() }}/100</span>
                     </div>
                   </div>
                 }
 
                 <!-- Dimensional roll-up -->
-                @if (analysis()!.dimensionMetrics?.length) {
+                @if (displayDimensionMetrics().length) {
                   <div class="div-card">
                     <h3>{{ 'CONFLICT.dimensionalDivergence' | translate }}</h3>
                     <table class="div-table">
@@ -454,7 +495,7 @@ interface RecommendedActions {
                         </tr>
                       </thead>
                       <tbody>
-                        @for (d of analysis()!.dimensionMetrics; track d.dimension) {
+                        @for (d of displayDimensionMetrics(); track d.dimension) {
                           <tr>
                             <td>{{ d.dimension }}</td>
                             <td class="num">{{ d.itemCount }}</td>
@@ -498,7 +539,7 @@ interface RecommendedActions {
                 </div>
 
                 <!-- Subgroups panel (Phase 2) — only when k-means yielded a significant clustering -->
-                @if (analysis()!.subgroupAnalysis; as sa) {
+                @if (displaySubgroupAnalysis(); as sa) {
                   <div class="div-card">
                     <div class="div-card-head">
                       <h3>{{ 'CONFLICT.subgroupsTitle' | translate }}</h3>
@@ -1534,6 +1575,13 @@ interface RecommendedActions {
     .type-title {
       font-size: 15px; font-weight: 600; color: var(--artes-primary);
       line-height: 1.35;
+      strong { font-weight: 700; }
+      .type-rationale {
+        display: block;
+        margin-top: 6px;
+        font-size: 12.5px; font-weight: 400; font-style: italic;
+        color: #5a6a7e; line-height: 1.5;
+      }
     }
 
     /* Small per-type ring */
@@ -1691,6 +1739,25 @@ interface RecommendedActions {
       mat-icon { color: #7f8ea3; flex-shrink: 0; font-size: 18px; width: 18px; height: 18px; margin-top: 1px; }
     }
 
+    .div-audit-toggle {
+      margin-left: 8px;
+      min-width: 0;
+      font-size: 12px; font-weight: 600; line-height: 1;
+      padding: 0 12px; height: 28px;
+      mat-icon { font-size: 16px; width: 16px; height: 16px; margin-right: 4px; }
+    }
+    .div-audit-banner {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 14px; border-radius: 8px;
+      background: rgba(240,165,0,0.10);
+      border: 1px solid rgba(240,165,0,0.30);
+      color: #8a5a00;
+      font-size: 13px; line-height: 1.5;
+      margin-bottom: 16px;
+      mat-icon { color: #b07800; flex-shrink: 0; font-size: 18px; width: 18px; height: 18px; }
+      strong { color: #6a4500; font-weight: 700; }
+    }
+
     /* Two-column layout (metric cards + reader's-guide sidebar) */
     .div-layout {
       display: grid;
@@ -1802,6 +1869,11 @@ export class ConflictDetailComponent implements OnInit {
   intakeGeneratedFor = signal<number | null>(null);
   expandedPanel = signal<string>('immediate');
   completedActions = signal<Record<string, Set<number>>>({});
+
+  // §8.4 audit toggle: when true, the divergence panel reads from
+  // analysis().unfilteredMetrics (no quality filtering) instead of the
+  // filtered metrics. Defaults off so the standard view is always the AI-aligned one.
+  auditMode = signal(false);
 
   // Escalation / Coach selection
   coaches = signal<CoachOption[]>([]);
@@ -2047,11 +2119,51 @@ export class ConflictDetailComponent implements OnInit {
       .sort((a, b) => a.value - b.value);
   }
 
+  /** Parse a conflictType into { label, rationale }. The divergence-aware
+   *  prompt produces "Label — rationale" strings; legacy analyses are just
+   *  a label and yield rationale=''. */
+  parseType(raw: string) { return parseConflictType(raw); }
+
+  /** True when audit-mode metrics were persisted and the toggle is meaningful. */
+  hasAuditView(): boolean {
+    return !!this.analysis()?.unfilteredMetrics;
+  }
+
+  /** Switch metric reads to the unfiltered view when audit mode is on AND
+   *  the analysis carries an unfiltered block (legacy analyses don't). */
+  private auditActive(): boolean {
+    return this.auditMode() && this.hasAuditView();
+  }
+  /** Public mirror of auditActive() for the template banner. */
+  auditActiveForBanner(): boolean {
+    return this.auditActive();
+  }
+
+  displayItemMetrics(): ItemMetric[] {
+    const a = this.analysis();
+    if (!a) return [];
+    return (this.auditActive() ? a.unfilteredMetrics?.itemMetrics : a.itemMetrics) ?? [];
+  }
+  displayDimensionMetrics(): DimensionMetric[] {
+    const a = this.analysis();
+    if (!a) return [];
+    return (this.auditActive() ? a.unfilteredMetrics?.dimensionMetrics : a.dimensionMetrics) ?? [];
+  }
+  displayTeamAlignmentScore(): number | undefined {
+    const a = this.analysis();
+    if (!a) return undefined;
+    return this.auditActive() ? a.unfilteredMetrics?.teamAlignmentScore : a.teamAlignmentScore;
+  }
+  displaySubgroupAnalysis(): SubgroupAnalysis | undefined {
+    const a = this.analysis();
+    if (!a) return undefined;
+    return this.auditActive() ? a.unfilteredMetrics?.subgroupAnalysis : a.subgroupAnalysis;
+  }
+
   /** Items sorted lowest rwg first, with split items prioritised. Cap at 10
    *  so the heat-map list doesn't sprawl on long instruments (e.g. 30-item TKI). */
   sortedItemMetrics(): ItemMetric[] {
-    const items = this.analysis()?.itemMetrics ?? [];
-    return [...items]
+    return [...this.displayItemMetrics()]
       .sort((a, b) => {
         const aSplit = a.bimodalityCoef > 0.555 ? 1 : 0;
         const bSplit = b.bimodalityCoef > 0.555 ? 1 : 0;

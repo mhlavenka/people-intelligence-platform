@@ -10,6 +10,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ApiService } from '../../../core/api.service';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { parseConflictType } from '../conflict-type.util';
 
 interface ConflictAnalysis {
   _id: string;
@@ -99,7 +100,7 @@ interface Coachee {
           <mat-icon>info</mat-icon>
           <div>
             <strong>{{ "CONFLICT.conflictTypesDetected" | translate }}</strong>
-            {{ getSelectedAnalysis()?.conflictTypes?.join(', ') || 'None' }}
+            {{ selectedConflictTypeLabels() || 'None' }}
           </div>
         </div>
       }
@@ -164,6 +165,11 @@ export class ConflictIdpDialogComponent implements OnInit {
 
   getSelectedAnalysis(): ConflictAnalysis | undefined {
     return this.analyses.find((a) => a._id === this.selectedAnalysisId);
+  }
+
+  selectedConflictTypeLabels(): string {
+    const types = this.getSelectedAnalysis()?.conflictTypes ?? [];
+    return types.map((t) => parseConflictType(t).label).join(', ');
   }
 
   generate(): void {
