@@ -4,6 +4,7 @@ import { MatDialogModule, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { TranslateModule } from '@ngx-translate/core';
+import { parseConflictType } from '../conflict-type.util';
 
 export interface SubAnalysisDialogData {
   focusConflictType: string;
@@ -59,7 +60,7 @@ export interface SubAnalysisDialogData {
         </span>
         @if (data.conflictTypes.length) {
           @for (t of data.conflictTypes; track t) {
-            <span class="dlg-chip">{{ t }}</span>
+            <span class="dlg-chip" [title]="parseType(t).rationale || ''">{{ parseType(t).label }}</span>
           }
         }
       </div>
@@ -274,6 +275,8 @@ export class SubAnalysisDialogComponent {
     };
     return map[this.data.riskLevel] ?? 'help';
   }
+
+  parseType(raw: string) { return parseConflictType(raw); }
 
   private paragraphs(): string[] {
     return (this.data.aiNarrative || '').split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);

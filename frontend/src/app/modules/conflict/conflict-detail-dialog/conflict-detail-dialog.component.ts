@@ -10,6 +10,7 @@ import { ApiService } from '../../../core/api.service';
 import { MiniGaugeComponent } from '../../../shared/mini-gauge/mini-gauge.component';
 import { RiskBadgeComponent } from '../../../shared/risk-badge/risk-badge.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { parseConflictType } from '../conflict-type.util';
 
 type ScriptSection =
   | { key: string; label: string; type: 'string'; value: string }
@@ -102,7 +103,12 @@ interface ConflictAnalysis {
                 </div>
 
                 <div class="sub-center">
-                  <div class="sub-type-label">{{ ct }}</div>
+                  <div class="sub-type-label">
+                    <strong>{{ parseType(ct).label }}</strong>
+                    @if (parseType(ct).rationale) {
+                      <em class="sub-type-rationale">{{ parseType(ct).rationale }}</em>
+                    }
+                  </div>
                   @if (subAnalysisFor(ct); as sub) {
                     <div class="sub-score-bar-wrap">
                       <div class="sub-score-bar" [class]="sub.riskLevel" [style.width.%]="sub.riskScore"></div>
@@ -312,6 +318,13 @@ interface ConflictAnalysis {
 
     .sub-type-label {
       font-size: 13px; font-weight: 600; color: var(--artes-primary); margin-bottom: 6px;
+      strong { font-weight: 700; }
+      .sub-type-rationale {
+        display: block;
+        margin-top: 4px;
+        font-size: 12px; font-weight: 400; font-style: italic;
+        color: #5a6a7e; line-height: 1.5;
+      }
     }
 
     .sub-score-bar-wrap {
@@ -435,6 +448,8 @@ export class ConflictDetailDialogComponent implements OnInit {
     return this.subAnalyses().find((s) => s.focusConflictType === conflictType);
   }
 
+  parseType(raw: string) { return parseConflictType(raw); }
+
   runSubAnalysis(conflictType: string): void {
     this.runningFor.set(conflictType);
     this.api.post<ConflictAnalysis>(`/conflict/analyses/${this.data._id}/sub-analyses`, {
@@ -551,7 +566,9 @@ export class ConflictDetailDialogComponent implements OnInit {
       }).join('');
     })();
 
-    const conflictChips = d.conflictTypes.map((t) => `<span class="chip">${t}</span>`).join('');
+    const conflictChips = d.conflictTypes
+      .map((t) => `<span class="chip">${parseConflictType(t).label}</span>`)
+      .join('');
 
     const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
 <title>Conflict Analysis — ${d.departmentId || 'All Departments'}</title>

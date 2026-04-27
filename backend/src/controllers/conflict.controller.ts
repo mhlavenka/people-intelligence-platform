@@ -8,7 +8,7 @@ import { ConflictAnalysis, IConflictAnalysis } from '../models/ConflictAnalysis.
 import { Organization } from '../models/Organization.model';
 import { User } from '../models/User.model';
 import { buildConflictAnalysisPrompt, buildConflictSubAnalysisPrompt, buildConflictRecommendedActionsPrompt, callClaude } from '../services/ai.service';
-import { computeAllMetrics, DEFAULT_SUBGROUP_POLICY, DEFAULT_QUALITY_POLICY } from '../services/surveyMetrics.service';
+import { computeAllMetrics, computeAllMetricsUnfiltered, DEFAULT_SUBGROUP_POLICY, DEFAULT_QUALITY_POLICY } from '../services/surveyMetrics.service';
 import { sendEmail } from '../services/email.service';
 import { createHubNotification } from '../services/hubNotification.service';
 
@@ -84,6 +84,13 @@ export async function analyzeConflict(
     };
     const metrics = template ? computeAllMetrics(allResponses, template, subgroupPolicy, qualityPolicy) : null;
 
+    // Audit-mode metrics (§8.4): only when at least one response was filtered
+    // out — otherwise the unfiltered view would be identical to the filtered
+    // one and the toggle is meaningless.
+    const unfilteredMetrics = (template && metrics && metrics.responseQuality.droppedCount > 0)
+      ? computeAllMetricsUnfiltered(allResponses, template, subgroupPolicy)
+      : null;
+
     const prompt = buildConflictAnalysisPrompt(
       {
         departmentId: departmentId || 'All Departments',
@@ -148,6 +155,15 @@ export async function analyzeConflict(
         dimensionMetrics:   metrics.dimensionMetrics,
         teamAlignmentScore: metrics.teamAlignmentScore,
         ...(metrics.subgroupAnalysis && { subgroupAnalysis: metrics.subgroupAnalysis }),
+      }),
+      ...(unfilteredMetrics && {
+        unfilteredMetrics: {
+          responseQuality:    unfilteredMetrics.responseQuality,
+          itemMetrics:        unfilteredMetrics.itemMetrics,
+          dimensionMetrics:   unfilteredMetrics.dimensionMetrics,
+          teamAlignmentScore: unfilteredMetrics.teamAlignmentScore,
+          ...(unfilteredMetrics.subgroupAnalysis && { subgroupAnalysis: unfilteredMetrics.subgroupAnalysis }),
+        },
       }),
     });
 

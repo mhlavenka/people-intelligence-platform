@@ -13,6 +13,7 @@ import { RiskBadgeComponent } from '../../../shared/risk-badge/risk-badge.compon
 import { ConflictAnalyzeDialogComponent } from '../conflict-analyze-dialog/conflict-analyze-dialog.component';
 import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog.component';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { parseConflictType } from '../conflict-type.util';
 
 interface ConflictAnalysis {
   _id: string;
@@ -101,9 +102,9 @@ interface ConflictAnalysis {
               @if (a.conflictTypes.length) {
                 <div class="type-chips">
                   @for (t of a.conflictTypes; track t) {
-                    <span class="type-chip">
-                      <mat-icon>{{ typeIcon(t) }}</mat-icon>
-                      {{ t }}
+                    <span class="type-chip" [matTooltip]="parseType(t).rationale">
+                      <mat-icon>{{ typeIcon(parseType(t).label) }}</mat-icon>
+                      {{ parseType(t).label }}
                     </span>
                   }
                 </div>
@@ -278,6 +279,8 @@ export class ConflictAnalysisComponent implements OnInit {
   }
 
   /** Pick a Material icon for a free-form conflict-type label returned by the AI. */
+  parseType(raw: string) { return parseConflictType(raw); }
+
   typeIcon(type: string): string {
     const t = type.toLowerCase();
     if (t.includes('communication'))                            return 'forum';

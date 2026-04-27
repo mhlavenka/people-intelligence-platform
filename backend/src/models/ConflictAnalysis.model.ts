@@ -100,6 +100,20 @@ export interface IConflictAnalysis extends Document {
   // rendered in the UI as "no significant subgroups detected".
   subgroupAnalysis?: ISubgroupAnalysis;
 
+  // Audit view (§8.4): the same metric blocks recomputed on ALL submitted
+  // responses, ignoring per-response quality and cohort speeders. Persisted
+  // only when at least one response was filtered out (otherwise the audit
+  // view would be identical to the filtered view, and the toggle hides).
+  // The AI narrative is generated once from the filtered set — never from
+  // this view — so this is admin audit only.
+  unfilteredMetrics?: {
+    responseQuality: IResponseQuality;
+    itemMetrics: IItemMetric[];
+    dimensionMetrics: IDimensionMetric[];
+    teamAlignmentScore: number;
+    subgroupAnalysis?: ISubgroupAnalysis;
+  };
+
   createdAt: Date;
   updatedAt: Date;
 }
@@ -149,6 +163,7 @@ const ConflictAnalysisSchema = new Schema<IConflictAnalysis>(
     dimensionMetrics:   { type: [Schema.Types.Mixed], default: undefined },
     teamAlignmentScore: { type: Number, min: 0, max: 100 },
     subgroupAnalysis:   { type: Schema.Types.Mixed },
+    unfilteredMetrics:  { type: Schema.Types.Mixed },
   },
   { timestamps: true }
 );
