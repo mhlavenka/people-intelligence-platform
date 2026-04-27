@@ -212,7 +212,7 @@ interface RecommendedActions {
         @if (analysis()!.conflictTypes.length) {
           <div class="chips-row">
             @for (t of analysis()!.conflictTypes; track t) {
-              <span class="chip" [matTooltip]="parseType(t).rationale || null">{{ parseType(t).label }}</span>
+              <span class="chip" [matTooltip]="parseType(t).rationale">{{ parseType(t).label }}</span>
             }
           </div>
         }

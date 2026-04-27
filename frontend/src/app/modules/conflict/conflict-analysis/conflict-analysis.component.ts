@@ -102,7 +102,7 @@ interface ConflictAnalysis {
               @if (a.conflictTypes.length) {
                 <div class="type-chips">
                   @for (t of a.conflictTypes; track t) {
-                    <span class="type-chip" [matTooltip]="parseType(t).rationale || null">
+                    <span class="type-chip" [matTooltip]="parseType(t).rationale">
                       <mat-icon>{{ typeIcon(parseType(t).label) }}</mat-icon>
                       {{ parseType(t).label }}
                     </span>
