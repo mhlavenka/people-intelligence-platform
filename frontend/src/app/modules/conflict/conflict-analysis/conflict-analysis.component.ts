@@ -100,14 +100,14 @@ interface ConflictAnalysis {
                 </button>
               </div>
               @if (a.conflictTypes.length) {
-                <div class="type-chips">
+                <ul class="type-list">
                   @for (t of a.conflictTypes; track t) {
-                    <span class="type-chip" [matTooltip]="parseType(t).rationale">
+                    <li class="type-list-item" [matTooltip]="parseType(t).rationale">
                       <mat-icon>{{ typeIcon(parseType(t).label) }}</mat-icon>
-                      {{ parseType(t).label }}
-                    </span>
+                      <span>{{ parseType(t).label }}</span>
+                    </li>
                   }
-                </div>
+                </ul>
               }
               @if (!a.escalationRequested && (a.riskLevel === 'high' || a.riskLevel === 'critical')) {
                 <div class="analysis-card-actions">
@@ -202,19 +202,31 @@ interface ConflictAnalysis {
     .meta-template { display: flex; align-items: center; gap: 6px; font-size: 14px; color: var(--artes-accent); mat-icon { font-size: 16px; width: 16px; height: 16px; } }
     .meta-dept, .meta-period { display: flex; align-items: center; gap: 6px; font-size: 14px; mat-icon { font-size: 16px; width: 16px; height: 16px; color: #9aa5b4; } strong { color: var(--artes-primary); } }
     .meta-period { color: #5a6a7e; }
-    .type-chips { display: flex; flex-wrap: wrap; gap: 6px; }
-    .type-chip {
-      display: inline-flex; align-items: center; gap: 6px;
-      padding: 5px 12px 5px 10px; border-radius: 999px;
+    .type-list {
+      list-style: none;
+      margin: 0; padding: 0;
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+    }
+    .type-list-item {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 6px 14px;
+      border-radius: 8px;
       font-size: 12px; font-weight: 600; text-transform: capitalize;
       background: #eef2f7; color: #4a5568;
-      line-height: 1;
+      line-height: 1.3;
+      max-width: 100%;
+      cursor: help;
       mat-icon {
         font-size: 14px; width: 14px; height: 14px;
         line-height: 14px;
         flex-shrink: 0;
         color: #6b7c93;
         overflow: visible;
+      }
+      span {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
     }
     .escalated-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; color: #e86c3a; font-weight: 600; mat-icon { font-size: 16px; width: 16px; height: 16px; } }
