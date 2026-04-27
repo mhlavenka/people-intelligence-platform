@@ -10,7 +10,7 @@ Handles the subset of Markdown actually used in docs/design/*.md:
 - thematic breaks (---)
 - block quotes (>)
 
-Usage: python scripts/md_to_docx.py <input.md> <output.docx>
+Usage: python scripts/docs/md_to_docx.py <input.md> <output.docx>
 """
 import re
 import sys
@@ -226,6 +226,6 @@ def convert(md_path: Path, docx_path: Path):
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:
-        print("Usage: python scripts/md_to_docx.py <input.md> <output.docx>", file=sys.stderr)
+        print("Usage: python scripts/docs/md_to_docx.py <input.md> <output.docx>", file=sys.stderr)
         sys.exit(1)
     convert(Path(sys.argv[1]), Path(sys.argv[2]))

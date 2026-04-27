@@ -24,7 +24,7 @@ All UI strings must use `{{ 'KEY' | translate }}` — never hardcode English in 
 When adding or changing a translation key, update **every** JSON file in `frontend/src/assets/i18n/` (currently `en.json`, `fr.json`, `es.json`).
 Backend error strings use `req.t('errors.xxx')` via i18next; locale files live in `backend/src/locales/{lang}/common.json`.
 AI prompt builders accept a `language` parameter — always pass `req.language` from the route handler.
-Run `node scripts/check-translations.js` before deploying to catch missing keys.
+Run `node scripts/i18n/check-translations.js` before deploying to catch missing keys.
 
 ---
 

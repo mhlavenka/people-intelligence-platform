@@ -362,7 +362,7 @@ ARTES already has Conflict Intelligence, Coaching, Booking, Billing, Sponsors, H
 | AI-drafted justification / scope | `ai.service.ts` (Claude) | New `buildEscalationJustificationPrompt()` |
 | Activity timeline | Admin → Activity Log | Writes one entry per state transition |
 | Permission model | Custom Roles + `requirePermission` | New permission `MANAGE_CONFLICT_ESCALATIONS` |
-| Translations | `assets/i18n/{en,fr,es,sk}.json` + `scripts/check-translations.js` | Same pipeline as everything else |
+| Translations | `assets/i18n/{en,fr,es,sk}.json` + `scripts/i18n/check-translations.js` | Same pipeline as everything else |
 
 ### 12.1 Conflict Intelligence module (origin)
 
@@ -467,7 +467,7 @@ Every state transition calls into the existing activity-logging helper, so escal
 
 ### 12.13 i18n pipeline
 
-All new UI keys, email templates, and AI language instructions flow through the standard pipelines — `{{ 'KEY' \| translate }}`, `req.t('errors.xxx')`, `languageInstruction(language)`. The `scripts/check-translations.js` pre-deploy check blocks any missing key across en / fr / es / sk. No new pipeline.
+All new UI keys, email templates, and AI language instructions flow through the standard pipelines — `{{ 'KEY' \| translate }}`, `req.t('errors.xxx')`, `languageInstruction(language)`. The `scripts/i18n/check-translations.js` pre-deploy check blocks any missing key across en / fr / es / sk. No new pipeline.
 
 ### 12.14 Mobile
 

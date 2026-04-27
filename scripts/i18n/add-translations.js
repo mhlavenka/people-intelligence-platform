@@ -103,7 +103,7 @@ const newKeys = {
 };
 
 for (const lang of ['en', 'fr', 'es']) {
-  const filePath = path.join(__dirname, '..', 'frontend', 'src', 'assets', 'i18n', lang + '.json');
+  const filePath = path.join(__dirname, '..', '..', 'frontend', 'src', 'assets', 'i18n', lang + '.json');
   const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
 
   for (const [section, keys] of Object.entries(newKeys)) {

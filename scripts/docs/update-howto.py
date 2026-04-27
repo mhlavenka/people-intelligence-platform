@@ -10,7 +10,7 @@ from docx.oxml.ns import qn, nsdecls
 from docx.oxml import parse_xml
 import copy, os
 
-SRC = os.path.join(os.path.dirname(__file__), '..', 'docs', 'design', 'technical-howto.docx')
+SRC = os.path.join(os.path.dirname(__file__), '..', '..', 'docs', 'design', 'technical-howto.docx')
 DST = SRC  # overwrite
 
 # Load original to copy styles
@@ -518,7 +518,7 @@ add_list_item(doc, 'Frontend: All UI strings use {{ \'KEY\' | translate }} — n
 add_list_item(doc, 'Translation files: frontend/src/assets/i18n/en.json, fr.json, es.json (2400+ keys each).')
 add_list_item(doc, 'Backend: req.t(\'errors.xxx\') via i18next; locale files in backend/src/locales/{lang}/common.json.')
 add_list_item(doc, 'AI prompts: all prompt builders accept a language parameter — always pass req.language from the route handler.')
-add_list_item(doc, 'Run node scripts/check-translations.js before deploying to catch missing keys.')
+add_list_item(doc, 'Run node scripts/i18n/check-translations.js before deploying to catch missing keys.')
 
 doc.add_heading('8.8 Roles & Access', level=2)
 add_body(doc, 'The application defines the following roles:')
@@ -669,7 +669,7 @@ add_body(doc, 'Verify MONGODB_URI in backend/.env is correct and your IP is whit
 
 doc.add_heading('12.7 Translation keys showing as raw keys in UI', level=2)
 add_body(doc, 'Cause: Key was added to one language file but not all three (en.json, fr.json, es.json).')
-add_body(doc, 'Fix: Run node scripts/check-translations.js to find missing keys. The deploy script runs this automatically.')
+add_body(doc, 'Fix: Run node scripts/i18n/check-translations.js to find missing keys. The deploy script runs this automatically.')
 
 doc.add_heading('12.8 Google Calendar webhook not receiving events', level=2)
 add_body(doc, 'Cause: BOOKING_WEBHOOKS_ENABLED is false, or the Apache vhost is not proxying /api/webhooks/gcal to PM2.')

@@ -2,7 +2,7 @@
 """Generate a weekly changelog .docx for the ARTES platform.
 
 Usage:
-    python3 scripts/generate_changelog.py [--days N] [--since YYYY-MM-DD] [--until YYYY-MM-DD]
+    python3 scripts/changelog/generate_changelog.py [--days N] [--since YYYY-MM-DD] [--until YYYY-MM-DD]
 
 Defaults to the past 7 days. Output is saved to docs/changelog_YYYY-MM-DD.docx.
 Requires: pip install python-docx

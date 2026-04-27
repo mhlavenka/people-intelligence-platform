@@ -5,13 +5,13 @@
  * Ensures all language files have the same keys as en.json (the reference).
  * Exits with code 1 if any keys are missing.
  *
- * Usage: node scripts/check-translations.js
+ * Usage: node scripts/i18n/check-translations.js
  */
 
 const fs = require('fs');
 const path = require('path');
 
-const I18N_DIR = path.join(__dirname, '..', 'frontend', 'src', 'assets', 'i18n');
+const I18N_DIR = path.join(__dirname, '..', '..', 'frontend', 'src', 'assets', 'i18n');
 
 function collectKeys(obj, prefix = '') {
   const keys = [];

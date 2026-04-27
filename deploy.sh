@@ -69,7 +69,7 @@ echo "════════════════════════�
 
 # Pre-deploy: check translations are in sync
 step "Checking translation files…"
-if node scripts/check-translations.js; then
+if node scripts/i18n/check-translations.js; then
   ok "Translations in sync"
 else
   echo ""
