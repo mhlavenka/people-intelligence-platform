@@ -10,7 +10,10 @@ export interface ParsedConflictType {
   rationale: string;
 }
 
-const SPLIT_RE = /\s[—–-]\s/;
+// Splits on a space-separated em/en/hyphen OR a colon followed by a space.
+// Examples that match: "Label — rationale", "Label - rationale",
+// "Label – rationale", "Label: rationale".
+const SPLIT_RE = /\s[—–-]\s|:\s/;
 
 export function parseConflictType(raw: string): ParsedConflictType {
   if (!raw) return { label: '', rationale: '' };
