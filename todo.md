@@ -29,14 +29,6 @@ Phase 4 — research
 - Longitudinal respondent calibration — explicitly avoided so far (would require persistent respondent
   linking, conflicts with anonymity contract)
 
-Loose ends visible in the Onkwe data
-
-- The sub-analysis documents (Pulse with Divergence rows that are children) don't re-persist the metric
-  blocks. The divergence tab on those rows correctly hides itself today, but a one-line "see parent for
-  the full divergence panel" link in the sub-analysis dialog would be friendlier than silence.
-
-
-
 
 
 **Coaching Module**

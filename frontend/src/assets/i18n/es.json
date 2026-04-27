@@ -724,6 +724,8 @@
     "alignmentBand_aligned": "Alineado",
     "alignmentBand_mixed": "Mixto",
     "alignmentBand_fractured": "Fragmentado",
+    "subParentDivergenceHint": "Este análisis focalizado no tiene sus propias métricas de divergencia — están en el análisis principal.",
+    "subParentDivergenceCta": "Ver divergencia del principal",
     "dimensionalRadar": "Radar dimensional",
     "radarTeamLabel": "Media del equipo",
     "radarClusterLabel": "Clúster {{label}} (n={{size}})",

@@ -239,7 +239,9 @@ interface RecommendedActions {
         }
 
         <!-- Tabs -->
-        <mat-tab-group animationDuration="200ms" class="detail-tabs">
+        <mat-tab-group animationDuration="200ms" class="detail-tabs"
+                       [selectedIndex]="activeTab()"
+                       (selectedIndexChange)="activeTab.set($event)">
           <!-- Tab 1: AI Analysis -->
           <mat-tab>
             <ng-template mat-tab-label>
@@ -2021,6 +2023,11 @@ export class ConflictDetailComponent implements OnInit {
   // filtered metrics. Defaults off so the standard view is always the AI-aligned one.
   auditMode = signal(false);
 
+  // mat-tab-group selected index. Two-way bound so we can switch tabs
+  // programmatically (e.g. from the sub-analysis dialog's "see parent
+  // divergence panel" CTA).
+  activeTab = signal(0);
+
   // Escalation / Coach selection
   coaches = signal<CoachOption[]>([]);
   loadingCoaches = signal(false);
@@ -2132,20 +2139,33 @@ export class ConflictDetailComponent implements OnInit {
   openSubAnalysis(ct: string): void {
     const sub = this.subAnalysisFor(ct);
     if (!sub) return;
-    this.dialog.open<SubAnalysisDialogComponent, SubAnalysisDialogData>(SubAnalysisDialogComponent, {
-      width: '720px',
-      maxWidth: '92vw',
-      panelClass: 'sub-analysis-dialog-panel',
-      data: {
-        focusConflictType: sub.focusConflictType || ct,
-        riskScore: sub.riskScore,
-        riskLevel: sub.riskLevel,
-        aiNarrative: sub.aiNarrative,
-        conflictTypes: sub.conflictTypes || [],
-        icon: this.typeIcon(ct),
-        createdAt: sub.createdAt,
-      },
+    const parent = this.analysis();
+    const parentHasDivergence = !!parent?.itemMetrics?.length;
+    const ref = this.dialog.open<SubAnalysisDialogComponent, SubAnalysisDialogData, 'show-divergence' | undefined>(
+      SubAnalysisDialogComponent, {
+        width: '720px',
+        maxWidth: '92vw',
+        panelClass: 'sub-analysis-dialog-panel',
+        data: {
+          focusConflictType: sub.focusConflictType || ct,
+          riskScore: sub.riskScore,
+          riskLevel: sub.riskLevel,
+          aiNarrative: sub.aiNarrative,
+          conflictTypes: sub.conflictTypes || [],
+          icon: this.typeIcon(parseConflictType(ct).label),
+          createdAt: sub.createdAt,
+          parentHasDivergence,
+        },
+      });
+    ref.afterClosed().subscribe((result) => {
+      if (result === 'show-divergence') this.activeTab.set(this.divergenceTabIndex());
     });
+  }
+
+  /** Resolve the index of the Divergence Signals tab — present only when the
+   *  analysis has metric blocks (otherwise the tab itself is hidden). */
+  private divergenceTabIndex(): number {
+    return this.analysis()?.itemMetrics?.length ? 1 : 0;
   }
 
   riskColor(level: string): string {

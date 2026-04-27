@@ -724,6 +724,8 @@
     "alignmentBand_aligned": "Súdržný",
     "alignmentBand_mixed": "Zmiešaný",
     "alignmentBand_fractured": "Rozdelený",
+    "subParentDivergenceHint": "Táto fokusovaná analýza nenesie vlastné metriky divergencie — sú na rodičovskej analýze.",
+    "subParentDivergenceCta": "Zobraziť divergenciu rodiča",
     "dimensionalRadar": "Dimenzionálny radar",
     "radarTeamLabel": "Priemer tímu",
     "radarClusterLabel": "Klaster {{label}} (n={{size}})",
