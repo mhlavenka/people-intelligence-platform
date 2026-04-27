@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
@@ -754,7 +754,9 @@ export class ConflictDashboardHomeComponent implements OnInit {
     },
   };
 
-  alignmentSparkData(): ChartData<'line'> {
+  // Memoised — Chart.js sees the same reference between change-detection
+  // cycles, so the sparkline doesn't re-animate on every mouse movement.
+  alignmentSparkData = computed<ChartData<'line'>>(() => {
     const pts = this.alignmentTrend();
     return {
       labels: pts.map((p) => new Date(p.createdAt).toLocaleDateString()),
@@ -765,7 +767,7 @@ export class ConflictDashboardHomeComponent implements OnInit {
         fill: true,
       }],
     };
-  }
+  });
 
   ngOnInit(): void {
     this.api.get<AnalysisLite[]>('/conflict/analyses').subscribe({

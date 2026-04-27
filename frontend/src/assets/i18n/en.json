@@ -737,6 +737,7 @@
     "itemHistogramLabel": "Answer distribution for this item",
     "dimensionalDivergence": "Dimensional Divergence",
     "rwgExplainerToggle": "About r_wg",
+    "rwgTooltip": "r_wg = within-group agreement.\n0 = responses as scattered as random; 1 = everyone picked the same value.\n≥0.70 is the conventional 'good agreement' threshold; <0.40 is fractured.\nClick 'About r_wg' for the formula and details.",
     "rwgExplainerTitle": "About r_wg (within-group agreement)",
     "rwgExplainerWhat": "<strong>r<sub>wg</sub></strong> measures how closely team members agree on a question. It runs from <strong>0</strong> (responses are as scattered as you'd expect from random uniform answering) to <strong>1</strong> (everyone picked the same value).",
     "rwgExplainerHow": "It is computed as 1 minus the ratio of the team's <strong>observed variance</strong> to the variance you'd get from purely random responding on the same scale (the &quot;expected uniform&quot; variance, σ²<sub>eu</sub>):",

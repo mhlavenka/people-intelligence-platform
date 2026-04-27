@@ -736,6 +736,7 @@
     "itemHistogramLabel": "Distribución de respuestas de este ítem",
     "dimensionalDivergence": "Divergencia por dimensión",
     "rwgExplainerToggle": "Sobre r_wg",
+    "rwgTooltip": "r_wg = acuerdo intragrupo.\n0 = respuestas tan dispersas como al azar; 1 = todos eligieron el mismo valor.\n≥0,70 es el umbral convencional de 'buen acuerdo'; <0,40 indica un equipo fracturado.\nHaga clic en 'Sobre r_wg' para ver la fórmula y los detalles.",
     "rwgExplainerTitle": "Sobre r_wg (acuerdo intragrupo)",
     "rwgExplainerWhat": "<strong>r<sub>wg</sub></strong> mide cuánto coinciden los miembros del equipo en una pregunta. Va de <strong>0</strong> (las respuestas están tan dispersas como cabría esperar de respuestas aleatorias uniformes) a <strong>1</strong> (todos eligieron el mismo valor).",
     "rwgExplainerHow": "Se calcula como 1 menos la razón entre la <strong>varianza observada</strong> del equipo y la varianza que se obtendría con respuestas puramente aleatorias en la misma escala (la varianza «uniforme esperada», σ²<sub>eu</sub>):",
