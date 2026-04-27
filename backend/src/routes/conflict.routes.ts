@@ -45,6 +45,36 @@ router.patch(
   }
 );
 
+// Trend of teamAlignmentScore across recent analyses, used by the dashboard
+// sparkline. Parent analyses only (sub-analyses don't carry alignment),
+// optionally filtered by department.
+router.get(
+  '/alignment-trend',
+  requirePermission('VIEW_CONFLICT_DASHBOARD'),
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const limit = Math.min(Math.max(parseInt(String(req.query['limit'] ?? '12'), 10) || 12, 3), 30);
+      const dept = typeof req.query['departmentId'] === 'string' ? req.query['departmentId'] : undefined;
+
+      const filter: Record<string, unknown> = {
+        organizationId: req.user!.organizationId,
+        teamAlignmentScore: { $exists: true, $ne: null },
+        parentId: { $exists: false },
+      };
+      if (dept) filter['departmentId'] = dept;
+
+      const docs = await ConflictAnalysis.find(filter)
+        .select('_id name departmentId teamAlignmentScore createdAt')
+        .sort({ createdAt: -1 })
+        .limit(limit)
+        .lean();
+
+      // Reverse so the oldest is first (left-to-right sparkline reads chronologically).
+      res.json(docs.reverse());
+    } catch (e) { next(e); }
+  }
+);
+
 router.delete(
   '/analyses/:id',
   requirePermission('RUN_CONFLICT_ANALYSIS'),
