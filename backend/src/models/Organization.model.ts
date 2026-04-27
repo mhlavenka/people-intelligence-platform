@@ -61,6 +61,9 @@ export interface IOrganization extends Document {
     longStringMaxFraction?: number;   // default 0.80  (≥80% same answer ⇒ flag)
     minSubgroupN?: number;            // default 3     (Phase 2 — subgroup detection)
     showSubgroupAnalysis?: boolean;   // default true
+    speedingMsPerItemFloor?: number;  // default 2000  (per-response hard implausibility floor, ms)
+    speedingGroupZThreshold?: number; // default -3.5  (cohort modified-Z; lower = stricter)
+    speedingMinCohortN?: number;      // default 10    (cohort-Z gate; below this, only the floor fires)
   };
 
   createdAt: Date;
@@ -111,10 +114,13 @@ const OrganizationSchema = new Schema<IOrganization>(
 
     surveyQualityPolicy: {
       type: new Schema({
-        qualityThreshold:      { type: Number, min: 0, max: 1, default: 0.35 },
-        longStringMaxFraction: { type: Number, min: 0, max: 1, default: 0.80 },
-        minSubgroupN:          { type: Number, min: 1, default: 3 },
-        showSubgroupAnalysis:  { type: Boolean, default: true },
+        qualityThreshold:        { type: Number, min: 0, max: 1, default: 0.35 },
+        longStringMaxFraction:   { type: Number, min: 0, max: 1, default: 0.80 },
+        minSubgroupN:            { type: Number, min: 1, default: 3 },
+        showSubgroupAnalysis:    { type: Boolean, default: true },
+        speedingMsPerItemFloor:  { type: Number, min: 0, default: 2000 },
+        speedingGroupZThreshold: { type: Number, max: 0, default: -3.5 },
+        speedingMinCohortN:      { type: Number, min: 3, default: 10 },
       }, { _id: false }),
     },
     logoUrl:     { type: String },

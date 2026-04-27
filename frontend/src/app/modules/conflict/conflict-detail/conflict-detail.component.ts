@@ -406,6 +406,8 @@ interface RecommendedActions {
                 <span>{{ 'CONFLICT.divergenceTab' | translate }}</span>
               </ng-template>
               <div class="tab-body">
+                <div class="div-layout">
+                  <div class="div-main">
                 <!-- Response-quality card -->
                 @if (analysis()!.responseQuality; as q) {
                   <div class="div-quality">
@@ -554,6 +556,35 @@ interface RecommendedActions {
                 <div class="div-disclaimer">
                   <mat-icon>info</mat-icon>
                   <span>{{ 'CONFLICT.divergenceDisclaimer' | translate }}</span>
+                </div>
+                  </div>
+
+                  <!-- Sidebar — reader's guide to the panel -->
+                  <aside class="div-sidebar" [attr.aria-label]="'CONFLICT.divergenceSidebarTitle' | translate">
+                    <div class="div-sidebar-card">
+                      <h4 class="div-sidebar-title">
+                        <mat-icon>menu_book</mat-icon>
+                        {{ 'CONFLICT.divergenceSidebarTitle' | translate }}
+                      </h4>
+                      <p class="div-sidebar-lead">{{ 'CONFLICT.divergenceSidebarLead' | translate }}</p>
+                      <section class="div-sidebar-section">
+                        <h5>{{ 'CONFLICT.divergenceSidebarAlignmentTitle' | translate }}</h5>
+                        <p [innerHTML]="'CONFLICT.divergenceSidebarAlignment' | translate"></p>
+                      </section>
+                      <section class="div-sidebar-section">
+                        <h5>{{ 'CONFLICT.divergenceSidebarDimensionsTitle' | translate }}</h5>
+                        <p [innerHTML]="'CONFLICT.divergenceSidebarDimensions' | translate"></p>
+                      </section>
+                      <section class="div-sidebar-section">
+                        <h5>{{ 'CONFLICT.divergenceSidebarItemsTitle' | translate }}</h5>
+                        <p [innerHTML]="'CONFLICT.divergenceSidebarItems' | translate"></p>
+                      </section>
+                      <section class="div-sidebar-section div-sidebar-use">
+                        <h5>{{ 'CONFLICT.divergenceSidebarUseTitle' | translate }}</h5>
+                        <p>{{ 'CONFLICT.divergenceSidebarUse' | translate }}</p>
+                      </section>
+                    </div>
+                  </aside>
                 </div>
               </div>
             </mat-tab>
@@ -1658,6 +1689,46 @@ interface RecommendedActions {
       background: rgba(154,165,180,0.08); color: #5a6a7e;
       font-size: 12px; line-height: 1.5; margin-top: 8px;
       mat-icon { color: #7f8ea3; flex-shrink: 0; font-size: 18px; width: 18px; height: 18px; margin-top: 1px; }
+    }
+
+    /* Two-column layout (metric cards + reader's-guide sidebar) */
+    .div-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 320px;
+      gap: 20px;
+      align-items: start;
+    }
+    .div-main { min-width: 0; }
+    .div-sidebar { position: sticky; top: 12px; }
+    .div-sidebar-card {
+      background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
+      border: 1px solid #dde7f3; border-radius: 10px;
+      padding: 18px 18px 16px;
+      box-shadow: 0 1px 2px rgba(27,42,71,0.04);
+    }
+    .div-sidebar-title {
+      display: flex; align-items: center; gap: 8px;
+      margin: 0 0 10px; font-size: 13px; font-weight: 700;
+      color: var(--artes-primary); text-transform: uppercase; letter-spacing: 0.5px;
+      mat-icon { font-size: 18px; width: 18px; height: 18px; color: #3A9FD6; }
+    }
+    .div-sidebar-lead {
+      margin: 0 0 14px; font-size: 13px; line-height: 1.5; color: #374151;
+    }
+    .div-sidebar-section {
+      padding-top: 12px; margin-top: 12px;
+      border-top: 1px solid #edf1f6;
+      h5 {
+        margin: 0 0 6px; font-size: 11px; font-weight: 700;
+        color: #5a6a7e; text-transform: uppercase; letter-spacing: 0.6px;
+      }
+      p { margin: 0; font-size: 12.5px; line-height: 1.55; color: #374151; }
+      strong { color: var(--artes-primary); font-weight: 600; }
+    }
+    .div-sidebar-use p { color: #2d3a4f; }
+    @media (max-width: 1100px) {
+      .div-layout { grid-template-columns: 1fr; }
+      .div-sidebar { position: static; }
     }
 
     /* Subgroups panel (Phase 2) ─────────────────────────────────── */

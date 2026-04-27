@@ -45,7 +45,19 @@
       "Bash(grep -rn \"snackBar\\\\.open\\('[A-Z]\" frontend/src/app/ --include=\"*.component.ts\")",
       "Bash(grep -rn \"confirm\\('\" frontend/src/app/ --include=\"*.component.ts\")",
       "Bash(grep -rn 'app-empty-state.*title=\"' frontend/src/app/ --include=\"*.component.ts\")",
-      "Bash(node ../scripts/check-translations.js)"
+      "Bash(node ../scripts/check-translations.js)",
+      "Bash(node scripts/check-translations.js)",
+      "Bash(git -C D:/CUSTOMERS/HeadSoft/people-intelligence-platform checkout -b feat/user-dialog-defaults)",
+      "Bash(git -C D:/CUSTOMERS/HeadSoft/people-intelligence-platform add -u)",
+      "Bash(git -C D:/CUSTOMERS/HeadSoft/people-intelligence-platform diff --cached --stat)",
+      "Bash(git -C D:/CUSTOMERS/HeadSoft/people-intelligence-platform reset HEAD .claude/settings.local.json)",
+      "Bash(git -C D:/CUSTOMERS/HeadSoft/people-intelligence-platform commit -m ' *)",
+      "Bash(git -C D:/CUSTOMERS/HeadSoft/people-intelligence-platform checkout master)",
+      "Bash(git -C D:/CUSTOMERS/HeadSoft/people-intelligence-platform merge --no-ff feat/user-dialog-defaults -m \"merge: user-dialog email autofill + password autogen + regenerate\")",
+      "Bash(git -C D:/CUSTOMERS/HeadSoft/people-intelligence-platform branch -d feat/user-dialog-defaults)",
+      "Bash(git -C D:/CUSTOMERS/HeadSoft/people-intelligence-platform push origin master)",
+      "Bash(git -C D:/CUSTOMERS/HeadSoft/people-intelligence-platform merge --no-ff chore/append-divergence-prompt-script -m \"merge: append-divergence-prompt script\")",
+      "Bash(git -C D:/CUSTOMERS/HeadSoft/people-intelligence-platform branch -d chore/append-divergence-prompt-script)"
     ]
   }
 }
