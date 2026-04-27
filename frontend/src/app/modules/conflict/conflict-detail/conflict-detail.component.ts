@@ -123,6 +123,7 @@ interface ItemMetric {
   outlierCount: number;
   scaleMin?: number;
   scaleMax?: number;
+  histogram?: number[];
 }
 
 interface DimensionMetric {
@@ -480,6 +481,35 @@ interface RecommendedActions {
                   </div>
                 }
 
+                <!-- Disagreement heatmap — one square per item, grouped by dimension,
+                     colour = 1 - rwg (green → red). High-density overview of where
+                     the team is diverging vs aligning. -->
+                @if (heatmapGroups().length) {
+                  <div class="div-card">
+                    <h3>{{ 'CONFLICT.disagreementHeatmap' | translate }}</h3>
+                    <div class="div-heatmap">
+                      @for (g of heatmapGroups(); track g.dimension) {
+                        <div class="div-heatmap-group">
+                          <span class="div-heatmap-label">{{ g.dimension }}</span>
+                          <div class="div-heatmap-cells">
+                            @for (c of g.cells; track c.questionId) {
+                              <span class="div-heatmap-cell"
+                                    [class.split]="c.split"
+                                    [style.background]="c.color"
+                                    [matTooltip]="c.tooltip"></span>
+                            }
+                          </div>
+                        </div>
+                      }
+                    </div>
+                    <div class="div-heatmap-legend">
+                      <span class="div-heatmap-legend-label">{{ 'CONFLICT.heatmapAgreement' | translate }}</span>
+                      <span class="div-heatmap-legend-bar"></span>
+                      <span class="div-heatmap-legend-label">{{ 'CONFLICT.heatmapDisagreement' | translate }}</span>
+                    </div>
+                  </div>
+                }
+
                 <!-- Dimensional roll-up -->
                 @if (displayDimensionMetrics().length) {
                   <div class="div-card">
@@ -527,11 +557,34 @@ interface RecommendedActions {
                             </span>
                           }
                         </div>
-                        <div class="div-item-stats">
-                          <span><strong>μ</strong> {{ m.mean }}</span>
-                          <span><strong>σ</strong> {{ m.sd }}</span>
-                          <span><strong>r<sub>wg</sub></strong> {{ m.rwg }}</span>
-                          @if (m.dimension) { <span class="div-item-dim">{{ m.dimension }}</span> }
+                        <div class="div-item-body">
+                          @if (m.histogram?.length) {
+                            <svg class="div-item-hist" [attr.viewBox]="'0 0 ' + (m.histogram!.length * 10) + ' 28'"
+                                 preserveAspectRatio="none"
+                                 [attr.aria-label]="'CONFLICT.itemHistogramLabel' | translate"
+                                 role="img">
+                              @for (c of m.histogram!; track $index) {
+                                <rect class="hist-bar"
+                                      [class.split]="m.bimodalityCoef > 0.555"
+                                      [attr.x]="$index * 10 + 1"
+                                      [attr.y]="28 - histBarHeight(c, m.histogram!)"
+                                      width="8"
+                                      [attr.height]="histBarHeight(c, m.histogram!)">
+                                  <title>{{ histBarTitle(c, $index, m) }}</title>
+                                </rect>
+                              }
+                            </svg>
+                            <div class="div-item-scale">
+                              <span>{{ m.scaleMin ?? 0 }}</span>
+                              <span>{{ m.scaleMax ?? (m.histogram!.length - 1) }}</span>
+                            </div>
+                          }
+                          <div class="div-item-stats">
+                            <span><strong>μ</strong> {{ m.mean }}</span>
+                            <span><strong>σ</strong> {{ m.sd }}</span>
+                            <span><strong>r<sub>wg</sub></strong> {{ m.rwg }}</span>
+                            @if (m.dimension) { <span class="div-item-dim">{{ m.dimension }}</span> }
+                          </div>
                         </div>
                       </div>
                     }
@@ -1731,6 +1784,56 @@ interface RecommendedActions {
         background: rgba(58,159,214,0.10); color: #2080b0; font-weight: 600; font-size: 11px;
       }
     }
+
+    /* Inline per-item histogram */
+    .div-item-body { display: grid; grid-template-columns: 96px 1fr; gap: 14px; align-items: center; }
+    .div-item-hist {
+      width: 96px; height: 28px; display: block;
+      .hist-bar { fill: #3A9FD6; transition: fill 0.2s; }
+      .hist-bar.split { fill: #e86c3a; }
+    }
+    .div-item-scale {
+      grid-column: 1; grid-row: 2;
+      display: flex; justify-content: space-between;
+      width: 96px;
+      font-size: 10px; color: #9aa5b4; font-variant-numeric: tabular-nums;
+      margin-top: -4px;
+    }
+    .div-item-stats { grid-column: 2; grid-row: 1 / 3; }
+    @media (max-width: 700px) {
+      .div-item-body { grid-template-columns: 1fr; }
+      .div-item-scale { width: 100%; }
+      .div-item-stats { grid-column: 1; grid-row: auto; }
+    }
+
+    /* Disagreement heatmap */
+    .div-heatmap { display: flex; flex-direction: column; gap: 10px; }
+    .div-heatmap-group {
+      display: grid; grid-template-columns: 160px 1fr; align-items: center; gap: 12px;
+    }
+    .div-heatmap-label {
+      font-size: 12px; font-weight: 600; color: #5a6a7e;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .div-heatmap-cells { display: flex; flex-wrap: wrap; gap: 4px; }
+    .div-heatmap-cell {
+      width: 22px; height: 22px; border-radius: 4px;
+      cursor: help;
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
+      &:hover { transform: scale(1.18); box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
+      &.split { box-shadow: inset 0 0 0 2px #c53030; }
+    }
+    .div-heatmap-legend {
+      display: flex; align-items: center; gap: 8px;
+      margin-top: 14px; font-size: 11px; color: #7f8ea3;
+    }
+    .div-heatmap-legend-bar {
+      flex: 1; height: 8px; border-radius: 999px;
+      background: linear-gradient(90deg, hsl(120, 65%, 55%) 0%, hsl(60, 65%, 55%) 50%, hsl(0, 65%, 55%) 100%);
+    }
+    @media (max-width: 700px) {
+      .div-heatmap-group { grid-template-columns: 1fr; gap: 4px; }
+    }
     .div-disclaimer {
       display: flex; align-items: flex-start; gap: 10px;
       padding: 12px 14px; border-radius: 8px;
@@ -2158,6 +2261,51 @@ export class ConflictDetailComponent implements OnInit {
     const a = this.analysis();
     if (!a) return undefined;
     return this.auditActive() ? a.unfilteredMetrics?.subgroupAnalysis : a.subgroupAnalysis;
+  }
+
+  /** Bar height in SVG units (max 24px) for the inline per-item histogram. */
+  histBarHeight(count: number, histogram: number[]): number {
+    const max = Math.max(1, ...histogram);
+    return Math.round((count / max) * 24);
+  }
+
+  /** Tooltip for an inline histogram bar: "<count> respondent(s) → value <v>". */
+  histBarTitle(count: number, index: number, m: ItemMetric): string {
+    const value = (m.scaleMin ?? 0) + index;
+    return `${count} → ${value}`;
+  }
+
+  /** Build the dimension-grouped heatmap rows. Each cell carries an HSL
+   *  colour from green (high rwg, agreement) → red (low rwg, disagreement). */
+  heatmapGroups(): { dimension: string; cells: { questionId: string; color: string; split: boolean; tooltip: string }[] }[] {
+    const items = this.displayItemMetrics();
+    if (!items.length) return [];
+    const groups = new Map<string, ItemMetric[]>();
+    for (const m of items) {
+      const k = (m.dimension || 'Ungrouped').trim();
+      if (!groups.has(k)) groups.set(k, []);
+      groups.get(k)!.push(m);
+    }
+    const out: { dimension: string; cells: { questionId: string; color: string; split: boolean; tooltip: string }[] }[] = [];
+    for (const [dimension, ms] of groups) {
+      out.push({
+        dimension,
+        cells: ms.map((m) => ({
+          questionId: m.questionId,
+          color: this.heatmapColor(m.rwg),
+          split: m.bimodalityCoef > 0.555,
+          tooltip: `${m.text || m.questionId} — rwg ${m.rwg}, μ ${m.mean}`,
+        })),
+      });
+    }
+    return out;
+  }
+
+  /** Hue 120 (green) at rwg=1 → hue 0 (red) at rwg=0. Saturation/lightness fixed. */
+  private heatmapColor(rwg: number): string {
+    const r = Math.max(0, Math.min(1, rwg));
+    const hue = Math.round(120 * r);
+    return `hsl(${hue}, 65%, 55%)`;
   }
 
   /** Items sorted lowest rwg first, with split items prioritised. Cap at 10
