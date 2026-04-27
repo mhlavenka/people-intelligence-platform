@@ -458,10 +458,16 @@ interface RecommendedActions {
                 @if (analysis()!.responseQuality; as q) {
                   <div class="div-quality">
                     <mat-icon>verified_user</mat-icon>
-                    <span [innerHTML]="'CONFLICT.responseQualitySummary' | translate:{
-                      accepted: q.acceptedCount, total: q.totalSubmitted,
-                      dropped: q.droppedCount
-                    }"></span>
+                    <span>
+                      <span [innerHTML]="'CONFLICT.responseQualitySummary' | translate:{
+                        accepted: q.acceptedCount, total: q.totalSubmitted
+                      }"></span>
+                      @if (q.droppedCount > 0) {
+                        <span [innerHTML]="'CONFLICT.responseQualityDropped' | translate:{
+                          dropped: q.droppedCount
+                        }"></span>
+                      }
+                    </span>
                     <mat-icon class="div-info"
                               [matTooltip]="'CONFLICT.responseQualityTooltip' | translate">info_outline</mat-icon>
                     @if (hasAuditView()) {
