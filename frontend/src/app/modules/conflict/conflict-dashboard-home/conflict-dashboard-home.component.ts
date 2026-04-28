@@ -6,22 +6,6 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { TranslateModule } from '@ngx-translate/core';
 import { ApiService } from '../../../core/api.service';
-import { BaseChartDirective } from 'ng2-charts';
-import {
-  Chart, LineController, LineElement, PointElement,
-  LinearScale, CategoryScale, Filler, Tooltip,
-  ChartConfiguration, ChartData,
-} from 'chart.js';
-
-Chart.register(LineController, LineElement, PointElement, LinearScale, CategoryScale, Filler, Tooltip);
-
-interface AlignmentTrendPoint {
-  _id: string;
-  name: string;
-  departmentId?: string;
-  teamAlignmentScore: number;
-  createdAt: string;
-}
 
 interface AnalysisLite {
   _id: string;
@@ -70,7 +54,7 @@ interface ToolkitCard {
 @Component({
   selector: 'app-conflict-dashboard-home',
   standalone: true,
-  imports: [CommonModule, RouterLink, MatIconModule, MatButtonModule, MatTooltipModule, TranslateModule, BaseChartDirective],
+  imports: [CommonModule, RouterLink, MatIconModule, MatButtonModule, MatTooltipModule, TranslateModule],
   template: `
     <!-- ── Hero ────────────────────────────────────────────────────────── -->
     <div class="hero">
@@ -133,16 +117,11 @@ interface ToolkitCard {
           <span class="alignment-tile-band">
             {{ ('CONFLICT.alignmentBand_' + alignmentBand(teamAlignment()!)) | translate }}
           </span>
-          @if (alignmentTrend().length >= 3) {
-            <div class="alignment-spark">
-              <canvas baseChart
-                      type="line"
-                      [data]="alignmentSparkData()"
-                      [options]="alignmentSparkOptions"
-                      aria-label="Recent alignment trend"
-                      role="img"></canvas>
-            </div>
-          }
+          <!-- A cross-template/cross-department trend strip would be
+               misleading: an alignment score is only comparable across the
+               same (template, department) pair. Per-team trend lives on
+               the analysis-detail page where scope is unambiguous. -->
+
         </a>
       }
     </section>
@@ -568,10 +547,6 @@ interface ToolkitCard {
     .alignment-tile--fractured { border-left-color: #e53e3e;
       .alignment-tile-band { background: rgba(229,62,62,0.15);  color: #c53030; }
     }
-    .alignment-spark {
-      position: relative; height: 36px; margin-top: 8px;
-      width: 100%;
-    }
 
     @media (max-width: 720px) {
       .risk-grid { grid-template-columns: repeat(2, 1fr); }
@@ -729,53 +704,10 @@ export class ConflictDashboardHomeComponent implements OnInit {
     { titleKey: 'CONFLICT.conflictDiagnosticTitle',  descKey: 'CONFLICT.conflictDiagnosticDesc',  icon: 'category',       color: '#e86c3a', pdfUrl: `${this.cdnBase}/conflict-type-diagnostic.pdf` },
   ];
 
-  alignmentTrend = signal<AlignmentTrendPoint[]>([]);
-
-  alignmentSparkOptions: ChartConfiguration<'line'>['options'] = {
-    responsive: true,
-    maintainAspectRatio: false,
-    interaction: { intersect: false, mode: 'index' },
-    plugins: {
-      legend: { display: false },
-      tooltip: {
-        callbacks: {
-          title: (items) => items[0]?.label ?? '',
-          label: (ctx) => `${ctx.parsed.y} / 100`,
-        },
-      },
-    },
-    scales: {
-      x: { display: false },
-      y: { display: false, suggestedMin: 0, suggestedMax: 100 },
-    },
-    elements: {
-      line: { tension: 0.35, borderWidth: 2 },
-      point: { radius: 0, hoverRadius: 4 },
-    },
-  };
-
-  // Memoised — Chart.js sees the same reference between change-detection
-  // cycles, so the sparkline doesn't re-animate on every mouse movement.
-  alignmentSparkData = computed<ChartData<'line'>>(() => {
-    const pts = this.alignmentTrend();
-    return {
-      labels: pts.map((p) => new Date(p.createdAt).toLocaleDateString()),
-      datasets: [{
-        data: pts.map((p) => p.teamAlignmentScore),
-        borderColor: '#3A9FD6',
-        backgroundColor: 'rgba(58,159,214,0.18)',
-        fill: true,
-      }],
-    };
-  });
 
   ngOnInit(): void {
     this.api.get<AnalysisLite[]>('/conflict/analyses').subscribe({
       next: (data) => this.analyses.set(data.filter((a) => !a.parentId)),
-      error: () => {},
-    });
-    this.api.get<AlignmentTrendPoint[]>('/conflict/alignment-trend?limit=12').subscribe({
-      next: (data) => this.alignmentTrend.set(data),
       error: () => {},
     });
   }

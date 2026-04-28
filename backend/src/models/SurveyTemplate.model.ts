@@ -71,6 +71,23 @@ export interface IQuestion {
     // sharing the same dimension. When all questions on a template lack a
     // dimension, metrics fall back to a single 'Ungrouped' bucket.
     dimension?: string;
+
+    // ── Phase 3 quality signals ─────────────────────────────────────────
+    // Trap / attention-check item. The respondent's answer is compared to
+    // trap_correct_answer; mismatches add a 'trapFailed' quality flag and
+    // a heavy penalty (0.50). Use sparingly — one trap item per template
+    // is usually enough; coaches design them so a careful respondent
+    // can't possibly answer wrong.
+    is_trap?: boolean;
+    trap_correct_answer?: number | boolean | string;
+
+    // Per-respondent inconsistency check. List of other question ids on
+    // the same template that should correlate with this one. The pair's
+    // expected direction is derived from `reverse_scored`: items with
+    // matching reverse-scored flags should answer in the same direction;
+    // items with differing flags should answer inversely. Large
+    // contradictions add an 'inconsistent' flag (penalty 0.30).
+    correlated_item_ids?: string[];
 }
 
 // ── Subscale detail (CDP, de Dreu) ───────────────────────────────────────────
@@ -251,6 +268,11 @@ const QuestionSchema = new Schema<IQuestion>(
         optional: { type: Boolean, default: false },
 
         dimension: { type: String, trim: true },
+
+        // Phase 3 quality flags
+        is_trap:               { type: Boolean },
+        trap_correct_answer:   { type: Schema.Types.Mixed },  // number | boolean | string
+        correlated_item_ids:   [{ type: String }],
     },
     { _id: false }
 );

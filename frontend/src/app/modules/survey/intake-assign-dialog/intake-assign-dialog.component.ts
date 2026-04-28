@@ -41,6 +41,27 @@ interface UserOption {
     <p class="subtitle">{{ data.title }}</p>
 
     <mat-dialog-content>
+      @if (activeSchedule(); as s) {
+        <div class="schedule-banner" [class.paused]="s.recurrence?.paused">
+          <mat-icon>{{ s.recurrence?.paused ? 'pause_circle' : 'schedule' }}</mat-icon>
+          <div class="schedule-info">
+            <strong>
+              {{ (s.recurrence?.paused ? 'SURVEY.scheduleActivePaused' : 'SURVEY.scheduleActive') | translate }}
+            </strong>
+            <span>{{ scheduleSummary(s) }}</span>
+          </div>
+          <div class="schedule-actions">
+            <button mat-stroked-button (click)="togglePause(s)">
+              <mat-icon>{{ s.recurrence?.paused ? 'play_arrow' : 'pause' }}</mat-icon>
+              {{ (s.recurrence?.paused ? 'COMMON.resume' : 'COMMON.pause') | translate }}
+            </button>
+            <button mat-stroked-button color="warn" (click)="cancelSchedule(s)">
+              <mat-icon>cancel</mat-icon>
+              {{ 'SURVEY.scheduleCancel' | translate }}
+            </button>
+          </div>
+        </div>
+      }
       @if (loading()) {
         <div class="loading-center"><mat-spinner diameter="32" /></div>
       } @else {
@@ -50,8 +71,8 @@ interface UserOption {
             <ng-template mat-tab-label>
               <mat-icon>business</mat-icon>
               {{ 'SURVEY.assignToDepartments' | translate }}
-              @if (selectedDepts().size) {
-                <span class="tab-badge">{{ selectedDepts().size }}</span>
+              @if (selectedDeptUserCount()) {
+                <span class="tab-badge">{{ selectedDeptUserCount() }}</span>
               }
             </ng-template>
 
@@ -127,11 +148,71 @@ interface UserOption {
           </mat-form-field>
         </section>
 
+        <!-- Recurring schedule -->
+        <section>
+          <label class="schedule-toggle">
+            <mat-checkbox [(ngModel)]="recurring" color="primary" />
+            <span>
+              <strong>{{ 'SURVEY.assignRepeat' | translate }}</strong>
+              <em>{{ 'SURVEY.assignRepeatHint' | translate }}</em>
+            </span>
+          </label>
+
+          @if (recurring) {
+            <div class="schedule-grid">
+              <mat-form-field appearance="outline">
+                <mat-label>{{ 'SURVEY.scheduleEvery' | translate }}</mat-label>
+                <input matInput type="number" min="1" max="52" [(ngModel)]="intervalWeeks" />
+                <span matSuffix>&nbsp;{{ 'SURVEY.scheduleWeeks' | translate }}</span>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>{{ 'SURVEY.scheduleDayOfWeek' | translate }}</mat-label>
+                <select matNativeControl [(ngModel)]="dayOfWeek">
+                  <option [ngValue]="null">{{ 'SURVEY.scheduleAnyDay' | translate }}</option>
+                  <option [ngValue]="1">{{ 'SURVEY.dowMon' | translate }}</option>
+                  <option [ngValue]="2">{{ 'SURVEY.dowTue' | translate }}</option>
+                  <option [ngValue]="3">{{ 'SURVEY.dowWed' | translate }}</option>
+                  <option [ngValue]="4">{{ 'SURVEY.dowThu' | translate }}</option>
+                  <option [ngValue]="5">{{ 'SURVEY.dowFri' | translate }}</option>
+                  <option [ngValue]="6">{{ 'SURVEY.dowSat' | translate }}</option>
+                  <option [ngValue]="0">{{ 'SURVEY.dowSun' | translate }}</option>
+                </select>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>{{ 'SURVEY.scheduleHour' | translate }}</mat-label>
+                <input matInput type="number" min="0" max="23" [(ngModel)]="hourOfDay" />
+                <mat-hint>{{ 'SURVEY.scheduleHourHint' | translate }}</mat-hint>
+              </mat-form-field>
+            </div>
+
+            <div class="schedule-grid">
+              <mat-form-field appearance="outline">
+                <mat-label>{{ 'SURVEY.scheduleMaxOccurrences' | translate }}</mat-label>
+                <input matInput type="number" min="1" max="500" [(ngModel)]="maxOccurrences"
+                       [placeholder]="'SURVEY.scheduleUnlimited' | translate" />
+                <mat-hint>{{ 'SURVEY.scheduleMaxHint' | translate }}</mat-hint>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>{{ 'SURVEY.scheduleEndsAt' | translate }}</mat-label>
+                <input matInput type="date" [(ngModel)]="endsAt" />
+                <mat-hint>{{ 'SURVEY.scheduleEndsHint' | translate }}</mat-hint>
+              </mat-form-field>
+            </div>
+          }
+        </section>
+
         <!-- Summary -->
         @if (totalRecipients() > 0) {
           <div class="summary">
             <mat-icon>group</mat-icon>
-            {{ 'SURVEY.assignSummary' | translate: { count: totalRecipients() } }}
+            @if (selectedDepts().size > 0) {
+              {{ 'SURVEY.assignSummaryWithDepts' | translate: { count: totalRecipients(), deptCount: selectedDepts().size } }}
+            } @else {
+              {{ 'SURVEY.assignSummary' | translate: { count: totalRecipients() } }}
+            }
           </div>
         }
       }
@@ -157,6 +238,34 @@ interface UserOption {
     mat-dialog-content { max-height: 60vh; }
     section { margin: 16px 0; }
     h3 { font-size: 14px; font-weight: 600; color: var(--artes-primary, #1B2A47); margin: 0 0 10px; }
+
+    .schedule-toggle {
+      display: flex; align-items: flex-start; gap: 10px; cursor: pointer;
+      padding: 12px 14px; background: #fafbfd; border: 1px solid #e6ecf2; border-radius: 8px;
+      strong { display: block; font-size: 14px; color: var(--artes-primary, #1B2A47); }
+      em { font-size: 12px; color: #5a6a7e; font-style: normal; }
+    }
+    .schedule-banner {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 14px; margin: 0 0 16px;
+      background: #eff6ff; border: 1px solid #b3d4f5; border-radius: 8px;
+      mat-icon { color: #2080b0; flex-shrink: 0; }
+      .schedule-info { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+      .schedule-info strong { color: #1B2A47; font-size: 13px; }
+      .schedule-info span { color: #5a6a7e; font-size: 12px; }
+      .schedule-actions { display: flex; gap: 6px; flex-shrink: 0; }
+    }
+    .schedule-banner.paused {
+      background: #fff8f0; border-color: #f0d4a0;
+      mat-icon { color: #b27300; }
+    }
+
+    .schedule-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+      margin-top: 12px;
+    }
+    .schedule-grid mat-form-field { width: 100%; }
+    @media (max-width: 720px) { .schedule-grid { grid-template-columns: 1fr; } }
 
     ::ng-deep .mat-mdc-tab .mdc-tab__text-label {
       display: flex; align-items: center; gap: 6px;
@@ -220,6 +329,19 @@ export class IntakeAssignDialogComponent implements OnInit {
   searchTerm = signal('');
   message = '';
 
+  // Recurring-schedule fields (only sent when `recurring` is true).
+  recurring = false;
+  intervalWeeks = 2;
+  dayOfWeek: number | null = null;
+  hourOfDay = 9;
+  maxOccurrences: number | null = null;
+  endsAt = '';
+
+  /** The most recent recurring assignment for this template, surfaced as
+   *  the "active schedule" banner so the coach can pause/resume/cancel
+   *  without re-creating it. */
+  activeSchedule = signal<any | null>(null);
+
   filteredUsers = computed(() => {
     const term = this.searchTerm().toLowerCase();
     return this.users().filter((u) =>
@@ -230,6 +352,16 @@ export class IntakeAssignDialogComponent implements OnInit {
   });
 
   selectedUserCount = computed(() => this.users().filter((u) => u.selected).length);
+
+  /** Count of distinct people who belong to the currently selected
+   *  departments. Mirrors selectedUserCount so the Departments tab badge
+   *  reads as "people who'll be notified via this department list" rather
+   *  than the count of departments themselves. */
+  selectedDeptUserCount = computed(() => {
+    const depts = this.selectedDepts();
+    if (depts.size === 0) return 0;
+    return this.users().filter((u) => u.department && depts.has(u.department)).length;
+  });
 
   totalRecipients = computed(() => {
     const deptUsers = new Set<string>();
@@ -287,10 +419,61 @@ export class IntakeAssignDialogComponent implements OnInit {
           if (a.userIds) for (const uid of a.userIds) previouslyAssignedUserIds.add(uid);
           if (a.departments) for (const d of a.departments) previouslyAssignedDepts.add(d);
         }
+        // Find the most recent recurring assignment that is still scheduled
+        // (has a future nextFireAt or hasn't hit an end condition yet).
+        const recurring = assignments
+          .filter((a) => a.recurrence?.intervalWeeks)
+          .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        const stillScheduled = recurring.find((a) =>
+          a.recurrence?.nextFireAt || a.recurrence?.paused,
+        ) ?? recurring[0];
+        if (stillScheduled) this.activeSchedule.set(stillScheduled);
         assignDone = true;
         checkReady();
       },
       error: () => { assignDone = true; checkReady(); },
+    });
+  }
+
+  scheduleSummary(a: any): string {
+    const r = a?.recurrence; if (!r) return '';
+    const dow = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const parts: string[] = [];
+    parts.push(`Every ${r.intervalWeeks} week${r.intervalWeeks > 1 ? 's' : ''}`);
+    if (typeof r.dayOfWeek === 'number') {
+      parts.push(`${dow[r.dayOfWeek]}${typeof r.hourOfDay === 'number' ? ' at ' + String(r.hourOfDay).padStart(2, '0') + ':00' : ''}`);
+    }
+    if (r.occurrencesFired || r.maxOccurrences) {
+      parts.push(`${r.occurrencesFired ?? 0}${r.maxOccurrences ? '/' + r.maxOccurrences : ''} cycles`);
+    }
+    if (r.nextFireAt && !r.paused) {
+      parts.push('next: ' + new Date(r.nextFireAt).toLocaleDateString());
+    }
+    return parts.join(' · ');
+  }
+
+  togglePause(a: any): void {
+    const newPaused = !a.recurrence?.paused;
+    this.api.patch(`/surveys/templates/${this.data._id}/assignments/${a._id}`, { paused: newPaused }).subscribe({
+      next: (updated) => this.activeSchedule.set(updated),
+      error: () => this.snackBar.open(this.translate.instant('SURVEY.scheduleUpdateFailed'), 'OK', { duration: 3000 }),
+    });
+  }
+
+  cancelSchedule(a: any): void {
+    if (!confirm(this.translate.instant('SURVEY.scheduleCancelConfirm'))) return;
+    // Stop the cron from firing again by clearing nextFireAt + pausing.
+    // We could also DELETE the assignment but that wipes its dispatch
+    // history; pausing keeps the audit trail.
+    this.api.patch(`/surveys/templates/${this.data._id}/assignments/${a._id}`, {
+      paused: true,
+      endsAt: new Date().toISOString(),
+    }).subscribe({
+      next: (updated) => {
+        this.activeSchedule.set(updated);
+        this.snackBar.open(this.translate.instant('SURVEY.scheduleCancelled'), 'OK', { duration: 2500 });
+      },
+      error: () => this.snackBar.open(this.translate.instant('SURVEY.scheduleUpdateFailed'), 'OK', { duration: 3000 }),
     });
   }
 
@@ -317,10 +500,21 @@ export class IntakeAssignDialogComponent implements OnInit {
     const userIds = this.users().filter((u) => u.selected).map((u) => u._id);
     const departments = Array.from(this.selectedDepts());
 
+    const recurrence = this.recurring && this.intervalWeeks >= 1
+      ? {
+          intervalWeeks: this.intervalWeeks,
+          ...(this.dayOfWeek !== null ? { dayOfWeek: this.dayOfWeek } : {}),
+          ...(this.hourOfDay !== null && this.hourOfDay !== undefined ? { hourOfDay: this.hourOfDay } : {}),
+          ...(this.maxOccurrences ? { maxOccurrences: this.maxOccurrences } : {}),
+          ...(this.endsAt ? { endsAt: this.endsAt } : {}),
+        }
+      : undefined;
+
     this.api.post(`/surveys/templates/${this.data._id}/assign`, {
       userIds,
       departments,
       message: this.message || undefined,
+      ...(recurrence ? { recurrence } : {}),
     }).subscribe({
       next: (res: any) => {
         this.submitting.set(false);

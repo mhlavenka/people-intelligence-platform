@@ -74,6 +74,9 @@ interface SurveyTemplate {
     reference_period?: string;
     optional?: boolean;
     dimension?: string;
+    is_trap?: boolean;
+    trap_correct_answer?: number | boolean | string;
+    correlated_item_ids?: string[];
   }[];
 }
 
@@ -678,6 +681,36 @@ interface SurveyTemplate {
                               }
                             }
 
+                            <!-- Phase 3: Trap / attention check -->
+                            <div class="checkbox-row">
+                              <mat-checkbox formControlName="isTrap" color="primary"
+                                            [matTooltip]="'SURVEY.tipTrapItem' | translate"
+                                            matTooltipPosition="above"
+                                            matTooltipClass="tip-wide">
+                                {{ 'SURVEY.trapItem' | translate }}
+                              </mat-checkbox>
+                            </div>
+                            @if (q.get('isTrap')?.value) {
+                              <mat-form-field appearance="outline" class="full-width">
+                                <mat-label>{{ 'SURVEY.trapCorrectAnswer' | translate }}</mat-label>
+                                <input matInput formControlName="trapCorrectAnswer"
+                                       [placeholder]="q.get('type')?.value === 'boolean' ? 'true / false' : 'Expected value'" />
+                                <mat-hint>{{ 'SURVEY.trapCorrectAnswerHint' | translate }}</mat-hint>
+                              </mat-form-field>
+                            }
+
+                            <!-- Phase 3: Correlated items for inconsistency detection -->
+                            <mat-form-field appearance="outline" class="full-width">
+                              <mat-label>{{ 'SURVEY.correlatedItemIds' | translate }}</mat-label>
+                              <input matInput formControlName="correlatedItemIds"
+                                     placeholder="cp01, cp04" />
+                              <mat-icon matSuffix class="field-info"
+                                        [matTooltip]="'SURVEY.tipCorrelatedItems' | translate"
+                                        matTooltipPosition="above"
+                                        matTooltipClass="tip-wide">info_outline</mat-icon>
+                              <mat-hint>{{ 'SURVEY.correlatedItemIdsHint' | translate }}</mat-hint>
+                            </mat-form-field>
+
                             <!-- Temporal anchor -->
                             <mat-form-field appearance="outline" class="full-width">
                               <mat-label>{{ 'SURVEY.referencePeriod' | translate }}</mat-label>
@@ -1147,6 +1180,10 @@ export class SurveyTemplateDialogComponent implements OnInit {
         optional:            [data?.optional === true],
         // Layer 3 dimensional roll-up tag (analytics grouping)
         dimension:           [data?.dimension ?? ''],
+        // Phase 3 quality signals
+        isTrap:              [data?.is_trap === true],
+        trapCorrectAnswer:   [data?.trap_correct_answer ?? ''],
+        correlatedItemIds:   [(data?.correlated_item_ids ?? []).join(', ')],
       })
     );
   }
@@ -1299,6 +1336,27 @@ export class SurveyTemplateDialogComponent implements OnInit {
       }
       if (q.optional) base['optional'] = true;
       if (q.dimension && String(q.dimension).trim()) base['dimension'] = String(q.dimension).trim();
+
+      // Phase 3 quality signals
+      if (q.isTrap) {
+        base['is_trap'] = true;
+        if (q.trapCorrectAnswer !== '' && q.trapCorrectAnswer !== null && q.trapCorrectAnswer !== undefined) {
+          // Normalise to number when the question type is scale (string field
+          // produces a string by default).
+          const raw = q.trapCorrectAnswer;
+          const asNumber = Number(raw);
+          base['trap_correct_answer'] = q.type === 'scale' && !Number.isNaN(asNumber)
+            ? asNumber
+            : raw;
+        }
+      }
+      if (q.correlatedItemIds && String(q.correlatedItemIds).trim()) {
+        const ids = String(q.correlatedItemIds)
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean);
+        if (ids.length) base['correlated_item_ids'] = ids;
+      }
       return base;
     });
 

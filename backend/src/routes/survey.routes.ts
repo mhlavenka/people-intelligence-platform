@@ -10,10 +10,27 @@ import { User } from '../models/User.model';
 import { callClaude, buildAITemplatePrompt } from '../services/ai.service';
 import { createHubNotification, notifyCoachIntakeSubmitted } from '../services/hubNotification.service';
 import { sendEmail } from '../services/email.service';
+import { dispatchAssignment, computeNextFireAt } from '../services/surveyDispatch.service';
 import { config } from '../config/env';
 
-function makeSubmissionToken(userId: string, templateId: string, sessionId?: string): string {
-  const payload = sessionId ? `${userId}:${templateId}:${sessionId}` : `${userId}:${templateId}`;
+/**
+ * Build the submissionToken used as the dedup key on SurveyResponse.
+ *
+ * Variants in priority order:
+ *   - sessionId (pre/post-session intake) — coaching-session-bound
+ *   - cycle     (recurring assignment fire) — same template can be answered
+ *                 once per cycle without colliding with prior cycles
+ *   - neither   — one-shot survey, single submission per user per template
+ */
+function makeSubmissionToken(
+  userId: string,
+  templateId: string,
+  sessionId?: string,
+  cycle?: string,
+): string {
+  let payload = `${userId}:${templateId}`;
+  if (sessionId)   payload += `:s=${sessionId}`;
+  else if (cycle)  payload += `:c=${cycle}`;
   return createHash('sha256').update(payload).digest('hex');
 }
 
@@ -587,6 +604,7 @@ router.delete(
 router.get('/check/:templateId', async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const sessionId = typeof req.query['sessionId'] === 'string' ? req.query['sessionId'] : undefined;
+    const cycle = typeof req.query['cycle'] === 'string' ? req.query['cycle'] : undefined;
 
     if (sessionId) {
       const access = await isSessionIntakeAccessible(sessionId, req.params['templateId']);
@@ -600,6 +618,7 @@ router.get('/check/:templateId', async (req: AuthRequest, res: Response, next: N
       req.user!.userId.toString(),
       req.params['templateId'],
       sessionId,
+      cycle,
     );
     const existing = await SurveyResponse.findOne({ submissionToken: token }).setOptions({ bypassTenantCheck: true });
     res.json({ alreadySubmitted: !!existing, locked: false });
@@ -612,7 +631,7 @@ router.post('/respond', async (req: AuthRequest, res: Response, next: NextFuncti
   try {
     const {
       templateId, isAnonymous = true, departmentId, responses,
-      coacheeId, sessionFormat, targetName, sessionId, respondentLanguage,
+      coacheeId, sessionFormat, targetName, sessionId, cycle, respondentLanguage,
       timingMsPerItem,
     } = req.body;
 
@@ -628,7 +647,7 @@ router.post('/respond', async (req: AuthRequest, res: Response, next: NextFuncti
     }
 
     const tokenSubject = coacheeId ? coacheeId.toString() : req.user!.userId.toString();
-    const submissionToken = makeSubmissionToken(tokenSubject, templateId, sessionId);
+    const submissionToken = makeSubmissionToken(tokenSubject, templateId, sessionId, cycle);
 
     // Duplicate check — DB unique index is the safety net, but give a friendly error here
     const existing = await SurveyResponse.findOne({ submissionToken }).setOptions({ bypassTenantCheck: true });
@@ -649,6 +668,7 @@ router.post('/respond', async (req: AuthRequest, res: Response, next: NextFuncti
     };
 
     if (sessionId) doc['sessionId'] = sessionId;
+    if (cycle) doc['cycle'] = cycle;
     if (Array.isArray(timingMsPerItem)) doc['timingMsPerItem'] = timingMsPerItem;
 
     // Layer 1 (response quality) — compute on submit so it's persisted with the
@@ -663,7 +683,17 @@ router.post('/respond', async (req: AuthRequest, res: Response, next: NextFuncti
         longStringMaxFraction: org?.surveyQualityPolicy?.longStringMaxFraction ?? DEFAULT_QUALITY_POLICY.longStringMaxFraction,
         speedingMsPerItemFloor: DEFAULT_QUALITY_POLICY.speedingMsPerItemFloor,
       };
-      const q = computeQuality({ responses, timingMsPerItem }, policy);
+      // Phase 3: pass template questions in so trap + correlated-pair
+      // checks can fire (no-op when the template doesn't define them).
+      const tpl = await SurveyTemplate.findById(templateId)
+        .select('questions')
+        .setOptions({ bypassTenantCheck: true })
+        .lean();
+      const q = computeQuality(
+        { responses, timingMsPerItem },
+        policy,
+        tpl?.questions ?? undefined,
+      );
       doc['qualityScore'] = q.qualityScore;
       doc['qualityFlags'] = q.qualityFlags;
       doc['acceptedInAnalysis'] = q.acceptedInAnalysis;
@@ -856,24 +886,48 @@ router.post(
       }).setOptions({ bypassTenantCheck: true });
       if (!template) { res.status(404).json({ error: req.t('errors.templateNotFound') }); return; }
 
-      const { userIds = [], departments = [], message } = req.body as {
+      const { userIds = [], departments = [], message, recurrence } = req.body as {
         userIds?: string[];
         departments?: string[];
         message?: string;
+        recurrence?: {
+          intervalWeeks: number;
+          dayOfWeek?: number;
+          hourOfDay?: number;
+          startsAt?: string;
+          endsAt?: string;
+          maxOccurrences?: number;
+        };
       };
       if (!userIds.length && !departments.length) {
         res.status(400).json({ error: req.t('errors.assignmentTargetRequired') });
         return;
       }
 
-      // Resolve all recipient user IDs (explicit + department members)
-      const recipientSet = new Set<string>(userIds);
-      if (departments.length) {
-        const deptUsers = await User.find({
-          organizationId: req.user!.organizationId,
-          department: { $in: departments },
-        }).select('_id').lean();
-        for (const u of deptUsers) recipientSet.add(u._id.toString());
+      // Build recurrence sub-doc (optional). Validate the basics here; the
+      // schema enforces ranges.
+      let recurrenceDoc: Record<string, unknown> | undefined;
+      if (recurrence && Number(recurrence.intervalWeeks) >= 1) {
+        const startsAt = recurrence.startsAt ? new Date(recurrence.startsAt) : new Date();
+        recurrenceDoc = {
+          intervalWeeks:    Number(recurrence.intervalWeeks),
+          dayOfWeek:        typeof recurrence.dayOfWeek === 'number' ? recurrence.dayOfWeek : undefined,
+          hourOfDay:        typeof recurrence.hourOfDay === 'number' ? recurrence.hourOfDay : 9,
+          startsAt,
+          endsAt:           recurrence.endsAt ? new Date(recurrence.endsAt) : undefined,
+          maxOccurrences:   recurrence.maxOccurrences,
+          occurrencesFired: 0,
+          paused:           false,
+          // First fire = either startsAt itself, or the first dayOfWeek+hour after it.
+          nextFireAt: recurrence.dayOfWeek !== undefined
+            ? computeNextFireAt(
+                new Date(startsAt.getTime() - 1),  // -1ms so dayOfWeek match isn't skipped
+                Number(recurrence.intervalWeeks),
+                recurrence.dayOfWeek,
+                recurrence.hourOfDay,
+              )
+            : startsAt,
+        };
       }
 
       const assignment = await SurveyAssignment.create({
@@ -883,24 +937,76 @@ router.post(
         userIds,
         departments,
         message,
+        ...(recurrenceDoc ? { recurrence: recurrenceDoc } : {}),
       });
 
-      // Send hub notification to each recipient
-      const intakeLink = `/intake/${template._id}`;
-      const promises = Array.from(recipientSet).map((uid) =>
-        createHubNotification({
-          userId: uid,
-          organizationId: req.user!.organizationId,
-          type: 'survey_response',
-          title: template.title,
-          body: message || `You have been assigned a new intake: ${template.title}`,
-          link: intakeLink,
-          category: 'surveyAssigned',
-        }),
-      );
-      await Promise.allSettled(promises);
+      // Initial dispatch — if recurrence is set, the cron will handle the
+      // SCHEDULED future fires. We still notify recipients now so they
+      // know the assignment exists. The first cycle fire from the cron will
+      // also notify them with a fresh cycle token; that's intentional —
+      // recurring intakes should ping each cycle.
+      const result = await dispatchAssignment(assignment, template, {
+        sendEmail: false,  // initial fire is hub-only to match prior behaviour
+      });
 
-      res.status(201).json({ assignment, notifiedCount: recipientSet.size });
+      res.status(201).json({ assignment, notifiedCount: result.notifiedCount });
+    } catch (e) { next(e); }
+  },
+);
+
+/** PATCH /templates/:id/assignments/:assignmentId — pause/resume/edit cadence. */
+router.patch(
+  '/templates/:id/assignments/:assignmentId',
+  requirePermission('MANAGE_INTAKE_TEMPLATES'),
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const assignment = await SurveyAssignment.findOne({
+        _id: req.params['assignmentId'],
+        templateId: req.params['id'],
+        organizationId: req.user!.organizationId,
+      });
+      if (!assignment) { res.status(404).json({ error: req.t('errors.assignmentNotFound') }); return; }
+
+      const body = req.body as {
+        paused?: boolean;
+        intervalWeeks?: number;
+        dayOfWeek?: number | null;
+        hourOfDay?: number;
+        endsAt?: string | null;
+        maxOccurrences?: number | null;
+      };
+
+      // Allow partial updates of the recurrence sub-doc.
+      if (assignment.recurrence) {
+        if (typeof body.paused === 'boolean') assignment.recurrence.paused = body.paused;
+        if (typeof body.intervalWeeks === 'number' && body.intervalWeeks >= 1) {
+          assignment.recurrence.intervalWeeks = body.intervalWeeks;
+        }
+        if (body.dayOfWeek === null) assignment.recurrence.dayOfWeek = undefined;
+        else if (typeof body.dayOfWeek === 'number') assignment.recurrence.dayOfWeek = body.dayOfWeek;
+        if (typeof body.hourOfDay === 'number') assignment.recurrence.hourOfDay = body.hourOfDay;
+        if (body.endsAt === null) assignment.recurrence.endsAt = undefined;
+        else if (typeof body.endsAt === 'string') assignment.recurrence.endsAt = new Date(body.endsAt);
+        if (body.maxOccurrences === null) assignment.recurrence.maxOccurrences = undefined;
+        else if (typeof body.maxOccurrences === 'number') assignment.recurrence.maxOccurrences = body.maxOccurrences;
+
+        // Recompute nextFireAt if cadence changed (and it's not paused).
+        if (
+          (body.intervalWeeks !== undefined || body.dayOfWeek !== undefined || body.hourOfDay !== undefined)
+          && !assignment.recurrence.paused
+        ) {
+          const base = assignment.recurrence.lastFiredAt ?? new Date();
+          assignment.recurrence.nextFireAt = computeNextFireAt(
+            base,
+            assignment.recurrence.intervalWeeks,
+            assignment.recurrence.dayOfWeek,
+            assignment.recurrence.hourOfDay,
+          );
+        }
+      }
+
+      await assignment.save();
+      res.json(assignment);
     } catch (e) { next(e); }
   },
 );
