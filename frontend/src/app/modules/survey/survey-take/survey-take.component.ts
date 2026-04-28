@@ -614,6 +614,7 @@ export class SurveyTakeComponent implements OnInit {
   ) {}
 
   sessionId: string | null = null;
+  cycle: string | null = null;
 
   ngOnInit(): void {
     this.api.get<{ departments?: string[] }>('/organizations/me').subscribe({
@@ -634,11 +635,14 @@ export class SurveyTakeComponent implements OnInit {
 
     const id = this.route.snapshot.paramMap.get('id');
     this.sessionId = this.route.snapshot.queryParamMap.get('sessionId');
+    this.cycle = this.route.snapshot.queryParamMap.get('cycle');
     if (!id) { this.loading.set(false); return; }
 
-    const checkUrl = this.sessionId
-      ? `/surveys/check/${id}?sessionId=${encodeURIComponent(this.sessionId)}`
-      : `/surveys/check/${id}`;
+    const params = new URLSearchParams();
+    if (this.sessionId) params.set('sessionId', this.sessionId);
+    if (this.cycle)     params.set('cycle', this.cycle);
+    const qs = params.toString();
+    const checkUrl = `/surveys/check/${id}${qs ? '?' + qs : ''}`;
 
     this.api.get<{ alreadySubmitted: boolean; locked?: boolean; lockedReason?: string }>(checkUrl).subscribe({
       next: (result) => {
@@ -799,6 +803,7 @@ export class SurveyTakeComponent implements OnInit {
       body['departmentId'] = this.selectedDept || undefined;
       body['isAnonymous'] = true;
     }
+    if (this.cycle) body['cycle'] = this.cycle;
 
     this.api.post('/surveys/respond', body).subscribe({
       next: () => { this.submitting.set(false); this.submitted.set(true); this.submitError.set(null); },
