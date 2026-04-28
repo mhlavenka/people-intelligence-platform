@@ -71,19 +71,12 @@ interface UserOption {
             <ng-template mat-tab-label>
               <mat-icon>business</mat-icon>
               {{ 'SURVEY.assignToDepartments' | translate }}
-              @if (selectedDepts().size) {
-                <span class="tab-badge">{{ selectedDepts().size }}</span>
+              @if (selectedDeptUserCount()) {
+                <span class="tab-badge">{{ selectedDeptUserCount() }}</span>
               }
             </ng-template>
 
             <div class="tab-body">
-              @if (selectedDepts().size > 0) {
-                <div class="dept-selected-banner">
-                  <mat-icon>check_circle</mat-icon>
-                  <strong>{{ selectedDepts().size }}</strong>
-                  {{ (selectedDepts().size === 1 ? 'SURVEY.deptSelected' : 'SURVEY.deptSelectedPlural') | translate }}
-                </div>
-              }
               @if (departments().length === 0) {
                 <p class="no-results">{{ 'SURVEY.noDepartments' | translate }}</p>
               } @else {
@@ -267,14 +260,6 @@ interface UserOption {
       mat-icon { color: #b27300; }
     }
 
-    .dept-selected-banner {
-      display: inline-flex; align-items: center; gap: 6px;
-      padding: 6px 12px; margin: 0 0 10px;
-      background: var(--artes-accent, #3A9FD6); color: #fff;
-      border-radius: 999px; font-size: 13px;
-      mat-icon { font-size: 16px; width: 16px; height: 16px; }
-      strong { font-weight: 700; }
-    }
     .schedule-grid {
       display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
       margin-top: 12px;
@@ -367,6 +352,16 @@ export class IntakeAssignDialogComponent implements OnInit {
   });
 
   selectedUserCount = computed(() => this.users().filter((u) => u.selected).length);
+
+  /** Count of distinct people who belong to the currently selected
+   *  departments. Mirrors selectedUserCount so the Departments tab badge
+   *  reads as "people who'll be notified via this department list" rather
+   *  than the count of departments themselves. */
+  selectedDeptUserCount = computed(() => {
+    const depts = this.selectedDepts();
+    if (depts.size === 0) return 0;
+    return this.users().filter((u) => u.department && depts.has(u.department)).length;
+  });
 
   totalRecipients = computed(() => {
     const deptUsers = new Set<string>();
