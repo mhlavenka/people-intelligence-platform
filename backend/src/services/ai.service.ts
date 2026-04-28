@@ -143,7 +143,7 @@ export function buildConflictAnalysisPrompt(
       mean: number; sd: number; bimodalityCoef: number; rwg: number;
     }>;
     dimensionMetrics?: Array<{
-      dimension: string; mean: number; rwg: number; disagreementScore: number;
+      dimension: string; mean?: number | null; rwg: number; disagreementScore: number;
     }>;
     subgroupAnalysis?: {
       k: number; silhouette: number;
@@ -184,9 +184,13 @@ export function buildConflictAnalysisPrompt(
 
   const dimensionBlock = (surveyData.dimensionMetrics ?? []).length
     ? '\nDIMENSIONAL DIVERGENCE (rwg ≥0.7 = good agreement, <0.5 = low)\n' +
-      surveyData.dimensionMetrics!.map((d) =>
-        `- ${d.dimension}: mean ${d.mean}, rwg ${d.rwg} (disagreement ${d.disagreementScore}/100)`
-      ).join('\n') + '\n'
+      surveyData.dimensionMetrics!.map((d) => {
+        // Some dimensions (e.g. boolean-only ones like Escalation Intent)
+        // intentionally have no continuous-scale mean. Use "n/a" so the LLM
+        // doesn't infer a fake value from "null" or "undefined" wording.
+        const meanLabel = (typeof d.mean === 'number') ? d.mean : 'n/a';
+        return `- ${d.dimension}: mean ${meanLabel}, rwg ${d.rwg} (disagreement ${d.disagreementScore}/100)`;
+      }).join('\n') + '\n'
     : '';
 
   const subgroupBlock = surveyData.subgroupAnalysis

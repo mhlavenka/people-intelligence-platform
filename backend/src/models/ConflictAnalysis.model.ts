@@ -43,7 +43,12 @@ export interface IItemMetric {
 export interface IDimensionMetric {
   dimension: string;             // 'Psychological Safety', 'Trust', ... or 'Ungrouped'
   itemCount: number;
-  mean: number;
+  /** Average of constituent item means restricted to continuous-scale items.
+   *  Null/undefined when the dimension contains only boolean items (e.g.
+   *  Escalation Intent in HNP-PULSE), since blending 0/1 booleans with 0/10
+   *  scale items would produce a misleading number without reverse-coding
+   *  metadata. UI must handle the null case. */
+  mean?: number | null;
   rwg: number;
   disagreementScore: number;     // 0-100 (100 = max disagreement)
   mostDivergentItemIds: string[];
