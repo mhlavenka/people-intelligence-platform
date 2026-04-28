@@ -82,6 +82,32 @@ interface Session {
             </button>
           </div>
         }
+        <!-- Alumni: coach can reactivate the engagement -->
+        @if (canManage() && engagement()!.status === 'alumni') {
+          <div class="lifecycle-banner alumni">
+            <mat-icon>autorenew</mat-icon>
+            <div class="banner-text">
+              <strong>{{ 'COACHING.reactivateTitle' | translate }}</strong>
+              <span>{{ 'COACHING.reactivateDesc' | translate }}</span>
+            </div>
+            <button mat-flat-button color="primary"
+                    (click)="reactivateEngagement()"
+                    [disabled]="reactivating()">
+              @if (reactivating()) { <mat-spinner diameter="14" /> }
+              {{ 'COACHING.reactivateAction' | translate }}
+            </button>
+          </div>
+        }
+        <!-- Alumni: coachee read-only banner -->
+        @if (!canManage() && engagement()!.status === 'alumni') {
+          <div class="lifecycle-banner alumni-readonly">
+            <mat-icon>lock</mat-icon>
+            <div class="banner-text">
+              <strong>{{ 'COACHING.alumniReadOnlyTitle' | translate }}</strong>
+              <span>{{ 'COACHING.alumniReadOnlyDesc' | translate }}</span>
+            </div>
+          </div>
+        }
         <div class="detail-layout">
 
           <!-- Sidebar -->
@@ -560,15 +586,15 @@ interface Session {
               </div>
             }
 
-            <!-- Coach: 'New Session' as an empty + tile -->
-            @if (canManage()) {
+            <!-- Coach: 'New Session' — hidden on alumni engagements -->
+            @if (canManage() && engagement()!.status !== 'alumni') {
               <button class="session-card add-session-card" type="button" (click)="addSession()">
                 <mat-icon class="add-icon">add</mat-icon>
                 <span class="add-label">{{ 'COACHING.newSession' | translate }}</span>
               </button>
             }
-            <!-- Coachee: 'Book a Session' as an empty + tile -->
-            @if (!canManage()) {
+            <!-- Coachee: 'Book a Session' — hidden on alumni engagements -->
+            @if (!canManage() && engagement()!.status !== 'alumni') {
               <button class="session-card add-session-card" type="button" (click)="bookSession()">
                 <mat-icon class="add-icon">add</mat-icon>
                 <span class="add-label">{{ 'COACHING.bookASession' | translate }}</span>
@@ -593,6 +619,14 @@ interface Session {
       .banner-text { display: flex; flex-direction: column; gap: 2px; flex: 1; }
       .banner-text strong { color: #1B2A47; font-size: 14px; }
       .banner-text span { color: #5a6a7e; font-size: 12px; }
+    }
+    .lifecycle-banner.alumni {
+      background: #f1ecfa; border-color: #cfb8e8;
+      mat-icon { color: #6a4ba8; }
+    }
+    .lifecycle-banner.alumni-readonly {
+      background: #f4f7fb; border-color: #d6dde6;
+      mat-icon { color: #5a6a7e; }
     }
 
     .info-card {
@@ -919,6 +953,7 @@ export class EngagementDetailComponent implements OnInit {
   sessions = signal<Session[]>([]);
   loading = signal(true);
   advancing = signal(false);
+  reactivating = signal(false);
   currentMonth = signal(new Date());
 
   /** Banner shows when a prospect engagement has at least one completed
@@ -1118,6 +1153,43 @@ export class EngagementDetailComponent implements OnInit {
           { duration: 4000 },
         );
       },
+    });
+  }
+
+  reactivateEngagement(): void {
+    if (this.reactivating() || !this.engId) return;
+    const ref = this.dialog.open(ConfirmDialogComponent, {
+      width: '460px',
+      data: {
+        title: this.translate.instant('COACHING.reactivateConfirmTitle'),
+        message: this.translate.instant('COACHING.reactivateConfirmMsg'),
+        confirmLabel: this.translate.instant('COACHING.reactivateAction'),
+        confirmColor: 'primary',
+        icon: 'autorenew',
+      },
+    });
+    ref.afterClosed().subscribe((ok) => {
+      if (!ok) return;
+      this.reactivating.set(true);
+      this.api.put(`/coaching/engagements/${this.engId}`, { status: 'contracted' }).subscribe({
+        next: () => {
+          this.reactivating.set(false);
+          this.snack.open(
+            this.translate.instant('COACHING.reactivateSuccess'),
+            this.translate.instant('COMMON.ok'),
+            { duration: 3000 },
+          );
+          this.load();
+        },
+        error: (err) => {
+          this.reactivating.set(false);
+          this.snack.open(
+            err?.error?.error || this.translate.instant('COACHING.reactivateError'),
+            this.translate.instant('COMMON.dismiss'),
+            { duration: 4000 },
+          );
+        },
+      });
     });
   }
 

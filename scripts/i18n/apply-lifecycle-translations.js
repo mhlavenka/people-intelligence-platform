@@ -19,9 +19,18 @@ const COACHING_FR = {
   advanceToContractedError: 'Impossible de faire avancer l\'engagement. Réessayez.',
   advanceToContractedSuccess: 'Engagement passé au statut Sous contrat',
   advanceToContractedTitle: 'Prêt·e à démarrer l\'engagement ?',
+  alumniReadOnlyDesc: 'Cet engagement est en mode alumni. Votre plan de développement et vos notes de séance restent disponibles en lecture seule.',
+  alumniReadOnlyTitle: 'Alumni — accès en lecture seule',
   chemistryCall: 'Appel de découverte',
   chemistryCallDesc: 'Appel gratuit avant la signature du contrat. Ne décompte pas du quota de séances.',
   chemistryCallTooltip: 'Appel de découverte gratuit — ne consomme pas le quota de séances',
+  reactivateAction: 'Réactiver l\'engagement',
+  reactivateConfirmMsg: 'Ceci replacera l\'engagement au statut « Sous contrat » et rétablira l\'accès du coaché·e. Les rappels alumni en attente seront annulés.',
+  reactivateConfirmTitle: 'Réactiver cet engagement ?',
+  reactivateDesc: 'L\'engagement est en mode alumni. Le réactiver redonne au coaché·e l\'accès aux réservations.',
+  reactivateError: 'Impossible de réactiver l\'engagement. Réessayez.',
+  reactivateSuccess: 'Engagement réactivé',
+  reactivateTitle: 'Faire revenir le coaché·e ?',
 };
 
 const COACHING_ES = {
@@ -30,9 +39,18 @@ const COACHING_ES = {
   advanceToContractedError: 'No se pudo avanzar el compromiso. Inténtalo de nuevo.',
   advanceToContractedSuccess: 'Compromiso avanzado a Contratado',
   advanceToContractedTitle: '¿Listo/a para comenzar el compromiso?',
+  alumniReadOnlyDesc: 'Este compromiso está en modo alumni. Tu plan de desarrollo y notas de sesión siguen disponibles en solo lectura.',
+  alumniReadOnlyTitle: 'Alumni — acceso de solo lectura',
   chemistryCall: 'Sesión de química',
   chemistryCallDesc: 'Llamada gratuita antes de contratar. No consume el cupo de sesiones.',
   chemistryCallTooltip: 'Sesión de química gratuita — no consume el cupo de sesiones',
+  reactivateAction: 'Reactivar compromiso',
+  reactivateConfirmMsg: 'Esto devolverá el compromiso a Contratado y restablecerá el acceso del coachee. Los recordatorios alumni pendientes se cancelarán.',
+  reactivateConfirmTitle: '¿Reactivar este compromiso?',
+  reactivateDesc: 'El compromiso está en modo alumni. Reactivarlo permite al coachee reservar sesiones de nuevo.',
+  reactivateError: 'No se pudo reactivar el compromiso. Inténtalo de nuevo.',
+  reactivateSuccess: 'Compromiso reactivado',
+  reactivateTitle: '¿Darle la bienvenida de nuevo?',
 };
 
 const COACHING_SK = {
@@ -41,9 +59,18 @@ const COACHING_SK = {
   advanceToContractedError: 'Nepodarilo sa posunúť koučovací vzťah. Skúste znova.',
   advanceToContractedSuccess: 'Koučovací vzťah posunutý na Zmluvné',
   advanceToContractedTitle: 'Pripravený začať koučovací vzťah?',
+  alumniReadOnlyDesc: 'Tento koučovací vzťah je v alumni režime. Váš rozvojový plán a poznámky zo stretnutí zostávajú prístupné len na čítanie.',
+  alumniReadOnlyTitle: 'Alumni — prístup len na čítanie',
   chemistryCall: 'Úvodný rozhovor',
   chemistryCallDesc: 'Nezáväzný rozhovor pred uzavretím zmluvy. Nezapočítava sa do kvóty stretnutí.',
   chemistryCallTooltip: 'Nezáväzný úvodný rozhovor — nespotrebúva kvótu stretnutí',
+  reactivateAction: 'Obnoviť koučovací vzťah',
+  reactivateConfirmMsg: 'Toto vráti koučovací vzťah na Zmluvné a obnoví prístup koučovaného. Čakajúce alumni pripomienky budú zrušené.',
+  reactivateConfirmTitle: 'Obnoviť tento koučovací vzťah?',
+  reactivateDesc: 'Koučovací vzťah je v alumni režime. Jeho obnovenie umožní koučovanému opäť rezervovať stretnutia.',
+  reactivateError: 'Nepodarilo sa obnoviť koučovací vzťah. Skúste znova.',
+  reactivateSuccess: 'Koučovací vzťah obnovený',
+  reactivateTitle: 'Privítať ho späť?',
 };
 
 const TRANSLATIONS = {
