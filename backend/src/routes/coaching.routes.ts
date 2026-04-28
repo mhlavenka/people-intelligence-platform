@@ -1,4 +1,8 @@
 import { Router, Response, NextFunction } from 'express';
+import multer from 'multer';
+import path from 'path';
+import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { authenticateToken, requirePermission, AuthRequest, isCoacheeUser } from '../middleware/auth.middleware';
 import { tenantResolver } from '../middleware/tenant.middleware';
 import { CoachingEngagement } from '../models/CoachingEngagement.model';
@@ -385,15 +389,31 @@ router.put(
   requirePermission('MANAGE_COACHING'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
-      const engagement = await CoachingEngagement.findOneAndUpdate(
-        { _id: req.params['id'], organizationId: req.user!.organizationId },
-        req.body,
-        { new: true, runValidators: true }
-      )
+      // Reactivation: alumni/completed -> contracted/active. Stamp
+      // reactivatedAt and clear pending alumni reminders so the cron
+      // doesn't re-fire on the resumed engagement.
+      const existing = await CoachingEngagement.findOne({
+        _id: req.params['id'],
+        organizationId: req.user!.organizationId,
+      });
+      if (!existing) { res.status(404).json({ error: req.t('errors.engagementNotFound') }); return; }
+
+      const wasFinal = existing.status === 'alumni' || existing.status === 'completed';
+      const becomingActive = ['contracted', 'active'].includes(req.body?.status);
+      const isReactivation = wasFinal && becomingActive;
+
+      Object.assign(existing, req.body);
+      if (isReactivation) {
+        existing.reactivatedAt = new Date();
+        existing.completedAt = undefined;
+        existing.alumniReminders = { disabled: false };
+      }
+      await existing.save();
+
+      const engagement = await CoachingEngagement.findById(existing._id)
         .populate('coacheeId', 'firstName lastName email department profilePicture')
         .populate('coachId', 'firstName lastName email profilePicture')
-      .populate('sponsorId', 'name email organization');
-      if (!engagement) { res.status(404).json({ error: req.t('errors.engagementNotFound') }); return; }
+        .populate('sponsorId', 'name email organization');
       res.json(engagement);
     } catch (e) { next(e); }
   }
@@ -442,6 +462,240 @@ router.delete(
       res.json({ message: 'Engagement and sessions deleted' });
     } catch (e) { next(e); }
   }
+);
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CONTRACT (click-to-accept)
+// ═══════════════════════════════════════════════════════════════════════════
+
+const s3Client = new S3Client({
+  region: config.aws.region,
+  ...(config.aws.accessKeyId && config.aws.secretAccessKey
+    ? { credentials: { accessKeyId: config.aws.accessKeyId, secretAccessKey: config.aws.secretAccessKey } }
+    : {}),
+});
+
+const contractUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
+  fileFilter: (_req, file, cb) => {
+    if (file.mimetype !== 'application/pdf') {
+      cb(new Error('Only PDF files are accepted')); return;
+    }
+    cb(null, true);
+  },
+});
+
+/**
+ * Authorize the requester for contract operations on an engagement.
+ * Coach (own engagement), the engagement's coachee, admin, and hr_manager
+ * are allowed. Returns the engagement when allowed, null otherwise.
+ */
+async function authorizeContractAccess(
+  req: AuthRequest,
+  engagementId: string,
+): Promise<InstanceType<typeof CoachingEngagement> | null> {
+  const engagement = await CoachingEngagement.findOne({
+    _id: engagementId,
+    organizationId: req.user!.organizationId,
+  });
+  if (!engagement) return null;
+
+  const role = req.user!.role;
+  const userId = req.user!.userId;
+  if (role === 'admin' || role === 'hr_manager') return engagement;
+  if (role === 'coach' && String(engagement.coachId) === userId) return engagement;
+  if (String(engagement.coacheeId) === userId) return engagement;
+  return null;
+}
+
+/** Coach uploads a contract PDF for an engagement. Replaces any existing
+ *  contract; resets the accepted timestamp so the coachee re-accepts the
+ *  new version. The S3 object stays private — frontend never receives the
+ *  public URL, only the S3 key. */
+router.post(
+  '/engagements/:id/contract',
+  requirePermission('MANAGE_COACHING'),
+  contractUpload.single('file'),
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      if (!req.file) { res.status(400).json({ error: 'PDF file required' }); return; }
+      // Validate magic bytes (multer's mimetype check is client-asserted).
+      if (req.file.buffer.slice(0, 4).toString() !== '%PDF') {
+        res.status(400).json({ error: 'File is not a valid PDF' });
+        return;
+      }
+
+      const engagement = await CoachingEngagement.findOne({
+        _id: req.params['id'],
+        organizationId: req.user!.organizationId,
+      });
+      if (!engagement) { res.status(404).json({ error: req.t('errors.engagementNotFound') }); return; }
+
+      // Best-effort: delete the old object so we don't leak storage on replace.
+      if (engagement.contractS3Key) {
+        s3Client.send(new DeleteObjectCommand({
+          Bucket: config.aws.s3Bucket,
+          Key: engagement.contractS3Key,
+        })).catch((err) => console.warn('[Contract] Old object delete failed:', err));
+      }
+
+      const ext = path.extname(req.file.originalname).toLowerCase() || '.pdf';
+      const key = `contracts/${req.user!.organizationId}/${engagement._id}-${Date.now()}${ext}`;
+      await s3Client.send(new PutObjectCommand({
+        Bucket: config.aws.s3Bucket,
+        Key: key,
+        Body: req.file.buffer,
+        ContentType: 'application/pdf',
+      }));
+
+      engagement.contractS3Key = key;
+      engagement.contractFilename = req.file.originalname;
+      // New contract -> previous acceptance no longer applies
+      engagement.contractAcceptedAt = undefined;
+      engagement.contractAcceptedBy = undefined;
+      engagement.contractAcceptedIp = undefined;
+      await engagement.save();
+
+      res.json({
+        contractFilename: engagement.contractFilename,
+        hasContract: true,
+      });
+    } catch (e) { next(e); }
+  },
+);
+
+/** Issue a short-lived signed URL for viewing the contract PDF.
+ *  Coach (own engagement), coachee, admin, hr_manager all eligible. */
+router.get(
+  '/engagements/:id/contract/url',
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const engagement = await authorizeContractAccess(req, req.params['id']!);
+      if (!engagement) { res.status(404).json({ error: req.t('errors.engagementNotFound') }); return; }
+      if (!engagement.contractS3Key) {
+        res.status(404).json({ error: 'No contract uploaded for this engagement' });
+        return;
+      }
+
+      const expiresInSeconds = 300; // 5 minutes — enough for the coachee to load the iframe
+      const command = new GetObjectCommand({
+        Bucket: config.aws.s3Bucket,
+        Key: engagement.contractS3Key,
+        // Force inline rendering so the PDF shows in an iframe rather than
+        // downloading. Filename is suggested if the user does choose to save.
+        ResponseContentDisposition: `inline; filename="${(engagement.contractFilename || 'contract.pdf').replace(/"/g, '')}"`,
+        ResponseContentType: 'application/pdf',
+      });
+      const url = await getSignedUrl(s3Client, command, { expiresIn: expiresInSeconds });
+
+      res.json({
+        url,
+        expiresAt: new Date(Date.now() + expiresInSeconds * 1000).toISOString(),
+        filename: engagement.contractFilename,
+      });
+    } catch (e) { next(e); }
+  },
+);
+
+/** Coach removes the uploaded contract. */
+router.delete(
+  '/engagements/:id/contract',
+  requirePermission('MANAGE_COACHING'),
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const engagement = await CoachingEngagement.findOne({
+        _id: req.params['id'],
+        organizationId: req.user!.organizationId,
+      });
+      if (!engagement) { res.status(404).json({ error: req.t('errors.engagementNotFound') }); return; }
+
+      // Best-effort delete from S3
+      if (engagement.contractS3Key) {
+        s3Client.send(new DeleteObjectCommand({
+          Bucket: config.aws.s3Bucket,
+          Key: engagement.contractS3Key,
+        })).catch((err) => console.warn('[Contract] S3 delete failed:', err));
+      }
+
+      engagement.contractS3Key = undefined;
+      engagement.contractFilename = undefined;
+      engagement.contractAcceptedAt = undefined;
+      engagement.contractAcceptedBy = undefined;
+      engagement.contractAcceptedIp = undefined;
+      await engagement.save();
+
+      res.status(204).end();
+    } catch (e) { next(e); }
+  },
+);
+
+/** Coachee (or any party on the engagement) clicks accept. Records the
+ *  user, timestamp, and request IP as the audit trail. */
+router.post(
+  '/engagements/:id/contract/accept',
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const engagement = await CoachingEngagement.findOne({
+        _id: req.params['id'],
+        organizationId: req.user!.organizationId,
+      });
+      if (!engagement) { res.status(404).json({ error: req.t('errors.engagementNotFound') }); return; }
+      if (!engagement.contractS3Key) {
+        res.status(400).json({ error: 'No contract uploaded for this engagement' });
+        return;
+      }
+      if (engagement.contractAcceptedAt) {
+        res.status(409).json({ error: 'Contract already accepted' });
+        return;
+      }
+
+      // Only the coachee or someone with manage rights can accept.
+      const isCoachee = String(engagement.coacheeId) === req.user!.userId;
+      const canManage = req.user!.role === 'admin' || req.user!.role === 'hr_manager' || req.user!.role === 'coach';
+      if (!isCoachee && !canManage) {
+        res.status(403).json({ error: 'Only the coachee on this engagement can accept the contract' });
+        return;
+      }
+
+      engagement.contractAcceptedAt = new Date();
+      engagement.contractAcceptedBy = new (await import('mongoose')).Types.ObjectId(req.user!.userId);
+      // req.ip honours the trust-proxy setting — Apache forwards real client IP.
+      engagement.contractAcceptedIp = req.ip || (req.socket && req.socket.remoteAddress) || '';
+      await engagement.save();
+
+      // Notify the coach (and admin/hr) that the coachee has signed.
+      try {
+        const coach = await User.findById(engagement.coachId).select('firstName lastName email');
+        const coachee = await User.findById(engagement.coacheeId).select('firstName lastName email');
+        if (coach?.email && coachee) {
+          const coacheeName = `${coachee.firstName} ${coachee.lastName}`;
+          sendEmail({
+            to: coach.email,
+            subject: `Contract accepted — ${coacheeName}`,
+            html: `<h2 style="color:#1B2A47;margin:0 0 12px;font-size:22px;">Contract accepted</h2>
+                   <p style="color:#5a6a7e;margin:0 0 16px;line-height:1.6;">
+                     <strong>${coacheeName}</strong> has accepted the coaching contract for this engagement.
+                   </p>
+                   <p style="color:#9aa5b4;margin:0 0 16px;font-size:13px;">
+                     Accepted at ${engagement.contractAcceptedAt.toISOString()} from ${engagement.contractAcceptedIp || 'unknown IP'}.
+                   </p>
+                   <a href="${config.frontendUrl}/coaching/${engagement._id}"
+                      style="display:inline-block;background:#3A9FD6;color:#ffffff;padding:14px 28px;border-radius:6px;text-decoration:none;font-weight:600;font-size:15px;">
+                     View engagement
+                   </a>`,
+          }).catch((err) => console.error('[Contract] Coach email failed:', err));
+        }
+      } catch (err) {
+        console.warn('[Contract] Notification failed (non-fatal):', err);
+      }
+
+      res.json({
+        contractAcceptedAt: engagement.contractAcceptedAt,
+        contractAcceptedBy: engagement.contractAcceptedBy,
+      });
+    } catch (e) { next(e); }
+  },
 );
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -542,8 +796,9 @@ router.post(
         coachId: req.body.coachId || req.user!.userId,
       });
 
-      // Increment sessionsUsed on the engagement if session is completed
-      if (session.status === 'completed') {
+      // Increment sessionsUsed on the engagement if session is completed.
+      // Chemistry calls are complimentary and never consume the quota.
+      if (session.status === 'completed' && !session.isChemistryCall) {
         await CoachingEngagement.findByIdAndUpdate(session.engagementId, { $inc: { sessionsUsed: 1 } });
       }
 
@@ -734,8 +989,11 @@ router.put(
       // If status changed to completed, increment engagement counter and send
       // the post-session form. Coach-assigned template wins; otherwise we fall
       // back to AI auto-generation when context is available.
+      // Chemistry calls are complimentary and skip the quota increment.
       if (wasNotCompleted && existing.status === 'completed') {
-        await CoachingEngagement.findByIdAndUpdate(existing.engagementId, { $inc: { sessionsUsed: 1 } });
+        if (!existing.isChemistryCall) {
+          await CoachingEngagement.findByIdAndUpdate(existing.engagementId, { $inc: { sessionsUsed: 1 } });
+        }
 
         if (existing.postSessionIntakeTemplateId && !existing.postSessionIntakeSentAt) {
           dispatchAssignedPostSessionForm(existing, req.language)

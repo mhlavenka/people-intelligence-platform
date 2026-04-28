@@ -23,6 +23,10 @@ export interface ICoachingSession extends Document {
   status: SessionStatus;
   clientType: SessionClientType;     // ICF-required: individual / team / group
   paidStatus: SessionPaidStatus;     // ICF-required: paid / pro_bono
+  /** Complimentary chemistry call before contracting. Does NOT consume the
+   *  engagement's session quota. Always pro_bono. Typically the only session
+   *  that can exist on a 'prospect' engagement. */
+  isChemistryCall: boolean;
   googleEventId?: string;
   googleMeetLink?: string;
   bookingId?: mongoose.Types.ObjectId;  // paired Booking row, if any
@@ -67,6 +71,7 @@ const CoachingSessionSchema = new Schema<ICoachingSession>(
       enum: ['paid', 'pro_bono'],
       default: 'paid',
     },
+    isChemistryCall: { type: Boolean, default: false },
     googleEventId: { type: String },
     googleMeetLink: { type: String },
     bookingId: { type: Schema.Types.ObjectId, ref: 'Booking', index: true },

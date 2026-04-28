@@ -63,6 +63,16 @@ export async function precheckBookingQuota(
   // No engagement yet → the auto-created one will start at 0/0 (unlimited).
   if (!engagement) return { allowed: true };
 
+  // Alumni / completed engagements are read-only. The coach must reactivate
+  // before the coachee can book again.
+  if (engagement.status === 'alumni' || engagement.status === 'completed') {
+    return {
+      allowed: false,
+      reason: 'This engagement has ended. Ask your coach to reactivate it before booking another session.',
+      remaining: 0,
+    };
+  }
+
   // 0 means unlimited — same semantics as the engagement editor's hint.
   if (!engagement.sessionsPurchased) return { allowed: true };
 

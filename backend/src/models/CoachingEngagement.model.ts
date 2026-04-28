@@ -11,6 +11,15 @@ export type EngagementStatus = 'prospect' | 'contracted' | 'active' | 'paused' |
  */
 export type BillingMode = 'sponsor' | 'subscription';
 
+export interface IAlumniReminders {
+  /** When the 3-month follow-up email was sent. Empty until the cron fires. */
+  threeMonthSentAt?: Date;
+  /** When the 6-month follow-up email was sent. */
+  sixMonthSentAt?: Date;
+  /** Coach can opt the engagement out of automated alumni reminders. */
+  disabled?: boolean;
+}
+
 export interface ICoachingEngagement extends Document {
   organizationId: mongoose.Types.ObjectId;
   coacheeId: mongoose.Types.ObjectId;
@@ -26,9 +35,27 @@ export interface ICoachingEngagement extends Document {
   targetEndDate?: Date;
   completedAt?: Date;
   goals: string[];
-  contractUrl?: string;
+  /** S3 object key for the uploaded contract PDF. The bucket is private;
+   *  served only via short-lived signed URLs from the backend. Empty when
+   *  no contract is on file. */
+  contractS3Key?: string;
+  contractFilename?: string;        // original filename for display
+  contractAcceptedAt?: Date;        // when the coachee clicked accept
+  contractAcceptedBy?: mongoose.Types.ObjectId; // user who accepted (usually coachee)
+  contractAcceptedIp?: string;      // requester IP at acceptance time
   notes?: string;                   // coach's private engagement notes
   hourlyRate?: number;              // per-engagement rate; falls back to sponsor.defaultHourlyRate
+  alumniReminders?: IAlumniReminders;
+  /** When this engagement was reactivated from alumni back to active.
+   *  Used so the alumni cron skips reactivated engagements. */
+  reactivatedAt?: Date;
+  /** When the mid-point three-way review was conducted. Set after the
+   *  coach completes the corresponding interview template. Empty -> the
+   *  engagement detail page surfaces a prompt at >= 50% session usage. */
+  midPointReviewAt?: Date;
+  /** When the final three-way review was conducted. Empty on completed
+   *  engagements -> page surfaces a closure prompt. */
+  finalReviewAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -58,9 +85,21 @@ const CoachingEngagementSchema = new Schema<ICoachingEngagement>(
     targetEndDate:     { type: Date },
     completedAt:       { type: Date },
     goals:             [{ type: String }],
-    contractUrl:       { type: String },
+    contractS3Key:     { type: String },
+    contractFilename:  { type: String },
+    contractAcceptedAt:{ type: Date },
+    contractAcceptedBy:{ type: Schema.Types.ObjectId, ref: 'User' },
+    contractAcceptedIp:{ type: String },
     notes:             { type: String },
     hourlyRate:        { type: Number, min: 0 },
+    alumniReminders: {
+      threeMonthSentAt: { type: Date },
+      sixMonthSentAt:   { type: Date },
+      disabled:         { type: Boolean, default: false },
+    },
+    reactivatedAt:     { type: Date },
+    midPointReviewAt:  { type: Date },
+    finalReviewAt:     { type: Date },
   },
   { timestamps: true }
 );

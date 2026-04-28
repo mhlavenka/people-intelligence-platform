@@ -396,6 +396,90 @@ const coachingPostSession: {
   ],
 };
 
+const coachingMidpointReview: {
+  title: string;
+  moduleType: 'coaching';
+  intakeType: 'interview';
+  description: string;
+  instructions: string;
+  questions: IQuestion[];
+} = {
+  title: 'Coaching — Mid-Point Three-Way Review',
+  moduleType: 'coaching',
+  intakeType: 'interview',
+  description:
+    'Structured agenda for the mid-engagement three-way conversation between coach, coachee, and sponsor. ' +
+    'Captures progress observations, recalibrates goals, and surfaces what the sponsor can do to support the coachee further.',
+  instructions:
+    'Use this template to lead the mid-point review. Capture each participant\'s perspective in turn. ' +
+    'Output is shareable with the sponsor in summary form (sensitive coachee content stays private).',
+  questions: [
+    { id: 'mid01', category: 'Progress to Goals', type: 'text',
+      text: 'For each coaching goal, where are we against where we wanted to be at the half-way mark? Note evidence from the coachee\'s own observations and any third-party signals.' },
+    { id: 'mid02', category: 'Behavioral Change Observed', type: 'text',
+      text: 'What specific behavioural shifts has the sponsor observed in the coachee since coaching began?' },
+    { id: 'mid03', category: 'Behavioral Change Observed', type: 'text',
+      text: 'What has the coachee observed about themselves that wasn\'t visible at the start of the engagement?' },
+    { id: 'mid04', category: 'Sponsor Perspective', type: 'text',
+      text: 'From the sponsor\'s perspective, what is now most important for this coachee to focus on through the second half?' },
+    { id: 'mid05', category: 'Sponsor Perspective', type: 'text',
+      text: 'What organizational support — assignments, exposure, projects — would amplify the impact of the remaining sessions?' },
+    { id: 'mid06', category: 'Areas Needing More Focus', type: 'text',
+      text: 'Which goals or development areas are off-track, and what is getting in the way?' },
+    { id: 'mid07', category: 'Recalibration', type: 'text',
+      text: 'Should any goals be adjusted, dropped, or added based on what we have learned in the first half?' },
+    { id: 'mid08', category: 'Recalibration', type: 'text',
+      text: 'Are there any contextual changes (organizational, role, personal) that should reshape the plan for the remaining sessions?' },
+    { id: 'mid09', category: 'Concerns', type: 'text',
+      text: 'Are there any concerns from the sponsor or coachee that need to be addressed before continuing?' },
+    { id: 'mid10', category: 'Commitments', type: 'text',
+      text: 'What does each party (coach, coachee, sponsor) commit to between now and the close of the engagement?' },
+  ],
+};
+
+const coachingFinalReview: {
+  title: string;
+  moduleType: 'coaching';
+  intakeType: 'interview';
+  description: string;
+  instructions: string;
+  questions: IQuestion[];
+} = {
+  title: 'Coaching — Final Engagement Review',
+  moduleType: 'coaching',
+  intakeType: 'interview',
+  description:
+    'Closure agenda for the final three-way conversation. Reviews outcomes against goals, captures pre/post change, ' +
+    'agrees on a transition plan for sustained growth, and signs off the engagement.',
+  instructions:
+    'Use this template at the engagement closure meeting with coach, coachee, and sponsor. ' +
+    'The output feeds the final report shared with the sponsor.',
+  questions: [
+    { id: 'fin01', category: 'Outcomes', type: 'text',
+      text: 'For each original coaching goal, what was achieved? Where possible, cite measurable evidence (assessment deltas, 360 changes, business outcomes).' },
+    { id: 'fin02', category: 'Outcomes', type: 'text',
+      text: 'Which outcomes exceeded what was originally agreed, and why?' },
+    { id: 'fin03', category: 'Outcomes', type: 'text',
+      text: 'Which outcomes fell short of what was agreed, and what would need to be true for them to land in the next 6 months?' },
+    { id: 'fin04', category: 'Behavioral Change', type: 'text',
+      text: 'What shifts in behaviour, mindset, or capability does the sponsor recognise as most material since coaching began?' },
+    { id: 'fin05', category: 'Behavioral Change', type: 'text',
+      text: 'How has the coachee\'s self-awareness, choices, and decision-making changed?' },
+    { id: 'fin06', category: 'Sustainment', type: 'text',
+      text: 'What practices, routines, or supports will the coachee continue independently to keep the gains?' },
+    { id: 'fin07', category: 'Sustainment', type: 'text',
+      text: 'What organizational reinforcement (manager check-ins, peer accountability, exposure opportunities) will help these gains stick?' },
+    { id: 'fin08', category: 'Recommendations', type: 'text',
+      text: 'What does the coach recommend for the coachee\'s next 6–12 months — including any further coaching, mentoring, or formal development?' },
+    { id: 'fin09', category: 'Recommendations', type: 'text',
+      text: 'What is the sponsor\'s recommendation for next steps from an organizational perspective?' },
+    { id: 'fin10', category: 'Closure', type: 'text',
+      text: 'Acknowledgements: what does each party most want to thank or acknowledge in the others?' },
+    { id: 'fin11', category: 'Closure', type: 'text',
+      text: 'Does the sponsor have any feedback for the coach on the coaching process itself, for use in future engagements?' },
+  ],
+};
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Seeder
 // ─────────────────────────────────────────────────────────────────────────────
@@ -422,6 +506,8 @@ async function seed(): Promise<void> {
     successionBench,
     coachingPreSession,
     coachingPostSession,
+    coachingMidpointReview,
+    coachingFinalReview,
   ];
 
   // Remove any old org-scoped copies created by a previous seed run

@@ -14,6 +14,9 @@ import { SessionDialogComponent } from '../session-dialog/session-dialog.compone
 import { CoachPickerDialogComponent, CoachPick } from '../coach-picker-dialog/coach-picker-dialog.component';
 import { CoachLandingComponent } from '../../booking/coach-landing/coach-landing.component';
 import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog.component';
+import { ContractAcceptDialogComponent } from './contract-accept-dialog.component';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../../environments/environment';
 import { JournalService, SessionNote } from '../../journal/journal.service';
 import { RescheduleDialogComponent, RescheduleDialogResult } from '../../booking/reschedule-dialog/reschedule-dialog.component';
 import { CancelDialogComponent, CancelDialogResult } from '../../booking/cancel-dialog/cancel-dialog.component';
@@ -34,6 +37,7 @@ interface Session {
   postSessionRating?: number;
   topics: string[];
   status: string;
+  isChemistryCall?: boolean;
   googleMeetLink?: string;
   createdAt: string;
   createdVia?: 'coach' | 'coachee_booking';
@@ -65,6 +69,125 @@ interface Session {
       @if (loading()) {
         <div class="loading-center"><mat-spinner diameter="36" /></div>
       } @else if (engagement()) {
+        <!-- Lifecycle prompt: completed chemistry call → suggest advancing to 'contracted' -->
+        @if (canManage() && shouldAdvanceFromProspect()) {
+          <div class="lifecycle-banner">
+            <mat-icon>handshake</mat-icon>
+            <div class="banner-text">
+              <strong>{{ 'COACHING.advanceToContractedTitle' | translate }}</strong>
+              <span>{{ 'COACHING.advanceToContractedDesc' | translate }}</span>
+            </div>
+            <button mat-flat-button color="primary"
+                    (click)="advanceToContracted()"
+                    [disabled]="advancing()">
+              @if (advancing()) { <mat-spinner diameter="14" /> }
+              {{ 'COACHING.advanceToContractedAction' | translate }}
+            </button>
+          </div>
+        }
+        <!-- Contract: coachee needs to review and accept -->
+        @if (!canManage() && shouldPromptContractAccept()) {
+          <div class="lifecycle-banner contract">
+            <mat-icon>description</mat-icon>
+            <div class="banner-text">
+              <strong>{{ 'COACHING.contractPromptTitle' | translate }}</strong>
+              <span>{{ 'COACHING.contractPromptDesc' | translate }}</span>
+            </div>
+            <button mat-flat-button color="primary" (click)="openContractDialog()">
+              {{ 'COACHING.contractAcceptAction' | translate }}
+            </button>
+          </div>
+        }
+        <!-- Contract: coach uploaded but coachee hasn't accepted yet -->
+        @if (canManage() && engagement()!.contractS3Key && !engagement()!.contractAcceptedAt) {
+          <div class="lifecycle-banner contract-pending">
+            <mat-icon>hourglass_top</mat-icon>
+            <div class="banner-text">
+              <strong>{{ 'COACHING.contractPendingTitle' | translate }}</strong>
+              <span>{{ 'COACHING.contractPendingDesc' | translate }}</span>
+            </div>
+            <button mat-stroked-button (click)="viewContract()">
+              <mat-icon>visibility</mat-icon> {{ 'COACHING.contractView' | translate }}
+            </button>
+          </div>
+        }
+        <!-- Contract: signed -->
+        @if (canManage() && engagement()!.contractAcceptedAt) {
+          <div class="lifecycle-banner contract-signed">
+            <mat-icon>verified</mat-icon>
+            <div class="banner-text">
+              <strong>{{ 'COACHING.contractSignedTitle' | translate }}</strong>
+              <span>
+                {{ 'COACHING.contractSignedOn' | translate }}
+                {{ engagement()!.contractAcceptedAt | date:'medium' }}
+              </span>
+            </div>
+            <button mat-stroked-button (click)="viewContract()">
+              <mat-icon>visibility</mat-icon> {{ 'COACHING.contractView' | translate }}
+            </button>
+          </div>
+        }
+
+        <!-- Mid-point review prompt: coach hit half the session quota and hasn't logged the review yet -->
+        @if (canManage() && shouldPromptMidPointReview()) {
+          <div class="lifecycle-banner review">
+            <mat-icon>insights</mat-icon>
+            <div class="banner-text">
+              <strong>{{ 'COACHING.midPointReviewTitle' | translate }}</strong>
+              <span>{{ 'COACHING.midPointReviewDesc' | translate }}</span>
+            </div>
+            <button mat-flat-button color="primary"
+                    (click)="markReviewConducted('midPoint')"
+                    [disabled]="markingReview()">
+              @if (markingReview()) { <mat-spinner diameter="14" /> }
+              {{ 'COACHING.midPointReviewAction' | translate }}
+            </button>
+          </div>
+        }
+
+        <!-- Final review prompt: completed engagement without final review -->
+        @if (canManage() && shouldPromptFinalReview()) {
+          <div class="lifecycle-banner review">
+            <mat-icon>flag</mat-icon>
+            <div class="banner-text">
+              <strong>{{ 'COACHING.finalReviewTitle' | translate }}</strong>
+              <span>{{ 'COACHING.finalReviewDesc' | translate }}</span>
+            </div>
+            <button mat-flat-button color="primary"
+                    (click)="markReviewConducted('final')"
+                    [disabled]="markingReview()">
+              @if (markingReview()) { <mat-spinner diameter="14" /> }
+              {{ 'COACHING.finalReviewAction' | translate }}
+            </button>
+          </div>
+        }
+
+        <!-- Alumni: coach can reactivate the engagement -->
+        @if (canManage() && engagement()!.status === 'alumni') {
+          <div class="lifecycle-banner alumni">
+            <mat-icon>autorenew</mat-icon>
+            <div class="banner-text">
+              <strong>{{ 'COACHING.reactivateTitle' | translate }}</strong>
+              <span>{{ 'COACHING.reactivateDesc' | translate }}</span>
+            </div>
+            <button mat-flat-button color="primary"
+                    (click)="reactivateEngagement()"
+                    [disabled]="reactivating()">
+              @if (reactivating()) { <mat-spinner diameter="14" /> }
+              {{ 'COACHING.reactivateAction' | translate }}
+            </button>
+          </div>
+        }
+        <!-- Alumni: coachee read-only banner -->
+        @if (!canManage() && engagement()!.status === 'alumni') {
+          <div class="lifecycle-banner alumni-readonly">
+            <mat-icon>lock</mat-icon>
+            <div class="banner-text">
+              <strong>{{ 'COACHING.alumniReadOnlyTitle' | translate }}</strong>
+              <span>{{ 'COACHING.alumniReadOnlyDesc' | translate }}</span>
+            </div>
+          </div>
+        }
         <div class="detail-layout">
 
           <!-- Sidebar -->
@@ -107,6 +230,47 @@ interface Session {
               <div class="notes-block">
                 <span class="info-label">{{ 'COACHING.privatNotes' | translate }}</span>
                 <p>{{ engagement()!.notes }}</p>
+              </div>
+            }
+            @if (canManage()) {
+              <mat-divider />
+              <div class="contract-block">
+                <span class="info-label">{{ 'COACHING.contract' | translate }}</span>
+                @if (engagement()!.contractS3Key) {
+                  <div class="contract-row">
+                    <mat-icon>picture_as_pdf</mat-icon>
+                    <button class="contract-link" (click)="viewContract()" type="button">
+                      {{ engagement()!.contractFilename || 'contract.pdf' }}
+                    </button>
+                    <button mat-icon-button (click)="removeContract()"
+                            [matTooltip]="'COACHING.contractRemove' | translate">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </div>
+                  @if (engagement()!.contractAcceptedAt) {
+                    <span class="contract-status accepted">
+                      <mat-icon>verified</mat-icon>
+                      {{ 'COACHING.contractAcceptedOn' | translate }}
+                      {{ engagement()!.contractAcceptedAt | date:'mediumDate' }}
+                    </span>
+                  } @else {
+                    <span class="contract-status pending">
+                      <mat-icon>hourglass_top</mat-icon>
+                      {{ 'COACHING.contractWaitingForAcceptance' | translate }}
+                    </span>
+                  }
+                  <button mat-stroked-button class="contract-replace" (click)="contractFileInput.click()" [disabled]="uploadingContract()">
+                    @if (uploadingContract()) { <mat-spinner diameter="14" /> }
+                    <mat-icon>swap_horiz</mat-icon> {{ 'COACHING.contractReplace' | translate }}
+                  </button>
+                } @else {
+                  <button mat-stroked-button (click)="contractFileInput.click()" [disabled]="uploadingContract()">
+                    @if (uploadingContract()) { <mat-spinner diameter="14" /> }
+                    <mat-icon>upload_file</mat-icon> {{ 'COACHING.contractUpload' | translate }}
+                  </button>
+                }
+                <input #contractFileInput type="file" accept="application/pdf" hidden
+                       (change)="onContractFile($event)" />
               </div>
             }
             @if (canManage()) {
@@ -237,6 +401,12 @@ interface Session {
                       </div>
                       <span class="session-duration">{{ s.duration }} {{ 'COACHING.min' | translate }} · {{ translateFormat(s.format) }}</span>
                       <span class="session-status" [class]="s.status">{{ translateSessionStatus(s.status) }}</span>
+                      @if (s.isChemistryCall) {
+                        <span class="chem-chip"
+                              [matTooltip]="'COACHING.chemistryCallTooltip' | translate">
+                          <mat-icon>coffee</mat-icon> {{ 'COACHING.chemistryCall' | translate }}
+                        </span>
+                      }
                       @if (s.createdVia === 'coachee_booking') {
                         <span class="source-chip booked"
                               [matTooltip]="'COACHING.coacheeBookedTooltip' | translate">
@@ -537,15 +707,15 @@ interface Session {
               </div>
             }
 
-            <!-- Coach: 'New Session' as an empty + tile -->
-            @if (canManage()) {
+            <!-- Coach: 'New Session' — hidden on alumni engagements -->
+            @if (canManage() && engagement()!.status !== 'alumni') {
               <button class="session-card add-session-card" type="button" (click)="addSession()">
                 <mat-icon class="add-icon">add</mat-icon>
                 <span class="add-label">{{ 'COACHING.newSession' | translate }}</span>
               </button>
             }
-            <!-- Coachee: 'Book a Session' as an empty + tile -->
-            @if (!canManage()) {
+            <!-- Coachee: 'Book a Session' — hidden on alumni engagements -->
+            @if (!canManage() && engagement()!.status !== 'alumni') {
               <button class="session-card add-session-card" type="button" (click)="bookSession()">
                 <mat-icon class="add-icon">add</mat-icon>
                 <span class="add-label">{{ 'COACHING.bookASession' | translate }}</span>
@@ -561,6 +731,62 @@ interface Session {
     .back-link { display: flex; align-items: center; gap: 4px; color: var(--artes-accent); text-decoration: none; font-size: 14px; font-weight: 500; }
 
     .detail-layout { display: grid; grid-template-columns: 280px 1fr; gap: 24px; align-items: start; }
+
+    .lifecycle-banner {
+      display: flex; align-items: center; gap: 14px;
+      padding: 14px 18px; margin-bottom: 16px;
+      background: #fff8f0; border: 1px solid #f0d4a0; border-radius: 10px;
+      mat-icon { color: #b27300; font-size: 24px; width: 24px; height: 24px; flex-shrink: 0; }
+      .banner-text { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+      .banner-text strong { color: #1B2A47; font-size: 14px; }
+      .banner-text span { color: #5a6a7e; font-size: 12px; }
+    }
+    .lifecycle-banner.alumni {
+      background: #f1ecfa; border-color: #cfb8e8;
+      mat-icon { color: #6a4ba8; }
+    }
+    .lifecycle-banner.alumni-readonly {
+      background: #f4f7fb; border-color: #d6dde6;
+      mat-icon { color: #5a6a7e; }
+    }
+    .lifecycle-banner.review {
+      background: #eff6ff; border-color: #b3d4f5;
+      mat-icon { color: #2080b0; }
+    }
+    .lifecycle-banner.contract {
+      background: #fff5f5; border-color: #f5cdcd;
+      mat-icon { color: #c43a3a; }
+    }
+    .lifecycle-banner.contract-pending {
+      background: #fffbf0; border-color: #f0d4a0;
+      mat-icon { color: #b27300; }
+    }
+    .lifecycle-banner.contract-signed {
+      background: #f0fdf4; border-color: #b8e0c4;
+      mat-icon { color: #1a9678; }
+    }
+
+    .contract-block {
+      padding: 16px 20px;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .contract-row { display: flex; align-items: center; gap: 8px; }
+    .contract-row mat-icon { color: #c43a3a; }
+    .contract-link {
+      flex: 1; color: #1B2A47; font-size: 13px; font-weight: 600;
+      text-decoration: none; word-break: break-all;
+      background: transparent; border: 0; padding: 0; cursor: pointer;
+      text-align: left; font-family: inherit;
+    }
+    .contract-link:hover { text-decoration: underline; }
+    .contract-status {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 12px;
+      mat-icon { font-size: 14px; width: 14px; height: 14px; }
+      &.accepted { color: #1a9678; }
+      &.pending  { color: #b27300; }
+    }
+    .contract-replace { align-self: flex-start; margin-top: 4px; }
 
     .info-card {
       background: white; border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06);
@@ -709,6 +935,14 @@ interface Session {
       mat-icon { font-size: 12px; width: 12px; height: 12px; }
       &.booked   { background: #f3eafc; color: #6b3aa0; }
       &.scheduled { background: #fef6e6; color: #b87e08; }
+    }
+
+    .chem-chip {
+      display: inline-flex; align-items: center; gap: 3px;
+      font-size: 10px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.4px; padding: 2px 8px 2px 6px; border-radius: 999px;
+      background: #fff8f0; color: #b27300; border: 1px solid #f0d4a0;
+      mat-icon { font-size: 12px; width: 12px; height: 12px; }
     }
 
     .session-topics { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 8px; }
@@ -877,7 +1111,49 @@ export class EngagementDetailComponent implements OnInit {
   engagement = signal<any>(null);
   sessions = signal<Session[]>([]);
   loading = signal(true);
+  advancing = signal(false);
+  reactivating = signal(false);
+  markingReview = signal(false);
+  uploadingContract = signal(false);
   currentMonth = signal(new Date());
+
+  /** Coachee banner: contract uploaded, status indicates an active engagement,
+   *  and the coachee hasn't accepted yet. */
+  shouldPromptContractAccept = computed(() => {
+    const eng = this.engagement();
+    if (!eng) return false;
+    if (!eng.contractS3Key) return false;
+    if (eng.contractAcceptedAt) return false;
+    return ['contracted', 'active'].includes(eng.status);
+  });
+
+  /** Banner shows when a prospect engagement has at least one completed
+   *  chemistry call — coach can advance the engagement to 'contracted'. */
+  shouldAdvanceFromProspect = computed(() => {
+    const eng = this.engagement();
+    if (!eng || eng.status !== 'prospect') return false;
+    return this.sessions().some(
+      (s) => s.isChemistryCall && s.status === 'completed',
+    );
+  });
+
+  /** Mid-point review prompt: active engagement, ≥50% session quota
+   *  consumed, and no review timestamp yet. */
+  shouldPromptMidPointReview = computed(() => {
+    const eng = this.engagement();
+    if (!eng) return false;
+    if (eng.midPointReviewAt) return false;
+    if (!['active', 'contracted'].includes(eng.status)) return false;
+    if (!eng.sessionsPurchased) return false;
+    return (eng.sessionsUsed ?? 0) / eng.sessionsPurchased >= 0.5;
+  });
+
+  /** Final review prompt: engagement is completed and no final review yet. */
+  shouldPromptFinalReview = computed(() => {
+    const eng = this.engagement();
+    if (!eng) return false;
+    return eng.status === 'completed' && !eng.finalReviewAt;
+  });
   private notesBySession = new Map<string, SessionNote>();
   engId = '';
 
@@ -965,6 +1241,7 @@ export class EngagementDetailComponent implements OnInit {
     private journal: JournalService,
     private bookingSvc: BookingService,
     private translate: TranslateService,
+    private http: HttpClient,
   ) {}
 
   canManage = () => ['admin', 'hr_manager', 'coach'].includes(this.auth.currentUser()?.role ?? '');
@@ -1042,6 +1319,196 @@ export class EngagementDetailComponent implements OnInit {
         data: { engagementId: this.engId, sessionId },
       });
       ref.afterClosed().subscribe(() => this.load());
+    });
+  }
+
+  advanceToContracted(): void {
+    if (this.advancing() || !this.engId) return;
+    this.advancing.set(true);
+    this.api.put(`/coaching/engagements/${this.engId}`, { status: 'contracted' }).subscribe({
+      next: () => {
+        this.advancing.set(false);
+        this.snack.open(
+          this.translate.instant('COACHING.advanceToContractedSuccess'),
+          this.translate.instant('COMMON.ok'),
+          { duration: 3000 },
+        );
+        this.load();
+      },
+      error: (err) => {
+        this.advancing.set(false);
+        this.snack.open(
+          err?.error?.error || this.translate.instant('COACHING.advanceToContractedError'),
+          this.translate.instant('COMMON.dismiss'),
+          { duration: 4000 },
+        );
+      },
+    });
+  }
+
+  // ── Contract (click-to-accept) ─────────────────────────────────────────
+
+  onContractFile(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const f = input.files?.[0];
+    if (!f) return;
+    if (!this.engId) return;
+    this.uploadingContract.set(true);
+    const fd = new FormData();
+    fd.append('file', f);
+    this.http.post<{ contractFilename: string; hasContract: boolean }>(
+      `${environment.apiUrl}/coaching/engagements/${this.engId}/contract`,
+      fd,
+    ).subscribe({
+      next: () => {
+        this.uploadingContract.set(false);
+        this.snack.open(
+          this.translate.instant('COACHING.contractUploadedSuccess'),
+          this.translate.instant('COMMON.ok'),
+          { duration: 3000 },
+        );
+        input.value = '';
+        this.load();
+      },
+      error: (err) => {
+        this.uploadingContract.set(false);
+        input.value = '';
+        this.snack.open(
+          err?.error?.error || this.translate.instant('COACHING.contractUploadError'),
+          this.translate.instant('COMMON.dismiss'),
+          { duration: 4000 },
+        );
+      },
+    });
+  }
+
+  removeContract(): void {
+    if (!this.engId) return;
+    const ref = this.dialog.open(ConfirmDialogComponent, {
+      width: '440px',
+      data: {
+        title: this.translate.instant('COACHING.contractRemoveConfirmTitle'),
+        message: this.translate.instant('COACHING.contractRemoveConfirmMsg'),
+        confirmLabel: this.translate.instant('COMMON.delete'),
+        confirmColor: 'warn',
+        icon: 'delete',
+      },
+    });
+    ref.afterClosed().subscribe((ok) => {
+      if (!ok) return;
+      this.api.delete(`/coaching/engagements/${this.engId}/contract`).subscribe({
+        next: () => {
+          this.snack.open(
+            this.translate.instant('COACHING.contractRemovedSuccess'),
+            this.translate.instant('COMMON.ok'),
+            { duration: 3000 },
+          );
+          this.load();
+        },
+        error: () => {
+          this.snack.open(
+            this.translate.instant('COACHING.contractRemoveError'),
+            this.translate.instant('COMMON.dismiss'),
+            { duration: 4000 },
+          );
+        },
+      });
+    });
+  }
+
+  openContractDialog(): void {
+    const eng = this.engagement();
+    if (!eng?.contractS3Key || !this.engId) return;
+    const ref = this.dialog.open(ContractAcceptDialogComponent, {
+      width: '720px',
+      data: {
+        engagementId: this.engId,
+        contractFilename: eng.contractFilename,
+      },
+    });
+    ref.afterClosed().subscribe((accepted) => {
+      if (accepted) this.load();
+    });
+  }
+
+  /** Fetch a fresh signed URL and open it in a new tab. Used by the
+   *  "View contract" buttons on banners + the sidebar filename link. */
+  viewContract(): void {
+    if (!this.engId) return;
+    this.api.get<{ url: string }>(`/coaching/engagements/${this.engId}/contract/url`)
+      .subscribe({
+        next: (res) => { window.open(res.url, '_blank', 'noopener'); },
+        error: () => {
+          this.snack.open(
+            this.translate.instant('COACHING.contractLoadError'),
+            this.translate.instant('COMMON.dismiss'),
+            { duration: 4000 },
+          );
+        },
+      });
+  }
+
+  markReviewConducted(kind: 'midPoint' | 'final'): void {
+    if (this.markingReview() || !this.engId) return;
+    const fieldKey = kind === 'midPoint' ? 'midPointReviewAt' : 'finalReviewAt';
+    this.markingReview.set(true);
+    this.api.put(`/coaching/engagements/${this.engId}`, { [fieldKey]: new Date() }).subscribe({
+      next: () => {
+        this.markingReview.set(false);
+        this.snack.open(
+          this.translate.instant(
+            kind === 'midPoint' ? 'COACHING.midPointReviewLogged' : 'COACHING.finalReviewLogged',
+          ),
+          this.translate.instant('COMMON.ok'),
+          { duration: 3000 },
+        );
+        this.load();
+      },
+      error: () => {
+        this.markingReview.set(false);
+        this.snack.open(
+          this.translate.instant('COACHING.reviewLogError'),
+          this.translate.instant('COMMON.dismiss'),
+          { duration: 4000 },
+        );
+      },
+    });
+  }
+
+  reactivateEngagement(): void {
+    if (this.reactivating() || !this.engId) return;
+    const ref = this.dialog.open(ConfirmDialogComponent, {
+      width: '460px',
+      data: {
+        title: this.translate.instant('COACHING.reactivateConfirmTitle'),
+        message: this.translate.instant('COACHING.reactivateConfirmMsg'),
+        confirmLabel: this.translate.instant('COACHING.reactivateAction'),
+        confirmColor: 'primary',
+        icon: 'autorenew',
+      },
+    });
+    ref.afterClosed().subscribe((ok) => {
+      if (!ok) return;
+      this.reactivating.set(true);
+      this.api.put(`/coaching/engagements/${this.engId}`, { status: 'contracted' }).subscribe({
+        next: () => {
+          this.reactivating.set(false);
+          this.snack.open(
+            this.translate.instant('COACHING.reactivateSuccess'),
+            this.translate.instant('COMMON.ok'),
+            { duration: 3000 },
+          );
+          this.load();
+        },
+        error: (err) => {
+          this.reactivating.set(false);
+          this.snack.open(
+            err?.error?.error || this.translate.instant('COACHING.reactivateError'),
+            this.translate.instant('COMMON.dismiss'),
+            { duration: 4000 },
+          );
+        },
+      });
     });
   }
 
@@ -1328,7 +1795,7 @@ export class EngagementDetailComponent implements OnInit {
       return;
     }
     const ref = this.dialog.open(SessionDialogComponent, {
-      data: { engagementId: this.engId, coacheeId },
+      data: { engagementId: this.engId, coacheeId, engagementStatus: eng.status },
       minWidth: '600px', maxHeight: '92vh',
     });
     ref.afterClosed().subscribe((r) => { if (r) this.load(); });
@@ -1336,7 +1803,7 @@ export class EngagementDetailComponent implements OnInit {
 
   editSession(s: Session): void {
     const ref = this.dialog.open(SessionDialogComponent, {
-      data: { ...s, engagementId: this.engId, coacheeId: this.engagement()?.coacheeId?._id },
+      data: { ...s, engagementId: this.engId, coacheeId: this.engagement()?.coacheeId?._id, engagementStatus: this.engagement()?.status },
       minWidth: '600px', maxHeight: '92vh',
     });
     ref.afterClosed().subscribe((r) => { if (r) this.load(); });
