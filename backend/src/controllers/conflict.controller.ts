@@ -14,6 +14,59 @@ import { createHubNotification } from '../services/hubNotification.service';
 
 const MIN_GROUP_SIZE = 5;
 
+/**
+ * Resolve the cycle date range from the request body.
+ *
+ * cycleMode:
+ *   - 'all'              -> no date filter
+ *   - 'last14'           -> from now-14d to now
+ *   - 'last30'           -> from now-30d to now
+ *   - 'sinceLastCycle'   -> from latest prior analysis's cycleEnd to now;
+ *                           falls back to all-time if no prior cycle exists
+ *   - 'custom'           -> uses fromDate/toDate from the body verbatim
+ *
+ * Returns { cycleStart, cycleEnd } as Date | null pairs. Both null = all-time.
+ */
+async function resolveCycleRange(
+  body: { cycleMode?: string; fromDate?: string; toDate?: string },
+  organizationId: any,
+  templateId: any,
+  departmentId?: string,
+): Promise<{ cycleStart: Date | null; cycleEnd: Date | null }> {
+  const mode = body.cycleMode ?? 'all';
+  const now = new Date();
+  const daysAgo = (n: number) => new Date(now.getTime() - n * 24 * 60 * 60 * 1000);
+
+  if (mode === 'last14')  return { cycleStart: daysAgo(14), cycleEnd: now };
+  if (mode === 'last30')  return { cycleStart: daysAgo(30), cycleEnd: now };
+
+  if (mode === 'custom') {
+    return {
+      cycleStart: body.fromDate ? new Date(body.fromDate) : null,
+      cycleEnd:   body.toDate   ? new Date(body.toDate)   : null,
+    };
+  }
+
+  if (mode === 'sinceLastCycle') {
+    const filter: Record<string, unknown> = {
+      organizationId,
+      intakeTemplateId: templateId,
+      parentId: { $in: [null, undefined] },  // top-level analyses only
+      cycleEnd: { $exists: true, $ne: null },
+    };
+    if (departmentId) filter['departmentId'] = departmentId;
+    const last = await ConflictAnalysis.findOne(filter)
+      .sort({ cycleEnd: -1 })
+      .select('cycleEnd');
+    return {
+      cycleStart: last?.cycleEnd ?? null,
+      cycleEnd: now,
+    };
+  }
+
+  return { cycleStart: null, cycleEnd: null };  // 'all' / unknown
+}
+
 export async function analyzeConflict(
   req: AuthRequest,
   res: Response,
@@ -23,8 +76,16 @@ export async function analyzeConflict(
     const organizationId = req.user!.organizationId;
     const { templateId, departmentId, name } = req.body;
 
+    const cycle = await resolveCycleRange(req.body, organizationId, templateId, departmentId);
+
     const responseFilter: Record<string, unknown> = { organizationId, templateId };
     if (departmentId) responseFilter['departmentId'] = departmentId;
+    if (cycle.cycleStart || cycle.cycleEnd) {
+      const submittedAt: Record<string, Date> = {};
+      if (cycle.cycleStart) submittedAt['$gte'] = cycle.cycleStart;
+      if (cycle.cycleEnd)   submittedAt['$lte'] = cycle.cycleEnd;
+      responseFilter['submittedAt'] = submittedAt;
+    }
 
     const allResponses = await SurveyResponse.find(responseFilter);
 
@@ -143,6 +204,8 @@ export async function analyzeConflict(
       intakeTemplateId: templateId,
       name,
       departmentId,
+      ...(cycle.cycleStart && { cycleStart: cycle.cycleStart }),
+      ...(cycle.cycleEnd && { cycleEnd: cycle.cycleEnd }),
       riskScore: parsed.riskScore,
       riskLevel: parsed.riskLevel,
       conflictTypes: parsed.conflictTypes,
@@ -327,6 +390,10 @@ export async function createSubAnalysis(
       departmentId: parent.departmentId,
       parentId: parent._id,
       focusConflictType,
+      // Inherit the parent's cycle window so the sub-analysis is anchored
+      // to the same response set the parent was scoped to.
+      ...(parent.cycleStart && { cycleStart: parent.cycleStart }),
+      ...(parent.cycleEnd && { cycleEnd: parent.cycleEnd }),
       riskScore: parsed.riskScore,
       riskLevel: parsed.riskLevel as 'low' | 'medium' | 'high' | 'critical',
       conflictTypes: parsed.conflictTypes?.length ? parsed.conflictTypes : [focusConflictType],

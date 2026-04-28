@@ -121,6 +121,31 @@ interface OrgResponse {
             </mat-select>
           </mat-form-field>
 
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>{{ "CONFLICT.cycleRange" | translate }}</mat-label>
+            <mat-select formControlName="cycleMode">
+              <mat-option value="all">{{ "CONFLICT.cycleAllTime" | translate }}</mat-option>
+              <mat-option value="last14">{{ "CONFLICT.cycleLast14" | translate }}</mat-option>
+              <mat-option value="last30">{{ "CONFLICT.cycleLast30" | translate }}</mat-option>
+              <mat-option value="sinceLastCycle">{{ "CONFLICT.cycleSinceLast" | translate }}</mat-option>
+              <mat-option value="custom">{{ "CONFLICT.cycleCustom" | translate }}</mat-option>
+            </mat-select>
+            <mat-hint>{{ "CONFLICT.cycleRangeHint" | translate }}</mat-hint>
+          </mat-form-field>
+
+          @if (form.get('cycleMode')?.value === 'custom') {
+            <div class="custom-range">
+              <mat-form-field appearance="outline">
+                <mat-label>{{ "CONFLICT.cycleFrom" | translate }}</mat-label>
+                <input matInput type="date" formControlName="fromDate" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>{{ "CONFLICT.cycleTo" | translate }}</mat-label>
+                <input matInput type="date" formControlName="toDate" />
+              </mat-form-field>
+            </div>
+          }
+
           @if (selectedMinRequired() > 1) {
             <div class="info-box">
               <mat-icon>shield</mat-icon>
@@ -153,6 +178,9 @@ interface OrgResponse {
     }
 
     mat-dialog-content { min-width: 720px; max-width: 880px; padding-top: 8px !important; }
+
+    .custom-range { display: flex; gap: 12px; }
+    .custom-range mat-form-field { flex: 1; }
 
     .tpl-row {
       display: grid;
@@ -240,6 +268,9 @@ export class ConflictAnalyzeDialogComponent implements OnInit {
       name:         ['', Validators.required],
       templateId:   ['', Validators.required],
       departmentId: [''],
+      cycleMode:    ['all'],
+      fromDate:     [''],
+      toDate:       [''],
     });
   }
 
@@ -288,12 +319,15 @@ export class ConflictAnalyzeDialogComponent implements OnInit {
     this.analyzing.set(true);
     this.error.set('');
 
-    const { name, templateId, departmentId } = this.form.value;
+    const { name, templateId, departmentId, cycleMode, fromDate, toDate } = this.form.value;
 
     this.api.post('/conflict/analyze', {
       templateId,
       departmentId: departmentId || undefined,
       name,
+      cycleMode: cycleMode || 'all',
+      ...(cycleMode === 'custom' && fromDate ? { fromDate } : {}),
+      ...(cycleMode === 'custom' && toDate ? { toDate } : {}),
     }).subscribe({
       next: (result) => {
         this.analyzing.set(false);

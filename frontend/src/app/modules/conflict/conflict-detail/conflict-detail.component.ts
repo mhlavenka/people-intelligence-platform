@@ -62,6 +62,9 @@ interface ConflictAnalysis {
   intakeTemplateId?: { _id: string; title: string } | null;
   name: string;
   departmentId?: string;
+  /** Date window the analysis was scoped to (cyclical re-analysis). */
+  cycleStart?: string;
+  cycleEnd?: string;
   riskScore: number;
   riskLevel: 'low' | 'medium' | 'high' | 'critical';
   conflictTypes: string[];
@@ -213,6 +216,19 @@ interface RecommendedActions {
                 <mat-icon>corporate_fare</mat-icon>
                 {{ analysis()!.departmentId || 'All Departments' }}
               </span>
+              @if (analysis()!.cycleStart || analysis()!.cycleEnd) {
+                <span class="meta-chip"
+                      [matTooltip]="'CONFLICT.cycleScopeTooltip' | translate">
+                  <mat-icon>date_range</mat-icon>
+                  @if (analysis()!.cycleStart && analysis()!.cycleEnd) {
+                    {{ analysis()!.cycleStart | date:'MMM d' }} – {{ analysis()!.cycleEnd | date:'MMM d, y' }}
+                  } @else if (analysis()!.cycleStart) {
+                    {{ 'CONFLICT.cycleSince' | translate }} {{ analysis()!.cycleStart | date:'MMM d, y' }}
+                  } @else if (analysis()!.cycleEnd) {
+                    {{ 'CONFLICT.cycleUntil' | translate }} {{ analysis()!.cycleEnd | date:'MMM d, y' }}
+                  }
+                </span>
+              }
               @if (analysis()!.intakeTemplateId; as tpl) {
                 <a class="meta-chip meta-link" (click)="viewIntakeResponses(tpl._id)">
                   <mat-icon>assignment</mat-icon>

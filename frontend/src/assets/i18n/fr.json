@@ -780,7 +780,19 @@
     "analysisBannerDesc": "Claude applique un raisonnement fondé sur les intérêts aux données agrégées des enquêtes, en identifiant les causes profondes et les besoins non satisfaits plutôt qu'en désignant un responsable. Chaque analyse produit trois couches complémentaires :",
     "analysisLayerNarrative": "<strong>Récit</strong> — interprétation des dynamiques de l'équipe dans le langage des intérêts, pas des positions",
     "analysisLayerQuantitative": "<strong>Quantitatif</strong> — un score de risque de 0 à 100 fondé sur des critères objectifs et agrégés",
-    "analysisLayerPattern": "<strong>Motifs</strong> — types de conflit spécifiques (ex. Ambiguïté des rôles, Rupture de communication) qui nomment les intérêts structurels en jeu"
+    "analysisLayerPattern": "<strong>Motifs</strong> — types de conflit spécifiques (ex. Ambiguïté des rôles, Rupture de communication) qui nomment les intérêts structurels en jeu",
+    "cycleRange": "Période",
+    "cycleRangeHint": "Sélectionnez les réponses à inclure dans cette analyse. Réutilisez le même modèle d'un cycle à l'autre sans perdre les données précédentes.",
+    "cycleAllTime": "Depuis le début (toutes les réponses)",
+    "cycleLast14": "14 derniers jours (cycle bihebdomadaire)",
+    "cycleLast30": "30 derniers jours (cycle mensuel)",
+    "cycleSinceLast": "Depuis le dernier cycle (continue après l'analyse précédente)",
+    "cycleCustom": "Période personnalisée…",
+    "cycleFrom": "Du",
+    "cycleTo": "Au",
+    "cycleScopeTooltip": "Cette analyse couvre uniquement les réponses soumises dans cette période.",
+    "cycleSince": "Depuis",
+    "cycleUntil": "Jusqu'au"
   },
   "NEURO": {
     "title": "Boussole de neuroinclusion™",
