@@ -507,7 +507,7 @@ type RangePreset = 'all' | 'last30' | 'last12' | 'custom';
       text-transform: lowercase; margin-left: 4px;
     }
     .compact-table tr.from-session { background: #fafcfe; }
-    .compact-table .num { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
+    .compact-table .num { text-align: center; font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
     .compact-table .col-date { white-space: nowrap; min-width: 110px; width: 110px; }
     .compact-table th.actions, .compact-table td.actions { width: 36px; padding: 0 4px 0 0; text-align: right; }
     .compact-table td.actions .mat-mdc-icon-button { width: 28px; height: 28px; padding: 0; line-height: 28px; }
