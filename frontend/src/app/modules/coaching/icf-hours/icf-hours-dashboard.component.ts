@@ -1,0 +1,438 @@
+import { Component, OnInit, signal, computed } from '@angular/core';
+import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
+import { RouterLink } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule } from '@angular/material/core';
+import { MatSelectModule } from '@angular/material/select';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { ApiService } from '../../../core/api.service';
+import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog.component';
+import { HoursLogDialogComponent } from './hours-log-dialog.component';
+import { HoursSummary, HoursLogEntry, HoursLogPayload } from './icf-hours.types';
+
+type RangePreset = 'all' | 'last30' | 'last12' | 'custom';
+
+@Component({
+  selector: 'app-icf-hours-dashboard',
+  standalone: true,
+  imports: [
+    CommonModule, DatePipe, DecimalPipe, RouterLink, FormsModule,
+    MatIconModule, MatButtonModule, MatProgressSpinnerModule, MatTooltipModule,
+    MatMenuModule, MatSnackBarModule, MatFormFieldModule, MatInputModule,
+    MatDatepickerModule, MatNativeDateModule, MatSelectModule,
+    TranslateModule,
+  ],
+  template: `
+    <div class="icf-page">
+      <div class="page-header">
+        <div>
+          <h1>{{ 'COACHING.icfHoursTitle' | translate }}</h1>
+          <p class="subtitle">{{ 'COACHING.icfHoursSubtitle' | translate }}</p>
+        </div>
+        <div class="header-actions">
+          <button mat-stroked-button (click)="openLogDialog()">
+            <mat-icon>add</mat-icon> {{ 'COACHING.icfLogHours' | translate }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Date range filter -->
+      <div class="filter-bar">
+        <mat-form-field appearance="outline" class="range-select">
+          <mat-label>{{ 'COACHING.icfDateRange' | translate }}</mat-label>
+          <mat-select [(ngModel)]="rangePreset" (selectionChange)="onRangeChange()">
+            <mat-option value="all">{{ 'COACHING.icfAllTime' | translate }}</mat-option>
+            <mat-option value="last12">{{ 'COACHING.icfLast12Months' | translate }}</mat-option>
+            <mat-option value="last30">{{ 'COACHING.icfLast30Days' | translate }}</mat-option>
+            <mat-option value="custom">{{ 'COACHING.icfCustomRange' | translate }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        @if (rangePreset === 'custom') {
+          <mat-form-field appearance="outline">
+            <mat-label>{{ 'COACHING.icfFromDate' | translate }}</mat-label>
+            <input matInput [matDatepicker]="dpFrom" [(ngModel)]="customFrom" (dateChange)="reload()" />
+            <mat-datepicker-toggle matIconSuffix [for]="dpFrom" />
+            <mat-datepicker #dpFrom />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>{{ 'COACHING.icfToDate' | translate }}</mat-label>
+            <input matInput [matDatepicker]="dpTo" [(ngModel)]="customTo" (dateChange)="reload()" />
+            <mat-datepicker-toggle matIconSuffix [for]="dpTo" />
+            <mat-datepicker #dpTo />
+          </mat-form-field>
+        }
+      </div>
+
+      @if (loading()) {
+        <div class="loading-center"><mat-spinner diameter="36" /></div>
+      }
+      @if (!loading() && summary(); as s) {
+
+        <!-- ICF level progress rings -->
+        <h2 class="section-title">{{ 'COACHING.icfProgress' | translate }}</h2>
+        <div class="progress-row">
+          @for (level of s.icfProgress; track level.level) {
+            <div class="progress-card" [class.eligible]="level.eligible">
+              <div class="ring" [style.--pct]="level.percentComplete">
+                <svg viewBox="0 0 120 120">
+                  <circle cx="60" cy="60" r="52" class="ring-bg" />
+                  <circle cx="60" cy="60" r="52" class="ring-fg"
+                          [attr.stroke-dasharray]="327"
+                          [attr.stroke-dashoffset]="327 - (327 * level.percentComplete / 100)" />
+                </svg>
+                <div class="ring-label">
+                  <span class="ring-pct">{{ level.percentComplete | number:'1.0-0' }}%</span>
+                  <span class="ring-level">{{ level.level }}</span>
+                </div>
+              </div>
+              <div class="progress-meta">
+                <h3>{{ level.name }}</h3>
+                <div class="progress-detail">
+                  <span class="logged">{{ level.coachingHoursLogged | number:'1.0-1' }}</span>
+                  <span class="of">/ {{ level.coachingHoursRequired }}</span>
+                  <span class="suffix">{{ 'COACHING.icfCoachingHours' | translate }}</span>
+                </div>
+                <div class="mentor-line">
+                  <mat-icon>school</mat-icon>
+                  {{ level.mentorCoachingLogged | number:'1.0-1' }} / {{ level.mentorCoachingRequired }} {{ 'COACHING.icfMentorHours' | translate }}
+                </div>
+                <div class="eligibility" [class.yes]="level.eligible">
+                  <mat-icon>{{ level.eligible ? 'verified' : 'schedule' }}</mat-icon>
+                  {{ (level.eligible ? 'COACHING.icfEligible' : 'COACHING.icfNotYetEligible') | translate }}
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Totals breakdown -->
+        <h2 class="section-title">{{ 'COACHING.icfTotalsBreakdown' | translate }}</h2>
+        <div class="totals-grid">
+          <div class="total-card primary">
+            <span class="num">{{ s.totals.coachingTotal | number:'1.0-1' }}</span>
+            <span class="label">{{ 'COACHING.icfTotalCoachingHours' | translate }}</span>
+            <span class="sub">
+              {{ s.bySource.fromSessions | number:'1.0-1' }} {{ 'COACHING.icfFromSessions' | translate }}
+              · {{ s.bySource.fromManualLog | number:'1.0-1' }} {{ 'COACHING.icfFromManual' | translate }}
+            </span>
+          </div>
+          <div class="total-card">
+            <span class="num">{{ s.totals.paid | number:'1.0-1' }}</span>
+            <span class="label">{{ 'COACHING.icfPaid' | translate }}</span>
+          </div>
+          <div class="total-card">
+            <span class="num">{{ s.totals.proBono | number:'1.0-1' }}</span>
+            <span class="label">{{ 'COACHING.icfProBono' | translate }}</span>
+          </div>
+          <div class="total-card">
+            <span class="num">{{ s.totals.individual | number:'1.0-1' }}</span>
+            <span class="label">{{ 'COACHING.icfClientIndividual' | translate }}</span>
+          </div>
+          <div class="total-card">
+            <span class="num">{{ s.totals.team | number:'1.0-1' }}</span>
+            <span class="label">{{ 'COACHING.icfClientTeam' | translate }}</span>
+          </div>
+          <div class="total-card">
+            <span class="num">{{ s.totals.group | number:'1.0-1' }}</span>
+            <span class="label">{{ 'COACHING.icfClientGroup' | translate }}</span>
+          </div>
+          <div class="total-card mentor">
+            <span class="num">{{ s.totals.mentorCoachingReceived | number:'1.0-1' }}</span>
+            <span class="label">{{ 'COACHING.icfMentorCoachingReceived' | translate }}</span>
+          </div>
+          <div class="total-card cce">
+            <span class="num">{{ s.totals.cceCredits | number:'1.0-1' }}</span>
+            <span class="label">{{ 'COACHING.icfCceCredits' | translate }}</span>
+          </div>
+        </div>
+
+        <!-- Recent activity table -->
+        <div class="activity-header">
+          <h2 class="section-title">{{ 'COACHING.icfRecentActivity' | translate }}</h2>
+          <span class="row-count">{{ entries().length }} {{ 'COACHING.icfEntries' | translate }}</span>
+        </div>
+
+        @if (entries().length === 0) {
+          <div class="empty-row">
+            <mat-icon>schedule</mat-icon>
+            <p>{{ 'COACHING.icfNoEntries' | translate }}</p>
+          </div>
+        } @else {
+          <div class="activity-table-wrap">
+            <table class="activity-table">
+              <thead>
+                <tr>
+                  <th>{{ 'COACHING.date' | translate }}</th>
+                  <th>{{ 'COACHING.icfCategory' | translate }}</th>
+                  <th>{{ 'COACHING.icfClientOrType' | translate }}</th>
+                  <th class="num">{{ 'COACHING.icfHoursValue' | translate }}</th>
+                  <th>{{ 'COACHING.icfPaidStatus' | translate }}</th>
+                  <th class="actions"></th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (entry of entries(); track entry.id) {
+                  <tr [class.from-session]="entry.source === 'session'">
+                    <td>{{ entry.date | date:'mediumDate' }}</td>
+                    <td>
+                      <span class="cat-pill" [class]="entry.category">
+                        {{ categoryLabel(entry.category) | translate }}
+                      </span>
+                      @if (entry.source === 'session') {
+                        <mat-icon class="auto-icon"
+                                  [matTooltip]="'COACHING.icfFromSessionTooltip' | translate">
+                          link
+                        </mat-icon>
+                      }
+                    </td>
+                    <td>{{ entry.clientName || '—' }}</td>
+                    <td class="num">{{ entry.hours | number:'1.0-2' }}</td>
+                    <td>
+                      @if (entry.paidStatus === 'paid') {
+                        <span class="paid-badge paid">{{ 'COACHING.icfPaid' | translate }}</span>
+                      } @else if (entry.paidStatus === 'pro_bono') {
+                        <span class="paid-badge probono">{{ 'COACHING.icfProBono' | translate }}</span>
+                      }
+                    </td>
+                    <td class="actions">
+                      @if (entry.source === 'manual') {
+                        <button mat-icon-button [matMenuTriggerFor]="rowMenu" (click)="$event.stopPropagation()">
+                          <mat-icon>more_vert</mat-icon>
+                        </button>
+                        <mat-menu #rowMenu="matMenu">
+                          <button mat-menu-item (click)="editEntry(entry.id)">
+                            <mat-icon>edit</mat-icon> {{ 'COMMON.edit' | translate }}
+                          </button>
+                          <button mat-menu-item (click)="deleteEntry(entry.id)">
+                            <mat-icon>delete</mat-icon> {{ 'COMMON.delete' | translate }}
+                          </button>
+                        </mat-menu>
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      }
+    </div>
+  `,
+  styles: [`
+    .icf-page { padding: 24px 32px; max-width: 1280px; margin: 0 auto; }
+    .page-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 16px; }
+    .page-header h1 { margin: 0 0 4px; color: var(--artes-primary, #1B2A47); font-size: 26px; font-weight: 600; }
+    .subtitle { margin: 0; color: #5a6a7e; font-size: 14px; }
+    .header-actions { display: flex; gap: 8px; }
+
+    .filter-bar { display: flex; gap: 12px; margin: 12px 0 24px; flex-wrap: wrap; }
+    .range-select { min-width: 220px; }
+
+    .loading-center { display: flex; justify-content: center; padding: 60px; }
+
+    .section-title { margin: 32px 0 12px; font-size: 16px; font-weight: 600; color: #1B2A47; text-transform: uppercase; letter-spacing: 0.6px; }
+
+    /* Progress rings */
+    .progress-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 16px; }
+    .progress-card {
+      display: flex; gap: 18px; padding: 20px; background: #fff;
+      border: 1px solid #e6ecf2; border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(27,42,71,0.04);
+      transition: border-color 0.2s;
+    }
+    .progress-card.eligible { border-color: #27C4A0; background: #f0fdf6; }
+    .ring { position: relative; width: 110px; height: 110px; flex-shrink: 0; }
+    .ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+    .ring circle { fill: none; stroke-width: 10; }
+    .ring-bg { stroke: #ebf0f5; }
+    .ring-fg { stroke: #3A9FD6; stroke-linecap: round; transition: stroke-dashoffset 0.6s ease; }
+    .progress-card.eligible .ring-fg { stroke: #27C4A0; }
+    .ring-label {
+      position: absolute; inset: 0; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+    }
+    .ring-pct { font-size: 22px; font-weight: 700; color: #1B2A47; }
+    .ring-level { font-size: 11px; color: #5a6a7e; letter-spacing: 1px; }
+
+    .progress-meta { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+    .progress-meta h3 { margin: 0; font-size: 16px; color: #1B2A47; font-weight: 600; }
+    .progress-detail { display: flex; align-items: baseline; gap: 4px; font-size: 13px; }
+    .progress-detail .logged { font-size: 20px; font-weight: 700; color: #1B2A47; }
+    .progress-detail .of { color: #9aa5b4; }
+    .progress-detail .suffix { color: #5a6a7e; margin-left: 4px; }
+    .mentor-line {
+      display: flex; align-items: center; gap: 6px; font-size: 12px; color: #7c8a99;
+    }
+    .mentor-line mat-icon { font-size: 16px; width: 16px; height: 16px; }
+    .eligibility {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 12px; padding: 4px 10px; border-radius: 999px;
+      background: #f4f7fb; color: #7c8a99; align-self: flex-start; margin-top: 4px;
+    }
+    .eligibility.yes { background: #27C4A0; color: #fff; }
+    .eligibility mat-icon { font-size: 14px; width: 14px; height: 14px; }
+
+    /* Totals grid */
+    .totals-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+    .total-card {
+      padding: 16px; background: #fff; border: 1px solid #e6ecf2;
+      border-radius: 8px; display: flex; flex-direction: column; gap: 4px;
+    }
+    .total-card .num { font-size: 22px; font-weight: 700; color: #1B2A47; }
+    .total-card .label { font-size: 12px; color: #5a6a7e; text-transform: uppercase; letter-spacing: 0.5px; }
+    .total-card .sub { font-size: 11px; color: #9aa5b4; margin-top: 4px; }
+    .total-card.primary { background: linear-gradient(135deg, #1B2A47 0%, #2a3d5f 100%); color: #fff; }
+    .total-card.primary .num { color: #fff; }
+    .total-card.primary .label { color: #d6dde6; }
+    .total-card.primary .sub { color: #aab8c8; }
+    .total-card.mentor { border-left: 3px solid #7c5cbf; }
+    .total-card.cce { border-left: 3px solid #f0a500; }
+
+    /* Activity table */
+    .activity-header { display: flex; justify-content: space-between; align-items: baseline; margin-top: 32px; }
+    .row-count { font-size: 12px; color: #9aa5b4; }
+    .activity-table-wrap { background: #fff; border: 1px solid #e6ecf2; border-radius: 8px; overflow: hidden; }
+    .activity-table { width: 100%; border-collapse: collapse; }
+    .activity-table th, .activity-table td { padding: 12px 14px; text-align: left; border-bottom: 1px solid #f0f3f7; font-size: 13px; }
+    .activity-table th { background: #f8fafc; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #5a6a7e; font-weight: 600; }
+    .activity-table tr.from-session { background: #fafcfe; }
+    .activity-table tr:last-child td { border-bottom: none; }
+    .activity-table .num { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+    .activity-table .actions { width: 40px; text-align: right; padding-right: 8px; }
+
+    .cat-pill { display: inline-block; padding: 3px 9px; border-radius: 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    .cat-pill.session { background: #e0f0ff; color: #1e6aa8; }
+    .cat-pill.mentor_coaching_received { background: #f1ecfa; color: #6a4ba8; }
+    .cat-pill.cce { background: #fff4e0; color: #b27300; }
+    .auto-icon { font-size: 14px; width: 14px; height: 14px; vertical-align: middle; color: #9aa5b4; margin-left: 6px; }
+
+    .paid-badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+    .paid-badge.paid { background: #e0f7ed; color: #1a9678; }
+    .paid-badge.probono { background: #f4f7fb; color: #5a6a7e; }
+
+    .empty-row { display: flex; flex-direction: column; align-items: center; padding: 50px; gap: 8px; color: #9aa5b4; background: #fafbfd; border: 1px dashed #d6dde6; border-radius: 8px; }
+    .empty-row mat-icon { font-size: 36px; width: 36px; height: 36px; }
+    .empty-row p { margin: 0; font-size: 14px; }
+
+    @media (max-width: 900px) {
+      .progress-row { grid-template-columns: 1fr; }
+      .totals-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  `],
+})
+export class IcfHoursDashboardComponent implements OnInit {
+  loading = signal(true);
+  summary = signal<HoursSummary | null>(null);
+  entries = signal<HoursLogEntry[]>([]);
+
+  rangePreset: RangePreset = 'all';
+  customFrom: Date | null = null;
+  customTo: Date | null = null;
+
+  constructor(
+    private api: ApiService,
+    private dialog: MatDialog,
+    private snack: MatSnackBar,
+    private translate: TranslateService,
+  ) {}
+
+  ngOnInit(): void { this.reload(); }
+
+  reload(): void {
+    this.loading.set(true);
+    const params: Record<string, string> = {};
+    const range = this.computeRange();
+    if (range.from) params['from'] = range.from;
+    if (range.to)   params['to']   = range.to;
+
+    Promise.all([
+      this.api.get<HoursSummary>('/coaching/hours/summary', params).toPromise(),
+      this.api.get<HoursLogEntry[]>('/coaching/hours/entries', params).toPromise(),
+    ]).then(([summary, entries]) => {
+      this.summary.set(summary || null);
+      this.entries.set(entries || []);
+      this.loading.set(false);
+    }).catch((err) => {
+      this.loading.set(false);
+      this.snack.open(err?.error?.error || 'Failed to load ICF hours', 'Dismiss', { duration: 4000 });
+    });
+  }
+
+  onRangeChange(): void {
+    if (this.rangePreset !== 'custom') this.reload();
+  }
+
+  computeRange(): { from?: string; to?: string } {
+    const now = new Date();
+    if (this.rangePreset === 'last30') {
+      const from = new Date(now); from.setDate(from.getDate() - 30);
+      return { from: from.toISOString() };
+    }
+    if (this.rangePreset === 'last12') {
+      const from = new Date(now); from.setMonth(from.getMonth() - 12);
+      return { from: from.toISOString() };
+    }
+    if (this.rangePreset === 'custom') {
+      return {
+        from: this.customFrom ? this.customFrom.toISOString() : undefined,
+        to:   this.customTo ? this.customTo.toISOString() : undefined,
+      };
+    }
+    return {};
+  }
+
+  categoryLabel(category: string): string {
+    return category === 'session' ? 'COACHING.icfCatSession'
+         : category === 'mentor_coaching_received' ? 'COACHING.icfCatMentor'
+         : category === 'cce' ? 'COACHING.icfCatCce'
+         : category;
+  }
+
+  openLogDialog(): void {
+    const ref = this.dialog.open(HoursLogDialogComponent, { data: {} });
+    ref.afterClosed().subscribe((res) => { if (res) this.reload(); });
+  }
+
+  editEntry(id: string): void {
+    // Entries view collapses session-only fields; refetch the raw log row.
+    this.api.get<HoursLogPayload[]>('/coaching/hours').subscribe({
+      next: (rows) => {
+        const full = rows.find((r) => r._id === id);
+        if (!full) return;
+        const ref = this.dialog.open(HoursLogDialogComponent, { data: { entry: full } });
+        ref.afterClosed().subscribe((res) => { if (res) this.reload(); });
+      },
+    });
+  }
+
+  deleteEntry(id: string): void {
+    const ref = this.dialog.open(ConfirmDialogComponent, {
+      data: {
+        title: this.translate.instant('COACHING.icfDeleteConfirmTitle'),
+        message: this.translate.instant('COACHING.icfDeleteConfirmMsg'),
+        confirmText: this.translate.instant('COMMON.delete'),
+      },
+    });
+    ref.afterClosed().subscribe((ok) => {
+      if (!ok) return;
+      this.api.delete(`/coaching/hours/${id}`).subscribe({
+        next: () => {
+          this.snack.open(this.translate.instant('COACHING.icfEntryDeleted'), 'Dismiss', { duration: 2500 });
+          this.reload();
+        },
+        error: (err) => this.snack.open(err?.error?.error || 'Failed', 'Dismiss', { duration: 4000 }),
+      });
+    });
+  }
+}
