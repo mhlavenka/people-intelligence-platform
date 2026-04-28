@@ -1500,7 +1500,12 @@
     "scheduleUpdateFailed": "Nepodarilo sa aktualizovať harmonogram. Skúste znova.",
     "assignSummaryWithDepts": "Bude upozornených {{count}} osôb a {{deptCount}} oddelenie(í)",
     "deptSelected": "oddelenie vybrané",
-    "deptSelectedPlural": "oddelení vybraných"
+    "deptSelectedPlural": "oddelení vybraných",
+    "filterByDept": "Oddelenie",
+    "filterByCycle": "Cyklus",
+    "filterAllDepts": "Všetky oddelenia",
+    "filterAllCycles": "Všetky cykly",
+    "filterReset": "Vynulovať filtre"
   },
   "EQ": {
     "importWizard": "Sprievodca importom EQi",

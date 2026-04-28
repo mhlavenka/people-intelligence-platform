@@ -1,11 +1,14 @@
-import { Component, OnInit, Inject, signal } from '@angular/core';
+import { Component, OnInit, Inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { MatDialogModule, MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
 import { ApiService } from '../../../core/api.service';
 import { TranslateModule } from '@ngx-translate/core';
 
@@ -36,6 +39,7 @@ export type SurveyResponsesDialogData =
 
 interface RawResponse {
   departmentId?: string;
+  cycle?: string;                            // cycle stamp from a recurring fire
   responses: { questionId: string; value: string | number | boolean }[];
   submittedAt: string;
 }
@@ -68,12 +72,15 @@ interface DeptBreakdown { dept: string; count: number; pct: number; }
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     MatDialogModule,
     MatButtonModule,
     MatIconModule,
     MatProgressSpinnerModule,
     MatDividerModule,
     MatTooltipModule,
+    MatFormFieldModule,
+    MatSelectModule,
     TranslateModule,
   ],
   template: `
@@ -114,6 +121,39 @@ interface DeptBreakdown { dept: string; count: number; pct: number; }
       }
 
       @else {
+        <!-- Filters -->
+        @if (availableDepts().length > 1 || availableCycles().length > 0) {
+          <div class="resp-filter-bar">
+            @if (availableDepts().length > 1) {
+              <mat-form-field appearance="outline" class="filter-fld">
+                <mat-label>{{ 'SURVEY.filterByDept' | translate }}</mat-label>
+                <mat-select [(ngModel)]="deptFilter" (selectionChange)="onFilterChange()">
+                  <mat-option value="">{{ 'SURVEY.filterAllDepts' | translate }}</mat-option>
+                  @for (d of availableDepts(); track d) {
+                    <mat-option [value]="d">{{ d }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+            }
+            @if (availableCycles().length > 0) {
+              <mat-form-field appearance="outline" class="filter-fld">
+                <mat-label>{{ 'SURVEY.filterByCycle' | translate }}</mat-label>
+                <mat-select [(ngModel)]="cycleFilter" (selectionChange)="onFilterChange()">
+                  <mat-option value="">{{ 'SURVEY.filterAllCycles' | translate }}</mat-option>
+                  @for (c of availableCycles(); track c) {
+                    <mat-option [value]="c">{{ c }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+            }
+            @if (deptFilter || cycleFilter) {
+              <button mat-stroked-button (click)="resetFilters()" class="reset-btn">
+                <mat-icon>clear</mat-icon> {{ 'SURVEY.filterReset' | translate }}
+              </button>
+            }
+          </div>
+        }
+
         <!-- Overview -->
         <div class="overview-row">
           <div class="ov-stat">
@@ -281,6 +321,15 @@ interface DeptBreakdown { dept: string; count: number; pct: number; }
       font-size: 14px; font-weight: 600; color: #5a6a7e;
     }
 
+    .resp-filter-bar {
+      display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;
+      padding: 12px 20px 4px;
+      border-bottom: 1px solid #edf2f7;
+    }
+    .filter-fld { min-width: 200px; flex: 1; max-width: 280px; }
+    .resp-filter-bar ::ng-deep .mat-mdc-form-field-subscript-wrapper { display: none; }
+    .reset-btn { margin-bottom: 22px; }
+
     .overview-row {
       display: grid; grid-template-columns: repeat(4, 1fr);
       border-bottom: 1px solid #edf2f7;
@@ -391,6 +440,31 @@ export class SurveyResponsesDialogComponent implements OnInit {
   stats       = signal<QuestionStats[]>([]);
   deptBreakdown = signal<DeptBreakdown[]>([]);
 
+  /** All responses returned by the server. Filters work over this set
+   *  client-side; recomputeFromFilters() refreshes the derived signals. */
+  rawResponses = signal<RawResponse[]>([]);
+
+  /** Filter state — bound to the dropdowns via ngModel. */
+  deptFilter  = '';                   // empty = all
+  cycleFilter = '';                   // empty = all
+
+  /** Distinct values present in the loaded responses, used to populate the
+   *  dropdowns. */
+  availableDepts  = computed(() => {
+    const set = new Set<string>();
+    for (const r of this.rawResponses()) {
+      if (r.departmentId) set.add(r.departmentId);
+    }
+    return [...set].sort();
+  });
+  availableCycles = computed(() => {
+    const set = new Set<string>();
+    for (const r of this.rawResponses()) {
+      if (r.cycle) set.add(r.cycle);
+    }
+    return [...set].sort().reverse();   // newest cycle first
+  });
+
   template!: SurveyTemplate;
   sessionId?: string;
   departmentFilter?: string;
@@ -427,10 +501,8 @@ export class SurveyResponsesDialogComponent implements OnInit {
     const url = `/surveys/responses/${this.template._id}${qs ? '?' + qs : ''}`;
     this.api.get<{ count: number; responses: RawResponse[] }>(url).subscribe({
       next: (data) => {
-        this.totalCount.set(data.count);
-        this.dateRange.set(this.buildDateRange(data.responses));
-        this.deptBreakdown.set(this.buildDeptBreakdown(data.responses));
-        this.stats.set(this.buildStats(data.responses));
+        this.rawResponses.set(data.responses);
+        this.recomputeFromFilters();
         this.loading.set(false);
       },
       error: (err) => {
@@ -444,6 +516,30 @@ export class SurveyResponsesDialogComponent implements OnInit {
         }
       },
     });
+  }
+
+  /** Apply the active dept + cycle filters and refresh derived stats. */
+  recomputeFromFilters(): void {
+    const dept = this.deptFilter;
+    const cycle = this.cycleFilter;
+    const filtered = this.rawResponses().filter((r) => {
+      if (dept  && r.departmentId !== dept) return false;
+      if (cycle && r.cycle !== cycle) return false;
+      return true;
+    });
+    this.totalCount.set(filtered.length);
+    this.dateRange.set(this.buildDateRange(filtered));
+    this.deptBreakdown.set(this.buildDeptBreakdown(filtered));
+    this.stats.set(this.buildStats(filtered));
+  }
+
+  /** Triggered when the user changes a filter dropdown. */
+  onFilterChange(): void { this.recomputeFromFilters(); }
+
+  resetFilters(): void {
+    this.deptFilter = '';
+    this.cycleFilter = '';
+    this.recomputeFromFilters();
   }
 
   avgColor(avg: number, max: number): string {

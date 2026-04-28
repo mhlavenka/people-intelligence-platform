@@ -668,6 +668,7 @@ router.post('/respond', async (req: AuthRequest, res: Response, next: NextFuncti
     };
 
     if (sessionId) doc['sessionId'] = sessionId;
+    if (cycle) doc['cycle'] = cycle;
     if (Array.isArray(timingMsPerItem)) doc['timingMsPerItem'] = timingMsPerItem;
 
     // Layer 1 (response quality) — compute on submit so it's persisted with the

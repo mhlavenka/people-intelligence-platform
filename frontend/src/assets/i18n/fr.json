@@ -1500,7 +1500,12 @@
     "scheduleUpdateFailed": "Impossible de mettre à jour le calendrier. Réessayez.",
     "assignSummaryWithDepts": "{{count}} personnes et {{deptCount}} département(s) seront notifiés",
     "deptSelected": "département sélectionné",
-    "deptSelectedPlural": "départements sélectionnés"
+    "deptSelectedPlural": "départements sélectionnés",
+    "filterByDept": "Département",
+    "filterByCycle": "Cycle",
+    "filterAllDepts": "Tous les départements",
+    "filterAllCycles": "Tous les cycles",
+    "filterReset": "Réinitialiser les filtres"
   },
   "EQ": {
     "importWizard": "Assistant d’import EQi",
