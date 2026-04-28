@@ -35,7 +35,11 @@ export interface ICoachingEngagement extends Document {
   targetEndDate?: Date;
   completedAt?: Date;
   goals: string[];
-  contractUrl?: string;
+  contractUrl?: string;             // S3 URL of the uploaded contract PDF
+  contractFilename?: string;        // original filename for display
+  contractAcceptedAt?: Date;        // when the coachee clicked accept
+  contractAcceptedBy?: mongoose.Types.ObjectId; // user who accepted (usually coachee)
+  contractAcceptedIp?: string;      // requester IP at acceptance time
   notes?: string;                   // coach's private engagement notes
   hourlyRate?: number;              // per-engagement rate; falls back to sponsor.defaultHourlyRate
   alumniReminders?: IAlumniReminders;
@@ -79,6 +83,10 @@ const CoachingEngagementSchema = new Schema<ICoachingEngagement>(
     completedAt:       { type: Date },
     goals:             [{ type: String }],
     contractUrl:       { type: String },
+    contractFilename:  { type: String },
+    contractAcceptedAt:{ type: Date },
+    contractAcceptedBy:{ type: Schema.Types.ObjectId, ref: 'User' },
+    contractAcceptedIp:{ type: String },
     notes:             { type: String },
     hourlyRate:        { type: Number, min: 0 },
     alumniReminders: {

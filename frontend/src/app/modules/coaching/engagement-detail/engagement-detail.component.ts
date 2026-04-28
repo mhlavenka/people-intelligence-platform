@@ -14,6 +14,9 @@ import { SessionDialogComponent } from '../session-dialog/session-dialog.compone
 import { CoachPickerDialogComponent, CoachPick } from '../coach-picker-dialog/coach-picker-dialog.component';
 import { CoachLandingComponent } from '../../booking/coach-landing/coach-landing.component';
 import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog.component';
+import { ContractAcceptDialogComponent } from './contract-accept-dialog.component';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../../environments/environment';
 import { JournalService, SessionNote } from '../../journal/journal.service';
 import { RescheduleDialogComponent, RescheduleDialogResult } from '../../booking/reschedule-dialog/reschedule-dialog.component';
 import { CancelDialogComponent, CancelDialogResult } from '../../booking/cancel-dialog/cancel-dialog.component';
@@ -82,6 +85,49 @@ interface Session {
             </button>
           </div>
         }
+        <!-- Contract: coachee needs to review and accept -->
+        @if (!canManage() && shouldPromptContractAccept()) {
+          <div class="lifecycle-banner contract">
+            <mat-icon>description</mat-icon>
+            <div class="banner-text">
+              <strong>{{ 'COACHING.contractPromptTitle' | translate }}</strong>
+              <span>{{ 'COACHING.contractPromptDesc' | translate }}</span>
+            </div>
+            <button mat-flat-button color="primary" (click)="openContractDialog()">
+              {{ 'COACHING.contractAcceptAction' | translate }}
+            </button>
+          </div>
+        }
+        <!-- Contract: coach uploaded but coachee hasn't accepted yet -->
+        @if (canManage() && engagement()!.contractUrl && !engagement()!.contractAcceptedAt) {
+          <div class="lifecycle-banner contract-pending">
+            <mat-icon>hourglass_top</mat-icon>
+            <div class="banner-text">
+              <strong>{{ 'COACHING.contractPendingTitle' | translate }}</strong>
+              <span>{{ 'COACHING.contractPendingDesc' | translate }}</span>
+            </div>
+            <a [href]="engagement()!.contractUrl" target="_blank" rel="noopener" mat-stroked-button>
+              <mat-icon>visibility</mat-icon> {{ 'COACHING.contractView' | translate }}
+            </a>
+          </div>
+        }
+        <!-- Contract: signed -->
+        @if (canManage() && engagement()!.contractAcceptedAt) {
+          <div class="lifecycle-banner contract-signed">
+            <mat-icon>verified</mat-icon>
+            <div class="banner-text">
+              <strong>{{ 'COACHING.contractSignedTitle' | translate }}</strong>
+              <span>
+                {{ 'COACHING.contractSignedOn' | translate }}
+                {{ engagement()!.contractAcceptedAt | date:'medium' }}
+              </span>
+            </div>
+            <a [href]="engagement()!.contractUrl" target="_blank" rel="noopener" mat-stroked-button>
+              <mat-icon>visibility</mat-icon> {{ 'COACHING.contractView' | translate }}
+            </a>
+          </div>
+        }
+
         <!-- Mid-point review prompt: coach hit half the session quota and hasn't logged the review yet -->
         @if (canManage() && shouldPromptMidPointReview()) {
           <div class="lifecycle-banner review">
@@ -184,6 +230,47 @@ interface Session {
               <div class="notes-block">
                 <span class="info-label">{{ 'COACHING.privatNotes' | translate }}</span>
                 <p>{{ engagement()!.notes }}</p>
+              </div>
+            }
+            @if (canManage()) {
+              <mat-divider />
+              <div class="contract-block">
+                <span class="info-label">{{ 'COACHING.contract' | translate }}</span>
+                @if (engagement()!.contractUrl) {
+                  <div class="contract-row">
+                    <mat-icon>picture_as_pdf</mat-icon>
+                    <a [href]="engagement()!.contractUrl" target="_blank" rel="noopener" class="contract-link">
+                      {{ engagement()!.contractFilename || 'contract.pdf' }}
+                    </a>
+                    <button mat-icon-button (click)="removeContract()"
+                            [matTooltip]="'COACHING.contractRemove' | translate">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </div>
+                  @if (engagement()!.contractAcceptedAt) {
+                    <span class="contract-status accepted">
+                      <mat-icon>verified</mat-icon>
+                      {{ 'COACHING.contractAcceptedOn' | translate }}
+                      {{ engagement()!.contractAcceptedAt | date:'mediumDate' }}
+                    </span>
+                  } @else {
+                    <span class="contract-status pending">
+                      <mat-icon>hourglass_top</mat-icon>
+                      {{ 'COACHING.contractWaitingForAcceptance' | translate }}
+                    </span>
+                  }
+                  <button mat-stroked-button class="contract-replace" (click)="contractFileInput.click()" [disabled]="uploadingContract()">
+                    @if (uploadingContract()) { <mat-spinner diameter="14" /> }
+                    <mat-icon>swap_horiz</mat-icon> {{ 'COACHING.contractReplace' | translate }}
+                  </button>
+                } @else {
+                  <button mat-stroked-button (click)="contractFileInput.click()" [disabled]="uploadingContract()">
+                    @if (uploadingContract()) { <mat-spinner diameter="14" /> }
+                    <mat-icon>upload_file</mat-icon> {{ 'COACHING.contractUpload' | translate }}
+                  </button>
+                }
+                <input #contractFileInput type="file" accept="application/pdf" hidden
+                       (change)="onContractFile($event)" />
               </div>
             }
             @if (canManage()) {
@@ -666,6 +753,38 @@ interface Session {
       background: #eff6ff; border-color: #b3d4f5;
       mat-icon { color: #2080b0; }
     }
+    .lifecycle-banner.contract {
+      background: #fff5f5; border-color: #f5cdcd;
+      mat-icon { color: #c43a3a; }
+    }
+    .lifecycle-banner.contract-pending {
+      background: #fffbf0; border-color: #f0d4a0;
+      mat-icon { color: #b27300; }
+    }
+    .lifecycle-banner.contract-signed {
+      background: #f0fdf4; border-color: #b8e0c4;
+      mat-icon { color: #1a9678; }
+    }
+
+    .contract-block {
+      padding: 16px 20px;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .contract-row { display: flex; align-items: center; gap: 8px; }
+    .contract-row mat-icon { color: #c43a3a; }
+    .contract-link {
+      flex: 1; color: #1B2A47; font-size: 13px; font-weight: 600;
+      text-decoration: none; word-break: break-all;
+    }
+    .contract-link:hover { text-decoration: underline; }
+    .contract-status {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 12px;
+      mat-icon { font-size: 14px; width: 14px; height: 14px; }
+      &.accepted { color: #1a9678; }
+      &.pending  { color: #b27300; }
+    }
+    .contract-replace { align-self: flex-start; margin-top: 4px; }
 
     .info-card {
       background: white; border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06);
@@ -993,7 +1112,18 @@ export class EngagementDetailComponent implements OnInit {
   advancing = signal(false);
   reactivating = signal(false);
   markingReview = signal(false);
+  uploadingContract = signal(false);
   currentMonth = signal(new Date());
+
+  /** Coachee banner: contract uploaded, status indicates an active engagement,
+   *  and the coachee hasn't accepted yet. */
+  shouldPromptContractAccept = computed(() => {
+    const eng = this.engagement();
+    if (!eng) return false;
+    if (!eng.contractUrl) return false;
+    if (eng.contractAcceptedAt) return false;
+    return ['contracted', 'active'].includes(eng.status);
+  });
 
   /** Banner shows when a prospect engagement has at least one completed
    *  chemistry call — coach can advance the engagement to 'contracted'. */
@@ -1109,6 +1239,7 @@ export class EngagementDetailComponent implements OnInit {
     private journal: JournalService,
     private bookingSvc: BookingService,
     private translate: TranslateService,
+    private http: HttpClient,
   ) {}
 
   canManage = () => ['admin', 'hr_manager', 'coach'].includes(this.auth.currentUser()?.role ?? '');
@@ -1210,6 +1341,92 @@ export class EngagementDetailComponent implements OnInit {
           { duration: 4000 },
         );
       },
+    });
+  }
+
+  // ── Contract (click-to-accept) ─────────────────────────────────────────
+
+  onContractFile(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const f = input.files?.[0];
+    if (!f) return;
+    if (!this.engId) return;
+    this.uploadingContract.set(true);
+    const fd = new FormData();
+    fd.append('file', f);
+    this.http.post<{ contractUrl: string; contractFilename: string }>(
+      `${environment.apiUrl}/coaching/engagements/${this.engId}/contract`,
+      fd,
+    ).subscribe({
+      next: () => {
+        this.uploadingContract.set(false);
+        this.snack.open(
+          this.translate.instant('COACHING.contractUploadedSuccess'),
+          this.translate.instant('COMMON.ok'),
+          { duration: 3000 },
+        );
+        input.value = '';
+        this.load();
+      },
+      error: (err) => {
+        this.uploadingContract.set(false);
+        input.value = '';
+        this.snack.open(
+          err?.error?.error || this.translate.instant('COACHING.contractUploadError'),
+          this.translate.instant('COMMON.dismiss'),
+          { duration: 4000 },
+        );
+      },
+    });
+  }
+
+  removeContract(): void {
+    if (!this.engId) return;
+    const ref = this.dialog.open(ConfirmDialogComponent, {
+      width: '440px',
+      data: {
+        title: this.translate.instant('COACHING.contractRemoveConfirmTitle'),
+        message: this.translate.instant('COACHING.contractRemoveConfirmMsg'),
+        confirmLabel: this.translate.instant('COMMON.delete'),
+        confirmColor: 'warn',
+        icon: 'delete',
+      },
+    });
+    ref.afterClosed().subscribe((ok) => {
+      if (!ok) return;
+      this.api.delete(`/coaching/engagements/${this.engId}/contract`).subscribe({
+        next: () => {
+          this.snack.open(
+            this.translate.instant('COACHING.contractRemovedSuccess'),
+            this.translate.instant('COMMON.ok'),
+            { duration: 3000 },
+          );
+          this.load();
+        },
+        error: () => {
+          this.snack.open(
+            this.translate.instant('COACHING.contractRemoveError'),
+            this.translate.instant('COMMON.dismiss'),
+            { duration: 4000 },
+          );
+        },
+      });
+    });
+  }
+
+  openContractDialog(): void {
+    const eng = this.engagement();
+    if (!eng?.contractUrl || !this.engId) return;
+    const ref = this.dialog.open(ContractAcceptDialogComponent, {
+      width: '720px',
+      data: {
+        engagementId: this.engId,
+        contractUrl: eng.contractUrl,
+        contractFilename: eng.contractFilename,
+      },
+    });
+    ref.afterClosed().subscribe((accepted) => {
+      if (accepted) this.load();
     });
   }
 

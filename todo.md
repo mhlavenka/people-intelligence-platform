@@ -29,11 +29,16 @@ Phase 4 — research
 - Longitudinal respondent calibration — explicitly avoided so far (would require persistent respondent
   linking, conflicts with anonymity contract)
 
-
+admin@onkwe.com / ivb!6lgN
 
 **Coaching Module**
  - add mentoring to coaching module
  - repeating schedules for session creation by coach (weekly / monthly)
+ - **e-signature upgrade (later):** swap the click-to-accept contract flow for
+   OpenSign self-hosted in Docker on the EC2 box (AWS Linux 2023). Integrate
+   via REST API only — AGPL stays contained inside the container. Webhook
+   to /api/coaching/contract/webhook on completion. Coach uploads contract
+   template, coachee signs via embedded iframe.
  1
 **Booking**
 
