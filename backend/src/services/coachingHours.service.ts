@@ -65,6 +65,10 @@ export interface HoursLogEntry {
   paidStatus?: HoursLogPaidStatus;
   clientName?: string;
   clientOrganization?: string;
+  sponsorContactName?: string;
+  assessmentType?: string;
+  mentorCoachName?: string;
+  mentorCoachOrganization?: string;
   notes?: string;
 }
 
@@ -262,6 +266,10 @@ export async function getHoursLogEntries(
     paidStatus: m.paidStatus,
     clientName: m.clientName || m.mentorCoachName || m.cceProvider,
     clientOrganization: m.clientOrganization,
+    sponsorContactName: m.sponsorContactName,
+    assessmentType: m.assessmentType,
+    mentorCoachName: m.mentorCoachName,
+    mentorCoachOrganization: m.mentorCoachOrganization,
     notes: m.notes,
   }));
 

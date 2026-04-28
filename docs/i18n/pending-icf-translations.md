@@ -1,12 +1,11 @@
-# Pending Translations — ICF Credentialing (15.2)
+# Translations — ICF Credentialing (15.2) — APPLIED
 
-These keys were added to `en.json` for the ICF hours feature and copied verbatim
-into `fr.json`, `es.json`, and `sk.json` as English placeholders. Once the
-feature is fine-tuned, run a batch translation pass on these specific keys.
+**Status:** Translations applied via `scripts/i18n/apply-icf-translations.js`.
+The keys below now have French / Spanish / Slovak translations in their
+respective JSON files. This document is retained as a glossary reference;
+review and refine specific translations as needed during user testing.
 
-Approach for the batch pass: feed the table below to Claude with a
-"translate the values; preserve the keys exactly" prompt, repeat for each
-target locale, then write each translation back into its respective JSON file.
+The original tables show the English source values that were translated.
 
 ## Keys added to `COACHING.*`
 
@@ -71,6 +70,7 @@ target locale, then write each translation back into its respective JSON file.
 | `COACHING.icfMentorCredential` | Mentor ICF Credential |
 | `COACHING.icfMentorHours` | mentor hours |
 | `COACHING.icfMentorName` | Mentor Coach Name |
+| `COACHING.icfMentorOrganization` | Mentor Coach Organization |
 | `COACHING.icfNoEntries` | No coaching hours logged in this period yet. |
 | `COACHING.icfNotYetEligible` | Building hours |
 | `COACHING.icfNotes` | Notes |
@@ -78,7 +78,11 @@ target locale, then write each translation back into its respective JSON file.
 | `COACHING.icfPaidStatus` | Paid Status |
 | `COACHING.icfProBono` | Pro Bono |
 | `COACHING.icfProgress` | ICF Credential Progress |
+| `COACHING.icfAssessmentType` | Assessment Type |
+| `COACHING.icfAssessmentTypeHint` | Instrument debriefed (e.g. EQi-2.0, Hogan, DISC) — leave blank for plain coaching |
 | `COACHING.icfRecentActivity` | Recent Activity |
+| `COACHING.icfSponsorContactHint` | HR / sponsor liaison at the client organization |
+| `COACHING.icfSponsorContactName` | Sponsor Contact |
 | `COACHING.icfToDate` | To |
 | `COACHING.icfTotalCoachingHours` | Total Coaching Hours |
 | `COACHING.icfTotalsBreakdown` | Hours Breakdown |

@@ -39,3 +39,6 @@ coverage/
 
 # Docker
 *.pid
+
+# Local-only PII test data (do not commit real client names)
+docs/coaching-log-import.csv

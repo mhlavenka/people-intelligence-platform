@@ -96,6 +96,19 @@ interface DialogData {
           <input matInput type="email" [(ngModel)]="form.clientEmail" />
           <mat-hint>{{ 'COACHING.icfClientEmailHint' | translate }}</mat-hint>
         </mat-form-field>
+
+        <div class="row two-col">
+          <mat-form-field appearance="outline">
+            <mat-label>{{ 'COACHING.icfSponsorContactName' | translate }}</mat-label>
+            <input matInput [(ngModel)]="form.sponsorContactName" />
+            <mat-hint>{{ 'COACHING.icfSponsorContactHint' | translate }}</mat-hint>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>{{ 'COACHING.icfAssessmentType' | translate }}</mat-label>
+            <input matInput [(ngModel)]="form.assessmentType" placeholder="EQi-2.0, Hogan, ..." />
+            <mat-hint>{{ 'COACHING.icfAssessmentTypeHint' | translate }}</mat-hint>
+          </mat-form-field>
+        </div>
       }
 
       <!-- Mentor coaching fields -->
@@ -114,6 +127,10 @@ interface DialogData {
             </mat-select>
           </mat-form-field>
         </div>
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>{{ 'COACHING.icfMentorOrganization' | translate }}</mat-label>
+          <input matInput [(ngModel)]="form.mentorCoachOrganization" placeholder="e.g. Corry Robertson Academy" />
+        </mat-form-field>
       }
 
       <!-- CCE fields -->
@@ -194,6 +211,8 @@ export class HoursLogDialogComponent {
       this.form.clientName = undefined;
       this.form.clientOrganization = undefined;
       this.form.clientEmail = undefined;
+      this.form.sponsorContactName = undefined;
+      this.form.assessmentType = undefined;
     } else {
       this.form.clientType ??= 'individual';
       this.form.paidStatus ??= 'paid';
@@ -201,6 +220,7 @@ export class HoursLogDialogComponent {
     if (this.form.category !== 'mentor_coaching_received') {
       this.form.mentorCoachName = undefined;
       this.form.mentorCoachIcfCredential = undefined;
+      this.form.mentorCoachOrganization = undefined;
     }
     if (this.form.category !== 'cce') {
       this.form.cceCategory = undefined;

@@ -37,8 +37,11 @@ export interface ImportRowResult {
     clientName: string;
     clientOrganization: string;
     clientEmail: string;
+    sponsorContactName: string;
+    assessmentType: string;
     mentorCoachName: string;
     mentorCoachIcfCredential: 'ACC' | 'PCC' | 'MCC';
+    mentorCoachOrganization: string;
     cceCategory: CceCategory;
     cceProvider: string;
     cceCertificateUrl: string;
@@ -200,7 +203,10 @@ function validateRow(raw: Record<string, string>, rowNumber: number): ImportRowR
   copyIfPresent(raw, parsed, 'client_name', 'clientName');
   copyIfPresent(raw, parsed, 'client_organization', 'clientOrganization');
   copyIfPresent(raw, parsed, 'client_email', 'clientEmail');
+  copyIfPresent(raw, parsed, 'sponsor_contact_name', 'sponsorContactName');
+  copyIfPresent(raw, parsed, 'assessment_type', 'assessmentType');
   copyIfPresent(raw, parsed, 'mentor_coach_name', 'mentorCoachName');
+  copyIfPresent(raw, parsed, 'mentor_coach_organization', 'mentorCoachOrganization');
   copyIfPresent(raw, parsed, 'cce_provider', 'cceProvider');
   copyIfPresent(raw, parsed, 'cce_certificate_url', 'cceCertificateUrl');
   copyIfPresent(raw, parsed, 'notes', 'notes');
@@ -227,7 +233,8 @@ function copyIfPresent(
 
 const EXPORT_COLUMNS = [
   'date', 'category', 'client_name', 'client_organization', 'client_type',
-  'paid_status', 'hours', 'source', 'notes',
+  'paid_status', 'hours', 'sponsor_contact_name', 'assessment_type',
+  'mentor_coach_name', 'mentor_coach_organization', 'source', 'notes',
 ] as const;
 
 export async function exportCsv(
@@ -249,6 +256,10 @@ export async function exportCsv(
       client_type: e.clientType ?? '',
       paid_status: e.paidStatus ?? '',
       hours: String(e.hours),
+      sponsor_contact_name: e.sponsorContactName ?? '',
+      assessment_type: e.assessmentType ?? '',
+      mentor_coach_name: e.mentorCoachName ?? '',
+      mentor_coach_organization: e.mentorCoachOrganization ?? '',
       source: e.source,
       notes: (e.notes ?? '').replace(/\s+/g, ' ').trim(),
     };

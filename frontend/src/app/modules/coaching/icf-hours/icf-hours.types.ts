@@ -54,8 +54,11 @@ export interface HoursLogPayload {
   clientName?: string;
   clientOrganization?: string;
   clientEmail?: string;
+  sponsorContactName?: string;
+  assessmentType?: string;
   mentorCoachName?: string;
   mentorCoachIcfCredential?: 'ACC' | 'PCC' | 'MCC';
+  mentorCoachOrganization?: string;
   cceCategory?: CceCategory;
   cceProvider?: string;
   cceCertificateUrl?: string;

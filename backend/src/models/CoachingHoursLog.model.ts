@@ -30,10 +30,19 @@ export interface ICoachingHoursLog extends Document {
   clientName?: string;
   clientOrganization?: string;
   clientEmail?: string;            // ICF requires client contact for verification
+  /** HR / referring contact at the client organization (sponsor liaison).
+   *  Stored as free text now; future enhancement could auto-link to a Sponsor. */
+  sponsorContactName?: string;
+  /** Assessment instrument used when the session was an assessment debrief
+   *  (e.g. "EQi-2.0", "Hogan", "DISC"). Empty for plain coaching sessions. */
+  assessmentType?: string;
 
   // mentor-coaching only
   mentorCoachName?: string;
   mentorCoachIcfCredential?: string;  // ACC / PCC / MCC of the mentor
+  /** Institution / program that delivered the mentor coaching
+   *  (e.g. "Corry Robertson Academy"). */
+  mentorCoachOrganization?: string;
 
   // CCE only
   cceCategory?: CceCategory;
@@ -68,8 +77,11 @@ const CoachingHoursLogSchema = new Schema<ICoachingHoursLog>(
     clientName:           { type: String, trim: true },
     clientOrganization:   { type: String, trim: true },
     clientEmail:          { type: String, trim: true, lowercase: true },
+    sponsorContactName:   { type: String, trim: true },
+    assessmentType:       { type: String, trim: true },
     mentorCoachName:      { type: String, trim: true },
     mentorCoachIcfCredential: { type: String, enum: ['ACC', 'PCC', 'MCC', null] },
+    mentorCoachOrganization:  { type: String, trim: true },
     cceCategory:          { type: String, enum: ['core_competency', 'resource_development', null] },
     cceProvider:          { type: String, trim: true },
     cceCertificateUrl:    { type: String, trim: true },
