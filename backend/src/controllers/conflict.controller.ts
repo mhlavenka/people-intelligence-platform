@@ -172,6 +172,19 @@ export async function analyzeConflict(
     await analysis.populate('intakeTemplateId', 'title');
 
     res.status(201).json(analysis);
+
+    // Fire-and-forget hub notification so the user finds the analysis even
+    // if they navigated away while it was running. Sent AFTER the response
+    // so the in-flight client still gets the live update; the notification
+    // is the safety net for users who navigated away.
+    createHubNotification({
+      userId: req.user!.userId,
+      organizationId,
+      type: 'system',
+      title: 'Conflict analysis ready',
+      body: `${analysis.name}${analysis.departmentId ? ' · ' + analysis.departmentId : ''} — ${analysis.riskLevel} risk`,
+      link: `/conflict/analysis/${analysis._id}`,
+    }).catch((err) => console.error('[Conflict] Analysis-complete notification failed:', err));
   } catch (error) {
     next(error);
   }
@@ -323,6 +336,16 @@ export async function createSubAnalysis(
     });
 
     res.status(201).json(subAnalysis);
+
+    // Fire-and-forget notification — same rationale as the parent analysis.
+    createHubNotification({
+      userId: req.user!.userId,
+      organizationId,
+      type: 'system',
+      title: 'Sub-analysis ready',
+      body: `${parent.name} — ${focusConflictType} (${subAnalysis.riskLevel} risk)`,
+      link: `/conflict/analysis/${subAnalysis._id}`,
+    }).catch((err) => console.error('[Conflict] Sub-analysis notification failed:', err));
   } catch (error) {
     next(error);
   }

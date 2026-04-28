@@ -25,11 +25,14 @@ export interface SurveyTemplate {
   questions: Question[];
 }
 
-/** When opened from a specific session (pre-session intake), scope the
- *  aggregation to that one response instead of the whole org. */
+/** Dialog input. Either a bare template (legacy callers) or a wrapper
+ *  carrying optional scoping:
+ *   - sessionId        — show responses for one pre-session intake session
+ *   - departmentFilter — only responses tagged with this departmentId
+ *  Bare template form may also carry departmentFilter inline as a hint. */
 export type SurveyResponsesDialogData =
-  | SurveyTemplate
-  | { template: SurveyTemplate; sessionId?: string };
+  | (SurveyTemplate & { departmentFilter?: string })
+  | { template: SurveyTemplate; sessionId?: string; departmentFilter?: string };
 
 interface RawResponse {
   departmentId?: string;
@@ -390,6 +393,7 @@ export class SurveyResponsesDialogComponent implements OnInit {
 
   template!: SurveyTemplate;
   sessionId?: string;
+  departmentFilter?: string;
 
   constructor(
     @Inject(MAT_DIALOG_DATA) private data: SurveyResponsesDialogData,
@@ -397,11 +401,15 @@ export class SurveyResponsesDialogComponent implements OnInit {
     private api: ApiService,
   ) {
     if ('template' in (this.data as { template?: SurveyTemplate })) {
-      const wrapped = this.data as { template: SurveyTemplate; sessionId?: string };
+      const wrapped = this.data as { template: SurveyTemplate; sessionId?: string; departmentFilter?: string };
       this.template = wrapped.template;
       this.sessionId = wrapped.sessionId;
+      this.departmentFilter = wrapped.departmentFilter;
     } else {
+      // Plain template object — may carry an inline departmentFilter prop
+      // when callers don't wrap (e.g. conflict-detail).
       this.template = this.data as SurveyTemplate;
+      this.departmentFilter = (this.data as SurveyTemplate & { departmentFilter?: string }).departmentFilter;
     }
   }
 
@@ -412,9 +420,11 @@ export class SurveyResponsesDialogComponent implements OnInit {
         : this.template.minResponsesForAnalysis
           ?? (this.template.intakeType && this.template.intakeType !== 'survey' ? 1 : 5),
     );
-    const url = this.sessionId
-      ? `/surveys/responses/${this.template._id}?sessionId=${encodeURIComponent(this.sessionId)}`
-      : `/surveys/responses/${this.template._id}`;
+    const params = new URLSearchParams();
+    if (this.sessionId) params.set('sessionId', this.sessionId);
+    if (this.departmentFilter) params.set('departmentId', this.departmentFilter);
+    const qs = params.toString();
+    const url = `/surveys/responses/${this.template._id}${qs ? '?' + qs : ''}`;
     this.api.get<{ count: number; responses: RawResponse[] }>(url).subscribe({
       next: (data) => {
         this.totalCount.set(data.count);

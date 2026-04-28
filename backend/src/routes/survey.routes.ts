@@ -803,6 +803,7 @@ router.get(
       const organizationId = req.user!.organizationId;
       const templateId = req.params['templateId'];
       const sessionId = typeof req.query['sessionId'] === 'string' ? req.query['sessionId'] : undefined;
+      const departmentId = typeof req.query['departmentId'] === 'string' ? req.query['departmentId'] : undefined;
 
       const template = await SurveyTemplate.findById(templateId).setOptions({ bypassTenantCheck: true });
       const isSurvey = !template || template.intakeType === 'survey';
@@ -814,6 +815,7 @@ router.get(
 
       const filter: Record<string, unknown> = { organizationId, templateId };
       if (sessionId) filter['sessionId'] = sessionId;
+      if (departmentId) filter['departmentId'] = departmentId;
 
       const count = await SurveyResponse.countDocuments(filter);
 
