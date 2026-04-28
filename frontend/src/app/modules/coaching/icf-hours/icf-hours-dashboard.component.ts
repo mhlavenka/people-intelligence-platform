@@ -395,13 +395,8 @@ type RangePreset = 'all' | 'last30' | 'last12' | 'custom';
     /* Activity table */
     .activity-section {
       display: flex; flex-direction: column;
-      /* Fill the remaining viewport on first paint so the table dominates the
-       * fold and pagination is visible without scrolling.
-       * 360px reserves space for: page header, range filter, progress rings,
-       * totals grid + their margins. */
-      min-height: calc(100vh - 360px);
     }
-    .activity-header { display: flex; justify-content: space-between; align-items: baseline; margin-top: 32px; }
+    .activity-header { display: flex; justify-content: space-between; align-items: baseline; margin-top: 24px; }
     .row-count { font-size: 12px; color: #9aa5b4; }
 
     /* Filter bar above the table */
@@ -412,27 +407,34 @@ type RangePreset = 'all' | 'last30' | 'last12' | 'custom';
     .table-filter-bar ::ng-deep .mat-mdc-form-field-subscript-wrapper { display: none; }
 
     .activity-table-wrap {
-      flex: 1;
+      /* Bounded, predictable height. min-height shows ~10 rows so the table
+       * always feels populated; max-height caps at 50vh on large monitors so
+       * the paginator stays visible without scrolling beyond the fold. */
+      min-height: 320px;
+      max-height: 50vh;
       background: #fff; border: 1px solid #e6ecf2; border-radius: 8px 8px 0 0;
       overflow: auto;
     }
     .compact-table { width: 100%; }
     .compact-table th.mat-mdc-header-cell {
       background: #f8fafc;
-      font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;
+      font-size: 10px; text-transform: uppercase; letter-spacing: 0.4px;
       color: #5a6a7e; font-weight: 600;
-      padding: 8px 10px; height: 36px;
+      padding: 6px 10px; height: 30px;
     }
     .compact-table td.mat-mdc-cell {
-      padding: 4px 10px; font-size: 13px;
+      padding: 2px 10px; font-size: 12px;
       border-bottom: 1px solid #f0f3f7;
+      line-height: 1.3;
     }
-    .compact-table tr.mat-mdc-row { height: 34px; }
+    .compact-table tr.mat-mdc-row { height: 28px; }
     .compact-table tr.mat-mdc-row:hover { background: #f8fafc; }
     .compact-table tr.from-session { background: #fafcfe; }
     .compact-table .num { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
     .compact-table .col-date { white-space: nowrap; min-width: 110px; width: 110px; }
-    .compact-table th.actions, .compact-table td.actions { width: 40px; padding-right: 6px; text-align: right; }
+    .compact-table th.actions, .compact-table td.actions { width: 36px; padding: 0 4px 0 0; text-align: right; }
+    .compact-table td.actions .mat-mdc-icon-button { width: 28px; height: 28px; padding: 0; line-height: 28px; }
+    .compact-table td.actions .mat-mdc-icon-button mat-icon { font-size: 16px; width: 16px; height: 16px; line-height: 16px; }
     .compact-table tr.no-match td { padding: 24px; text-align: center; color: #9aa5b4; font-size: 13px; }
 
     .org-cell { display: flex; flex-direction: column; line-height: 1.25; }
