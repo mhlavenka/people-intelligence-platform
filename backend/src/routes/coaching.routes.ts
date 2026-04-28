@@ -542,8 +542,9 @@ router.post(
         coachId: req.body.coachId || req.user!.userId,
       });
 
-      // Increment sessionsUsed on the engagement if session is completed
-      if (session.status === 'completed') {
+      // Increment sessionsUsed on the engagement if session is completed.
+      // Chemistry calls are complimentary and never consume the quota.
+      if (session.status === 'completed' && !session.isChemistryCall) {
         await CoachingEngagement.findByIdAndUpdate(session.engagementId, { $inc: { sessionsUsed: 1 } });
       }
 
@@ -734,8 +735,11 @@ router.put(
       // If status changed to completed, increment engagement counter and send
       // the post-session form. Coach-assigned template wins; otherwise we fall
       // back to AI auto-generation when context is available.
+      // Chemistry calls are complimentary and skip the quota increment.
       if (wasNotCompleted && existing.status === 'completed') {
-        await CoachingEngagement.findByIdAndUpdate(existing.engagementId, { $inc: { sessionsUsed: 1 } });
+        if (!existing.isChemistryCall) {
+          await CoachingEngagement.findByIdAndUpdate(existing.engagementId, { $inc: { sessionsUsed: 1 } });
+        }
 
         if (existing.postSessionIntakeTemplateId && !existing.postSessionIntakeSentAt) {
           dispatchAssignedPostSessionForm(existing, req.language)

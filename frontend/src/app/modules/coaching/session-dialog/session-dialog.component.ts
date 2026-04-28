@@ -53,6 +53,21 @@ const FRAMEWORKS = [
       }
 
       <div class="form-section" [class.locked]="isLocked()">
+        <!-- Chemistry call flag — complimentary, no quota consumption -->
+        <label class="chem-toggle"
+               [class.checked]="form.isChemistryCall"
+               [class.disabled]="isLocked()">
+          <mat-checkbox [(ngModel)]="form.isChemistryCall"
+                        (change)="onChemistryToggle()"
+                        color="primary"
+                        [disabled]="isLocked()" />
+          <mat-icon>coffee</mat-icon>
+          <div class="chem-info">
+            <span class="chem-label">{{ 'COACHING.chemistryCall' | translate }}</span>
+            <span class="chem-desc">{{ 'COACHING.chemistryCallDesc' | translate }}</span>
+          </div>
+        </label>
+
         <div class="form-row">
           <mat-form-field appearance="outline">
             <mat-label>{{ 'COACHING.date' | translate }}</mat-label>
@@ -288,6 +303,24 @@ const FRAMEWORKS = [
       mat-form-field { pointer-events: none; }
     }
     .grow-check.disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .chem-toggle {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 14px; border-radius: 8px; cursor: pointer;
+      background: #fafbfd; border: 1px solid #e6ecf2;
+      margin-bottom: 16px;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .chem-toggle:hover { background: #f4f7fb; }
+    .chem-toggle.checked {
+      background: #fff8f0; border-color: #f0a500;
+      mat-icon { color: #b27300; }
+    }
+    .chem-toggle.disabled { opacity: 0.6; cursor: not-allowed; }
+    .chem-toggle mat-icon { color: #5a6a7e; flex-shrink: 0; }
+    .chem-info { display: flex; flex-direction: column; gap: 2px; }
+    .chem-label { font-size: 14px; font-weight: 600; color: #1B2A47; }
+    .chem-desc  { font-size: 12px; color: #7c8a99; }
   `],
 })
 export class SessionDialogComponent implements OnInit {
@@ -315,6 +348,7 @@ export class SessionDialogComponent implements OnInit {
     topics: [] as string[], engagementId: '', coacheeId: '',
     preSessionIntakeTemplateId: null as string | null,
     postSessionIntakeTemplateId: null as string | null,
+    isChemistryCall: false,
   };
 
   assessmentTemplates = signal<{ _id: string; title: string; moduleType: string }[]>([]);
@@ -354,9 +388,21 @@ export class SessionDialogComponent implements OnInit {
         if (d.postSessionIntakeCompleted) this.postIntakeStatus.set('completed');
         else if (d.postSessionIntakeSentAt) this.postIntakeStatus.set('sent');
       }
+    } else if (this.data?.engagementStatus === 'prospect') {
+      // First session on a prospect engagement defaults to a chemistry call
+      // (complimentary, doesn't consume the quota).
+      this.form.isChemistryCall = true;
     }
     this.topicsRaw = (this.form.topics || []).join(', ');
     this.loadAssessmentTemplates();
+  }
+
+  /** Toggling chemistry call on/off resets defaults that go with it. */
+  onChemistryToggle(): void {
+    // Currently no derived fields to flip on the form, but the route handler
+    // skips the sessionsUsed increment based on isChemistryCall. Kept as a
+    // hook for future state transitions (e.g. auto-prompt to advance the
+    // engagement to 'contracted' after a completed chemistry call).
   }
 
   private normaliseId(raw: unknown): string | null {

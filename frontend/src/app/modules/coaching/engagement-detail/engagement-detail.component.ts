@@ -34,6 +34,7 @@ interface Session {
   postSessionRating?: number;
   topics: string[];
   status: string;
+  isChemistryCall?: boolean;
   googleMeetLink?: string;
   createdAt: string;
   createdVia?: 'coach' | 'coachee_booking';
@@ -65,6 +66,22 @@ interface Session {
       @if (loading()) {
         <div class="loading-center"><mat-spinner diameter="36" /></div>
       } @else if (engagement()) {
+        <!-- Lifecycle prompt: completed chemistry call → suggest advancing to 'contracted' -->
+        @if (canManage() && shouldAdvanceFromProspect()) {
+          <div class="lifecycle-banner">
+            <mat-icon>handshake</mat-icon>
+            <div class="banner-text">
+              <strong>{{ 'COACHING.advanceToContractedTitle' | translate }}</strong>
+              <span>{{ 'COACHING.advanceToContractedDesc' | translate }}</span>
+            </div>
+            <button mat-flat-button color="primary"
+                    (click)="advanceToContracted()"
+                    [disabled]="advancing()">
+              @if (advancing()) { <mat-spinner diameter="14" /> }
+              {{ 'COACHING.advanceToContractedAction' | translate }}
+            </button>
+          </div>
+        }
         <div class="detail-layout">
 
           <!-- Sidebar -->
@@ -237,6 +254,12 @@ interface Session {
                       </div>
                       <span class="session-duration">{{ s.duration }} {{ 'COACHING.min' | translate }} · {{ translateFormat(s.format) }}</span>
                       <span class="session-status" [class]="s.status">{{ translateSessionStatus(s.status) }}</span>
+                      @if (s.isChemistryCall) {
+                        <span class="chem-chip"
+                              [matTooltip]="'COACHING.chemistryCallTooltip' | translate">
+                          <mat-icon>coffee</mat-icon> {{ 'COACHING.chemistryCall' | translate }}
+                        </span>
+                      }
                       @if (s.createdVia === 'coachee_booking') {
                         <span class="source-chip booked"
                               [matTooltip]="'COACHING.coacheeBookedTooltip' | translate">
@@ -562,6 +585,16 @@ interface Session {
 
     .detail-layout { display: grid; grid-template-columns: 280px 1fr; gap: 24px; align-items: start; }
 
+    .lifecycle-banner {
+      display: flex; align-items: center; gap: 14px;
+      padding: 14px 18px; margin-bottom: 16px;
+      background: #fff8f0; border: 1px solid #f0d4a0; border-radius: 10px;
+      mat-icon { color: #b27300; font-size: 24px; width: 24px; height: 24px; flex-shrink: 0; }
+      .banner-text { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+      .banner-text strong { color: #1B2A47; font-size: 14px; }
+      .banner-text span { color: #5a6a7e; font-size: 12px; }
+    }
+
     .info-card {
       background: white; border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06);
       overflow: hidden;
@@ -709,6 +742,14 @@ interface Session {
       mat-icon { font-size: 12px; width: 12px; height: 12px; }
       &.booked   { background: #f3eafc; color: #6b3aa0; }
       &.scheduled { background: #fef6e6; color: #b87e08; }
+    }
+
+    .chem-chip {
+      display: inline-flex; align-items: center; gap: 3px;
+      font-size: 10px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.4px; padding: 2px 8px 2px 6px; border-radius: 999px;
+      background: #fff8f0; color: #b27300; border: 1px solid #f0d4a0;
+      mat-icon { font-size: 12px; width: 12px; height: 12px; }
     }
 
     .session-topics { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 8px; }
@@ -877,7 +918,18 @@ export class EngagementDetailComponent implements OnInit {
   engagement = signal<any>(null);
   sessions = signal<Session[]>([]);
   loading = signal(true);
+  advancing = signal(false);
   currentMonth = signal(new Date());
+
+  /** Banner shows when a prospect engagement has at least one completed
+   *  chemistry call — coach can advance the engagement to 'contracted'. */
+  shouldAdvanceFromProspect = computed(() => {
+    const eng = this.engagement();
+    if (!eng || eng.status !== 'prospect') return false;
+    return this.sessions().some(
+      (s) => s.isChemistryCall && s.status === 'completed',
+    );
+  });
   private notesBySession = new Map<string, SessionNote>();
   engId = '';
 
@@ -1042,6 +1094,30 @@ export class EngagementDetailComponent implements OnInit {
         data: { engagementId: this.engId, sessionId },
       });
       ref.afterClosed().subscribe(() => this.load());
+    });
+  }
+
+  advanceToContracted(): void {
+    if (this.advancing() || !this.engId) return;
+    this.advancing.set(true);
+    this.api.put(`/coaching/engagements/${this.engId}`, { status: 'contracted' }).subscribe({
+      next: () => {
+        this.advancing.set(false);
+        this.snack.open(
+          this.translate.instant('COACHING.advanceToContractedSuccess'),
+          this.translate.instant('COMMON.ok'),
+          { duration: 3000 },
+        );
+        this.load();
+      },
+      error: (err) => {
+        this.advancing.set(false);
+        this.snack.open(
+          err?.error?.error || this.translate.instant('COACHING.advanceToContractedError'),
+          this.translate.instant('COMMON.dismiss'),
+          { duration: 4000 },
+        );
+      },
     });
   }
 
@@ -1328,7 +1404,7 @@ export class EngagementDetailComponent implements OnInit {
       return;
     }
     const ref = this.dialog.open(SessionDialogComponent, {
-      data: { engagementId: this.engId, coacheeId },
+      data: { engagementId: this.engId, coacheeId, engagementStatus: eng.status },
       minWidth: '600px', maxHeight: '92vh',
     });
     ref.afterClosed().subscribe((r) => { if (r) this.load(); });
@@ -1336,7 +1412,7 @@ export class EngagementDetailComponent implements OnInit {
 
   editSession(s: Session): void {
     const ref = this.dialog.open(SessionDialogComponent, {
-      data: { ...s, engagementId: this.engId, coacheeId: this.engagement()?.coacheeId?._id },
+      data: { ...s, engagementId: this.engId, coacheeId: this.engagement()?.coacheeId?._id, engagementStatus: this.engagement()?.status },
       minWidth: '600px', maxHeight: '92vh',
     });
     ref.afterClosed().subscribe((r) => { if (r) this.load(); });
