@@ -224,6 +224,9 @@ type RangePreset = 'all' | 'last30' | 'last12' | 'custom';
                 <ng-container matColumnDef="date">
                   <th mat-header-cell *matHeaderCellDef mat-sort-header class="col-date">{{ 'COACHING.date' | translate }}</th>
                   <td mat-cell *matCellDef="let r" class="col-date">{{ r.date | date:'mediumDate' }}</td>
+                  <td mat-footer-cell *matFooterCellDef class="col-date footer-label">
+                    {{ 'COACHING.icfTotal' | translate }}
+                  </td>
                 </ng-container>
 
                 <!-- Category -->
@@ -240,12 +243,17 @@ type RangePreset = 'all' | 'last30' | 'last12' | 'custom';
                       </mat-icon>
                     }
                   </td>
+                  <td mat-footer-cell *matFooterCellDef>
+                    <strong>{{ filteredCount() }}</strong>
+                    <span class="footer-suffix">{{ 'COACHING.icfSessions' | translate }}</span>
+                  </td>
                 </ng-container>
 
                 <!-- Client -->
                 <ng-container matColumnDef="clientName">
                   <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ 'COACHING.icfClientOrType' | translate }}</th>
                   <td mat-cell *matCellDef="let r">{{ r.clientName || '—' }}</td>
+                  <td mat-footer-cell *matFooterCellDef></td>
                 </ng-container>
 
                 <!-- Organization / Sponsor -->
@@ -263,12 +271,16 @@ type RangePreset = 'all' | 'last30' | 'last12' | 'custom';
                       }
                     </div>
                   </td>
+                  <td mat-footer-cell *matFooterCellDef></td>
                 </ng-container>
 
                 <!-- Hours -->
                 <ng-container matColumnDef="hours">
                   <th mat-header-cell *matHeaderCellDef mat-sort-header class="num">{{ 'COACHING.icfHoursValue' | translate }}</th>
                   <td mat-cell *matCellDef="let r" class="num">{{ r.hours | number:'1.0-2' }}</td>
+                  <td mat-footer-cell *matFooterCellDef class="num footer-total">
+                    {{ filteredHours() | number:'1.0-2' }}
+                  </td>
                 </ng-container>
 
                 <!-- Paid status -->
@@ -281,6 +293,7 @@ type RangePreset = 'all' | 'last30' | 'last12' | 'custom';
                       <span class="paid-badge probono">{{ 'COACHING.icfProBono' | translate }}</span>
                     }
                   </td>
+                  <td mat-footer-cell *matFooterCellDef></td>
                 </ng-container>
 
                 <!-- Actions -->
@@ -301,10 +314,12 @@ type RangePreset = 'all' | 'last30' | 'last12' | 'custom';
                       </mat-menu>
                     }
                   </td>
+                  <td mat-footer-cell *matFooterCellDef></td>
                 </ng-container>
 
                 <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
                 <tr mat-row *matRowDef="let row; columns: displayedColumns" [class.from-session]="row.source === 'session'"></tr>
+                <tr mat-footer-row *matFooterRowDef="displayedColumns; sticky: true" class="totals-footer"></tr>
 
                 <tr class="no-match" *matNoDataRow>
                   <td colspan="7">{{ 'COACHING.icfFilterNoMatch' | translate }}</td>
@@ -429,6 +444,30 @@ type RangePreset = 'all' | 'last30' | 'last12' | 'custom';
     }
     .compact-table tr.mat-mdc-row { height: 28px; }
     .compact-table tr.mat-mdc-row:hover { background: #f8fafc; }
+
+    /* Footer totals row */
+    .compact-table tr.totals-footer { height: 36px; }
+    .compact-table td.mat-mdc-footer-cell {
+      padding: 6px 10px;
+      font-size: 12px; font-weight: 600;
+      background: #f8fafc;
+      border-top: 2px solid #d6dde6;
+      border-bottom: none;
+      color: #1B2A47;
+    }
+    .compact-table td.mat-mdc-footer-cell.footer-label {
+      text-transform: uppercase; letter-spacing: 0.6px;
+      font-size: 10px; color: #5a6a7e;
+    }
+    .compact-table td.mat-mdc-footer-cell.footer-total {
+      font-variant-numeric: tabular-nums;
+      color: #1a9678;
+      font-weight: 700;
+    }
+    .footer-suffix {
+      font-size: 10px; font-weight: 500; color: #5a6a7e;
+      text-transform: lowercase; margin-left: 4px;
+    }
     .compact-table tr.from-session { background: #fafcfe; }
     .compact-table .num { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
     .compact-table .col-date { white-space: nowrap; min-width: 110px; width: 110px; }
@@ -557,6 +596,17 @@ export class IcfHoursDashboardComponent implements OnInit {
       paid: this.paidFilter,
     });
     if (this.dataSource.paginator) this.dataSource.paginator.firstPage();
+  }
+
+  /** Footer totals — recompute on every change detection (cheap; O(n)
+   *  over filteredData, ≤1k rows in practice). Called by the matFooterCell
+   *  template bindings. */
+  filteredCount(): number {
+    return this.dataSource.filteredData?.length ?? 0;
+  }
+  filteredHours(): number {
+    return (this.dataSource.filteredData ?? [])
+      .reduce((acc, r) => acc + (r.hours ?? 0), 0);
   }
 
   reload(): void {
