@@ -16,7 +16,12 @@ const I18N_DIR = path.join(__dirname, '..', '..', 'frontend', 'src', 'assets', '
 // ─── Translations ────────────────────────────────────────────────────────────
 
 const COACHING_FR = {
+  icfAllCategories: 'Toutes les catégories',
+  icfAllPaidStatus: 'Tous les statuts',
   icfAllTime: 'Depuis le début',
+  icfCompanySponsor: 'Entreprise / Commanditaire',
+  icfFilterNoMatch: 'Aucune entrée ne correspond aux filtres en cours.',
+  icfFilterPlaceholder: 'Filtrer par client, entreprise, contact, notes...',
   icfAssessmentType: 'Type d\'évaluation',
   icfAssessmentTypeHint: 'Instrument débriefé (p. ex. EQi-2.0, Hogan, DISC) — laisser vide pour un coaching standard',
   icfCatCce: 'CCE',
@@ -96,7 +101,12 @@ const COACHING_FR = {
 };
 
 const COACHING_ES = {
+  icfAllCategories: 'Todas las categorías',
+  icfAllPaidStatus: 'Todos los estados',
   icfAllTime: 'Desde el inicio',
+  icfCompanySponsor: 'Empresa / Patrocinador',
+  icfFilterNoMatch: 'Ninguna entrada coincide con los filtros actuales.',
+  icfFilterPlaceholder: 'Filtrar por cliente, empresa, contacto, notas...',
   icfAssessmentType: 'Tipo de evaluación',
   icfAssessmentTypeHint: 'Instrumento revisado (p. ej. EQi-2.0, Hogan, DISC) — dejar vacío para coaching estándar',
   icfCatCce: 'CCE',
@@ -176,7 +186,12 @@ const COACHING_ES = {
 };
 
 const COACHING_SK = {
+  icfAllCategories: 'Všetky kategórie',
+  icfAllPaidStatus: 'Všetky stavy',
   icfAllTime: 'Od začiatku',
+  icfCompanySponsor: 'Spoločnosť / Sponzor',
+  icfFilterNoMatch: 'Žiadne záznamy nezodpovedajú aktuálnym filtrom.',
+  icfFilterPlaceholder: 'Filtrovať podľa klienta, firmy, kontaktu, poznámok...',
   icfAssessmentType: 'Typ posúdenia',
   icfAssessmentTypeHint: 'Použitý nástroj (napr. EQi-2.0, Hogan, DISC) — pre bežný koučing nechajte prázdne',
   icfCatCce: 'CCE',

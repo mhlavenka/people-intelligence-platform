@@ -40,6 +40,10 @@ export interface HoursLogEntry {
   paidStatus?: HoursPaidStatus;
   clientName?: string;
   clientOrganization?: string;
+  sponsorContactName?: string;
+  assessmentType?: string;
+  mentorCoachName?: string;
+  mentorCoachOrganization?: string;
   notes?: string;
 }
 

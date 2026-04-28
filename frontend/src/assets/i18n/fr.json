@@ -2708,7 +2708,12 @@
     "goalsPlaceholder": "ex. Développement du leadership, Compétences en communication",
     "topicsPlaceholder": "ex. Style de leadership, Dynamique d'équipe",
     "journalComplete": "Terminé",
-    "journalDraft": "Brouillon"
+    "journalDraft": "Brouillon",
+    "icfAllCategories": "Toutes les catégories",
+    "icfAllPaidStatus": "Tous les statuts",
+    "icfCompanySponsor": "Entreprise / Commanditaire",
+    "icfFilterNoMatch": "Aucune entrée ne correspond aux filtres en cours.",
+    "icfFilterPlaceholder": "Filtrer par client, entreprise, contact, notes..."
   },
   "JOURNAL": {
     "aiRegenerateFailed": "Échec de la régénération des analyses IA",

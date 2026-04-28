@@ -2708,7 +2708,12 @@
     "goalsPlaceholder": "ej. Desarrollo de liderazgo, Habilidades de comunicación",
     "topicsPlaceholder": "ej. Estilo de liderazgo, Dinámica de equipo",
     "journalComplete": "Completo",
-    "journalDraft": "Borrador"
+    "journalDraft": "Borrador",
+    "icfAllCategories": "Todas las categorías",
+    "icfAllPaidStatus": "Todos los estados",
+    "icfCompanySponsor": "Empresa / Patrocinador",
+    "icfFilterNoMatch": "Ninguna entrada coincide con los filtros actuales.",
+    "icfFilterPlaceholder": "Filtrar por cliente, empresa, contacto, notas..."
   },
   "JOURNAL": {
     "aiRegenerateFailed": "Error al regenerar perspectivas de IA",

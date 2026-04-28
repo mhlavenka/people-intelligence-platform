@@ -2708,7 +2708,12 @@
     "goalsPlaceholder": "napr. Rozvoj líderstva, Komunikačné zručnosti",
     "topicsPlaceholder": "napr. Líderský štýl, Tímová dynamika",
     "journalComplete": "Dokončené",
-    "journalDraft": "Koncept"
+    "journalDraft": "Koncept",
+    "icfAllCategories": "Všetky kategórie",
+    "icfAllPaidStatus": "Všetky stavy",
+    "icfCompanySponsor": "Spoločnosť / Sponzor",
+    "icfFilterNoMatch": "Žiadne záznamy nezodpovedajú aktuálnym filtrom.",
+    "icfFilterPlaceholder": "Filtrovať podľa klienta, firmy, kontaktu, poznámok..."
   },
   "JOURNAL": {
     "aiRegenerateFailed": "Regenerácia AI poznatkov zlyhala",

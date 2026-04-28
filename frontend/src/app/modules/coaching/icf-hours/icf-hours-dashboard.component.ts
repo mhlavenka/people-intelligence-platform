@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, AfterViewInit, ViewChild, signal, computed } from '@angular/core';
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -15,6 +15,9 @@ import { MatInputModule } from '@angular/material/input';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatSelectModule } from '@angular/material/select';
+import { MatTableModule, MatTableDataSource } from '@angular/material/table';
+import { MatSortModule, MatSort } from '@angular/material/sort';
+import { MatPaginatorModule, MatPaginator } from '@angular/material/paginator';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ApiService } from '../../../core/api.service';
 import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog.component';
@@ -33,6 +36,7 @@ type RangePreset = 'all' | 'last30' | 'last12' | 'custom';
     MatIconModule, MatButtonModule, MatProgressSpinnerModule, MatTooltipModule,
     MatMenuModule, MatSnackBarModule, MatFormFieldModule, MatInputModule,
     MatDatepickerModule, MatNativeDateModule, MatSelectModule,
+    MatTableModule, MatSortModule, MatPaginatorModule,
     TranslateModule,
   ],
   template: `
@@ -167,74 +171,154 @@ type RangePreset = 'all' | 'last30' | 'last12' | 'custom';
         </div>
 
         <!-- Recent activity table -->
-        <div class="activity-header">
-          <h2 class="section-title">{{ 'COACHING.icfRecentActivity' | translate }}</h2>
-          <span class="row-count">{{ entries().length }} {{ 'COACHING.icfEntries' | translate }}</span>
-        </div>
+        <div class="activity-section">
+          <div class="activity-header">
+            <h2 class="section-title">{{ 'COACHING.icfRecentActivity' | translate }}</h2>
+            <span class="row-count">
+              {{ dataSource.filteredData.length }} / {{ entries().length }} {{ 'COACHING.icfEntries' | translate }}
+            </span>
+          </div>
 
-        @if (entries().length === 0) {
-          <div class="empty-row">
-            <mat-icon>schedule</mat-icon>
-            <p>{{ 'COACHING.icfNoEntries' | translate }}</p>
+          <!-- Filter bar -->
+          <div class="table-filter-bar">
+            <mat-form-field appearance="outline" class="filter-text">
+              <mat-icon matPrefix>search</mat-icon>
+              <mat-label>{{ 'COACHING.icfFilterPlaceholder' | translate }}</mat-label>
+              <input matInput [(ngModel)]="textFilter" (ngModelChange)="applyFilters()" />
+              @if (textFilter) {
+                <button matSuffix mat-icon-button (click)="textFilter=''; applyFilters()">
+                  <mat-icon>close</mat-icon>
+                </button>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="filter-select">
+              <mat-label>{{ 'COACHING.icfCategory' | translate }}</mat-label>
+              <mat-select [(ngModel)]="categoryFilter" (selectionChange)="applyFilters()">
+                <mat-option value="">{{ 'COACHING.icfAllCategories' | translate }}</mat-option>
+                <mat-option value="session">{{ 'COACHING.icfCatSession' | translate }}</mat-option>
+                <mat-option value="mentor_coaching_received">{{ 'COACHING.icfCatMentor' | translate }}</mat-option>
+                <mat-option value="cce">{{ 'COACHING.icfCatCce' | translate }}</mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="filter-select">
+              <mat-label>{{ 'COACHING.icfPaidStatus' | translate }}</mat-label>
+              <mat-select [(ngModel)]="paidFilter" (selectionChange)="applyFilters()">
+                <mat-option value="">{{ 'COACHING.icfAllPaidStatus' | translate }}</mat-option>
+                <mat-option value="paid">{{ 'COACHING.icfPaid' | translate }}</mat-option>
+                <mat-option value="pro_bono">{{ 'COACHING.icfProBono' | translate }}</mat-option>
+              </mat-select>
+            </mat-form-field>
           </div>
-        } @else {
-          <div class="activity-table-wrap">
-            <table class="activity-table">
-              <thead>
-                <tr>
-                  <th>{{ 'COACHING.date' | translate }}</th>
-                  <th>{{ 'COACHING.icfCategory' | translate }}</th>
-                  <th>{{ 'COACHING.icfClientOrType' | translate }}</th>
-                  <th class="num">{{ 'COACHING.icfHoursValue' | translate }}</th>
-                  <th>{{ 'COACHING.icfPaidStatus' | translate }}</th>
-                  <th class="actions"></th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (entry of entries(); track entry.id) {
-                  <tr [class.from-session]="entry.source === 'session'">
-                    <td>{{ entry.date | date:'mediumDate' }}</td>
-                    <td>
-                      <span class="cat-pill" [class]="entry.category">
-                        {{ categoryLabel(entry.category) | translate }}
-                      </span>
-                      @if (entry.source === 'session') {
-                        <mat-icon class="auto-icon"
-                                  [matTooltip]="'COACHING.icfFromSessionTooltip' | translate">
-                          link
-                        </mat-icon>
+
+          @if (entries().length === 0) {
+            <div class="empty-row">
+              <mat-icon>schedule</mat-icon>
+              <p>{{ 'COACHING.icfNoEntries' | translate }}</p>
+            </div>
+          } @else {
+            <div class="activity-table-wrap">
+              <table mat-table matSort [dataSource]="dataSource" class="compact-table">
+                <!-- Date -->
+                <ng-container matColumnDef="date">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ 'COACHING.date' | translate }}</th>
+                  <td mat-cell *matCellDef="let r">{{ r.date | date:'mediumDate' }}</td>
+                </ng-container>
+
+                <!-- Category -->
+                <ng-container matColumnDef="category">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ 'COACHING.icfCategory' | translate }}</th>
+                  <td mat-cell *matCellDef="let r">
+                    <span class="cat-pill" [class]="r.category">
+                      {{ categoryLabel(r.category) | translate }}
+                    </span>
+                    @if (r.source === 'session') {
+                      <mat-icon class="auto-icon"
+                                [matTooltip]="'COACHING.icfFromSessionTooltip' | translate">
+                        link
+                      </mat-icon>
+                    }
+                  </td>
+                </ng-container>
+
+                <!-- Client -->
+                <ng-container matColumnDef="clientName">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ 'COACHING.icfClientOrType' | translate }}</th>
+                  <td mat-cell *matCellDef="let r">{{ r.clientName || '—' }}</td>
+                </ng-container>
+
+                <!-- Organization / Sponsor -->
+                <ng-container matColumnDef="organization">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header>
+                    {{ 'COACHING.icfCompanySponsor' | translate }}
+                  </th>
+                  <td mat-cell *matCellDef="let r">
+                    <div class="org-cell">
+                      <span class="org-name">{{ r.clientOrganization || '—' }}</span>
+                      @if (r.sponsorContactName) {
+                        <span class="sponsor-name">
+                          <mat-icon>person</mat-icon>{{ r.sponsorContactName }}
+                        </span>
                       }
-                    </td>
-                    <td>{{ entry.clientName || '—' }}</td>
-                    <td class="num">{{ entry.hours | number:'1.0-2' }}</td>
-                    <td>
-                      @if (entry.paidStatus === 'paid') {
-                        <span class="paid-badge paid">{{ 'COACHING.icfPaid' | translate }}</span>
-                      } @else if (entry.paidStatus === 'pro_bono') {
-                        <span class="paid-badge probono">{{ 'COACHING.icfProBono' | translate }}</span>
-                      }
-                    </td>
-                    <td class="actions">
-                      @if (entry.source === 'manual') {
-                        <button mat-icon-button [matMenuTriggerFor]="rowMenu" (click)="$event.stopPropagation()">
-                          <mat-icon>more_vert</mat-icon>
+                    </div>
+                  </td>
+                </ng-container>
+
+                <!-- Hours -->
+                <ng-container matColumnDef="hours">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header class="num">{{ 'COACHING.icfHoursValue' | translate }}</th>
+                  <td mat-cell *matCellDef="let r" class="num">{{ r.hours | number:'1.0-2' }}</td>
+                </ng-container>
+
+                <!-- Paid status -->
+                <ng-container matColumnDef="paidStatus">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ 'COACHING.icfPaidStatus' | translate }}</th>
+                  <td mat-cell *matCellDef="let r">
+                    @if (r.paidStatus === 'paid') {
+                      <span class="paid-badge paid">{{ 'COACHING.icfPaid' | translate }}</span>
+                    } @else if (r.paidStatus === 'pro_bono') {
+                      <span class="paid-badge probono">{{ 'COACHING.icfProBono' | translate }}</span>
+                    }
+                  </td>
+                </ng-container>
+
+                <!-- Actions -->
+                <ng-container matColumnDef="actions">
+                  <th mat-header-cell *matHeaderCellDef class="actions"></th>
+                  <td mat-cell *matCellDef="let r" class="actions">
+                    @if (r.source === 'manual') {
+                      <button mat-icon-button [matMenuTriggerFor]="rowMenu" (click)="$event.stopPropagation()">
+                        <mat-icon>more_vert</mat-icon>
+                      </button>
+                      <mat-menu #rowMenu="matMenu">
+                        <button mat-menu-item (click)="editEntry(r.id)">
+                          <mat-icon>edit</mat-icon> {{ 'COMMON.edit' | translate }}
                         </button>
-                        <mat-menu #rowMenu="matMenu">
-                          <button mat-menu-item (click)="editEntry(entry.id)">
-                            <mat-icon>edit</mat-icon> {{ 'COMMON.edit' | translate }}
-                          </button>
-                          <button mat-menu-item (click)="deleteEntry(entry.id)">
-                            <mat-icon>delete</mat-icon> {{ 'COMMON.delete' | translate }}
-                          </button>
-                        </mat-menu>
-                      }
-                    </td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
-        }
+                        <button mat-menu-item (click)="deleteEntry(r.id)">
+                          <mat-icon>delete</mat-icon> {{ 'COMMON.delete' | translate }}
+                        </button>
+                      </mat-menu>
+                    }
+                  </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+                <tr mat-row *matRowDef="let row; columns: displayedColumns" [class.from-session]="row.source === 'session'"></tr>
+
+                <tr class="no-match" *matNoDataRow>
+                  <td colspan="7">{{ 'COACHING.icfFilterNoMatch' | translate }}</td>
+                </tr>
+              </table>
+            </div>
+
+            <mat-paginator
+              [pageSizeOptions]="[10, 25, 50, 100]"
+              [pageSize]="25"
+              showFirstLastButtons>
+            </mat-paginator>
+          }
+        </div>
       }
     </div>
   `,
@@ -309,18 +393,63 @@ type RangePreset = 'all' | 'last30' | 'last12' | 'custom';
     .total-card.cce { border-left: 3px solid #f0a500; }
 
     /* Activity table */
+    .activity-section {
+      display: flex; flex-direction: column;
+      /* Fill the remaining viewport on first paint so the table dominates the
+       * fold and pagination is visible without scrolling.
+       * 360px reserves space for: page header, range filter, progress rings,
+       * totals grid + their margins. */
+      min-height: calc(100vh - 360px);
+    }
     .activity-header { display: flex; justify-content: space-between; align-items: baseline; margin-top: 32px; }
     .row-count { font-size: 12px; color: #9aa5b4; }
-    .activity-table-wrap { background: #fff; border: 1px solid #e6ecf2; border-radius: 8px; overflow: hidden; }
-    .activity-table { width: 100%; border-collapse: collapse; }
-    .activity-table th, .activity-table td { padding: 12px 14px; text-align: left; border-bottom: 1px solid #f0f3f7; font-size: 13px; }
-    .activity-table th { background: #f8fafc; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #5a6a7e; font-weight: 600; }
-    .activity-table tr.from-session { background: #fafcfe; }
-    .activity-table tr:last-child td { border-bottom: none; }
-    .activity-table .num { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
-    .activity-table .actions { width: 40px; text-align: right; padding-right: 8px; }
 
-    .cat-pill { display: inline-block; padding: 3px 9px; border-radius: 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    /* Filter bar above the table */
+    .table-filter-bar { display: flex; gap: 12px; margin: 4px 0 8px; align-items: flex-end; flex-wrap: wrap; }
+    .filter-text   { flex: 1; min-width: 240px; }
+    .filter-select { width: 200px; }
+    /* Tighten Material form-field vertical spacing in this bar */
+    .table-filter-bar ::ng-deep .mat-mdc-form-field-subscript-wrapper { display: none; }
+
+    .activity-table-wrap {
+      flex: 1;
+      background: #fff; border: 1px solid #e6ecf2; border-radius: 8px 8px 0 0;
+      overflow: auto;
+    }
+    .compact-table { width: 100%; }
+    .compact-table th.mat-mdc-header-cell {
+      background: #f8fafc;
+      font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;
+      color: #5a6a7e; font-weight: 600;
+      padding: 8px 10px; height: 36px;
+    }
+    .compact-table td.mat-mdc-cell {
+      padding: 4px 10px; font-size: 13px;
+      border-bottom: 1px solid #f0f3f7;
+    }
+    .compact-table tr.mat-mdc-row { height: 34px; }
+    .compact-table tr.mat-mdc-row:hover { background: #f8fafc; }
+    .compact-table tr.from-session { background: #fafcfe; }
+    .compact-table .num { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
+    .compact-table th.actions, .compact-table td.actions { width: 40px; padding-right: 6px; text-align: right; }
+    .compact-table tr.no-match td { padding: 24px; text-align: center; color: #9aa5b4; font-size: 13px; }
+
+    .org-cell { display: flex; flex-direction: column; line-height: 1.25; }
+    .org-name { color: #1B2A47; }
+    .sponsor-name {
+      font-size: 11px; color: #9aa5b4;
+      display: inline-flex; align-items: center; gap: 2px;
+    }
+    .sponsor-name mat-icon {
+      font-size: 12px; width: 12px; height: 12px;
+    }
+
+    mat-paginator {
+      border: 1px solid #e6ecf2; border-top: 0; border-radius: 0 0 8px 8px;
+      background: #fafbfd;
+    }
+
+    .cat-pill { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
     .cat-pill.session { background: #e0f0ff; color: #1e6aa8; }
     .cat-pill.mentor_coaching_received { background: #f1ecfa; color: #6a4ba8; }
     .cat-pill.cce { background: #fff4e0; color: #b27300; }
@@ -340,7 +469,7 @@ type RangePreset = 'all' | 'last30' | 'last12' | 'custom';
     }
   `],
 })
-export class IcfHoursDashboardComponent implements OnInit {
+export class IcfHoursDashboardComponent implements OnInit, AfterViewInit {
   loading = signal(true);
   summary = signal<HoursSummary | null>(null);
   entries = signal<HoursLogEntry[]>([]);
@@ -348,6 +477,16 @@ export class IcfHoursDashboardComponent implements OnInit {
   rangePreset: RangePreset = 'all';
   customFrom: Date | null = null;
   customTo: Date | null = null;
+
+  // Activity table state
+  @ViewChild(MatSort) sort!: MatSort;
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
+  dataSource = new MatTableDataSource<HoursLogEntry>([]);
+  displayedColumns = ['date', 'category', 'clientName', 'organization', 'hours', 'paidStatus', 'actions'];
+
+  textFilter = '';
+  categoryFilter = '';
+  paidFilter = '';
 
   constructor(
     private api: ApiService,
@@ -357,7 +496,52 @@ export class IcfHoursDashboardComponent implements OnInit {
     private http: HttpClient,
   ) {}
 
-  ngOnInit(): void { this.reload(); }
+  ngOnInit(): void {
+    this.dataSource.filterPredicate = (row, filter) => {
+      const f = JSON.parse(filter) as { text: string; category: string; paid: string };
+      if (f.category && row.category !== f.category) return false;
+      if (f.paid && row.paidStatus !== f.paid) return false;
+      if (f.text) {
+        const haystack = [
+          row.clientName, row.clientOrganization, row.sponsorContactName,
+          row.mentorCoachName, row.mentorCoachOrganization, row.assessmentType,
+          row.notes, row.category,
+        ].filter(Boolean).join(' ').toLowerCase();
+        if (!haystack.includes(f.text)) return false;
+      }
+      return true;
+    };
+    this.reload();
+  }
+
+  ngAfterViewInit(): void {
+    this.dataSource.sort = this.sort;
+    this.dataSource.paginator = this.paginator;
+    this.dataSource.sortingDataAccessor = (row, prop) => {
+      switch (prop) {
+        case 'date':         return new Date(row.date).getTime();
+        case 'hours':        return row.hours;
+        case 'clientName':   return (row.clientName ?? '').toLowerCase();
+        case 'organization': return (row.clientOrganization ?? '').toLowerCase();
+        case 'category':     return row.category;
+        case 'paidStatus':   return row.paidStatus ?? '';
+        default:             return (row as any)[prop];
+      }
+    };
+    // Default sort: date desc (matches the natural order in the entries view)
+    this.sort.active = 'date';
+    this.sort.direction = 'desc';
+    this.sort.sortChange.emit();
+  }
+
+  applyFilters(): void {
+    this.dataSource.filter = JSON.stringify({
+      text: this.textFilter.trim().toLowerCase(),
+      category: this.categoryFilter,
+      paid: this.paidFilter,
+    });
+    if (this.dataSource.paginator) this.dataSource.paginator.firstPage();
+  }
 
   reload(): void {
     this.loading.set(true);
@@ -372,6 +556,8 @@ export class IcfHoursDashboardComponent implements OnInit {
     ]).then(([summary, entries]) => {
       this.summary.set(summary || null);
       this.entries.set(entries || []);
+      this.dataSource.data = entries || [];
+      this.applyFilters();
       this.loading.set(false);
     }).catch((err) => {
       this.loading.set(false);
