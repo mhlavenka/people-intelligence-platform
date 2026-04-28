@@ -1,6 +1,7 @@
 import { SESClient, SendEmailCommand, SendRawEmailCommand } from '@aws-sdk/client-ses';
 import i18next from 'i18next';
 import { config } from '../config/env';
+import { AppSettings } from '../models/AppSettings.model';
 
 // ─── Client ──────────────────────────────────────────────────────────────────
 
@@ -16,7 +17,47 @@ const ses = new SESClient({
     : {}), // fall back to IAM role / env-based credentials when keys are absent
 });
 
-const FROM = config.aws.sesFromEmail || 'noreply@headsoft.net';
+const DEFAULT_DISPLAY_NAME = 'ARTES Hub';
+const DEFAULT_FALLBACK_EMAIL = 'noreply@headsoft.net';
+
+// Cache the resolved Source header for 60s so we don't hit AppSettings on
+// every send; system-admin updates take effect within a minute.
+let fromCache: { value: string; expiresAt: number } | null = null;
+const FROM_CACHE_TTL_MS = 60_000;
+
+/** Build a SES Source header `"Display Name" <email@x.com>` from
+ *  AppSettings.emailDelivery, falling back to env / hardcoded defaults. */
+export async function getFromHeader(): Promise<string> {
+  const now = Date.now();
+  if (fromCache && fromCache.expiresAt > now) return fromCache.value;
+
+  let senderEmail = '';
+  let senderName = '';
+  try {
+    const settings = await AppSettings.findOne().select('emailDelivery').lean();
+    senderEmail = (settings?.emailDelivery?.senderEmail ?? '').trim();
+    senderName  = (settings?.emailDelivery?.senderName ?? '').trim();
+  } catch (err) {
+    console.warn('[EmailService] AppSettings lookup failed; falling back to env:', err);
+  }
+
+  if (!senderEmail) {
+    // Fall back to env var (may include a display name); strip it.
+    const raw = (config.aws.sesFromEmail || DEFAULT_FALLBACK_EMAIL).trim();
+    const angleMatch = raw.match(/<([^>]+)>/);
+    senderEmail = (angleMatch ? angleMatch[1] : raw).trim();
+  }
+  if (!senderName) senderName = DEFAULT_DISPLAY_NAME;
+
+  const header = `"${senderName.replace(/"/g, '\\"')}" <${senderEmail}>`;
+  fromCache = { value: header, expiresAt: now + FROM_CACHE_TTL_MS };
+  return header;
+}
+
+/** Invalidate the From cache; call from system-admin-settings PUT after an
+ *  emailDelivery change so the next send uses the new value immediately. */
+export function invalidateFromCache(): void { fromCache = null; }
+
 const isDev = config.nodeEnv !== 'production';
 
 // ─── i18n helper ─────────────────────────────────────────────────────────────
@@ -100,7 +141,7 @@ export async function sendEmail(params: {
   }
 
   const command = new SendEmailCommand({
-    Source: FROM,
+    Source: await getFromHeader(),
     Destination: { ToAddresses: recipients },
     Message: {
       Subject: { Data: params.subject, Charset: 'UTF-8' },
@@ -136,9 +177,10 @@ export async function sendEmailWithAttachments(params: {
     return;
   }
 
+  const fromHeader = await getFromHeader();
   const boundary = `----=_Part_${Date.now()}_${Math.random().toString(36).slice(2)}`;
   const rawParts: string[] = [
-    `From: ${FROM}`,
+    `From: ${fromHeader}`,
     `To: ${recipients.join(', ')}`,
     `Subject: =?UTF-8?B?${Buffer.from(params.subject).toString('base64')}?=`,
     'MIME-Version: 1.0',

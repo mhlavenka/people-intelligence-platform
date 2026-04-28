@@ -1,6 +1,7 @@
 import { Router, Response, NextFunction } from 'express';
 import { authenticateToken, requireRole, AuthRequest } from '../middleware/auth.middleware';
 import { AppSettings } from '../models/AppSettings.model';
+import { invalidateFromCache } from '../services/email.service';
 
 const router = Router();
 
@@ -22,7 +23,7 @@ router.get('/', async (req: AuthRequest, res: Response, next: NextFunction) => {
 /** Update app settings (partial merge). */
 router.put('/', async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const { passwordPolicy, loginPolicy, sessionPolicy, tokenPolicy, general, companyInfo } = req.body;
+    const { passwordPolicy, loginPolicy, sessionPolicy, tokenPolicy, general, companyInfo, emailDelivery } = req.body;
 
     let settings = await AppSettings.findOne();
     if (!settings) {
@@ -35,9 +36,14 @@ router.put('/', async (req: AuthRequest, res: Response, next: NextFunction) => {
     if (tokenPolicy)    { Object.assign(settings.tokenPolicy, tokenPolicy); }
     if (general)        { Object.assign(settings.general, general); }
     if (companyInfo)    { Object.assign(settings.companyInfo, companyInfo); }
+    if (emailDelivery)  { Object.assign(settings.emailDelivery, emailDelivery); }
 
     settings.updatedBy = req.user!.userId as any;
     await settings.save();
+
+    // Invalidate the cached SES Source header so subsequent sends use the new
+    // sender values immediately rather than waiting for the 60s TTL.
+    if (emailDelivery) invalidateFromCache();
 
     res.json(settings);
   } catch (e) {

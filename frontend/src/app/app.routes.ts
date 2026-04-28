@@ -240,6 +240,14 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'coaching/icf-hours',
+        canActivate: [roleGuard([...ADMIN_HR, 'coach'])],
+        loadComponent: () =>
+          import('./modules/coaching/icf-hours/icf-hours-dashboard.component').then(
+            (m) => m.IcfHoursDashboardComponent
+          ),
+      },
+      {
         path: 'coaching/:id',
         canActivate: [roleGuard([...ADMIN_HR, 'coach', 'coachee'])],
         loadComponent: () =>

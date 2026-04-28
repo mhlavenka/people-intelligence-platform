@@ -12,6 +12,7 @@
     "seed:plans": "ts-node --project tsconfig.json src/scripts/seed-plans.ts",
     "seed:conflict": "ts-node --project tsconfig.json src/scripts/seed-conflict-instruments.ts",
     "backfill:isCoachee": "ts-node --project tsconfig.json src/scripts/backfill-isCoachee.ts",
+    "backfill:sessionIcfFields": "ts-node --project tsconfig.json src/scripts/backfill-session-icf-fields.ts",
     "deploy": "npm run build && pm2 restart ecosystem.config.js --env production"
   },
   "dependencies": {
@@ -24,6 +25,7 @@
     "@types/pdfkit": "^0.17.6",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
+    "csv-parse": "^6.2.1",
     "date-holidays": "^3.27.0",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",

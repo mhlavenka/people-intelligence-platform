@@ -2,6 +2,8 @@ import mongoose, { Document, Schema } from 'mongoose';
 import { tenantFilterPlugin } from './plugins/tenantFilter.plugin';
 
 export type SessionStatus = 'scheduled' | 'completed' | 'cancelled' | 'no_show';
+export type SessionClientType = 'individual' | 'team' | 'group';
+export type SessionPaidStatus = 'paid' | 'pro_bono';
 
 export interface ICoachingSession extends Document {
   organizationId: mongoose.Types.ObjectId;
@@ -19,6 +21,8 @@ export interface ICoachingSession extends Document {
   postSessionRating?: number;        // coachee session rating 1-5
   topics: string[];
   status: SessionStatus;
+  clientType: SessionClientType;     // ICF-required: individual / team / group
+  paidStatus: SessionPaidStatus;     // ICF-required: paid / pro_bono
   googleEventId?: string;
   googleMeetLink?: string;
   bookingId?: mongoose.Types.ObjectId;  // paired Booking row, if any
@@ -52,6 +56,16 @@ const CoachingSessionSchema = new Schema<ICoachingSession>(
       type: String,
       enum: ['scheduled', 'completed', 'cancelled', 'no_show'],
       default: 'scheduled',
+    },
+    clientType: {
+      type: String,
+      enum: ['individual', 'team', 'group'],
+      default: 'individual',
+    },
+    paidStatus: {
+      type: String,
+      enum: ['paid', 'pro_bono'],
+      default: 'paid',
     },
     googleEventId: { type: String },
     googleMeetLink: { type: String },

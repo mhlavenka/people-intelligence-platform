@@ -5,6 +5,7 @@ import { SESClient, SendRawEmailCommand } from '@aws-sdk/client-ses';
 import { config } from '../config/env';
 import { IBooking } from '../models/Booking.model';
 import { User } from '../models/User.model';
+import { getFromHeader } from './email.service';
 
 export async function shouldSuppressBookingEmail(booking: IBooking): Promise<boolean> {
   if (!booking.coacheeId) return false;
@@ -26,7 +27,6 @@ const ses = new SESClient({
     : {}),
 });
 
-const FROM = config.aws.sesFromEmail || 'noreply@headsoft.net';
 const isDev = config.nodeEnv !== 'production';
 
 // ─── i18n helper ───────────────────────────────────────────────────────────
@@ -121,9 +121,10 @@ async function sendRawEmailWithICS(params: {
 
   const method = params.icsMethod || 'REQUEST';
   const filename = params.icsFilename || 'invite.ics';
+  const fromHeader = await getFromHeader();
   const boundary = `----=_Part_${Date.now()}`;
   const rawMessage = [
-    `From: ${FROM}`,
+    `From: ${fromHeader}`,
     `To: ${params.to}`,
     `Subject: ${params.subject}`,
     'MIME-Version: 1.0',
@@ -470,7 +471,7 @@ export async function sendReminder(
 
   const { SendEmailCommand } = await import('@aws-sdk/client-ses');
   const command = new SendEmailCommand({
-    Source: FROM,
+    Source: await getFromHeader(),
     Destination: { ToAddresses: [booking.clientEmail] },
     Message: {
       Subject: {

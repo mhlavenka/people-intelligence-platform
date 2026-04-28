@@ -675,6 +675,7 @@ export class AppShellComponent implements OnInit, OnDestroy {
         { label: 'NAV.coachees',    icon: 'people_alt',   route: '/coaching/coachees', roles: ['coach'] as AppRole[],                               module: 'coaching' },
         { label: 'NAV.sponsors',    icon: 'account_balance', route: '/sponsors', roles: ['admin', 'hr_manager', 'coach'] as AppRole[],            module: 'coaching' },
         { label: 'NAV.myJournal',   icon: 'menu_book',    route: '/journal',   roles: ['admin', 'hr_manager', 'coach'] as AppRole[],            module: 'coaching' },
+        { label: 'NAV.icfHours',    icon: 'workspace_premium', route: '/coaching/icf-hours', roles: ['admin', 'hr_manager', 'coach'] as AppRole[], module: 'coaching' },
       ],
     },
     { label: 'NAV.booking',            icon: 'event_available', route: '/booking',     roles: ['admin', 'hr_manager', 'coach'],              module: 'coaching' },
