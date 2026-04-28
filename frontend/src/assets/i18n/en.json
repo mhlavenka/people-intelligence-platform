@@ -2512,6 +2512,7 @@
     "contractAcceptSuccess": "Contract accepted",
     "contractAcceptTitle": "Coaching Contract",
     "contractAcceptedOn": "Accepted on",
+    "contractLoadError": "Could not load the contract — try refreshing.",
     "contractOpenInTab": "Open in a new tab",
     "contractPendingDesc": "Waiting for the coachee to review and accept the uploaded contract.",
     "contractPendingTitle": "Awaiting coachee acceptance",

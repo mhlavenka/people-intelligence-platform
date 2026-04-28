@@ -2505,6 +2505,7 @@
     "contractAcceptSuccess": "Contrato aceptado",
     "contractAcceptTitle": "Contrato de coaching",
     "contractAcceptedOn": "Aceptado el",
+    "contractLoadError": "No se pudo cargar el contrato — recarga la página.",
     "contractOpenInTab": "Abrir en una pestaña nueva",
     "contractPendingDesc": "A la espera de que el coachee revise y acepte el contrato cargado.",
     "contractPendingTitle": "Pendiente de aceptación del coachee",

@@ -35,7 +35,10 @@ export interface ICoachingEngagement extends Document {
   targetEndDate?: Date;
   completedAt?: Date;
   goals: string[];
-  contractUrl?: string;             // S3 URL of the uploaded contract PDF
+  /** S3 object key for the uploaded contract PDF. The bucket is private;
+   *  served only via short-lived signed URLs from the backend. Empty when
+   *  no contract is on file. */
+  contractS3Key?: string;
   contractFilename?: string;        // original filename for display
   contractAcceptedAt?: Date;        // when the coachee clicked accept
   contractAcceptedBy?: mongoose.Types.ObjectId; // user who accepted (usually coachee)
@@ -82,7 +85,7 @@ const CoachingEngagementSchema = new Schema<ICoachingEngagement>(
     targetEndDate:     { type: Date },
     completedAt:       { type: Date },
     goals:             [{ type: String }],
-    contractUrl:       { type: String },
+    contractS3Key:     { type: String },
     contractFilename:  { type: String },
     contractAcceptedAt:{ type: Date },
     contractAcceptedBy:{ type: Schema.Types.ObjectId, ref: 'User' },

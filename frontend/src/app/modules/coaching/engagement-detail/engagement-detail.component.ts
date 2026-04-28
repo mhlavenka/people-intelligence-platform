@@ -99,16 +99,16 @@ interface Session {
           </div>
         }
         <!-- Contract: coach uploaded but coachee hasn't accepted yet -->
-        @if (canManage() && engagement()!.contractUrl && !engagement()!.contractAcceptedAt) {
+        @if (canManage() && engagement()!.contractS3Key && !engagement()!.contractAcceptedAt) {
           <div class="lifecycle-banner contract-pending">
             <mat-icon>hourglass_top</mat-icon>
             <div class="banner-text">
               <strong>{{ 'COACHING.contractPendingTitle' | translate }}</strong>
               <span>{{ 'COACHING.contractPendingDesc' | translate }}</span>
             </div>
-            <a [href]="engagement()!.contractUrl" target="_blank" rel="noopener" mat-stroked-button>
+            <button mat-stroked-button (click)="viewContract()">
               <mat-icon>visibility</mat-icon> {{ 'COACHING.contractView' | translate }}
-            </a>
+            </button>
           </div>
         }
         <!-- Contract: signed -->
@@ -122,9 +122,9 @@ interface Session {
                 {{ engagement()!.contractAcceptedAt | date:'medium' }}
               </span>
             </div>
-            <a [href]="engagement()!.contractUrl" target="_blank" rel="noopener" mat-stroked-button>
+            <button mat-stroked-button (click)="viewContract()">
               <mat-icon>visibility</mat-icon> {{ 'COACHING.contractView' | translate }}
-            </a>
+            </button>
           </div>
         }
 
@@ -236,12 +236,12 @@ interface Session {
               <mat-divider />
               <div class="contract-block">
                 <span class="info-label">{{ 'COACHING.contract' | translate }}</span>
-                @if (engagement()!.contractUrl) {
+                @if (engagement()!.contractS3Key) {
                   <div class="contract-row">
                     <mat-icon>picture_as_pdf</mat-icon>
-                    <a [href]="engagement()!.contractUrl" target="_blank" rel="noopener" class="contract-link">
+                    <button class="contract-link" (click)="viewContract()" type="button">
                       {{ engagement()!.contractFilename || 'contract.pdf' }}
-                    </a>
+                    </button>
                     <button mat-icon-button (click)="removeContract()"
                             [matTooltip]="'COACHING.contractRemove' | translate">
                       <mat-icon>delete</mat-icon>
@@ -775,6 +775,8 @@ interface Session {
     .contract-link {
       flex: 1; color: #1B2A47; font-size: 13px; font-weight: 600;
       text-decoration: none; word-break: break-all;
+      background: transparent; border: 0; padding: 0; cursor: pointer;
+      text-align: left; font-family: inherit;
     }
     .contract-link:hover { text-decoration: underline; }
     .contract-status {
@@ -1120,7 +1122,7 @@ export class EngagementDetailComponent implements OnInit {
   shouldPromptContractAccept = computed(() => {
     const eng = this.engagement();
     if (!eng) return false;
-    if (!eng.contractUrl) return false;
+    if (!eng.contractS3Key) return false;
     if (eng.contractAcceptedAt) return false;
     return ['contracted', 'active'].includes(eng.status);
   });
@@ -1354,7 +1356,7 @@ export class EngagementDetailComponent implements OnInit {
     this.uploadingContract.set(true);
     const fd = new FormData();
     fd.append('file', f);
-    this.http.post<{ contractUrl: string; contractFilename: string }>(
+    this.http.post<{ contractFilename: string; hasContract: boolean }>(
       `${environment.apiUrl}/coaching/engagements/${this.engId}/contract`,
       fd,
     ).subscribe({
@@ -1416,18 +1418,34 @@ export class EngagementDetailComponent implements OnInit {
 
   openContractDialog(): void {
     const eng = this.engagement();
-    if (!eng?.contractUrl || !this.engId) return;
+    if (!eng?.contractS3Key || !this.engId) return;
     const ref = this.dialog.open(ContractAcceptDialogComponent, {
       width: '720px',
       data: {
         engagementId: this.engId,
-        contractUrl: eng.contractUrl,
         contractFilename: eng.contractFilename,
       },
     });
     ref.afterClosed().subscribe((accepted) => {
       if (accepted) this.load();
     });
+  }
+
+  /** Fetch a fresh signed URL and open it in a new tab. Used by the
+   *  "View contract" buttons on banners + the sidebar filename link. */
+  viewContract(): void {
+    if (!this.engId) return;
+    this.api.get<{ url: string }>(`/coaching/engagements/${this.engId}/contract/url`)
+      .subscribe({
+        next: (res) => { window.open(res.url, '_blank', 'noopener'); },
+        error: () => {
+          this.snack.open(
+            this.translate.instant('COACHING.contractLoadError'),
+            this.translate.instant('COMMON.dismiss'),
+            { duration: 4000 },
+          );
+        },
+      });
   }
 
   markReviewConducted(kind: 'midPoint' | 'final'): void {

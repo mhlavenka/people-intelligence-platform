@@ -2505,6 +2505,7 @@
     "contractAcceptSuccess": "Contrat accepté",
     "contractAcceptTitle": "Contrat de coaching",
     "contractAcceptedOn": "Accepté le",
+    "contractLoadError": "Impossible de charger le contrat — actualisez la page.",
     "contractOpenInTab": "Ouvrir dans un nouvel onglet",
     "contractPendingDesc": "En attente de l'acceptation du contrat téléversé par le coaché·e.",
     "contractPendingTitle": "En attente de l'acceptation du coaché·e",

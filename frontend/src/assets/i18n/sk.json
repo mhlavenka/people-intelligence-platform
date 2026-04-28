@@ -2505,6 +2505,7 @@
     "contractAcceptSuccess": "Zmluva prijatá",
     "contractAcceptTitle": "Koučovacia zmluva",
     "contractAcceptedOn": "Prijatá dňa",
+    "contractLoadError": "Zmluvu sa nepodarilo načítať — obnovte stránku.",
     "contractOpenInTab": "Otvoriť v novej karte",
     "contractPendingDesc": "Čaká sa, kým koučovaný prečíta a prijme nahranú zmluvu.",
     "contractPendingTitle": "Čaká sa na prijatie koučovaným",

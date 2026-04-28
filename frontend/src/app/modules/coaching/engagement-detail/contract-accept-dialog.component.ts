@@ -1,4 +1,4 @@
-import { Component, Inject, signal } from '@angular/core';
+import { Component, Inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
@@ -7,12 +7,12 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ApiService } from '../../../core/api.service';
 
 interface DialogData {
   engagementId: string;
-  contractUrl: string;
   contractFilename?: string;
 }
 
@@ -34,13 +34,24 @@ interface DialogData {
         <mat-icon>picture_as_pdf</mat-icon>
         <div>
           <span class="filename">{{ data.contractFilename || 'contract.pdf' }}</span>
-          <a [href]="data.contractUrl" target="_blank" rel="noopener" class="open-link">
-            <mat-icon>open_in_new</mat-icon> {{ 'COACHING.contractOpenInTab' | translate }}
-          </a>
+          @if (signedUrl()) {
+            <a [href]="signedUrl()!" target="_blank" rel="noopener" class="open-link">
+              <mat-icon>open_in_new</mat-icon> {{ 'COACHING.contractOpenInTab' | translate }}
+            </a>
+          }
         </div>
       </div>
 
-      <iframe class="pdf-frame" [src]="safeUrl()"></iframe>
+      @if (loading()) {
+        <div class="frame-loading"><mat-spinner diameter="32" /></div>
+      } @else if (frameSrc()) {
+        <iframe class="pdf-frame" [src]="frameSrc()!"></iframe>
+      } @else {
+        <div class="frame-error">
+          <mat-icon>error_outline</mat-icon>
+          <span>{{ 'COACHING.contractLoadError' | translate }}</span>
+        </div>
+      }
 
       <div class="ack-block">
         <label class="ack-row">
@@ -81,6 +92,13 @@ interface DialogData {
       width: 100%; height: 420px; border: 1px solid #d6dde6; border-radius: 6px;
       background: #fafbfd;
     }
+    .frame-loading, .frame-error {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      width: 100%; height: 420px;
+      background: #fafbfd; border: 1px solid #d6dde6; border-radius: 6px;
+      color: #5a6a7e;
+    }
+    .frame-error mat-icon { color: #c43a3a; }
 
     .ack-block {
       padding: 14px 16px; background: #fff8f0; border: 1px solid #f0d4a0; border-radius: 8px;
@@ -91,9 +109,12 @@ interface DialogData {
     }
   `],
 })
-export class ContractAcceptDialogComponent {
+export class ContractAcceptDialogComponent implements OnInit {
   acknowledged = false;
   saving = signal(false);
+  loading = signal(true);
+  signedUrl = signal<string | null>(null);
+  frameSrc = signal<SafeResourceUrl | null>(null);
 
   constructor(
     @Inject(MAT_DIALOG_DATA) public data: DialogData,
@@ -101,12 +122,26 @@ export class ContractAcceptDialogComponent {
     private api: ApiService,
     private snack: MatSnackBar,
     private translate: TranslateService,
+    private sanitizer: DomSanitizer,
   ) {}
 
-  /** PDFs hosted on the same S3 bucket — the iframe src needs no DomSanitizer
-   *  bypass since we trust the bucket origin. Returning the raw URL is fine. */
-  safeUrl(): string {
-    return this.data.contractUrl;
+  ngOnInit(): void {
+    // Signed URLs expire in 5 minutes — comfortable for one viewing session.
+    this.api.get<{ url: string; expiresAt: string }>(
+      `/coaching/engagements/${this.data.engagementId}/contract/url`,
+    ).subscribe({
+      next: (res) => {
+        this.signedUrl.set(res.url);
+        // bypassSecurityTrustResourceUrl is required because Angular blocks
+        // arbitrary URLs in iframe[src]. Source is our own backend's signed
+        // S3 URL, which we trust.
+        this.frameSrc.set(this.sanitizer.bypassSecurityTrustResourceUrl(res.url));
+        this.loading.set(false);
+      },
+      error: () => {
+        this.loading.set(false);
+      },
+    });
   }
 
   accept(): void {

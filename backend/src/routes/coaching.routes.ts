@@ -1,7 +1,8 @@
 import { Router, Response, NextFunction } from 'express';
 import multer from 'multer';
 import path from 'path';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { authenticateToken, requirePermission, AuthRequest, isCoacheeUser } from '../middleware/auth.middleware';
 import { tenantResolver } from '../middleware/tenant.middleware';
 import { CoachingEngagement } from '../models/CoachingEngagement.model';
@@ -485,9 +486,33 @@ const contractUpload = multer({
   },
 });
 
+/**
+ * Authorize the requester for contract operations on an engagement.
+ * Coach (own engagement), the engagement's coachee, admin, and hr_manager
+ * are allowed. Returns the engagement when allowed, null otherwise.
+ */
+async function authorizeContractAccess(
+  req: AuthRequest,
+  engagementId: string,
+): Promise<InstanceType<typeof CoachingEngagement> | null> {
+  const engagement = await CoachingEngagement.findOne({
+    _id: engagementId,
+    organizationId: req.user!.organizationId,
+  });
+  if (!engagement) return null;
+
+  const role = req.user!.role;
+  const userId = req.user!.userId;
+  if (role === 'admin' || role === 'hr_manager') return engagement;
+  if (role === 'coach' && String(engagement.coachId) === userId) return engagement;
+  if (String(engagement.coacheeId) === userId) return engagement;
+  return null;
+}
+
 /** Coach uploads a contract PDF for an engagement. Replaces any existing
  *  contract; resets the accepted timestamp so the coachee re-accepts the
- *  new version. */
+ *  new version. The S3 object stays private — frontend never receives the
+ *  public URL, only the S3 key. */
 router.post(
   '/engagements/:id/contract',
   requirePermission('MANAGE_COACHING'),
@@ -507,6 +532,14 @@ router.post(
       });
       if (!engagement) { res.status(404).json({ error: req.t('errors.engagementNotFound') }); return; }
 
+      // Best-effort: delete the old object so we don't leak storage on replace.
+      if (engagement.contractS3Key) {
+        s3Client.send(new DeleteObjectCommand({
+          Bucket: config.aws.s3Bucket,
+          Key: engagement.contractS3Key,
+        })).catch((err) => console.warn('[Contract] Old object delete failed:', err));
+      }
+
       const ext = path.extname(req.file.originalname).toLowerCase() || '.pdf';
       const key = `contracts/${req.user!.organizationId}/${engagement._id}-${Date.now()}${ext}`;
       await s3Client.send(new PutObjectCommand({
@@ -516,7 +549,7 @@ router.post(
         ContentType: 'application/pdf',
       }));
 
-      engagement.contractUrl = `https://${config.aws.s3Bucket}.s3.${config.aws.region}.amazonaws.com/${key}`;
+      engagement.contractS3Key = key;
       engagement.contractFilename = req.file.originalname;
       // New contract -> previous acceptance no longer applies
       engagement.contractAcceptedAt = undefined;
@@ -525,8 +558,41 @@ router.post(
       await engagement.save();
 
       res.json({
-        contractUrl: engagement.contractUrl,
         contractFilename: engagement.contractFilename,
+        hasContract: true,
+      });
+    } catch (e) { next(e); }
+  },
+);
+
+/** Issue a short-lived signed URL for viewing the contract PDF.
+ *  Coach (own engagement), coachee, admin, hr_manager all eligible. */
+router.get(
+  '/engagements/:id/contract/url',
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const engagement = await authorizeContractAccess(req, req.params['id']!);
+      if (!engagement) { res.status(404).json({ error: req.t('errors.engagementNotFound') }); return; }
+      if (!engagement.contractS3Key) {
+        res.status(404).json({ error: 'No contract uploaded for this engagement' });
+        return;
+      }
+
+      const expiresInSeconds = 300; // 5 minutes — enough for the coachee to load the iframe
+      const command = new GetObjectCommand({
+        Bucket: config.aws.s3Bucket,
+        Key: engagement.contractS3Key,
+        // Force inline rendering so the PDF shows in an iframe rather than
+        // downloading. Filename is suggested if the user does choose to save.
+        ResponseContentDisposition: `inline; filename="${(engagement.contractFilename || 'contract.pdf').replace(/"/g, '')}"`,
+        ResponseContentType: 'application/pdf',
+      });
+      const url = await getSignedUrl(s3Client, command, { expiresIn: expiresInSeconds });
+
+      res.json({
+        url,
+        expiresAt: new Date(Date.now() + expiresInSeconds * 1000).toISOString(),
+        filename: engagement.contractFilename,
       });
     } catch (e) { next(e); }
   },
@@ -544,7 +610,15 @@ router.delete(
       });
       if (!engagement) { res.status(404).json({ error: req.t('errors.engagementNotFound') }); return; }
 
-      engagement.contractUrl = undefined;
+      // Best-effort delete from S3
+      if (engagement.contractS3Key) {
+        s3Client.send(new DeleteObjectCommand({
+          Bucket: config.aws.s3Bucket,
+          Key: engagement.contractS3Key,
+        })).catch((err) => console.warn('[Contract] S3 delete failed:', err));
+      }
+
+      engagement.contractS3Key = undefined;
       engagement.contractFilename = undefined;
       engagement.contractAcceptedAt = undefined;
       engagement.contractAcceptedBy = undefined;
@@ -567,7 +641,7 @@ router.post(
         organizationId: req.user!.organizationId,
       });
       if (!engagement) { res.status(404).json({ error: req.t('errors.engagementNotFound') }); return; }
-      if (!engagement.contractUrl) {
+      if (!engagement.contractS3Key) {
         res.status(400).json({ error: 'No contract uploaded for this engagement' });
         return;
       }
