@@ -228,7 +228,19 @@ export function rollupByDimension(itemMetrics: IItemMetric[]): IDimensionMetric[
 
   const out: IDimensionMetric[] = [];
   for (const [dimension, items] of groups) {
-    const meanVal = mean(items.map((i) => i.mean));
+    // Dimension mean is computed only over continuous-scale items. Boolean
+    // items (scaleMax - scaleMin <= 1) live on a 0/1 scale and would otherwise
+    // drag the average down — e.g. Psychological Safety on HNP-PULSE was
+    // landing at 5.71 because cp03's "no incident" 0 averaged with cp01/cp02's
+    // 8.5/9 on a 0-10 scale. rWG aggregation still includes booleans since
+    // each item's rwg is normalised against its own scale.
+    const continuousItems = items.filter((i) => {
+      if (typeof i.scaleMin !== 'number' || typeof i.scaleMax !== 'number') return true;
+      return (i.scaleMax - i.scaleMin) > 1;
+    });
+    const meanVal = continuousItems.length > 0
+      ? round(mean(continuousItems.map((i) => i.mean)), 2)
+      : null;
     const rwgVal = mean(items.map((i) => i.rwg));
     // Disagreement score: invert mean rwg, scale to 0-100.
     const disagreementScore = round(clamp((1 - rwgVal) * 100, 0, 100), 0);
@@ -240,7 +252,7 @@ export function rollupByDimension(itemMetrics: IItemMetric[]): IDimensionMetric[
     out.push({
       dimension,
       itemCount: items.length,
-      mean: round(meanVal, 2),
+      mean: meanVal,
       rwg: round(rwgVal, 3),
       disagreementScore,
       mostDivergentItemIds: mostDivergent,
@@ -366,7 +378,9 @@ export function computeSubgroupAnalysis(
       .filter((m): m is IItemMetric => m !== null);
     const dimRows = rollupByDimension(itemMetrics);
     const meanByDimension: Record<string, number> = {};
-    for (const d of dimRows) meanByDimension[d.dimension] = d.mean;
+    for (const d of dimRows) {
+      if (typeof d.mean === 'number') meanByDimension[d.dimension] = d.mean;
+    }
 
     // Distinguishing items: items where THIS cluster's mean differs most
     // (absolute) from the global accepted-set mean. Top 3.
@@ -734,12 +748,30 @@ function longestIdenticalRun(xs: number[]): number {
   return best;
 }
 
+/**
+ * Resolve the scale range used by rwg() for a question's expected variance
+ * (σ²eu = (A² − 1) / 12, where A = scaleMax − scaleMin + 1).
+ *
+ * Order of preference:
+ *   1. q.scale_range (explicit, always wins)
+ *   2. q.type-based defaults — boolean → {0, 1}; scale → {0, 10}
+ *   3. observed min/max (LAST resort, unsafe — collapses range to actual
+ *      spread which makes σ²eu tiny and produces false rWG=0 readings on
+ *      uniformly positive data)
+ *
+ * Without #2, the previous fallback to observed min/max made any team with
+ * compressed positive responses (means 8-9, σ ≈ 0.5) get rWG=0 across
+ * supposedly aligned dimensions — see todo.md "rWG = 0 on uniformly
+ * positive distributions" for the original report.
+ */
 function effectiveScaleRange(q: IQuestion, observed: number[]): { min: number; max: number } {
   const sr: IScaleRange | undefined = q.scale_range;
   if (sr && typeof sr.min === 'number' && typeof sr.max === 'number') {
     return { min: sr.min, max: sr.max };
   }
-  // Boolean-coerced or unspecified scale: derive from data.
+  if (q.type === 'boolean')      return { min: 0, max: 1 };
+  if (q.type === 'scale')        return { min: 0, max: 10 };
+  // Final fallback only for unrecognised types.
   return { min: Math.min(...observed), max: Math.max(...observed) };
 }
 

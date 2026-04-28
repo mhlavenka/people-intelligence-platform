@@ -148,7 +148,9 @@ interface ItemMetric {
 interface DimensionMetric {
   dimension: string;
   itemCount: number;
-  mean: number;
+  /** Optional: dimensions with only boolean items (e.g. Escalation Intent
+   *  on HNP-PULSE) skip the mean to avoid mixing 0/1 with 0/10 scales. */
+  mean?: number | null;
   rwg: number;
   disagreementScore: number;
   mostDivergentItemIds: string[];
@@ -580,7 +582,7 @@ interface RecommendedActions {
                           <tr>
                             <td>{{ d.dimension }}</td>
                             <td class="num">{{ d.itemCount }}</td>
-                            <td class="num">{{ d.mean }}</td>
+                            <td class="num">{{ d.mean === null || d.mean === undefined ? '—' : d.mean }}</td>
                             <td class="num" [class.muted]="d.rwg >= 0.7">{{ d.rwg }}</td>
                             <td class="num">
                               <span class="div-disagreement-pill" [class]="alignmentBand(100 - d.disagreementScore)">
@@ -2411,11 +2413,15 @@ export class ConflictDetailComponent implements OnInit {
    *  triggers CD, the function reruns, returns a fresh ChartData object, and
    *  ng2-charts re-renders / re-animates the canvas continuously. */
   radarChartData = computed<ChartData<'radar'> | null>(() => {
-    const dims = this.displayDimensionMetrics();
+    // Boolean-only dimensions have no continuous mean — exclude from the
+    // radar entirely so the chart doesn't crash on null axes.
+    const dims = this.displayDimensionMetrics().filter(
+      (d) => typeof d.mean === 'number',
+    );
     if (dims.length < 3) return null;
 
     const labels = dims.map((d) => d.dimension);
-    const teamMeans = dims.map((d) => d.mean);
+    const teamMeans = dims.map((d) => d.mean as number);
     const datasets: ChartData<'radar'>['datasets'] = [
       {
         label: this.tx('CONFLICT.radarTeamLabel'),
