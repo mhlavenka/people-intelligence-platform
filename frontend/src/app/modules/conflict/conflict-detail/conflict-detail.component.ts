@@ -2688,10 +2688,16 @@ export class ConflictDetailComponent implements OnInit {
   viewIntakeResponses(templateId: string): void {
     this.api.get<Record<string, unknown>>(`/surveys/templates/${templateId}`).subscribe({
       next: (template) => {
+        // Scope the response view to the analysis's department so the
+        // viewer doesn't show responses from other dept buckets that were
+        // never part of this analysis.
         this.dialog.open(SurveyResponsesDialogComponent, {
           width: '760px',
           maxHeight: '90vh',
-          data: template,
+          data: {
+            ...template,
+            departmentFilter: this.analysis()?.departmentId,
+          },
         });
       },
       error: () => this.snack.open('Failed to load template', 'OK', { duration: 3000 }),
