@@ -794,7 +794,9 @@
     "cycleTo": "Do",
     "cycleScopeTooltip": "Táto analýza pokrýva len odpovede odoslané v tomto časovom rozsahu.",
     "cycleSince": "Od",
-    "cycleUntil": "Do"
+    "cycleUntil": "Do",
+    "cycleStripLabel": "História · posledných {{count}} analýz",
+    "cycleDeltaSuffix": "oproti minulému cyklu"
   },
   "NEURO": {
     "title": "Neuroinklúzia Compass™",

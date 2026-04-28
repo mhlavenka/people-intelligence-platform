@@ -6,14 +6,6 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { TranslateModule } from '@ngx-translate/core';
 import { ApiService } from '../../../core/api.service';
-import { BaseChartDirective } from 'ng2-charts';
-import {
-  Chart, LineController, LineElement, PointElement,
-  LinearScale, CategoryScale, Filler, Tooltip,
-  ChartConfiguration, ChartData,
-} from 'chart.js';
-
-Chart.register(LineController, LineElement, PointElement, LinearScale, CategoryScale, Filler, Tooltip);
 
 interface AlignmentTrendPoint {
   _id: string;
@@ -70,7 +62,7 @@ interface ToolkitCard {
 @Component({
   selector: 'app-conflict-dashboard-home',
   standalone: true,
-  imports: [CommonModule, RouterLink, MatIconModule, MatButtonModule, MatTooltipModule, TranslateModule, BaseChartDirective],
+  imports: [CommonModule, RouterLink, MatIconModule, MatButtonModule, MatTooltipModule, TranslateModule],
   template: `
     <!-- ── Hero ────────────────────────────────────────────────────────── -->
     <div class="hero">
@@ -133,14 +125,32 @@ interface ToolkitCard {
           <span class="alignment-tile-band">
             {{ ('CONFLICT.alignmentBand_' + alignmentBand(teamAlignment()!)) | translate }}
           </span>
-          @if (alignmentTrend().length >= 3) {
-            <div class="alignment-spark">
-              <canvas baseChart
-                      type="line"
-                      [data]="alignmentSparkData()"
-                      [options]="alignmentSparkOptions"
-                      aria-label="Recent alignment trend"
-                      role="img"></canvas>
+          @if (alignmentTrend().length >= 2) {
+            <div class="cycle-strip">
+              <div class="cycle-strip-caption">
+                <span>{{ 'CONFLICT.cycleStripLabel' | translate:{ count: alignmentTrend().length } }}</span>
+                @if (alignmentTrendDelta() !== null) {
+                  <span class="cycle-delta" [class.up]="alignmentTrendDelta()! >= 0" [class.down]="alignmentTrendDelta()! < 0">
+                    @if (alignmentTrendDelta()! >= 0) {
+                      <mat-icon>arrow_upward</mat-icon>{{ alignmentTrendDelta() }}
+                    } @else {
+                      <mat-icon>arrow_downward</mat-icon>{{ -alignmentTrendDelta()! }}
+                    }
+                    <em>{{ 'CONFLICT.cycleDeltaSuffix' | translate }}</em>
+                  </span>
+                }
+              </div>
+              <div class="cycle-dots">
+                @for (p of alignmentTrend(); track p._id; let last = $last) {
+                  <span class="cycle-dot"
+                        [class]="'cycle-dot--' + alignmentBand(p.teamAlignmentScore)"
+                        [class.is-latest]="last"
+                        [matTooltip]="cycleDotTooltip(p)"
+                        matTooltipPosition="above">
+                    @if (last) { <span class="cycle-dot-value">{{ p.teamAlignmentScore }}</span> }
+                  </span>
+                }
+              </div>
             </div>
           }
         </a>
@@ -568,10 +578,45 @@ interface ToolkitCard {
     .alignment-tile--fractured { border-left-color: #e53e3e;
       .alignment-tile-band { background: rgba(229,62,62,0.15);  color: #c53030; }
     }
-    .alignment-spark {
-      position: relative; height: 36px; margin-top: 8px;
-      width: 100%;
+    /* Cycle history dot strip — replaces the previous Chart.js sparkline. */
+    .cycle-strip {
+      display: flex; flex-direction: column; gap: 6px;
+      margin-top: 12px; padding-top: 10px;
+      border-top: 1px solid #edf2f7;
     }
+    .cycle-strip-caption {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 12px; color: #5a6a7e;
+    }
+    .cycle-delta {
+      display: inline-flex; align-items: center; gap: 2px;
+      font-weight: 700; font-variant-numeric: tabular-nums;
+      mat-icon { font-size: 14px; width: 14px; height: 14px; }
+      em { font-style: normal; font-weight: 400; color: #5a6a7e; margin-left: 4px; }
+      &.up   { color: #1a9678; }
+      &.down { color: #c53030; }
+    }
+    .cycle-dots {
+      display: flex; align-items: center; gap: 6px;
+      flex-wrap: wrap;
+    }
+    .cycle-dot {
+      width: 12px; height: 12px; border-radius: 50%;
+      flex-shrink: 0; cursor: help;
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05);
+    }
+    .cycle-dot.is-latest {
+      width: 26px; height: 26px;
+      display: inline-flex; align-items: center; justify-content: center;
+      box-shadow: 0 0 0 2px #fff, 0 0 0 3px currentColor;
+    }
+    .cycle-dot-value {
+      font-size: 10px; font-weight: 700; color: #fff;
+      font-variant-numeric: tabular-nums;
+    }
+    .cycle-dot--aligned   { background: #27C4A0; color: #1a9678; }
+    .cycle-dot--mixed     { background: #f0a500; color: #b07800; }
+    .cycle-dot--fractured { background: #e53e3e; color: #c53030; }
 
     @media (max-width: 720px) {
       .risk-grid { grid-template-columns: repeat(2, 1fr); }
@@ -731,43 +776,24 @@ export class ConflictDashboardHomeComponent implements OnInit {
 
   alignmentTrend = signal<AlignmentTrendPoint[]>([]);
 
-  alignmentSparkOptions: ChartConfiguration<'line'>['options'] = {
-    responsive: true,
-    maintainAspectRatio: false,
-    interaction: { intersect: false, mode: 'index' },
-    plugins: {
-      legend: { display: false },
-      tooltip: {
-        callbacks: {
-          title: (items) => items[0]?.label ?? '',
-          label: (ctx) => `${ctx.parsed.y} / 100`,
-        },
-      },
-    },
-    scales: {
-      x: { display: false },
-      y: { display: false, suggestedMin: 0, suggestedMax: 100 },
-    },
-    elements: {
-      line: { tension: 0.35, borderWidth: 2 },
-      point: { radius: 0, hoverRadius: 4 },
-    },
-  };
-
-  // Memoised — Chart.js sees the same reference between change-detection
-  // cycles, so the sparkline doesn't re-animate on every mouse movement.
-  alignmentSparkData = computed<ChartData<'line'>>(() => {
+  /** Latest minus previous score, null when fewer than 2 points exist.
+   *  Drives the up/down arrow + delta label on the cycle strip. */
+  alignmentTrendDelta = computed<number | null>(() => {
     const pts = this.alignmentTrend();
-    return {
-      labels: pts.map((p) => new Date(p.createdAt).toLocaleDateString()),
-      datasets: [{
-        data: pts.map((p) => p.teamAlignmentScore),
-        borderColor: '#3A9FD6',
-        backgroundColor: 'rgba(58,159,214,0.18)',
-        fill: true,
-      }],
-    };
+    if (pts.length < 2) return null;
+    const latest = pts[pts.length - 1].teamAlignmentScore;
+    const prev   = pts[pts.length - 2].teamAlignmentScore;
+    return latest - prev;
   });
+
+  cycleDotTooltip(p: AlignmentTrendPoint): string {
+    const date = new Date(p.createdAt).toLocaleDateString(
+      localStorage.getItem('artes_language') || 'en',
+      { day: 'numeric', month: 'short', year: 'numeric' },
+    );
+    const label = p.departmentId ? `${p.departmentId} · ` : '';
+    return `${label}${p.teamAlignmentScore}/100 · ${date}`;
+  }
 
   ngOnInit(): void {
     this.api.get<AnalysisLite[]>('/conflict/analyses').subscribe({

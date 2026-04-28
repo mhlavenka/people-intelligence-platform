@@ -95,7 +95,7 @@
     "settings": "Paramètres",
     "globalSettings": "Paramètres globaux",
     "conflict": "Intelligence des conflits",
-    "conflictDashboard": "Tableau de bord",
+    "conflictDashboard": "Vue d'ensemble",
     "conflictAnalysis": "Analyse",
     "conflictIDPs": "PDI conflits",
     "conflictSkillDev": "Développement des compétences",
@@ -794,7 +794,9 @@
     "cycleTo": "Au",
     "cycleScopeTooltip": "Cette analyse couvre uniquement les réponses soumises dans cette période.",
     "cycleSince": "Depuis",
-    "cycleUntil": "Jusqu'au"
+    "cycleUntil": "Jusqu'au",
+    "cycleStripLabel": "Historique · {{count}} dernières analyses",
+    "cycleDeltaSuffix": "vs cycle précédent"
   },
   "NEURO": {
     "title": "Boussole de neuroinclusion™",

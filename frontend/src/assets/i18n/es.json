@@ -95,7 +95,7 @@
     "settings": "Configuración",
     "globalSettings": "Configuración global",
     "conflict": "Inteligencia de Conflictos",
-    "conflictDashboard": "Panel de control",
+    "conflictDashboard": "Resumen",
     "conflictAnalysis": "Análisis",
     "conflictIDPs": "PDI de Conflictos",
     "conflictSkillDev": "Desarrollo de habilidades",
@@ -794,7 +794,9 @@
     "cycleTo": "Hasta",
     "cycleScopeTooltip": "Este análisis cubre solo las respuestas enviadas dentro de este rango de fechas.",
     "cycleSince": "Desde",
-    "cycleUntil": "Hasta"
+    "cycleUntil": "Hasta",
+    "cycleStripLabel": "Historial · últimos {{count}} análisis",
+    "cycleDeltaSuffix": "vs ciclo anterior"
   },
   "NEURO": {
     "title": "Neuro-Inclusion Compass™",
