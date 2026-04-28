@@ -23,6 +23,20 @@ Phase 3 — not started
   psychometrician."
 - Timing-based speeding flag in production — pairs with the baseline question above.
 
+Metric pipeline issues observed during case-01-healthy review (2026-04-28):
+
+- **rWG = 0 on uniformly positive distributions** — Communication / Trust / Mgmt Eff / Wellbeing on
+  case-01 all returned rWG=0 even though means were 8.5/10 with σ≈0.52. Conventional rWG for that
+  distribution should be ~0.97. The expected-variance σ²eu used in computeAllMetrics is likely
+  under-sized (treating the scale as a small-band response set). The AI narrative correctly reframes
+  these as "ceiling-effect paradox," but on borderline teams the false-positive divergence flag could
+  mislead. Investigate computeAllMetrics in surveyMetrics.service.ts.
+
+- **Psychological Safety dimension mean = 5.71** when the actual data is healthy (cp01=8.5, cp02≈9,
+  cp03=0/no-incident). The boolean cp03 (0/1 scale) is being averaged with cp01/cp02 (0/10 scale),
+  dragging the dimension mean down. Either reverse-score and rescale boolean items to 0-10 before
+  averaging, or compute dimension means from continuous-only items.
+
 Phase 4 — research
  groups 
 - Bayesian Truth Serum item on opt-in instruments
@@ -39,7 +53,7 @@ admin@onkwe.com / ivb!6lgN
    via REST API only — AGPL stays contained inside the container. Webhook
    to /api/coaching/contract/webhook on completion. Coach uploads contract
    template, coachee signs via embedded iframe.
- 1
+ 
 **Booking**
 
 **IDPs** 
