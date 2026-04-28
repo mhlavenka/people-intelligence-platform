@@ -42,3 +42,7 @@ coverage/
 
 # Local-only PII test data (do not commit real client names)
 docs/coaching-log-import.csv
+docs/Coaching Log.xlsx
+
+# Per-user Claude Code settings — never commit
+.claude/settings.local.json
