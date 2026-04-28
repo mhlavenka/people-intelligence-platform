@@ -42,6 +42,13 @@ export interface ICoachingEngagement extends Document {
   /** When this engagement was reactivated from alumni back to active.
    *  Used so the alumni cron skips reactivated engagements. */
   reactivatedAt?: Date;
+  /** When the mid-point three-way review was conducted. Set after the
+   *  coach completes the corresponding interview template. Empty -> the
+   *  engagement detail page surfaces a prompt at >= 50% session usage. */
+  midPointReviewAt?: Date;
+  /** When the final three-way review was conducted. Empty on completed
+   *  engagements -> page surfaces a closure prompt. */
+  finalReviewAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -80,6 +87,8 @@ const CoachingEngagementSchema = new Schema<ICoachingEngagement>(
       disabled:         { type: Boolean, default: false },
     },
     reactivatedAt:     { type: Date },
+    midPointReviewAt:  { type: Date },
+    finalReviewAt:     { type: Date },
   },
   { timestamps: true }
 );

@@ -82,6 +82,40 @@ interface Session {
             </button>
           </div>
         }
+        <!-- Mid-point review prompt: coach hit half the session quota and hasn't logged the review yet -->
+        @if (canManage() && shouldPromptMidPointReview()) {
+          <div class="lifecycle-banner review">
+            <mat-icon>insights</mat-icon>
+            <div class="banner-text">
+              <strong>{{ 'COACHING.midPointReviewTitle' | translate }}</strong>
+              <span>{{ 'COACHING.midPointReviewDesc' | translate }}</span>
+            </div>
+            <button mat-flat-button color="primary"
+                    (click)="markReviewConducted('midPoint')"
+                    [disabled]="markingReview()">
+              @if (markingReview()) { <mat-spinner diameter="14" /> }
+              {{ 'COACHING.midPointReviewAction' | translate }}
+            </button>
+          </div>
+        }
+
+        <!-- Final review prompt: completed engagement without final review -->
+        @if (canManage() && shouldPromptFinalReview()) {
+          <div class="lifecycle-banner review">
+            <mat-icon>flag</mat-icon>
+            <div class="banner-text">
+              <strong>{{ 'COACHING.finalReviewTitle' | translate }}</strong>
+              <span>{{ 'COACHING.finalReviewDesc' | translate }}</span>
+            </div>
+            <button mat-flat-button color="primary"
+                    (click)="markReviewConducted('final')"
+                    [disabled]="markingReview()">
+              @if (markingReview()) { <mat-spinner diameter="14" /> }
+              {{ 'COACHING.finalReviewAction' | translate }}
+            </button>
+          </div>
+        }
+
         <!-- Alumni: coach can reactivate the engagement -->
         @if (canManage() && engagement()!.status === 'alumni') {
           <div class="lifecycle-banner alumni">
@@ -628,6 +662,10 @@ interface Session {
       background: #f4f7fb; border-color: #d6dde6;
       mat-icon { color: #5a6a7e; }
     }
+    .lifecycle-banner.review {
+      background: #eff6ff; border-color: #b3d4f5;
+      mat-icon { color: #2080b0; }
+    }
 
     .info-card {
       background: white; border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06);
@@ -954,6 +992,7 @@ export class EngagementDetailComponent implements OnInit {
   loading = signal(true);
   advancing = signal(false);
   reactivating = signal(false);
+  markingReview = signal(false);
   currentMonth = signal(new Date());
 
   /** Banner shows when a prospect engagement has at least one completed
@@ -964,6 +1003,24 @@ export class EngagementDetailComponent implements OnInit {
     return this.sessions().some(
       (s) => s.isChemistryCall && s.status === 'completed',
     );
+  });
+
+  /** Mid-point review prompt: active engagement, ≥50% session quota
+   *  consumed, and no review timestamp yet. */
+  shouldPromptMidPointReview = computed(() => {
+    const eng = this.engagement();
+    if (!eng) return false;
+    if (eng.midPointReviewAt) return false;
+    if (!['active', 'contracted'].includes(eng.status)) return false;
+    if (!eng.sessionsPurchased) return false;
+    return (eng.sessionsUsed ?? 0) / eng.sessionsPurchased >= 0.5;
+  });
+
+  /** Final review prompt: engagement is completed and no final review yet. */
+  shouldPromptFinalReview = computed(() => {
+    const eng = this.engagement();
+    if (!eng) return false;
+    return eng.status === 'completed' && !eng.finalReviewAt;
   });
   private notesBySession = new Map<string, SessionNote>();
   engId = '';
@@ -1149,6 +1206,33 @@ export class EngagementDetailComponent implements OnInit {
         this.advancing.set(false);
         this.snack.open(
           err?.error?.error || this.translate.instant('COACHING.advanceToContractedError'),
+          this.translate.instant('COMMON.dismiss'),
+          { duration: 4000 },
+        );
+      },
+    });
+  }
+
+  markReviewConducted(kind: 'midPoint' | 'final'): void {
+    if (this.markingReview() || !this.engId) return;
+    const fieldKey = kind === 'midPoint' ? 'midPointReviewAt' : 'finalReviewAt';
+    this.markingReview.set(true);
+    this.api.put(`/coaching/engagements/${this.engId}`, { [fieldKey]: new Date() }).subscribe({
+      next: () => {
+        this.markingReview.set(false);
+        this.snack.open(
+          this.translate.instant(
+            kind === 'midPoint' ? 'COACHING.midPointReviewLogged' : 'COACHING.finalReviewLogged',
+          ),
+          this.translate.instant('COMMON.ok'),
+          { duration: 3000 },
+        );
+        this.load();
+      },
+      error: () => {
+        this.markingReview.set(false);
+        this.snack.open(
+          this.translate.instant('COACHING.reviewLogError'),
           this.translate.instant('COMMON.dismiss'),
           { duration: 4000 },
         );
