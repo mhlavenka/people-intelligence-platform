@@ -154,7 +154,7 @@ interface DialogData {
         </mat-form-field>
       }
 
-      <mat-form-field appearance="outline" class="full">
+      <mat-form-field appearance="outline" class="full notes-field">
         <mat-label>{{ 'COACHING.icfNotes' | translate }}</mat-label>
         <textarea matInput rows="3" [(ngModel)]="form.notes"></textarea>
       </mat-form-field>
@@ -172,6 +172,11 @@ interface DialogData {
     .dialog-body { display: flex; flex-direction: column; gap: 4px; min-width: 520px; padding-top: 18px !important; }
     .row { display: flex; gap: 12px; }
     .row.two-col mat-form-field { flex: 1; }
+
+    /* Notes textarea sits below fields whose hints render in the
+     * subscript-wrapper. Give it real breathing room so the textarea
+     * outline doesn't ride on top of the hint text above. */
+    .notes-field { margin-top: 18px; }
     .full { width: 100%; }
     h2 { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; }
   `],

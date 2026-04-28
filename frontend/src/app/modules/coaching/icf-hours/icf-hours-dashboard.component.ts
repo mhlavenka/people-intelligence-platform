@@ -210,6 +210,16 @@ type RangePreset = 'all' | 'last30' | 'last12' | 'custom';
                 <mat-option value="pro_bono">{{ 'COACHING.icfProBono' | translate }}</mat-option>
               </mat-select>
             </mat-form-field>
+
+            <mat-form-field appearance="outline" class="filter-select">
+              <mat-label>{{ 'COACHING.icfClientType' | translate }}</mat-label>
+              <mat-select [(ngModel)]="clientTypeFilter" (selectionChange)="applyFilters()">
+                <mat-option value="">{{ 'COACHING.icfAllClientTypes' | translate }}</mat-option>
+                <mat-option value="individual">{{ 'COACHING.icfClientIndividual' | translate }}</mat-option>
+                <mat-option value="team">{{ 'COACHING.icfClientTeam' | translate }}</mat-option>
+                <mat-option value="group">{{ 'COACHING.icfClientGroup' | translate }}</mat-option>
+              </mat-select>
+            </mat-form-field>
           </div>
 
           @if (entries().length === 0) {
@@ -253,6 +263,34 @@ type RangePreset = 'all' | 'last30' | 'last12' | 'custom';
                 <ng-container matColumnDef="clientName">
                   <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ 'COACHING.icfClientOrType' | translate }}</th>
                   <td mat-cell *matCellDef="let r">{{ r.clientName || '—' }}</td>
+                  <td mat-footer-cell *matFooterCellDef></td>
+                </ng-container>
+
+                <!-- Client type (individual / team / group) -->
+                <ng-container matColumnDef="clientType">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ 'COACHING.icfClientType' | translate }}</th>
+                  <td mat-cell *matCellDef="let r">
+                    @if (r.clientType) {
+                      <span class="type-pill" [class]="'ct-' + r.clientType">
+                        {{ clientTypeLabel(r.clientType) | translate }}
+                      </span>
+                    } @else {
+                      <span class="muted">—</span>
+                    }
+                  </td>
+                  <td mat-footer-cell *matFooterCellDef></td>
+                </ng-container>
+
+                <!-- Assessment type (e.g. EQi-2.0, Hogan) -->
+                <ng-container matColumnDef="assessmentType">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ 'COACHING.icfAssessmentType' | translate }}</th>
+                  <td mat-cell *matCellDef="let r">
+                    @if (r.assessmentType) {
+                      <span class="assessment-pill">{{ r.assessmentType }}</span>
+                    } @else {
+                      <span class="muted">—</span>
+                    }
+                  </td>
                   <td mat-footer-cell *matFooterCellDef></td>
                 </ng-container>
 
@@ -322,7 +360,7 @@ type RangePreset = 'all' | 'last30' | 'last12' | 'custom';
                 <tr mat-footer-row *matFooterRowDef="displayedColumns; sticky: true" class="totals-footer"></tr>
 
                 <tr class="no-match" *matNoDataRow>
-                  <td colspan="7">{{ 'COACHING.icfFilterNoMatch' | translate }}</td>
+                  <td colspan="9">{{ 'COACHING.icfFilterNoMatch' | translate }}</td>
                 </tr>
               </table>
             </div>
@@ -469,7 +507,7 @@ type RangePreset = 'all' | 'last30' | 'last12' | 'custom';
       text-transform: lowercase; margin-left: 4px;
     }
     .compact-table tr.from-session { background: #fafcfe; }
-    .compact-table .num { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
+    .compact-table .num { text-align: center; font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
     .compact-table .col-date { white-space: nowrap; min-width: 110px; width: 110px; }
     .compact-table th.actions, .compact-table td.actions { width: 36px; padding: 0 4px 0 0; text-align: right; }
     .compact-table td.actions .mat-mdc-icon-button { width: 28px; height: 28px; padding: 0; line-height: 28px; }
@@ -495,6 +533,23 @@ type RangePreset = 'all' | 'last30' | 'last12' | 'custom';
     .cat-pill.session { background: #e0f0ff; color: #1e6aa8; }
     .cat-pill.mentor_coaching_received { background: #f1ecfa; color: #6a4ba8; }
     .cat-pill.cce { background: #fff4e0; color: #b27300; }
+
+    .type-pill {
+      display: inline-block; padding: 2px 8px; border-radius: 4px;
+      font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .type-pill.ct-individual { background: #f4f7fb; color: #5a6a7e; }
+    .type-pill.ct-team       { background: #e0f7ed; color: #1a9678; }
+    .type-pill.ct-group      { background: #fff4e0; color: #b27300; }
+
+    .assessment-pill {
+      display: inline-block; padding: 2px 8px; border-radius: 4px;
+      font-size: 11px; font-weight: 600;
+      background: #eff6ff; color: #1e6aa8; border: 1px solid #cfe5ff;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .muted { color: #c0c8d2; }
     .auto-icon { font-size: 14px; width: 14px; height: 14px; vertical-align: middle; color: #9aa5b4; margin-left: 6px; }
 
     .paid-badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; }
@@ -546,11 +601,15 @@ export class IcfHoursDashboardComponent implements OnInit {
   }
 
   dataSource = new MatTableDataSource<HoursLogEntry>([]);
-  displayedColumns = ['date', 'category', 'clientName', 'organization', 'hours', 'paidStatus', 'actions'];
+  displayedColumns = [
+    'date', 'category', 'clientName', 'clientType', 'assessmentType',
+    'organization', 'hours', 'paidStatus', 'actions',
+  ];
 
   textFilter = '';
   categoryFilter = '';
   paidFilter = '';
+  clientTypeFilter = '';
 
   constructor(
     private api: ApiService,
@@ -562,14 +621,15 @@ export class IcfHoursDashboardComponent implements OnInit {
 
   ngOnInit(): void {
     this.dataSource.filterPredicate = (row, filter) => {
-      const f = JSON.parse(filter) as { text: string; category: string; paid: string };
+      const f = JSON.parse(filter) as { text: string; category: string; paid: string; clientType: string };
       if (f.category && row.category !== f.category) return false;
       if (f.paid && row.paidStatus !== f.paid) return false;
+      if (f.clientType && row.clientType !== f.clientType) return false;
       if (f.text) {
         const haystack = [
           row.clientName, row.clientOrganization, row.sponsorContactName,
           row.mentorCoachName, row.mentorCoachOrganization, row.assessmentType,
-          row.notes, row.category,
+          row.clientType, row.notes, row.category,
         ].filter(Boolean).join(' ').toLowerCase();
         if (!haystack.includes(f.text)) return false;
       }
@@ -577,13 +637,15 @@ export class IcfHoursDashboardComponent implements OnInit {
     };
     this.dataSource.sortingDataAccessor = (row, prop) => {
       switch (prop) {
-        case 'date':         return new Date(row.date).getTime();
-        case 'hours':        return row.hours;
-        case 'clientName':   return (row.clientName ?? '').toLowerCase();
-        case 'organization': return (row.clientOrganization ?? '').toLowerCase();
-        case 'category':     return row.category;
-        case 'paidStatus':   return row.paidStatus ?? '';
-        default:             return (row as any)[prop];
+        case 'date':           return new Date(row.date).getTime();
+        case 'hours':          return row.hours;
+        case 'clientName':     return (row.clientName ?? '').toLowerCase();
+        case 'clientType':     return (row.clientType ?? '').toLowerCase();
+        case 'assessmentType': return (row.assessmentType ?? '').toLowerCase();
+        case 'organization':   return (row.clientOrganization ?? '').toLowerCase();
+        case 'category':       return row.category;
+        case 'paidStatus':     return row.paidStatus ?? '';
+        default:               return (row as any)[prop];
       }
     };
     this.reload();
@@ -594,6 +656,7 @@ export class IcfHoursDashboardComponent implements OnInit {
       text: this.textFilter.trim().toLowerCase(),
       category: this.categoryFilter,
       paid: this.paidFilter,
+      clientType: this.clientTypeFilter,
     });
     if (this.dataSource.paginator) this.dataSource.paginator.firstPage();
   }
@@ -659,6 +722,13 @@ export class IcfHoursDashboardComponent implements OnInit {
          : category === 'mentor_coaching_received' ? 'COACHING.icfCatMentor'
          : category === 'cce' ? 'COACHING.icfCatCce'
          : category;
+  }
+
+  clientTypeLabel(clientType: string): string {
+    return clientType === 'individual' ? 'COACHING.icfClientIndividual'
+         : clientType === 'team' ? 'COACHING.icfClientTeam'
+         : clientType === 'group' ? 'COACHING.icfClientGroup'
+         : clientType;
   }
 
   openLogDialog(): void {
