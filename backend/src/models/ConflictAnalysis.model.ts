@@ -17,6 +17,7 @@ export interface IResponseQuality {
     longString?: number;
     speeding?: number;
     trapFailed?: number;
+    inconsistent?: number;
   };
 }
 

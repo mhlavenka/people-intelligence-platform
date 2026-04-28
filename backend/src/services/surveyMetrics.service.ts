@@ -56,10 +56,21 @@ export interface QualityResult {
 /**
  * Score a single response on careless-responding indicators.
  * Returns a permissive default (1.0, accepted) when there's nothing scoreable.
+ *
+ * When `questions` is provided, two additional Phase 3 checks fire:
+ *   - Trap items: items where `is_trap === true`. The response value must
+ *     equal `trap_correct_answer` exactly; any mismatch adds 'trapFailed'
+ *     (penalty 0.50).
+ *   - Correlated pairs: items with `correlated_item_ids`. If both items in
+ *     a pair are answered numerically, we check that the answers move
+ *     together (same direction when both reverse_scored flags match,
+ *     opposite when one differs). A large unexpected contradiction adds
+ *     'inconsistent' (penalty 0.30).
  */
 export function computeQuality(
   response: Pick<ISurveyResponse, 'responses' | 'timingMsPerItem'>,
   policy: QualityPolicy = DEFAULT_QUALITY_POLICY,
+  questions?: IQuestion[],
 ): QualityResult {
   const numerics = response.responses
     .map((r) => r.value)
@@ -97,6 +108,55 @@ export function computeQuality(
     if (med < policy.speedingMsPerItemFloor) {
       flags.push('speeding');
       penalty += 0.25;
+    }
+  }
+
+  // ── Phase 3: trap + inconsistency checks (when template metadata available)
+  if (questions && questions.length > 0) {
+    const responseById = new Map(response.responses.map((r) => [r.questionId, r.value]));
+
+    // Trap-item check: any single failure flags the response.
+    let trapFailed = false;
+    for (const q of questions) {
+      if (!q.is_trap) continue;
+      const expected = q.trap_correct_answer;
+      if (expected === undefined || expected === null) continue;  // no key set
+      const actual = responseById.get(q.id);
+      if (actual === undefined) continue;                          // unanswered
+      if (actual !== expected) { trapFailed = true; break; }
+    }
+    if (trapFailed) {
+      flags.push('trapFailed');
+      penalty += 0.50;
+    }
+
+    // Inconsistency check: at least one correlated pair with a large
+    // unexpected contradiction is enough to flag the response.
+    let inconsistent = false;
+    outer: for (const q of questions) {
+      if (!q.correlated_item_ids?.length) continue;
+      const aVal = responseById.get(q.id);
+      if (typeof aVal !== 'number') continue;
+      const aMax = q.scale_range?.max ?? 10;
+      for (const otherId of q.correlated_item_ids) {
+        const other = questions.find((x) => x.id === otherId);
+        if (!other) continue;
+        const bVal = responseById.get(otherId);
+        if (typeof bVal !== 'number') continue;
+        const bMax = other.scale_range?.max ?? aMax;
+        const expectedInverse = !!q.reverse_scored !== !!other.reverse_scored;
+        // Normalise to 0-1 to compare across scales.
+        const a01 = aVal / aMax;
+        const b01 = bVal / bMax;
+        const diff = expectedInverse
+          ? Math.abs(a01 - (1 - b01))
+          : Math.abs(a01 - b01);
+        if (diff > 0.6) { inconsistent = true; break outer; }
+      }
+    }
+    if (inconsistent) {
+      flags.push('inconsistent');
+      penalty += 0.30;
     }
   }
 

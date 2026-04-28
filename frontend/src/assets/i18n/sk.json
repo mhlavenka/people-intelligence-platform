@@ -1507,7 +1507,14 @@
     "filterByCycle": "Cyklus",
     "filterAllDepts": "Všetky oddelenia",
     "filterAllCycles": "Všetky cykly",
-    "filterReset": "Vynulovať filtre"
+    "filterReset": "Vynulovať filtre",
+    "trapItem": "Kontrolná otázka pozornosti (pasca)",
+    "tipTrapItem": "Zaškrtnuté: hodnota odpovede musí zodpovedať očakávanej odpovedi. Nesúlad vyradí odpoveď z analýzy s veľkou kvalitnou penalizáciou. Používajte striedmo — jedna pasca na šablónu stačí.",
+    "trapCorrectAnswer": "Očakávaná správna odpoveď",
+    "trapCorrectAnswerHint": "Presná hodnota, ktorú by mal pozorný respondent dať. Pre škálu zadajte číslo; pre boolean true / false.",
+    "correlatedItemIds": "ID korelovaných položiek (kontrola nekonzistencie)",
+    "tipCorrelatedItems": "Uveďte ID položiek, ktoré by mali korelovať s touto. Smer sa odvodzuje z príznaku obráteného skórovania — rovnaký príznak = zhoda, odlišný = rozpor. Veľké rozpory pridajú príznak kvality „nekonzistentné\".",
+    "correlatedItemIdsHint": "Oddelené čiarkami, napr. cp01, cp04"
   },
   "EQ": {
     "importWizard": "Sprievodca importom EQi",

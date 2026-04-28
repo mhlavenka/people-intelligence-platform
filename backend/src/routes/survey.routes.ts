@@ -683,7 +683,17 @@ router.post('/respond', async (req: AuthRequest, res: Response, next: NextFuncti
         longStringMaxFraction: org?.surveyQualityPolicy?.longStringMaxFraction ?? DEFAULT_QUALITY_POLICY.longStringMaxFraction,
         speedingMsPerItemFloor: DEFAULT_QUALITY_POLICY.speedingMsPerItemFloor,
       };
-      const q = computeQuality({ responses, timingMsPerItem }, policy);
+      // Phase 3: pass template questions in so trap + correlated-pair
+      // checks can fire (no-op when the template doesn't define them).
+      const tpl = await SurveyTemplate.findById(templateId)
+        .select('questions')
+        .setOptions({ bypassTenantCheck: true })
+        .lean();
+      const q = computeQuality(
+        { responses, timingMsPerItem },
+        policy,
+        tpl?.questions ?? undefined,
+      );
       doc['qualityScore'] = q.qualityScore;
       doc['qualityFlags'] = q.qualityFlags;
       doc['acceptedInAnalysis'] = q.acceptedInAnalysis;
