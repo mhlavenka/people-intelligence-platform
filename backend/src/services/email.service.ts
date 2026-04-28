@@ -16,7 +16,18 @@ const ses = new SESClient({
     : {}), // fall back to IAM role / env-based credentials when keys are absent
 });
 
-const FROM = config.aws.sesFromEmail || 'noreply@headsoft.net';
+const FROM_DISPLAY_NAME = 'ARTES Hub';
+
+/** Build a SES Source header with a fixed display name, regardless of whether
+ *  AWS_SES_FROM_EMAIL is set as `email@x.com` or `"some name" <email@x.com>`. */
+function buildFromHeader(): string {
+  const raw = (config.aws.sesFromEmail || 'noreply@headsoft.net').trim();
+  const angleMatch = raw.match(/<([^>]+)>/);
+  const email = (angleMatch ? angleMatch[1] : raw).trim();
+  return `"${FROM_DISPLAY_NAME}" <${email}>`;
+}
+
+const FROM = buildFromHeader();
 const isDev = config.nodeEnv !== 'production';
 
 // ─── i18n helper ─────────────────────────────────────────────────────────────
