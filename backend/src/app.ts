@@ -29,6 +29,7 @@ import authPasskeyRoutes from './routes/auth-passkey.routes';
 import reportsRoutes from './routes/reports.routes';
 import eqiImportRoutes from './routes/eqi-import.routes';
 import coachingRoutes from './routes/coaching.routes';
+import coachingHoursRoutes from './routes/coaching-hours.routes';
 import authOAuthRoutes from './routes/auth-oauth.routes';
 import systemAdminSettingsRoutes from './routes/system-admin-settings.routes';
 import calendarRoutes, { calendarCallbackRouter } from './routes/calendar.routes';
@@ -98,6 +99,7 @@ app.use('/api/roles', rolesRoutes);
 app.use('/api/system-admin/settings', systemAdminSettingsRoutes);
 app.use('/api/reports', reportsRoutes);
 app.use('/api/eq/import', eqiImportRoutes);
+app.use('/api/coaching/hours', coachingHoursRoutes);
 app.use('/api/coaching', coachingRoutes);
 app.use('/api/calendar', calendarCallbackRouter);  // public — Google OAuth redirect (no auth)
 app.use('/api/calendar', calendarRoutes);
