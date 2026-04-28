@@ -2492,6 +2492,7 @@
     "advanceToContractedError": "No se pudo avanzar el compromiso. Inténtalo de nuevo.",
     "advanceToContractedSuccess": "Compromiso avanzado a Contratado",
     "advanceToContractedTitle": "¿Listo/a para comenzar el compromiso?",
+    "allStatuses": "Todos",
     "alumniReadOnlyDesc": "Este compromiso está en modo alumni. Tu plan de desarrollo y notas de sesión siguen disponibles en solo lectura.",
     "alumniReadOnlyTitle": "Alumni — acceso de solo lectura",
     "chemistryCall": "Sesión de química",

@@ -2492,6 +2492,7 @@
     "advanceToContractedError": "Nepodarilo sa posunúť koučovací vzťah. Skúste znova.",
     "advanceToContractedSuccess": "Koučovací vzťah posunutý na Zmluvné",
     "advanceToContractedTitle": "Pripravený začať koučovací vzťah?",
+    "allStatuses": "Všetky",
     "alumniReadOnlyDesc": "Tento koučovací vzťah je v alumni režime. Váš rozvojový plán a poznámky zo stretnutí zostávajú prístupné len na čítanie.",
     "alumniReadOnlyTitle": "Alumni — prístup len na čítanie",
     "chemistryCall": "Úvodný rozhovor",

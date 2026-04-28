@@ -99,7 +99,30 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: string
         <div class="main-layout">
           <!-- Left: Engagements -->
           <div class="engagements-col">
-            @if (engagements().length === 0 && !canManage()) {
+            <!-- Status filter chips -->
+            <div class="status-filters">
+              <button class="status-chip-filter"
+                      [class.active]="statusFilter() === 'all'"
+                      (click)="setStatusFilter('all')">
+                <mat-icon>list</mat-icon>
+                {{ 'COACHING.allStatuses' | translate }}
+                <span class="chip-count">{{ engagements().length }}</span>
+              </button>
+              @for (sk of statusKeys; track sk) {
+                @if (statusCount(sk) > 0) {
+                  <button class="status-chip-filter"
+                          [class.active]="statusFilter() === sk"
+                          [style.--chip-color]="statusConfig(sk).color"
+                          (click)="setStatusFilter(sk)">
+                    <mat-icon>{{ statusConfig(sk).icon }}</mat-icon>
+                    {{ statusConfig(sk).label }}
+                    <span class="chip-count">{{ statusCount(sk) }}</span>
+                  </button>
+                }
+              }
+            </div>
+
+            @if (filteredEngagements().length === 0 && !canManage()) {
               <div class="empty-state">
                 <mat-icon>psychology_alt</mat-icon>
                 <h3>{{ 'COACHING.noEngagementsYet' | translate }}</h3>
@@ -107,7 +130,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: string
               </div>
             } @else {
               <div class="engagements-grid">
-                @for (eng of engagements(); track eng._id) {
+                @for (eng of filteredEngagements(); track eng._id) {
                   <div class="engagement-card" [routerLink]="'/coaching/' + eng._id">
                     <div class="eng-header">
                       <span class="status-chip" [style.background]="statusConfig(eng.status).color + '18'"
@@ -254,6 +277,36 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: string
 
     .engagements-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; }
 
+    .status-filters {
+      display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px;
+    }
+    .status-chip-filter {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 12px; border-radius: 999px;
+      background: #fff; border: 1px solid #d6dde6;
+      font-size: 12px; font-weight: 600; color: #5a6a7e;
+      cursor: pointer; transition: all 0.15s;
+      mat-icon { font-size: 14px; width: 14px; height: 14px; }
+    }
+    .status-chip-filter:hover {
+      border-color: var(--chip-color, #1B2A47);
+      color: var(--chip-color, #1B2A47);
+    }
+    .status-chip-filter.active {
+      background: var(--chip-color, #1B2A47);
+      border-color: var(--chip-color, #1B2A47);
+      color: #fff;
+    }
+    .status-chip-filter .chip-count {
+      font-size: 11px; font-weight: 700;
+      padding: 1px 7px; border-radius: 999px;
+      background: rgba(0,0,0,0.08); color: inherit;
+      min-width: 18px; text-align: center;
+    }
+    .status-chip-filter.active .chip-count {
+      background: rgba(255,255,255,0.25);
+    }
+
     .engagement-card {
       background: white; border-radius: 14px; padding: 20px;
       box-shadow: 0 2px 12px rgba(0,0,0,0.06); cursor: pointer;
@@ -381,6 +434,25 @@ export class CoachingDashboardComponent implements OnInit {
   engagements = signal<Engagement[]>([]);
   sessions = signal<CalSession[]>([]);
   currentMonth = signal(new Date());
+  statusFilter = signal<string>('all');
+
+  /** Order matches the lifecycle progression. Chips are only rendered for
+   *  statuses that have at least one engagement. */
+  statusKeys: ReadonlyArray<string> = [
+    'prospect', 'contracted', 'active', 'paused', 'completed', 'alumni',
+  ];
+
+  filteredEngagements = computed(() => {
+    const f = this.statusFilter();
+    if (f === 'all') return this.engagements();
+    return this.engagements().filter((e) => e.status === f);
+  });
+
+  statusCount(status: string): number {
+    return this.engagements().filter((e) => e.status === status).length;
+  }
+
+  setStatusFilter(s: string): void { this.statusFilter.set(s); }
 
   dayHeaders = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 

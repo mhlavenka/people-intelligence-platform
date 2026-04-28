@@ -2499,6 +2499,7 @@
     "advanceToContractedError": "Could not advance the engagement. Try again.",
     "advanceToContractedSuccess": "Engagement advanced to Contracted",
     "advanceToContractedTitle": "Ready to start the engagement?",
+    "allStatuses": "All",
     "alumniReadOnlyDesc": "This engagement is in alumni mode. Your past development plan and session notes remain available read-only.",
     "alumniReadOnlyTitle": "Alumni — read-only access",
     "chemistryCall": "Chemistry Call",
