@@ -152,7 +152,7 @@ interface DialogData {
     </mat-dialog-actions>
   `,
   styles: [`
-    .dialog-body { display: flex; flex-direction: column; gap: 4px; min-width: 520px; padding-top: 8px; }
+    .dialog-body { display: flex; flex-direction: column; gap: 4px; min-width: 520px; padding-top: 18px; }
     .row { display: flex; gap: 12px; }
     .row.two-col mat-form-field { flex: 1; }
     .full { width: 100%; }

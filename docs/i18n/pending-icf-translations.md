@@ -39,7 +39,25 @@ target locale, then write each translation back into its respective JSON file.
 | `COACHING.icfEligible` | Eligible to apply |
 | `COACHING.icfEntries` | entries |
 | `COACHING.icfEntryDeleted` | Entry deleted |
+| `COACHING.icfExport` | Export CSV |
 | `COACHING.icfFromDate` | From |
+| `COACHING.icfImport` | Import CSV |
+| `COACHING.icfImportBack` | Back |
+| `COACHING.icfImportChangeFile` | Change file |
+| `COACHING.icfImportChooseFile` | Choose CSV file |
+| `COACHING.icfImportCommit` | Import {{count}} valid rows |
+| `COACHING.icfImportCommitted` | Successfully imported {{count}} rows |
+| `COACHING.icfImportDropHint` | Drop a CSV file here or click to browse |
+| `COACHING.icfImportHint` | Upload a CSV file with the columns described below. We'll preview and validate every row before anything is saved. |
+| `COACHING.icfImportInvalid` | Invalid |
+| `COACHING.icfImportOptional` | Optional columns |
+| `COACHING.icfImportPreview` | Preview |
+| `COACHING.icfImportRequired` | are required |
+| `COACHING.icfImportRowOk` | OK |
+| `COACHING.icfImportStatus` | Status |
+| `COACHING.icfImportTitle` | Import ICF Hours |
+| `COACHING.icfImportTotal` | Total |
+| `COACHING.icfImportValid` | Valid |
 | `COACHING.icfFromManual` | manual |
 | `COACHING.icfFromSessionTooltip` | Auto-populated from a completed coaching session |
 | `COACHING.icfFromSessions` | from sessions |

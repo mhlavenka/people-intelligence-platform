@@ -1,13 +1,29 @@
 import { Router, Response, NextFunction } from 'express';
 import mongoose from 'mongoose';
+import multer from 'multer';
 import { authenticateToken, requirePermission, AuthRequest } from '../middleware/auth.middleware';
 import { tenantResolver } from '../middleware/tenant.middleware';
 import { CoachingHoursLog } from '../models/CoachingHoursLog.model';
 import { User } from '../models/User.model';
 import { getHoursSummary, getHoursLogEntries } from '../services/coachingHours.service';
+import { importCsv, exportCsv } from '../services/coachingHoursCsv.service';
 
 const router = Router();
 router.use(authenticateToken, tenantResolver);
+
+const csvUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB — far more than any realistic ICF log
+  fileFilter: (_req, file, cb) => {
+    const ok = file.mimetype === 'text/csv'
+      || file.mimetype === 'application/vnd.ms-excel'
+      || file.mimetype === 'application/csv'
+      || file.mimetype === 'text/plain'
+      || file.originalname.toLowerCase().endsWith('.csv');
+    if (!ok) { cb(new Error('Only CSV files are accepted')); return; }
+    cb(null, true);
+  },
+});
 
 /**
  * Resolve which coach's hours the request is asking for.
@@ -178,6 +194,70 @@ router.get(
 
       const entries = await CoachingHoursLog.find(filter).sort({ date: -1 });
       res.json(entries);
+    } catch (e) { next(e); }
+  },
+);
+
+// ─── CSV import / export ─────────────────────────────────────────────────────
+
+/**
+ * POST /import — accepts a CSV upload.
+ *
+ *   multipart form fields:
+ *     file:    .csv (required)
+ *     dryRun:  'true' | 'false'   (default: 'true')
+ *     coachId: ObjectId           (admin override)
+ *
+ * On dryRun (the default), no rows are inserted; the response includes a
+ * row-by-row preview with errors. On dryRun=false the valid rows are
+ * persisted and the same preview is returned for confirmation UI.
+ */
+router.post(
+  '/import',
+  requirePermission('MANAGE_COACHING'),
+  csvUpload.single('file'),
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      if (!req.file) { res.status(400).json({ error: 'CSV file required' }); return; }
+
+      const coachId = await resolveCoachId(req);
+      if (!coachId) { res.status(404).json({ error: 'Coach not found' }); return; }
+
+      const dryRun = (req.body?.dryRun ?? 'true') !== 'false';
+      const orgId = new mongoose.Types.ObjectId(req.user!.organizationId);
+
+      const preview = await importCsv(orgId, coachId, req.file.buffer, req.file.originalname, { dryRun });
+      res.json(preview);
+    } catch (e) {
+      // Header / parse errors come through as Error('CSV parse failed: ...') etc.
+      if (e instanceof Error && (e.message.startsWith('CSV parse failed') || e.message.startsWith('Missing required column'))) {
+        res.status(400).json({ error: e.message });
+        return;
+      }
+      next(e);
+    }
+  },
+);
+
+/**
+ * GET /export.csv — returns a flat CSV of session-derived + manual rows
+ * for the requested coach + range.
+ */
+router.get(
+  '/export.csv',
+  requirePermission('MANAGE_COACHING'),
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const coachId = await resolveCoachId(req);
+      if (!coachId) { res.status(404).json({ error: 'Coach not found' }); return; }
+
+      const orgId = new mongoose.Types.ObjectId(req.user!.organizationId);
+      const csv = await exportCsv(orgId, coachId, parseDateRange(req));
+
+      const filename = `icf-hours-${new Date().toISOString().slice(0, 10)}.csv`;
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.send(csv);
     } catch (e) { next(e); }
   },
 );

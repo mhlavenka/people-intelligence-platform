@@ -2,6 +2,7 @@ import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -18,7 +19,9 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ApiService } from '../../../core/api.service';
 import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog.component';
 import { HoursLogDialogComponent } from './hours-log-dialog.component';
+import { HoursImportDialogComponent } from './hours-import-dialog.component';
 import { HoursSummary, HoursLogEntry, HoursLogPayload } from './icf-hours.types';
+import { environment } from '../../../../environments/environment';
 
 type RangePreset = 'all' | 'last30' | 'last12' | 'custom';
 
@@ -40,7 +43,13 @@ type RangePreset = 'all' | 'last30' | 'last12' | 'custom';
           <p class="subtitle">{{ 'COACHING.icfHoursSubtitle' | translate }}</p>
         </div>
         <div class="header-actions">
-          <button mat-stroked-button (click)="openLogDialog()">
+          <button mat-stroked-button (click)="openImportDialog()">
+            <mat-icon>upload_file</mat-icon> {{ 'COACHING.icfImport' | translate }}
+          </button>
+          <button mat-stroked-button (click)="downloadExport()">
+            <mat-icon>download</mat-icon> {{ 'COACHING.icfExport' | translate }}
+          </button>
+          <button mat-flat-button color="primary" (click)="openLogDialog()">
             <mat-icon>add</mat-icon> {{ 'COACHING.icfLogHours' | translate }}
           </button>
         </div>
@@ -345,6 +354,7 @@ export class IcfHoursDashboardComponent implements OnInit {
     private dialog: MatDialog,
     private snack: MatSnackBar,
     private translate: TranslateService,
+    private http: HttpClient,
   ) {}
 
   ngOnInit(): void { this.reload(); }
@@ -402,6 +412,31 @@ export class IcfHoursDashboardComponent implements OnInit {
   openLogDialog(): void {
     const ref = this.dialog.open(HoursLogDialogComponent, { data: {} });
     ref.afterClosed().subscribe((res) => { if (res) this.reload(); });
+  }
+
+  openImportDialog(): void {
+    const ref = this.dialog.open(HoursImportDialogComponent, { width: '820px' });
+    ref.afterClosed().subscribe((committed) => { if (committed) this.reload(); });
+  }
+
+  downloadExport(): void {
+    const params: Record<string, string> = {};
+    const range = this.computeRange();
+    if (range.from) params['from'] = range.from;
+    if (range.to)   params['to']   = range.to;
+
+    const url = `${environment.apiUrl}/coaching/hours/export.csv`;
+    this.http.get(url, { params, responseType: 'blob' }).subscribe({
+      next: (blob) => {
+        const objUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = objUrl;
+        link.download = `icf-hours-${new Date().toISOString().slice(0, 10)}.csv`;
+        link.click();
+        URL.revokeObjectURL(objUrl);
+      },
+      error: (err) => this.snack.open(err?.error?.error || 'Export failed', 'Dismiss', { duration: 4000 }),
+    });
   }
 
   editEntry(id: string): void {
