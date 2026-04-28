@@ -17,6 +17,7 @@ const I18N_DIR = path.join(__dirname, '..', '..', 'frontend', 'src', 'assets', '
 
 const COACHING_FR = {
   icfAllCategories: 'Toutes les catégories',
+  icfAllClientTypes: 'Tous les types de client',
   icfAllPaidStatus: 'Tous les statuts',
   icfAllTime: 'Depuis le début',
   icfCompanySponsor: 'Entreprise / Commanditaire',
@@ -42,6 +43,7 @@ const COACHING_FR = {
   icfClientOrType: 'Client / Type',
   icfClientOrganization: 'Organisation du client',
   icfClientTeam: 'Équipe',
+  icfClientType: 'Type de client',
   icfCoachingHours: 'heures de coaching',
   icfCustomRange: 'Période personnalisée',
   icfDateRange: 'Période',
@@ -104,6 +106,7 @@ const COACHING_FR = {
 
 const COACHING_ES = {
   icfAllCategories: 'Todas las categorías',
+  icfAllClientTypes: 'Todos los tipos de cliente',
   icfAllPaidStatus: 'Todos los estados',
   icfAllTime: 'Desde el inicio',
   icfCompanySponsor: 'Empresa / Patrocinador',
@@ -129,6 +132,7 @@ const COACHING_ES = {
   icfClientOrType: 'Cliente / Tipo',
   icfClientOrganization: 'Organización del cliente',
   icfClientTeam: 'Equipo',
+  icfClientType: 'Tipo de cliente',
   icfCoachingHours: 'horas de coaching',
   icfCustomRange: 'Rango personalizado',
   icfDateRange: 'Rango de fechas',
@@ -191,6 +195,7 @@ const COACHING_ES = {
 
 const COACHING_SK = {
   icfAllCategories: 'Všetky kategórie',
+  icfAllClientTypes: 'Všetky typy klientov',
   icfAllPaidStatus: 'Všetky stavy',
   icfAllTime: 'Od začiatku',
   icfCompanySponsor: 'Spoločnosť / Sponzor',
@@ -216,6 +221,7 @@ const COACHING_SK = {
   icfClientOrType: 'Klient / Typ',
   icfClientOrganization: 'Organizácia klienta',
   icfClientTeam: 'Tím',
+  icfClientType: 'Typ klienta',
   icfCoachingHours: 'hodín koučingu',
   icfCustomRange: 'Vlastný rozsah',
   icfDateRange: 'Obdobie',
