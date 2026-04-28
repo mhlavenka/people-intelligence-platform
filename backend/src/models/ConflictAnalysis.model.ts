@@ -74,6 +74,13 @@ export interface IConflictAnalysis extends Document {
   departmentId?: string;
   parentId?: mongoose.Types.ObjectId;
   focusConflictType?: string;
+  /** Start of the response date window this analysis was scoped to.
+   *  Empty -> all-time analysis. Used to support bi-weekly / cyclical
+   *  re-analysis on the same template without cloning. */
+  cycleStart?: Date;
+  /** End of the response date window. Empty -> "up to now" at the time
+   *  the analysis ran. */
+  cycleEnd?: Date;
   riskScore: number;
   riskLevel: RiskLevel;
   conflictTypes: string[];
@@ -140,6 +147,8 @@ const ConflictAnalysisSchema = new Schema<IConflictAnalysis>(
     departmentId: { type: String },
     parentId: { type: Schema.Types.ObjectId, ref: 'ConflictAnalysis', index: true },
     focusConflictType: { type: String },
+    cycleStart: { type: Date },
+    cycleEnd: { type: Date },
     riskScore: { type: Number, min: 0, max: 100, required: true },
     riskLevel: { type: String, enum: ['low', 'medium', 'high', 'critical'], required: true },
     conflictTypes: [{ type: String }],

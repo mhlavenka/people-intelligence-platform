@@ -780,7 +780,19 @@
     "analysisBannerDesc": "Claude aplica el razonamiento basado en intereses a los datos agregados de las encuestas, identificando causas raíz y necesidades no satisfechas en lugar de asignar culpas. Cada análisis produce tres capas complementarias:",
     "analysisLayerNarrative": "<strong>Narrativa</strong> — interpretación de la dinámica del equipo en el lenguaje de los intereses, no de las posiciones",
     "analysisLayerQuantitative": "<strong>Cuantitativa</strong> — una puntuación de riesgo de 0 a 100 basada en criterios objetivos y agregados",
-    "analysisLayerPattern": "<strong>Patrones</strong> — tipos de conflicto específicos (p. ej. Ambigüedad de rol, Ruptura de comunicación) que nombran los intereses estructurales en juego"
+    "analysisLayerPattern": "<strong>Patrones</strong> — tipos de conflicto específicos (p. ej. Ambigüedad de rol, Ruptura de comunicación) que nombran los intereses estructurales en juego",
+    "cycleRange": "Rango de fechas",
+    "cycleRangeHint": "Define qué respuestas entran en este análisis. Ejecuta la misma plantilla en ciclos sin perder datos previos.",
+    "cycleAllTime": "Desde el inicio (todas las respuestas)",
+    "cycleLast14": "Últimos 14 días (ciclo quincenal)",
+    "cycleLast30": "Últimos 30 días (ciclo mensual)",
+    "cycleSinceLast": "Desde el último ciclo (continúa desde el análisis previo)",
+    "cycleCustom": "Rango personalizado…",
+    "cycleFrom": "Desde",
+    "cycleTo": "Hasta",
+    "cycleScopeTooltip": "Este análisis cubre solo las respuestas enviadas dentro de este rango de fechas.",
+    "cycleSince": "Desde",
+    "cycleUntil": "Hasta"
   },
   "NEURO": {
     "title": "Neuro-Inclusion Compass™",

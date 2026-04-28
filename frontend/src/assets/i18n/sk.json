@@ -780,7 +780,19 @@
     "analysisBannerDesc": "Claude aplikuje uvažovanie založené na záujmoch na agregované údaje z prieskumov — identifikuje koreňové príčiny a neuspokojené potreby namiesto prideľovania viny. Každá analýza produkuje tri komplementárne vrstvy:",
     "analysisLayerNarrative": "<strong>Naratív</strong> — interpretácia tímovej dynamiky v jazyku záujmov, nie pozícií",
     "analysisLayerQuantitative": "<strong>Kvantitatívna vrstva</strong> — skóre rizika 0–100 založené na objektívnych agregovaných kritériách",
-    "analysisLayerPattern": "<strong>Vzory</strong> — konkrétne typy konfliktu (napr. Nejasné roly, Rozpad komunikácie) pomenúvajúce štrukturálne záujmy, ktoré sú v hre"
+    "analysisLayerPattern": "<strong>Vzory</strong> — konkrétne typy konfliktu (napr. Nejasné roly, Rozpad komunikácie) pomenúvajúce štrukturálne záujmy, ktoré sú v hre",
+    "cycleRange": "Obdobie",
+    "cycleRangeHint": "Určuje, ktoré odpovede vstupujú do analýzy. Rovnakú šablónu môžete spúšťať v cykloch bez straty predchádzajúcich dát.",
+    "cycleAllTime": "Od začiatku (všetky odpovede)",
+    "cycleLast14": "Posledných 14 dní (dvojtýždňový cyklus)",
+    "cycleLast30": "Posledných 30 dní (mesačný cyklus)",
+    "cycleSinceLast": "Od posledného cyklu (pokračuje od predchádzajúcej analýzy)",
+    "cycleCustom": "Vlastný rozsah…",
+    "cycleFrom": "Od",
+    "cycleTo": "Do",
+    "cycleScopeTooltip": "Táto analýza pokrýva len odpovede odoslané v tomto časovom rozsahu.",
+    "cycleSince": "Od",
+    "cycleUntil": "Do"
   },
   "NEURO": {
     "title": "Neuroinklúzia Compass™",
