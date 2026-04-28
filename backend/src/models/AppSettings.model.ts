@@ -47,6 +47,11 @@ export interface ICompanyInfo {
   email: string;
 }
 
+export interface IEmailDeliverySettings {
+  senderEmail: string;        // From address, e.g. noreply@example.com (must be SES-verified)
+  senderName: string;         // From display name, e.g. "ARTES Hub"
+}
+
 export interface IAppSettings extends Document {
   passwordPolicy: IPasswordPolicy;
   loginPolicy: ILoginPolicy;
@@ -54,6 +59,7 @@ export interface IAppSettings extends Document {
   tokenPolicy: ITokenPolicy;
   general: IGeneralSettings;
   companyInfo: ICompanyInfo;
+  emailDelivery: IEmailDeliverySettings;
   updatedBy?: mongoose.Types.ObjectId;
   updatedAt: Date;
   createdAt: Date;
@@ -106,6 +112,11 @@ const CompanyInfoSchema = new Schema({
   email:      { type: String, default: '' },
 }, { _id: false });
 
+const EmailDeliverySettingsSchema = new Schema({
+  senderEmail: { type: String, default: '' },
+  senderName:  { type: String, default: 'ARTES Hub' },
+}, { _id: false });
+
 const AppSettingsSchema = new Schema(
   {
     passwordPolicy: { type: PasswordPolicySchema, default: () => ({}) },
@@ -114,6 +125,7 @@ const AppSettingsSchema = new Schema(
     tokenPolicy:    { type: TokenPolicySchema,    default: () => ({}) },
     general:        { type: GeneralSettingsSchema, default: () => ({}) },
     companyInfo:    { type: CompanyInfoSchema,     default: () => ({}) },
+    emailDelivery:  { type: EmailDeliverySettingsSchema, default: () => ({}) },
     updatedBy:      { type: Schema.Types.ObjectId, ref: 'User' },
   },
   { timestamps: true }

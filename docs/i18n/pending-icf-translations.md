@@ -91,6 +91,17 @@ target locale, then write each translation back into its respective JSON file.
 |-----|---------|
 | `NAV.icfHours` | ICF Hours |
 
+## Keys added to `SYSADMIN.*` (email delivery settings)
+
+| Key | English |
+|-----|---------|
+| `SYSADMIN.emailDeliveryTitle` | Email Delivery |
+| `SYSADMIN.emailDeliveryDesc` | Sender identity used for all outbound platform emails (notifications, invitations, password resets) |
+| `SYSADMIN.senderName` | Sender Name |
+| `SYSADMIN.senderNameHint` | Display name shown in clients' inbox, e.g. "ARTES Hub" |
+| `SYSADMIN.senderEmail` | Sender Email |
+| `SYSADMIN.senderEmailHint` | Must be a verified address in your AWS SES region |
+
 ## Glossary notes for translators
 
 - **ICF** — keep as the acronym; it is the proper name of the International Coach Federation.

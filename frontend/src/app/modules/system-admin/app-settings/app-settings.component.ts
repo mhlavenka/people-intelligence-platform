@@ -59,6 +59,10 @@ interface AppSettings {
     phone: string;
     email: string;
   };
+  emailDelivery: {
+    senderEmail: string;
+    senderName: string;
+  };
   updatedAt?: string;
 }
 
@@ -350,6 +354,31 @@ const REFRESH_EXPIRY_OPTIONS = [
             </div>
           </div>
 
+          <!-- ── Email Delivery (SES sender) ─────────────────── -->
+          <div class="settings-card">
+            <div class="card-header">
+              <mat-icon>mail</mat-icon>
+              <div>
+                <h3>{{ 'SYSADMIN.emailDeliveryTitle' | translate }}</h3>
+                <p>{{ 'SYSADMIN.emailDeliveryDesc' | translate }}</p>
+              </div>
+            </div>
+            <div class="card-body" formGroupName="emailDelivery">
+              <div class="field-row">
+                <mat-form-field appearance="outline" class="field-md">
+                  <mat-label>{{ 'SYSADMIN.senderName' | translate }}</mat-label>
+                  <input matInput formControlName="senderName" placeholder="ARTES Hub" />
+                  <mat-hint>{{ 'SYSADMIN.senderNameHint' | translate }}</mat-hint>
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="field-md">
+                  <mat-label>{{ 'SYSADMIN.senderEmail' | translate }}</mat-label>
+                  <input matInput formControlName="senderEmail" type="email" placeholder="noreply@yourdomain.com" />
+                  <mat-hint>{{ 'SYSADMIN.senderEmailHint' | translate }}</mat-hint>
+                </mat-form-field>
+              </div>
+            </div>
+          </div>
+
           <!-- ── General ─────────────────────────────────────── -->
           <div class="settings-card">
             <div class="card-header">
@@ -416,7 +445,7 @@ const REFRESH_EXPIRY_OPTIONS = [
     </div>
   `,
   styles: [`
-    .settings-page { padding: 32px; max-width: 820px; }
+    .settings-page { padding: 32px; max-width: 1400px; margin: 0 auto; }
 
     .page-header {
       display: flex; align-items: flex-start; justify-content: space-between;
@@ -429,11 +458,24 @@ const REFRESH_EXPIRY_OPTIONS = [
 
     .loading { display: flex; justify-content: center; padding: 80px; }
 
+    /* Multi-column grid for settings cards.
+     * Cards flow into the densest available column to avoid tall single-column
+     * gaps when one section has more content than another. */
+    form {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+      gap: 20px;
+      align-items: start;
+    }
+    @media (max-width: 900px) {
+      form { grid-template-columns: 1fr; }
+    }
+
     /* Cards */
     .settings-card {
       background: white; border-radius: 14px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-      margin-bottom: 20px; overflow: hidden;
+      overflow: hidden;
     }
 
     .card-header {
@@ -540,6 +582,10 @@ export class AppSettingsComponent implements OnInit {
         taxId:      [''],
         phone:      [''],
         email:      [''],
+      }),
+      emailDelivery: this.fb.group({
+        senderEmail: [''],
+        senderName:  ['ARTES Hub'],
       }),
     });
 
