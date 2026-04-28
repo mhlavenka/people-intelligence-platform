@@ -385,15 +385,31 @@ router.put(
   requirePermission('MANAGE_COACHING'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
-      const engagement = await CoachingEngagement.findOneAndUpdate(
-        { _id: req.params['id'], organizationId: req.user!.organizationId },
-        req.body,
-        { new: true, runValidators: true }
-      )
+      // Reactivation: alumni/completed -> contracted/active. Stamp
+      // reactivatedAt and clear pending alumni reminders so the cron
+      // doesn't re-fire on the resumed engagement.
+      const existing = await CoachingEngagement.findOne({
+        _id: req.params['id'],
+        organizationId: req.user!.organizationId,
+      });
+      if (!existing) { res.status(404).json({ error: req.t('errors.engagementNotFound') }); return; }
+
+      const wasFinal = existing.status === 'alumni' || existing.status === 'completed';
+      const becomingActive = ['contracted', 'active'].includes(req.body?.status);
+      const isReactivation = wasFinal && becomingActive;
+
+      Object.assign(existing, req.body);
+      if (isReactivation) {
+        existing.reactivatedAt = new Date();
+        existing.completedAt = undefined;
+        existing.alumniReminders = { disabled: false };
+      }
+      await existing.save();
+
+      const engagement = await CoachingEngagement.findById(existing._id)
         .populate('coacheeId', 'firstName lastName email department profilePicture')
         .populate('coachId', 'firstName lastName email profilePicture')
-      .populate('sponsorId', 'name email organization');
-      if (!engagement) { res.status(404).json({ error: req.t('errors.engagementNotFound') }); return; }
+        .populate('sponsorId', 'name email organization');
       res.json(engagement);
     } catch (e) { next(e); }
   }

@@ -11,6 +11,15 @@ export type EngagementStatus = 'prospect' | 'contracted' | 'active' | 'paused' |
  */
 export type BillingMode = 'sponsor' | 'subscription';
 
+export interface IAlumniReminders {
+  /** When the 3-month follow-up email was sent. Empty until the cron fires. */
+  threeMonthSentAt?: Date;
+  /** When the 6-month follow-up email was sent. */
+  sixMonthSentAt?: Date;
+  /** Coach can opt the engagement out of automated alumni reminders. */
+  disabled?: boolean;
+}
+
 export interface ICoachingEngagement extends Document {
   organizationId: mongoose.Types.ObjectId;
   coacheeId: mongoose.Types.ObjectId;
@@ -29,6 +38,10 @@ export interface ICoachingEngagement extends Document {
   contractUrl?: string;
   notes?: string;                   // coach's private engagement notes
   hourlyRate?: number;              // per-engagement rate; falls back to sponsor.defaultHourlyRate
+  alumniReminders?: IAlumniReminders;
+  /** When this engagement was reactivated from alumni back to active.
+   *  Used so the alumni cron skips reactivated engagements. */
+  reactivatedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -61,6 +74,12 @@ const CoachingEngagementSchema = new Schema<ICoachingEngagement>(
     contractUrl:       { type: String },
     notes:             { type: String },
     hourlyRate:        { type: Number, min: 0 },
+    alumniReminders: {
+      threeMonthSentAt: { type: Date },
+      sixMonthSentAt:   { type: Date },
+      disabled:         { type: Boolean, default: false },
+    },
+    reactivatedAt:     { type: Date },
   },
   { timestamps: true }
 );

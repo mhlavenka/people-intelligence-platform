@@ -43,6 +43,7 @@ import { startReminderJob } from './jobs/reminder.job';
 import { startWebhookRenewalJob } from './jobs/webhookRenewal.job';
 import { startTrialRevertJob } from './jobs/trialRevert.job';
 import { startPreSessionIntakeJob } from './jobs/preSessionIntake.job';
+import { startAlumniReminderJob } from './jobs/alumniReminder.job';
 
 const app = express();
 
@@ -125,6 +126,7 @@ async function bootstrap(): Promise<void> {
     startWebhookRenewalJob();
     startTrialRevertJob();
     startPreSessionIntakeJob();
+    startAlumniReminderJob();
   } else {
     console.log('[Server] Cron jobs disabled (set ENABLE_CRONS=true to enable)');
   }
