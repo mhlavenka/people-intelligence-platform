@@ -1498,7 +1498,9 @@
     "scheduleCancelConfirm": "Annuler ce calendrier ? L'enregistrement reste pour l'audit, mais aucun cycle supplémentaire ne sera lancé.",
     "scheduleCancelled": "Calendrier annulé",
     "scheduleUpdateFailed": "Impossible de mettre à jour le calendrier. Réessayez.",
-    "assignSummaryWithDepts": "{{count}} personnes et {{deptCount}} département(s) seront notifiés"
+    "assignSummaryWithDepts": "{{count}} personnes et {{deptCount}} département(s) seront notifiés",
+    "deptSelected": "département sélectionné",
+    "deptSelectedPlural": "départements sélectionnés"
   },
   "EQ": {
     "importWizard": "Assistant d’import EQi",

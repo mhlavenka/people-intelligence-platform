@@ -77,6 +77,13 @@ interface UserOption {
             </ng-template>
 
             <div class="tab-body">
+              @if (selectedDepts().size > 0) {
+                <div class="dept-selected-banner">
+                  <mat-icon>check_circle</mat-icon>
+                  <strong>{{ selectedDepts().size }}</strong>
+                  {{ (selectedDepts().size === 1 ? 'SURVEY.deptSelected' : 'SURVEY.deptSelectedPlural') | translate }}
+                </div>
+              }
               @if (departments().length === 0) {
                 <p class="no-results">{{ 'SURVEY.noDepartments' | translate }}</p>
               } @else {
@@ -258,6 +265,15 @@ interface UserOption {
     .schedule-banner.paused {
       background: #fff8f0; border-color: #f0d4a0;
       mat-icon { color: #b27300; }
+    }
+
+    .dept-selected-banner {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 12px; margin: 0 0 10px;
+      background: var(--artes-accent, #3A9FD6); color: #fff;
+      border-radius: 999px; font-size: 13px;
+      mat-icon { font-size: 16px; width: 16px; height: 16px; }
+      strong { font-weight: 700; }
     }
     .schedule-grid {
       display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;

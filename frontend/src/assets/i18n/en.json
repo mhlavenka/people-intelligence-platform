@@ -1310,6 +1310,8 @@
     "assignMessagePlaceholder": "Add a note that will appear in the notification…",
     "assignSummary": "{{count}} people will be notified",
     "assignSummaryWithDepts": "{{count}} people and {{deptCount}} department(s) will be notified",
+    "deptSelected": "department selected",
+    "deptSelectedPlural": "departments selected",
     "assignSend": "Send",
     "assignSuccess": "Assessment assigned — {{count}} people notified",
     "assignFailed": "Failed to assign assessment",

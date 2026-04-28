@@ -1498,7 +1498,9 @@
     "scheduleCancelConfirm": "Zrušiť tento harmonogram? Záznam zostáva pre audit, ale žiadne ďalšie cykly sa nespustia.",
     "scheduleCancelled": "Harmonogram zrušený",
     "scheduleUpdateFailed": "Nepodarilo sa aktualizovať harmonogram. Skúste znova.",
-    "assignSummaryWithDepts": "Bude upozornených {{count}} osôb a {{deptCount}} oddelenie(í)"
+    "assignSummaryWithDepts": "Bude upozornených {{count}} osôb a {{deptCount}} oddelenie(í)",
+    "deptSelected": "oddelenie vybrané",
+    "deptSelectedPlural": "oddelení vybraných"
   },
   "EQ": {
     "importWizard": "Sprievodca importom EQi",
