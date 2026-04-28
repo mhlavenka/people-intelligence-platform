@@ -64,6 +64,7 @@ export interface HoursLogEntry {
   clientType?: HoursLogClientType;
   paidStatus?: HoursLogPaidStatus;
   clientName?: string;
+  clientEmail?: string;
   clientOrganization?: string;
   sponsorContactName?: string;
   assessmentType?: string;
@@ -234,7 +235,7 @@ export async function getHoursLogEntries(
   const [sessions, manual] = await Promise.all([
     CoachingSession.find(sessionMatch)
       .select('_id date duration clientType paidStatus sharedNotes coacheeId')
-      .populate({ path: 'coacheeId', select: 'firstName lastName' })
+      .populate({ path: 'coacheeId', select: 'firstName lastName email' })
       .setOptions({ bypassTenantCheck: true } as any)
       .lean(),
     CoachingHoursLog.find({ organizationId, coachId, ...buildDateMatch('date', range) })
@@ -253,6 +254,7 @@ export async function getHoursLogEntries(
     clientName: s.coacheeId
       ? `${s.coacheeId.firstName ?? ''} ${s.coacheeId.lastName ?? ''}`.trim()
       : undefined,
+    clientEmail: s.coacheeId?.email,
     notes: s.sharedNotes || undefined,
   }));
 
@@ -265,6 +267,7 @@ export async function getHoursLogEntries(
     clientType: m.clientType,
     paidStatus: m.paidStatus,
     clientName: m.clientName || m.mentorCoachName || m.cceProvider,
+    clientEmail: m.clientEmail,
     clientOrganization: m.clientOrganization,
     sponsorContactName: m.sponsorContactName,
     assessmentType: m.assessmentType,

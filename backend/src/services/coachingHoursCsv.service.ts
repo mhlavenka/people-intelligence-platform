@@ -231,11 +231,62 @@ function copyIfPresent(
 
 // ─── Export ──────────────────────────────────────────────────────────────────
 
-const EXPORT_COLUMNS = [
-  'date', 'category', 'client_name', 'client_organization', 'client_type',
-  'paid_status', 'hours', 'sponsor_contact_name', 'assessment_type',
-  'mentor_coach_name', 'mentor_coach_organization', 'source', 'notes',
+/**
+ * Columns mirror the ICF Client Coaching Log spreadsheet.
+ *
+ * One row per coaching engagement (i.e. per client), aggregating all sessions
+ * for that client into total paid hours, total pro bono hours, start date,
+ * end date, and session count. Mentor Coaching Received and CCE entries are
+ * surfaced as separate rows tagged in the `coaching_type` column.
+ */
+const ICF_EXPORT_COLUMNS = [
+  'client_name',
+  'client_contact_information',
+  'coaching_type',                  // Individual / Group / Team / Mentor Coaching Received / CCE
+  'number_of_paid_hours',
+  'number_of_pro_bono_hours',
+  'start_date_of_coaching',
+  'end_date_of_coaching',
+  'number_of_sessions',
+  'sponsor_organization',
+  'sponsor_contact',
+  'mentor_coach_name',
+  'mentor_coach_organization',
+  'assessment_type',
+  'notes',
 ] as const;
+
+interface AggregateRow {
+  clientName: string;
+  clientContact: string;
+  coachingType: string;
+  paidHours: number;
+  proBonoHours: number;
+  startDate: Date | null;
+  endDate: Date | null;
+  sessionCount: number;
+  sponsorOrganization: string;
+  sponsorContact: string;
+  mentorCoachName: string;
+  mentorCoachOrganization: string;
+  assessmentType: string;
+  notes: string[];
+}
+
+const COACHING_TYPE_LABEL: Record<string, string> = {
+  individual: 'Individual',
+  team: 'Team',
+  group: 'Group',
+};
+
+function makeKey(e: { clientName?: string; clientOrganization?: string; clientType?: string; assessmentType?: string }): string {
+  return [
+    (e.clientName ?? '').toLowerCase().trim(),
+    (e.clientOrganization ?? '').toLowerCase().trim(),
+    e.clientType ?? '',
+    e.assessmentType ?? '',
+  ].join('|');
+}
 
 export async function exportCsv(
   organizationId: mongoose.Types.ObjectId,
@@ -244,29 +295,106 @@ export async function exportCsv(
 ): Promise<string> {
   const entries = await getHoursLogEntries(organizationId, coachId, range);
 
-  const lines: string[] = [];
-  lines.push(EXPORT_COLUMNS.join(','));
+  // 1. Bucket session-category entries by (client + organization + clientType + assessmentType)
+  // 2. Mentor Coaching Received: bucket by (mentorCoachName + mentorCoachOrganization)
+  // 3. CCE: bucket by cceProvider/notes (one row per provider × category)
+  const byKey = new Map<string, AggregateRow>();
 
   for (const e of entries) {
+    let key: string;
+    let agg: AggregateRow;
+
+    if (e.category === 'mentor_coaching_received') {
+      key = `mentor|${(e.mentorCoachName ?? '').toLowerCase()}|${(e.mentorCoachOrganization ?? '').toLowerCase()}`;
+      agg = byKey.get(key) ?? blankAggregate();
+      agg.coachingType = 'Mentor Coaching Received';
+      agg.clientName = e.mentorCoachName ?? '';
+      agg.mentorCoachName = e.mentorCoachName ?? agg.mentorCoachName;
+      agg.mentorCoachOrganization = e.mentorCoachOrganization ?? agg.mentorCoachOrganization;
+    } else if (e.category === 'cce') {
+      key = `cce|${(e.notes ?? '').toLowerCase()}`;
+      agg = byKey.get(key) ?? blankAggregate();
+      agg.coachingType = 'CCE';
+      agg.clientName = e.notes ?? 'CCE credit';
+    } else {
+      // session / assessment debrief
+      key = makeKey(e);
+      agg = byKey.get(key) ?? blankAggregate();
+      agg.coachingType = COACHING_TYPE_LABEL[e.clientType ?? 'individual'] ?? 'Individual';
+      agg.clientName = e.clientName ?? agg.clientName;
+      agg.clientContact = e.clientEmail ?? agg.clientContact;
+      agg.sponsorOrganization = e.clientOrganization ?? agg.sponsorOrganization;
+      agg.sponsorContact = e.sponsorContactName ?? agg.sponsorContact;
+      agg.assessmentType = e.assessmentType ?? agg.assessmentType;
+    }
+
+    // Common: hours, dates, count, notes
+    if (e.paidStatus === 'pro_bono') {
+      agg.proBonoHours += e.hours;
+    } else {
+      // 'paid' or unset (mentor/cce default): treat as paid
+      agg.paidHours += e.hours;
+    }
+    if (!agg.startDate || e.date < agg.startDate) agg.startDate = e.date;
+    if (!agg.endDate   || e.date > agg.endDate)   agg.endDate = e.date;
+    agg.sessionCount += 1;
+    if (e.notes && !agg.notes.includes(e.notes)) agg.notes.push(e.notes);
+
+    byKey.set(key, agg);
+  }
+
+  // Sort by coachingType then clientName for a readable export
+  const rows = [...byKey.values()].sort((a, b) =>
+    a.coachingType.localeCompare(b.coachingType) || a.clientName.localeCompare(b.clientName),
+  );
+
+  const lines: string[] = [];
+  lines.push(ICF_EXPORT_COLUMNS.join(','));
+
+  for (const r of rows) {
     const row: Record<string, string> = {
-      date: e.date.toISOString().slice(0, 10),
-      category: e.category,
-      client_name: e.clientName ?? '',
-      client_organization: e.clientOrganization ?? '',
-      client_type: e.clientType ?? '',
-      paid_status: e.paidStatus ?? '',
-      hours: String(e.hours),
-      sponsor_contact_name: e.sponsorContactName ?? '',
-      assessment_type: e.assessmentType ?? '',
-      mentor_coach_name: e.mentorCoachName ?? '',
-      mentor_coach_organization: e.mentorCoachOrganization ?? '',
-      source: e.source,
-      notes: (e.notes ?? '').replace(/\s+/g, ' ').trim(),
+      client_name: r.clientName,
+      client_contact_information: r.clientContact,
+      coaching_type: r.coachingType,
+      number_of_paid_hours: round2(r.paidHours).toString(),
+      number_of_pro_bono_hours: round2(r.proBonoHours).toString(),
+      start_date_of_coaching: r.startDate ? r.startDate.toISOString().slice(0, 10) : '',
+      end_date_of_coaching:   r.endDate   ? r.endDate.toISOString().slice(0, 10)   : '',
+      number_of_sessions: String(r.sessionCount),
+      sponsor_organization: r.sponsorOrganization,
+      sponsor_contact: r.sponsorContact,
+      mentor_coach_name: r.mentorCoachName,
+      mentor_coach_organization: r.mentorCoachOrganization,
+      assessment_type: r.assessmentType,
+      notes: r.notes.slice(0, 5).join('; ').replace(/\s+/g, ' ').trim(),
     };
-    lines.push(EXPORT_COLUMNS.map((c) => csvEscape(row[c] ?? '')).join(','));
+    lines.push(ICF_EXPORT_COLUMNS.map((c) => csvEscape(row[c] ?? '')).join(','));
   }
 
   return lines.join('\n') + '\n';
+}
+
+function blankAggregate(): AggregateRow {
+  return {
+    clientName: '',
+    clientContact: '',
+    coachingType: '',
+    paidHours: 0,
+    proBonoHours: 0,
+    startDate: null,
+    endDate: null,
+    sessionCount: 0,
+    sponsorOrganization: '',
+    sponsorContact: '',
+    mentorCoachName: '',
+    mentorCoachOrganization: '',
+    assessmentType: '',
+    notes: [],
+  };
+}
+
+function round2(n: number): number {
+  return Math.round(n * 100) / 100;
 }
 
 function csvEscape(value: string): string {

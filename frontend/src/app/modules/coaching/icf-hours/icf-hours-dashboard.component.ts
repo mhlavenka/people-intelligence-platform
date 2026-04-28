@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, ViewChild, signal, computed } from '@angular/core';
+import { Component, OnInit, ViewChild, signal, computed } from '@angular/core';
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -222,8 +222,8 @@ type RangePreset = 'all' | 'last30' | 'last12' | 'custom';
               <table mat-table matSort [dataSource]="dataSource" class="compact-table">
                 <!-- Date -->
                 <ng-container matColumnDef="date">
-                  <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ 'COACHING.date' | translate }}</th>
-                  <td mat-cell *matCellDef="let r">{{ r.date | date:'mediumDate' }}</td>
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header class="col-date">{{ 'COACHING.date' | translate }}</th>
+                  <td mat-cell *matCellDef="let r" class="col-date">{{ r.date | date:'mediumDate' }}</td>
                 </ng-container>
 
                 <!-- Category -->
@@ -431,6 +431,7 @@ type RangePreset = 'all' | 'last30' | 'last12' | 'custom';
     .compact-table tr.mat-mdc-row:hover { background: #f8fafc; }
     .compact-table tr.from-session { background: #fafcfe; }
     .compact-table .num { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
+    .compact-table .col-date { white-space: nowrap; min-width: 110px; width: 110px; }
     .compact-table th.actions, .compact-table td.actions { width: 40px; padding-right: 6px; text-align: right; }
     .compact-table tr.no-match td { padding: 24px; text-align: center; color: #9aa5b4; font-size: 13px; }
 
@@ -469,7 +470,7 @@ type RangePreset = 'all' | 'last30' | 'last12' | 'custom';
     }
   `],
 })
-export class IcfHoursDashboardComponent implements OnInit, AfterViewInit {
+export class IcfHoursDashboardComponent implements OnInit {
   loading = signal(true);
   summary = signal<HoursSummary | null>(null);
   entries = signal<HoursLogEntry[]>([]);
@@ -478,9 +479,31 @@ export class IcfHoursDashboardComponent implements OnInit, AfterViewInit {
   customFrom: Date | null = null;
   customTo: Date | null = null;
 
-  // Activity table state
-  @ViewChild(MatSort) sort!: MatSort;
-  @ViewChild(MatPaginator) paginator!: MatPaginator;
+  // Activity table state.
+  // The table sits inside @if (entries().length === 0) ... @else { <table> },
+  // so it is NOT in the DOM during ngAfterViewInit. We use ViewChild setters
+  // that fire when Angular finally renders the element, and attach sort +
+  // paginator to the data source at that point.
+  private _sort?: MatSort;
+  private _paginator?: MatPaginator;
+
+  @ViewChild(MatSort) set matSortRef(s: MatSort | undefined) {
+    this._sort = s;
+    if (s) {
+      this.dataSource.sort = s;
+      // Default sort: date desc, but only set once (don't clobber user clicks).
+      if (!s.active) {
+        s.active = 'date';
+        s.direction = 'desc';
+        s.sortChange.emit({ active: s.active, direction: s.direction });
+      }
+    }
+  }
+  @ViewChild(MatPaginator) set matPaginatorRef(p: MatPaginator | undefined) {
+    this._paginator = p;
+    if (p) this.dataSource.paginator = p;
+  }
+
   dataSource = new MatTableDataSource<HoursLogEntry>([]);
   displayedColumns = ['date', 'category', 'clientName', 'organization', 'hours', 'paidStatus', 'actions'];
 
@@ -511,12 +534,6 @@ export class IcfHoursDashboardComponent implements OnInit, AfterViewInit {
       }
       return true;
     };
-    this.reload();
-  }
-
-  ngAfterViewInit(): void {
-    this.dataSource.sort = this.sort;
-    this.dataSource.paginator = this.paginator;
     this.dataSource.sortingDataAccessor = (row, prop) => {
       switch (prop) {
         case 'date':         return new Date(row.date).getTime();
@@ -528,10 +545,7 @@ export class IcfHoursDashboardComponent implements OnInit, AfterViewInit {
         default:             return (row as any)[prop];
       }
     };
-    // Default sort: date desc (matches the natural order in the entries view)
-    this.sort.active = 'date';
-    this.sort.direction = 'desc';
-    this.sort.sortChange.emit();
+    this.reload();
   }
 
   applyFilters(): void {
