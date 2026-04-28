@@ -58,6 +58,9 @@ export interface HoursSummary {
 export interface HoursLogEntry {
   source: 'session' | 'manual';
   id: string;
+  /** For session-derived rows, the engagement this session belongs to.
+   *  Used to deep-link from the activity table to /coaching/<engagementId>. */
+  engagementId?: string;
   date: Date;
   hours: number;
   category: HoursLogCategory;
@@ -234,8 +237,13 @@ export async function getHoursLogEntries(
 
   const [sessions, manual] = await Promise.all([
     CoachingSession.find(sessionMatch)
-      .select('_id date duration clientType paidStatus sharedNotes coacheeId')
+      .select('_id date duration clientType paidStatus sharedNotes coacheeId engagementId')
       .populate({ path: 'coacheeId', select: 'firstName lastName email' })
+      .populate({
+        path: 'engagementId',
+        select: 'sponsorId',
+        populate: { path: 'sponsorId', select: 'name email' },
+      })
       .setOptions({ bypassTenantCheck: true } as any)
       .lean(),
     CoachingHoursLog.find({ organizationId, coachId, ...buildDateMatch('date', range) })
@@ -243,20 +251,29 @@ export async function getHoursLogEntries(
       .lean(),
   ]);
 
-  const sessionRows: HoursLogEntry[] = sessions.map((s: any) => ({
-    source: 'session',
-    id: String(s._id),
-    date: s.date,
-    hours: round2((s.duration ?? 0) / 60),
-    category: 'session',
-    clientType: s.clientType,
-    paidStatus: s.paidStatus,
-    clientName: s.coacheeId
-      ? `${s.coacheeId.firstName ?? ''} ${s.coacheeId.lastName ?? ''}`.trim()
-      : undefined,
-    clientEmail: s.coacheeId?.email,
-    notes: s.sharedNotes || undefined,
-  }));
+  const sessionRows: HoursLogEntry[] = sessions.map((s: any) => {
+    const sponsor = s.engagementId?.sponsorId;
+    return {
+      source: 'session' as const,
+      id: String(s._id),
+      engagementId: s.engagementId
+        ? String(typeof s.engagementId === 'object' ? s.engagementId._id : s.engagementId)
+        : undefined,
+      date: s.date,
+      hours: round2((s.duration ?? 0) / 60),
+      category: 'session' as const,
+      clientType: s.clientType,
+      paidStatus: s.paidStatus,
+      clientName: s.coacheeId
+        ? `${s.coacheeId.firstName ?? ''} ${s.coacheeId.lastName ?? ''}`.trim()
+        : undefined,
+      clientEmail: s.coacheeId?.email,
+      // For sponsor-billed engagements, surface the sponsor org so the
+      // session row visually matches manual rows that have client_organization.
+      clientOrganization: sponsor?.name,
+      notes: s.sharedNotes || undefined,
+    };
+  });
 
   const manualRows: HoursLogEntry[] = manual.map((m: any) => ({
     source: 'manual',

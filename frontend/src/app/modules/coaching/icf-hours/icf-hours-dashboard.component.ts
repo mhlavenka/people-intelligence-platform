@@ -246,11 +246,13 @@ type RangePreset = 'all' | 'last30' | 'last12' | 'custom';
                     <span class="cat-pill" [class]="r.category">
                       {{ categoryLabel(r.category) | translate }}
                     </span>
-                    @if (r.source === 'session') {
-                      <mat-icon class="auto-icon"
-                                [matTooltip]="'COACHING.icfFromSessionTooltip' | translate">
-                        link
-                      </mat-icon>
+                    @if (r.source === 'session' && r.engagementId) {
+                      <a [routerLink]="['/coaching', r.engagementId]"
+                         class="auto-link"
+                         [matTooltip]="'COACHING.icfFromSessionTooltip' | translate"
+                         (click)="$event.stopPropagation()">
+                        <mat-icon class="auto-icon">link</mat-icon>
+                      </a>
                     }
                   </td>
                   <td mat-footer-cell *matFooterCellDef>
@@ -554,6 +556,11 @@ type RangePreset = 'all' | 'last30' | 'last12' | 'custom';
 
     .muted { color: #c0c8d2; }
     .auto-icon { font-size: 14px; width: 14px; height: 14px; vertical-align: middle; color: #9aa5b4; margin-left: 6px; }
+    .auto-link {
+      display: inline-flex; align-items: center;
+      text-decoration: none; line-height: 1;
+    }
+    .auto-link:hover .auto-icon { color: #3A9FD6; }
 
     .paid-badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; }
     .paid-badge.paid { background: #e0f7ed; color: #1a9678; }

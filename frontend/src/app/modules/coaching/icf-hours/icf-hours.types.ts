@@ -33,6 +33,9 @@ export interface HoursSummary {
 export interface HoursLogEntry {
   source: 'session' | 'manual';
   id: string;
+  /** Present on session-derived rows so the activity table can deep-link
+   *  to /coaching/<engagementId>. */
+  engagementId?: string;
   date: string;
   hours: number;
   category: HoursLogCategory;
