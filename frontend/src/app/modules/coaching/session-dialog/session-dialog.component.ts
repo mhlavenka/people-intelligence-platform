@@ -15,6 +15,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ApiService } from '../../../core/api.service';
 
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { DialogCloseButtonComponent } from '../../../shared/dialog-close-button/dialog-close-button.component';
 const GROW_PHASES = [
   { key: 'goal',    label: 'Goal',    icon: 'flag' },
   { key: 'reality', label: 'Reality', icon: 'explore' },
@@ -34,9 +35,10 @@ const FRAMEWORKS = [
     CommonModule, FormsModule, MatDialogModule, MatFormFieldModule, MatInputModule,
     MatSelectModule, MatButtonModule, MatIconModule, MatProgressSpinnerModule,
     MatDatepickerModule, MatNativeDateModule, MatCheckboxModule, MatSnackBarModule,
-    TranslateModule,
+    TranslateModule, DialogCloseButtonComponent,
   ],
   template: `
+    <app-dialog-close-btn (closed)="dialogRef.close()" />
     <h2 mat-dialog-title>
       <mat-icon>event_note</mat-icon>
       {{ isEdit ? ('COACHING.editSession' | translate) : ('COACHING.newSession' | translate) }}
@@ -327,7 +329,7 @@ export class SessionDialogComponent implements OnInit {
   private api = inject(ApiService);
   private snack = inject(MatSnackBar);
   private translate = inject(TranslateService);
-  private dialogRef = inject(MatDialogRef<SessionDialogComponent>);
+  dialogRef = inject(MatDialogRef<SessionDialogComponent>);
   data = inject<any>(MAT_DIALOG_DATA);
 
   saving = signal(false);

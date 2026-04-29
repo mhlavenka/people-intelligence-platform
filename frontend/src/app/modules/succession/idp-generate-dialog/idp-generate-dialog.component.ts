@@ -12,6 +12,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatStepperModule } from '@angular/material/stepper';
 import { ApiService } from '../../../core/api.service';
 import { TranslateModule } from '@ngx-translate/core';
+import { DialogCloseButtonComponent } from '../../../shared/dialog-close-button/dialog-close-button.component';
 
 interface User {
   _id: string;
@@ -67,8 +68,10 @@ const COMMON_GAPS = [
     MatChipsModule,
     MatStepperModule,
     TranslateModule,
+    DialogCloseButtonComponent,
   ],
   template: `
+    <app-dialog-close-btn (closed)="dialogRef.close()" />
     <h2 mat-dialog-title>
       <mat-icon>auto_awesome</mat-icon>
       {{ "SUCCESSION.generateAIDevPlan" | translate }}
@@ -332,7 +335,7 @@ export class IdpGenerateDialogComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private api: ApiService,
-    private dialogRef: MatDialogRef<IdpGenerateDialogComponent>
+    public dialogRef: MatDialogRef<IdpGenerateDialogComponent>
   ) {
     this.coacheeGroup = this.fb.group({ coacheeId: ['', Validators.required], coachId: [null] });
     this.goalsGroup = this.fb.group({ goals: ['', Validators.required] });

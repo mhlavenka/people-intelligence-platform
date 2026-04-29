@@ -12,6 +12,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ApiService } from '../../../core/api.service';
 import { TranslateModule } from '@ngx-translate/core';
+import { DialogCloseButtonComponent } from '../../../shared/dialog-close-button/dialog-close-button.component';
 
 interface PlanLimits {
   maxAIAnalyses: number;
@@ -49,9 +50,10 @@ const MODULE_DEFS = [
     CommonModule, FormsModule, MatDialogModule, MatFormFieldModule, MatInputModule,
     MatButtonModule, MatIconModule, MatCheckboxModule, MatSlideToggleModule,
     MatProgressSpinnerModule, MatSnackBarModule,
-    TranslateModule,
+    TranslateModule, DialogCloseButtonComponent,
   ],
   template: `
+    <app-dialog-close-btn (closed)="dialogRef.close()" />
     <h2 mat-dialog-title>
       <mat-icon>sell</mat-icon>
       {{ isEdit ? ("SYSADMIN.editPlan" | translate) : ("SYSADMIN.newPlan" | translate) }}
@@ -176,7 +178,7 @@ const MODULE_DEFS = [
 })
 export class PlanEditDialogComponent implements OnInit {
   private api = inject(ApiService);
-  private dialogRef = inject(MatDialogRef<PlanEditDialogComponent>);
+  dialogRef = inject(MatDialogRef<PlanEditDialogComponent>);
   private snack = inject(MatSnackBar);
   data = inject<Plan | null>(MAT_DIALOG_DATA, { optional: true });
 

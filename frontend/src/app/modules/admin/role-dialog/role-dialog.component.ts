@@ -13,6 +13,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ApiService } from '../../../core/api.service';
 import { TranslateModule } from '@ngx-translate/core';
+import { DialogCloseButtonComponent } from '../../../shared/dialog-close-button/dialog-close-button.component';
 
 export interface CustomRole {
   _id: string;
@@ -113,8 +114,10 @@ const PRESET_COLORS = [
     MatDividerModule,
     MatTooltipModule,
     TranslateModule,
+    DialogCloseButtonComponent,
   ],
   template: `
+    <app-dialog-close-btn (closed)="dialogRef.close()" />
     <h2 mat-dialog-title>
       <mat-icon [style.color]="form.get('color')?.value || '#3A9FD6'">manage_accounts</mat-icon>
       {{ isEdit ? ('ADMIN.editCustomRole' | translate) : ('ADMIN.newCustomRole' | translate) }}
@@ -280,7 +283,7 @@ const PRESET_COLORS = [
 export class RoleDialogComponent implements OnInit {
   private fb = inject(FormBuilder);
   private api = inject(ApiService);
-  private dialogRef = inject(MatDialogRef<RoleDialogComponent>);
+  dialogRef = inject(MatDialogRef<RoleDialogComponent>);
   existingRole = inject<CustomRole | null>(MAT_DIALOG_DATA, { optional: true });
 
   form!: FormGroup;

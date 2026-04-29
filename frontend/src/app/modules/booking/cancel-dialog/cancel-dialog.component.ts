@@ -9,6 +9,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { DialogCloseButtonComponent } from '../../../shared/dialog-close-button/dialog-close-button.component';
 export interface CancelDialogData {
   /** What's being cancelled — shown in the confirmation copy. */
   title?: string;
@@ -35,9 +36,10 @@ export interface CancelDialogResult {
     CommonModule, DatePipe, FormsModule,
     MatDialogModule, MatFormFieldModule, MatInputModule,
     MatButtonModule, MatIconModule, MatProgressSpinnerModule,
-    TranslateModule,
+    TranslateModule, DialogCloseButtonComponent,
   ],
   template: `
+    <app-dialog-close-btn (closed)="cancel()" />
     <h2 mat-dialog-title>{{ data.title || ('BOOKING.cancelSession' | translate) }}</h2>
     <mat-dialog-content>
       @if (data.startTime) {

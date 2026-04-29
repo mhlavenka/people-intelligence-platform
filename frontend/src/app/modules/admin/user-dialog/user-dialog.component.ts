@@ -15,6 +15,7 @@ import { AuthService } from '../../../core/auth.service';
 import { environment } from '../../../../environments/environment';
 import { Sponsor, SponsorService } from '../../sponsor/sponsor.service';
 import { TranslateModule } from '@ngx-translate/core';
+import { DialogCloseButtonComponent } from '../../../shared/dialog-close-button/dialog-close-button.component';
 
 export interface OrgUser {
   _id: string;
@@ -65,8 +66,10 @@ const ROLES = [
     MatCheckboxModule,
     MatTooltipModule,
     TranslateModule,
+    DialogCloseButtonComponent,
   ],
   template: `
+    <app-dialog-close-btn (closed)="dialogRef.close()" />
     <h2 mat-dialog-title>
       <mat-icon>{{ isEdit() ? 'edit' : 'person_add' }}</mat-icon>
       {{ isEdit() ? ("ADMIN.editUser" | translate) : ("ADMIN.addUser" | translate) }}
@@ -294,7 +297,7 @@ export class UserDialogComponent implements OnInit {
   private api = inject(ApiService);
   private auth = inject(AuthService);
   private sponsorSvc = inject(SponsorService);
-  private dialogRef = inject(MatDialogRef<UserDialogComponent>);
+  dialogRef = inject(MatDialogRef<UserDialogComponent>);
   existingUser = inject<OrgUser | null>(MAT_DIALOG_DATA, { optional: true });
 
   form!: FormGroup;

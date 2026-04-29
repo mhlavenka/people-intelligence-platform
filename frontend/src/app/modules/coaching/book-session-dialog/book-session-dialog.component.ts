@@ -11,6 +11,7 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 
 import { TranslateModule } from '@ngx-translate/core';
+import { DialogCloseButtonComponent } from '../../../shared/dialog-close-button/dialog-close-button.component';
 export interface BookSessionData {
   coachName: string;
   engagementId: string;
@@ -22,9 +23,10 @@ export interface BookSessionData {
   imports: [
     CommonModule, FormsModule, MatDialogModule, MatButtonModule, MatIconModule,
     MatFormFieldModule, MatInputModule, MatSelectModule, MatDatepickerModule, MatNativeDateModule,
-    TranslateModule,
+    TranslateModule, DialogCloseButtonComponent,
   ],
   template: `
+    <app-dialog-close-btn (closed)="dialogRef.close()" />
     <h2 mat-dialog-title>
       <mat-icon>calendar_month</mat-icon>
       {{ 'COACHING.bookASession' | translate }}
@@ -117,7 +119,7 @@ export class BookSessionDialogComponent {
 
   constructor(
     @Inject(MAT_DIALOG_DATA) public data: BookSessionData,
-    private dialogRef: MatDialogRef<BookSessionDialogComponent>,
+    public dialogRef: MatDialogRef<BookSessionDialogComponent>,
   ) {}
 
   submit(): void {

@@ -10,6 +10,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ApiService } from '../../../core/api.service';
 import { TranslateModule } from '@ngx-translate/core';
+import { DialogCloseButtonComponent } from '../../../shared/dialog-close-button/dialog-close-button.component';
 
 @Component({
   selector: 'app-create-user-dialog',
@@ -17,9 +18,10 @@ import { TranslateModule } from '@ngx-translate/core';
   imports: [
     CommonModule, FormsModule, MatDialogModule, MatFormFieldModule, MatInputModule,
     MatSelectModule, MatButtonModule, MatIconModule, MatProgressSpinnerModule,
-    TranslateModule,
+    TranslateModule, DialogCloseButtonComponent,
   ],
   template: `
+    <app-dialog-close-btn (closed)="dialogRef.close()" />
     <h2 mat-dialog-title><mat-icon>person_add</mat-icon> {{ "SYSADMIN.createUserTitle" | translate }} — {{ data.orgName }}</h2>
     <mat-dialog-content>
       @if (error()) { <div class="error-banner">{{ error() }}</div> }
@@ -69,7 +71,7 @@ import { TranslateModule } from '@ngx-translate/core';
 })
 export class CreateUserDialogComponent {
   private api = inject(ApiService);
-  private dialogRef = inject(MatDialogRef<CreateUserDialogComponent>);
+  dialogRef = inject(MatDialogRef<CreateUserDialogComponent>);
   data = inject<{ orgId: string; orgName: string }>(MAT_DIALOG_DATA);
 
   saving = signal(false);

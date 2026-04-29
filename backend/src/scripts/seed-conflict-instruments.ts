@@ -81,6 +81,7 @@ Analysis rules:
 - When communication/trust scores diverge from conflict frequency, name the "What Happened?" Conversation.
 - The narrative synthesises across respondents to provide a composite "balcony view" (Ury, Getting Past No).
 - Conflict Types should name structural interests (e.g. "Role Ambiguity", "Communication Breakdown") without personalising.
+- Each entry in the conflictTypes array MUST follow the format "Label — short rationale sentence." using an em-dash (—) with a space on each side. The label is 2-5 words; the rationale is one concise sentence explaining why this pattern was detected from the data. Do not omit the rationale.
 - Manager scripts use open-ended, interest-probing questions: "What would need to change…?" / "Help me understand…"
 - Recommended actions span multiple roles (Manager, HR, Coach, Team Lead) — conflict resolution is a community function.
 - Match urgency to risk level: Critical = act NOW, High = move quickly, Medium = address systematically, Low = monitor.

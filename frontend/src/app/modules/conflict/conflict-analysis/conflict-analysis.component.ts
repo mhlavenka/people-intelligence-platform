@@ -15,6 +15,7 @@ import { ApiService } from '../../../core/api.service';
 import { MiniGaugeComponent } from '../../../shared/mini-gauge/mini-gauge.component';
 import { RiskBadgeComponent } from '../../../shared/risk-badge/risk-badge.component';
 import { ConflictAnalyzeDialogComponent } from '../conflict-analyze-dialog/conflict-analyze-dialog.component';
+import { EscalationPreviewDialogComponent } from '../escalation-preview-dialog/escalation-preview-dialog.component';
 import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog.component';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { parseConflictType } from '../conflict-type.util';
@@ -74,119 +75,123 @@ const RISK_RANK: Record<ConflictAnalysis['riskLevel'], number> = {
     </div>
 
     <!-- Analyses list -->
-    <div class="analyses-section">
-      <div class="analyses-header">
-        <h2>{{ "CONFLICT.analyses" | translate }}</h2>
-        <span class="analyses-count">
-          @if (searchQuery() || sort() !== 'recent') {
-            {{ filteredAnalyses().length }} / {{ analyses().length }}
-          } @else {
-            {{ analyses().length }}
+    <div class="analyses-header">
+      <h2>{{ "CONFLICT.analyses" | translate }}</h2>
+      <span class="analyses-count">
+        @if (searchQuery() || sort() !== 'recent') {
+          {{ filteredAnalyses().length }} / {{ analyses().length }}
+        } @else {
+          {{ analyses().length }}
+        }
+        {{ 'CONFLICT.totalSuffix' | translate }}
+      </span>
+
+      <div class="header-controls">
+        <mat-form-field appearance="outline" class="search-field" subscriptSizing="dynamic">
+          <mat-icon matPrefix>search</mat-icon>
+          <input matInput
+                 [placeholder]="'CONFLICT.searchAnalyses' | translate"
+                 [ngModel]="searchQuery()"
+                 (ngModelChange)="searchQuery.set($event)" />
+          @if (searchQuery()) {
+            <button matSuffix mat-icon-button aria-label="Clear" (click)="searchQuery.set('')">
+              <mat-icon>close</mat-icon>
+            </button>
           }
-          {{ 'CONFLICT.totalSuffix' | translate }}
-        </span>
+        </mat-form-field>
 
-        <div class="header-controls">
-          <mat-form-field appearance="outline" class="search-field" subscriptSizing="dynamic">
-            <mat-icon matPrefix>search</mat-icon>
-            <input matInput
-                   [placeholder]="'CONFLICT.searchAnalyses' | translate"
-                   [ngModel]="searchQuery()"
-                   (ngModelChange)="searchQuery.set($event)" />
-            @if (searchQuery()) {
-              <button matSuffix mat-icon-button aria-label="Clear" (click)="searchQuery.set('')">
-                <mat-icon>close</mat-icon>
-              </button>
-            }
-          </mat-form-field>
-
-          <button mat-stroked-button [matMenuTriggerFor]="sortMenu" class="sort-btn">
-            <mat-icon>sort</mat-icon>
-            <span>{{ sortLabelKey() | translate }}</span>
-            <mat-icon class="caret">arrow_drop_down</mat-icon>
+        <button mat-stroked-button [matMenuTriggerFor]="sortMenu" class="sort-btn">
+          <mat-icon>sort</mat-icon>
+          <span>{{ sortLabelKey() | translate }}</span>
+          <mat-icon class="caret">arrow_drop_down</mat-icon>
+        </button>
+        <mat-menu #sortMenu="matMenu">
+          <button mat-menu-item (click)="sort.set('recent')">
+            <mat-icon>schedule</mat-icon>{{ 'CONFLICT.sortRecent' | translate }}
           </button>
-          <mat-menu #sortMenu="matMenu">
-            <button mat-menu-item (click)="sort.set('recent')">
-              <mat-icon>schedule</mat-icon>{{ 'CONFLICT.sortRecent' | translate }}
-            </button>
-            <button mat-menu-item (click)="sort.set('risk-desc')">
-              <mat-icon>arrow_downward</mat-icon>{{ 'CONFLICT.sortRiskDesc' | translate }}
-            </button>
-            <button mat-menu-item (click)="sort.set('risk-asc')">
-              <mat-icon>arrow_upward</mat-icon>{{ 'CONFLICT.sortRiskAsc' | translate }}
-            </button>
-            <button mat-menu-item (click)="sort.set('name')">
-              <mat-icon>sort_by_alpha</mat-icon>{{ 'CONFLICT.sortName' | translate }}
-            </button>
-          </mat-menu>
-        </div>
+          <button mat-menu-item (click)="sort.set('risk-desc')">
+            <mat-icon>arrow_downward</mat-icon>{{ 'CONFLICT.sortRiskDesc' | translate }}
+          </button>
+          <button mat-menu-item (click)="sort.set('risk-asc')">
+            <mat-icon>arrow_upward</mat-icon>{{ 'CONFLICT.sortRiskAsc' | translate }}
+          </button>
+          <button mat-menu-item (click)="sort.set('name')">
+            <mat-icon>sort_by_alpha</mat-icon>{{ 'CONFLICT.sortName' | translate }}
+          </button>
+        </mat-menu>
       </div>
+    </div>
 
-      @if (loading()) {
-        <div class="loading-center"><mat-spinner diameter="36" /></div>
-      } @else {
-        <div class="analyses-grid">
+    @if (loading()) {
+      <div class="loading-center"><mat-spinner diameter="36" /></div>
+    } @else {
+      <div class="analyses-grid">
           @for (a of filteredAnalyses(); track a._id) {
             <div class="analysis-card" [class]="'accent-' + a.riskLevel" (click)="viewAnalysis(a)">
-              <div class="analysis-card-top">
-                <div class="mini-gauge-wrap">
+              <header class="card-header">
+                <div class="gauge-stack">
                   <app-mini-gauge [score]="a.riskScore" [riskLevel]="a.riskLevel" />
                   <app-risk-badge [level]="a.riskLevel" />
                 </div>
-                <div class="analysis-meta">
-                  <div class="meta-name">
-                    <strong>{{ a.name }}</strong>
+                <div class="header-info">
+                  <div class="header-info-top">
+                    <h3>{{ a.name }}</h3>
+                    <button mat-icon-button class="delete-analysis-btn"
+                            [matTooltip]="'CONFLICT.deleteAnalysis' | translate"
+                            (click)="deleteAnalysis(a); $event.stopPropagation()">
+                      <mat-icon>delete_outline</mat-icon>
+                    </button>
                   </div>
-                  <div class="meta-period">
-                    <mat-icon>calendar_today</mat-icon>
-                    {{ a.createdAt | date:'MMM d, y' }}
+                  <div class="card-meta">
+                    <span class="meta-item">
+                      <mat-icon>calendar_today</mat-icon>
+                      {{ a.createdAt | date:'MMM d, y' }}
+                    </span>
+                    @if (a.intakeTemplateId?.title; as tplTitle) {
+                      <span class="meta-item template">
+                        <mat-icon>assignment</mat-icon>
+                        {{ tplTitle }}
+                      </span>
+                    }
                   </div>
-                  @if (a.intakeTemplateId?.title; as tplTitle) {
-                    <div class="meta-template">
-                      <mat-icon>assignment</mat-icon>
-                      <span>{{ tplTitle }}</span>
-                    </div>
-                  }
                   @if (a.escalationRequested) {
                     <span class="escalated-badge">
                       <mat-icon>gavel</mat-icon> {{ "CONFLICT.escalated" | translate }}
                     </span>
                   }
                 </div>
-                <button mat-icon-button class="delete-analysis-btn"
-                        [matTooltip]="'CONFLICT.deleteAnalysis' | translate"
-                        (click)="deleteAnalysis(a); $event.stopPropagation()">
-                  <mat-icon>delete_outline</mat-icon>
-                </button>
+              </header>
+              <div class="card-body">
+                @if (a.conflictTypes.length) {
+                  <ul class="type-list">
+                    @for (t of a.conflictTypes; track t) {
+                      <li class="type-list-item"
+                          [class.has-tooltip]="!!parseType(t).rationale"
+                          [matTooltip]="parseType(t).rationale"
+                          [matTooltipDisabled]="!parseType(t).rationale">
+                        <mat-icon>{{ typeIcon(parseType(t).label) }}</mat-icon>
+                        <span>{{ parseType(t).label }}</span>
+                      </li>
+                    }
+                  </ul>
+                }
               </div>
-              @if (a.conflictTypes.length) {
-                <ul class="type-list">
-                  @for (t of a.conflictTypes; track t) {
-                    <li class="type-list-item" [matTooltip]="parseType(t).rationale">
-                      <mat-icon>{{ typeIcon(parseType(t).label) }}</mat-icon>
-                      <span>{{ parseType(t).label }}</span>
-                    </li>
-                  }
-                </ul>
-              }
               @if (!a.escalationRequested && (a.riskLevel === 'high' || a.riskLevel === 'critical')) {
-                <div class="analysis-card-actions">
-                  <button mat-stroked-button color="warn" (click)="escalate(a._id); $event.stopPropagation()">
+                <footer class="card-footer">
+                  <button mat-stroked-button color="warn" (click)="escalate(a); $event.stopPropagation()">
                     <mat-icon>escalator_warning</mat-icon> {{ 'CONFLICT.escalate' | translate }}
                   </button>
-                </div>
+                </footer>
               }
             </div>
           }
 
-          <div class="analysis-card new-analysis-card" (click)="runNewAnalysis()">
-            <mat-icon class="new-analysis-icon">add</mat-icon>
-            <span>{{ "CONFLICT.newAnalysis" | translate }}</span>
-          </div>
+        <div class="analysis-card new-analysis-card" (click)="runNewAnalysis()">
+          <mat-icon class="new-analysis-icon">add</mat-icon>
+          <span>{{ "CONFLICT.newAnalysis" | translate }}</span>
         </div>
-      }
-    </div>
-
+      </div>
+    }
   `,
   styles: [`
     .analysis-banner {
@@ -218,15 +223,11 @@ const RISK_RANK: Record<ConflictAnalysis['riskLevel'], number> = {
       strong { color: white; }
     }
 
-    .analyses-section {
-      background: var(--artes-panel); border-radius: 16px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.06); margin-bottom: 24px;
-    }
     .analyses-header {
       display: flex; align-items: center; gap: 10px;
-      padding: 18px 24px; border-bottom: 1px solid #f0f4f8;
-      h2 { font-size: 16px; color: var(--artes-on-panel, var(--artes-primary)); margin: 0; font-weight: 700; }
-      .analyses-count { font-size: 12px; background: #f0f4f8; color: var(--artes-on-panel-muted, #5a6a7e); padding: 2px 9px; border-radius: 999px; }
+      margin-bottom: 16px;
+      h2 { font-size: 16px; color: var(--artes-primary); margin: 0; font-weight: 700; }
+      .analyses-count { font-size: 12px; background: #f0f4f8; color: #5a6a7e; padding: 2px 9px; border-radius: 999px; }
       .header-controls { display: flex; align-items: center; gap: 8px; margin-left: auto; }
       .search-field { width: 240px; ::ng-deep .mat-mdc-form-field-infix { min-height: 36px; padding: 4px 0; } }
       .sort-btn { white-space: nowrap; .caret { font-size: 18px; width: 18px; height: 18px; margin-left: 2px; } }
@@ -234,25 +235,25 @@ const RISK_RANK: Record<ConflictAnalysis['riskLevel'], number> = {
 
     .analyses-grid {
       display: grid; grid-template-columns: repeat(auto-fill, minmax(550px, 1fr));
-      gap: 16px; padding: 16px 20px 20px;
+      gap: 20px;
     }
     .analysis-card {
-      /* Each riskLevel sets --accent-color so the card pulls a barely-there
-         tint from the same colour as its left border. color-mix lets us blend
-         on top of whatever the org's surface colour is, so the tint stays
-         subtle on light themes and visible on dark ones. */
+      /* Each riskLevel sets --accent-color which colours the left border
+         and tints the header. The card itself stays white with a soft
+         shadow so it lifts off the page background — same elevation
+         pattern as the intake management cards. */
       --accent-color: transparent;
-      background: color-mix(in srgb, var(--accent-color) 5%, var(--artes-surface));
-      border: 1px solid #e8edf4; border-radius: 14px; padding: 24px;
+      background: white;
+      border: 1.5px solid transparent; border-radius: 16px;
       border-left: 4px solid var(--accent-color);
-      transition: box-shadow 0.18s ease, transform 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      transition: box-shadow 0.15s ease, transform 0.15s ease;
       cursor: pointer;
-      display: flex; flex-direction: column; gap: 16px;
+      display: flex; flex-direction: column;
       min-height: 210px;
+      overflow: hidden;
       &:hover {
-        background: color-mix(in srgb, var(--accent-color) 10%, var(--artes-surface));
-        box-shadow: 0 6px 20px color-mix(in srgb, var(--accent-color) 18%, transparent);
-        border-color: color-mix(in srgb, var(--accent-color) 30%, #e8edf4);
+        box-shadow: 0 6px 20px color-mix(in srgb, var(--accent-color) 18%, rgba(0,0,0,0.10));
         transform: translateY(-2px);
       }
       &.accent-low      { --accent-color: #27C4A0; }
@@ -260,23 +261,68 @@ const RISK_RANK: Record<ConflictAnalysis['riskLevel'], number> = {
       &.accent-high     { --accent-color: #e86c3a; }
       &.accent-critical { --accent-color: #e53e3e; }
     }
-    .analysis-card-top { display: flex; align-items: flex-start; gap: 20px; }
-    .mini-gauge-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+
+    /* Header — risk-tinted band that reads at a glance */
+    .card-header {
+      display: flex; align-items: flex-start; gap: 16px;
+      padding: 16px 20px;
+      background: color-mix(in srgb, var(--accent-color) 16%, white);
+      border-bottom: 1px solid color-mix(in srgb, var(--accent-color) 35%, transparent);
+    }
+    .gauge-stack {
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      flex-shrink: 0;
+    }
     app-mini-gauge { width: 80px; }
+    .header-info { display: flex; flex-direction: column; gap: 6px; min-width: 0; flex: 1; }
+    .header-info-top {
+      display: flex; align-items: flex-start; justify-content: space-between; gap: 8px;
+    }
+    .delete-analysis-btn {
+      color: #9aa5b4; width: 38px; height: 32px; flex-shrink: 0;
+      margin-top: -4px;
+      &:hover { color: #e53e3e !important; }
+    }
+
+    h3 {
+      font-size: 16px; color: var(--artes-primary); margin: 0;
+      font-weight: 600; line-height: 1.3; word-break: break-word;
+    }
+
+    .card-meta {
+      display: flex; gap: 14px; flex-wrap: wrap;
+      .meta-item {
+        display: flex; align-items: center; gap: 4px;
+        font-size: 12px; color: #5a6a7e;
+        mat-icon { font-size: 14px; width: 14px; height: 14px; color: #9aa5b4; }
+        &.template { color: var(--artes-accent); mat-icon { color: var(--artes-accent); } }
+      }
+    }
+
+    /* Body — fills available space so the footer can stick to the bottom */
+    .card-body {
+      padding: 16px 20px;
+      flex: 1;
+      display: flex; flex-direction: column; gap: 12px;
+    }
+
+    /* Footer — always at the bottom, left-aligned */
+    .card-footer {
+      display: flex; justify-content: flex-start; align-items: center;
+      padding: 12px 20px;
+      border-top: 1px solid #f0f4f8;
+      margin-top: auto;
+    }
+
     .new-analysis-card {
       border: 2px dashed #d0d8e4; border-left-width: 2px;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       gap: 10px; cursor: pointer; min-height: 210px; color: #6b7c93;
-      font-size: 15px;
+      font-size: 15px; padding: 24px;
       transition: border-color 0.15s, color 0.15s, background 0.15s;
       &:hover { border-color: var(--artes-accent); color: var(--artes-accent); background: rgba(58,159,214,0.04); }
     }
     .new-analysis-icon { font-size: 44px; width: 44px; height: 44px; }
-    .analysis-meta { display: flex; flex-direction: column; gap: 7px; min-width: 0; flex: 1; }
-    .meta-name { font-size: 17px; color: var(--artes-primary); strong { font-weight: 600; } }
-    .meta-template { display: flex; align-items: center; gap: 6px; font-size: 14px; color: var(--artes-accent); mat-icon { font-size: 16px; width: 16px; height: 16px; } }
-    .meta-dept, .meta-period { display: flex; align-items: center; gap: 6px; font-size: 14px; mat-icon { font-size: 16px; width: 16px; height: 16px; color: #9aa5b4; } strong { color: var(--artes-primary); } }
-    .meta-period { color: #5a6a7e; }
     .type-list {
       list-style: none;
       margin: 0; padding: 0;
@@ -290,7 +336,7 @@ const RISK_RANK: Record<ConflictAnalysis['riskLevel'], number> = {
       background: #eef2f7; color: #4a5568;
       line-height: 1.3;
       max-width: 100%;
-      cursor: help;
+      &.has-tooltip { cursor: help; }
       mat-icon {
         font-size: 14px; width: 14px; height: 14px;
         line-height: 14px;
@@ -304,9 +350,13 @@ const RISK_RANK: Record<ConflictAnalysis['riskLevel'], number> = {
         text-overflow: ellipsis;
       }
     }
-    .escalated-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; color: #e86c3a; font-weight: 600; mat-icon { font-size: 16px; width: 16px; height: 16px; } }
-    .analysis-card-actions { display: flex; gap: 8px; padding-top: 4px; border-top: 1px solid #f0f4f8; }
-    .delete-analysis-btn { color: #c5d0db; width: 38px; height: 38px; margin-left: auto; flex-shrink: 0; &:hover { color: #e53e3e !important; } }
+    .escalated-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 10px; border-radius: 999px;
+      font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px;
+      background: rgba(232,108,58,0.12); color: #c04a14;
+      mat-icon { font-size: 14px; width: 14px; height: 14px; }
+    }
 
   `],
 })
@@ -364,8 +414,16 @@ export class ConflictAnalysisComponent implements OnInit {
     this.router.navigate(['/conflict/analysis', analysis._id]);
   }
 
-  escalate(id: string): void {
-    this.api.post(`/conflict/escalate/${id}`, {}).subscribe({ next: () => this.loadAnalyses() });
+  escalate(a: ConflictAnalysis): void {
+    this.dialog.open(EscalationPreviewDialogComponent, {
+      width: '720px',
+      maxWidth: '94vw',
+      maxHeight: '90vh',
+      data: { analysisName: a.name },
+    }).afterClosed().subscribe((confirmed) => {
+      if (!confirmed) return;
+      this.api.post(`/conflict/escalate/${a._id}`, {}).subscribe({ next: () => this.loadAnalyses() });
+    });
   }
 
   deleteAnalysis(a: ConflictAnalysis): void {

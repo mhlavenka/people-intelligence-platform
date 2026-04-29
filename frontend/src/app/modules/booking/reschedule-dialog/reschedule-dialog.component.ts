@@ -12,6 +12,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { AvailableSlot, BookingRecord, BookingService } from '../booking.service';
 
 import { TranslateModule } from '@ngx-translate/core';
+import { DialogCloseButtonComponent } from '../../../shared/dialog-close-button/dialog-close-button.component';
 export interface RescheduleDialogData {
   booking: BookingRecord;
   /** When true, show a "Message to coach" textarea; the submitted note
@@ -34,9 +35,10 @@ export interface RescheduleDialogResult {
     MatDialogModule, MatFormFieldModule, MatInputModule,
     MatDatepickerModule, MatNativeDateModule,
     MatButtonModule, MatIconModule, MatProgressSpinnerModule,
-    TranslateModule,
+    TranslateModule, DialogCloseButtonComponent,
   ],
   template: `
+    <app-dialog-close-btn (closed)="cancel()" />
     <h2 mat-dialog-title>{{ 'BOOKING.rescheduleBookingTitle' | translate }}</h2>
     <mat-dialog-content>
       <p class="intro">

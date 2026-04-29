@@ -13,6 +13,7 @@ import { forkJoin, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { ApiService } from '../../../core/api.service';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { DialogCloseButtonComponent } from '../../../shared/dialog-close-button/dialog-close-button.component';
 
 interface SurveyTemplate {
   _id: string;
@@ -43,8 +44,10 @@ interface OrgResponse {
     MatProgressSpinnerModule,
     MatTooltipModule,
     TranslateModule,
+    DialogCloseButtonComponent,
   ],
   template: `
+    <app-dialog-close-btn (closed)="dialogRef.close()" />
     <h2 mat-dialog-title>
       <mat-icon>analytics</mat-icon>
       {{ "CONFLICT.newConflictAnalysis" | translate }}
@@ -261,7 +264,7 @@ export class ConflictAnalyzeDialogComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private api: ApiService,
-    private dialogRef: MatDialogRef<ConflictAnalyzeDialogComponent>,
+    public dialogRef: MatDialogRef<ConflictAnalyzeDialogComponent>,
     private translate: TranslateService
   ) {
     this.form = this.fb.group({

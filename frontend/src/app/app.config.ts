@@ -3,6 +3,7 @@ import { provideRouter } from '@angular/router';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { MatNativeDateModule } from '@angular/material/core';
+import { MAT_DIALOG_DEFAULT_OPTIONS } from '@angular/material/dialog';
 import { provideTranslateService } from '@ngx-translate/core';
 import { provideTranslateHttpLoader } from '@ngx-translate/http-loader';
 import { registerLocaleData } from '@angular/common';
@@ -27,5 +28,9 @@ export const appConfig: ApplicationConfig = {
       suffix: '.json',
     }),
     { provide: LOCALE_ID, useValue: 'en' },
+    {
+      provide: MAT_DIALOG_DEFAULT_OPTIONS,
+      useValue: { disableClose: true, hasBackdrop: true },
+    },
   ],
 };

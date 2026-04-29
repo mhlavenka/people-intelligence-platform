@@ -11,6 +11,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ApiService } from '../../../core/api.service';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { parseConflictType } from '../conflict-type.util';
+import { DialogCloseButtonComponent } from '../../../shared/dialog-close-button/dialog-close-button.component';
 
 interface ConflictAnalysis {
   _id: string;
@@ -43,8 +44,10 @@ interface Coachee {
     MatIconModule,
     MatProgressSpinnerModule,
     TranslateModule,
+    DialogCloseButtonComponent,
   ],
   template: `
+    <app-dialog-close-btn (closed)="dialogRef.close()" />
     <h2 mat-dialog-title>
       <mat-icon>psychology</mat-icon>
       {{ "CONFLICT.generateConflictSkillPlan" | translate }}
@@ -144,7 +147,7 @@ interface Coachee {
 })
 export class ConflictIdpDialogComponent implements OnInit {
   private api = inject(ApiService);
-  private dialogRef = inject(MatDialogRef<ConflictIdpDialogComponent>);
+  dialogRef = inject(MatDialogRef<ConflictIdpDialogComponent>);
   private data = inject<{ analyses: ConflictAnalysis[] }>(MAT_DIALOG_DATA);
   private translate = inject(TranslateService);
 

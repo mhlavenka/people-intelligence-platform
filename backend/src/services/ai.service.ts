@@ -244,7 +244,7 @@ ${JSON.stringify(surveyData.aggregatedResponses, null, 2)}
 Please provide:
 1. **Risk Score** (0-100): Overall conflict risk level
 2. **Risk Level**: low/medium/high/critical
-3. **Conflict Types Detected**: List specific conflict patterns observed
+3. **Conflict Types Detected**: List of strings. Each entry MUST follow the format "Label — short rationale sentence." using an em-dash (—) with a space on each side. The label should be 2-5 words naming the pattern (e.g. "Role Ambiguity", "Psychological Safety Deficit"). The rationale should be one concise sentence explaining why this pattern was detected from the data. Do not omit the rationale.
 4. **AI Narrative** (2-3 paragraphs): Professional analysis of team dynamics and conflict indicators. Where divergence metrics are present, reference the structure of disagreement (which dimensions are split vs. uniformly low) WITHOUT speculating about individual respondents.
 5. **Manager Script**: Practical talking points for the manager to address the situation (use interest-based negotiation principles)
 

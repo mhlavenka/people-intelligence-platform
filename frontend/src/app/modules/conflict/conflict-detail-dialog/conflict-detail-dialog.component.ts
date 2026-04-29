@@ -11,6 +11,7 @@ import { MiniGaugeComponent } from '../../../shared/mini-gauge/mini-gauge.compon
 import { RiskBadgeComponent } from '../../../shared/risk-badge/risk-badge.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { parseConflictType } from '../conflict-type.util';
+import { DialogCloseButtonComponent } from '../../../shared/dialog-close-button/dialog-close-button.component';
 
 type ScriptSection =
   | { key: string; label: string; type: 'string'; value: string }
@@ -47,8 +48,10 @@ interface ConflictAnalysis {
     MiniGaugeComponent,
     RiskBadgeComponent,
     TranslateModule,
+    DialogCloseButtonComponent,
   ],
   template: `
+    <app-dialog-close-btn (closed)="dialogRef.close()" />
     <h2 mat-dialog-title>
       <mat-icon>analytics</mat-icon>
       {{ data.name }}
@@ -426,7 +429,7 @@ interface ConflictAnalysis {
 })
 export class ConflictDetailDialogComponent implements OnInit {
   data = inject<ConflictAnalysis>(MAT_DIALOG_DATA);
-  private dialogRef = inject(MatDialogRef<ConflictDetailDialogComponent>);
+  dialogRef = inject(MatDialogRef<ConflictDetailDialogComponent>);
   private api = inject(ApiService);
 
   subAnalyses = signal<ConflictAnalysis[]>([]);
