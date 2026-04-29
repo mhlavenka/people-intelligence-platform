@@ -33,18 +33,24 @@ export async function syncLoginSessionTTL(): Promise<void> {
         index: { keyPattern: TTL_KEY_PATTERN, expireAfterSeconds: seconds },
       });
       console.log(`[LoginSession] TTL synced in place: ${seconds}s (autoLogoutMinutes=${minutes})`);
+      return;
     } catch (err: any) {
       const msg = err?.message || '';
       const code = err?.codeName;
-      if (code === 'IndexNotFound' || /cannot find index|index not found/i.test(msg)) {
-        await LoginSession.collection.createIndex(TTL_KEY_PATTERN, {
-          name: TTL_INDEX_NAME,
-          expireAfterSeconds: seconds,
-        });
-        console.log(`[LoginSession] TTL index created: ${seconds}s`);
-      } else {
-        throw err;
-      }
+      const isMissing = code === 'IndexNotFound' || /cannot find index|index not found/i.test(msg);
+      const isPermDenied = code === 'Unauthorized' || code === 'AtlasError' || /not allowed to do action \[collMod\]/i.test(msg);
+      if (!isMissing && !isPermDenied) throw err;
+      // Fallback: drop + recreate. Required on MongoDB Atlas where the
+      // built-in roles (e.g. atlasAdmin) don't grant the collMod privilege.
+      // There's a brief window where the TTL index is absent — MongoDB's TTL
+      // monitor runs every 60s, so the worst case is a single missed cleanup
+      // pass. Acceptable.
+      try { await LoginSession.collection.dropIndex(TTL_INDEX_NAME); } catch { /* not present */ }
+      await LoginSession.collection.createIndex(TTL_KEY_PATTERN, {
+        name: TTL_INDEX_NAME,
+        expireAfterSeconds: seconds,
+      });
+      console.log(`[LoginSession] TTL index recreated: ${seconds}s (collMod ${isPermDenied ? 'denied — Atlas perms' : 'index missing'})`);
     }
   } catch (err) {
     console.error('[LoginSession] Failed to sync TTL:', err);
