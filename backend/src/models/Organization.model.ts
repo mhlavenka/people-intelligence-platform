@@ -4,7 +4,8 @@ export interface IOrgTheme {
   primaryColor: string;
   accentColor: string;
   backgroundColor: string;
-  surfaceColor: string;
+  surfaceColor: string;     // cards
+  panelColor: string;       // sections / panels (wraps cards)
   headingFont: string;
   bodyFont: string;
   borderRadius: 'sharp' | 'rounded' | 'pill';
@@ -131,6 +132,7 @@ const OrganizationSchema = new Schema<IOrganization>(
         accentColor:     { type: String, default: '#3A9FD6' },
         backgroundColor: { type: String, default: '#EBF5FB' },
         surfaceColor:    { type: String, default: '#ffffff' },
+        panelColor:      { type: String, default: '#ffffff' },
         headingFont:     { type: String, default: 'Inter' },
         bodyFont:        { type: String, default: 'Inter' },
         borderRadius:    { type: String, enum: ['sharp', 'rounded', 'pill'], default: 'rounded' },

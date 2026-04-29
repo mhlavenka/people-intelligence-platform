@@ -4,7 +4,8 @@ export interface OrgTheme {
   primaryColor?: string;
   accentColor?: string;
   backgroundColor?: string;
-  surfaceColor?: string;
+  surfaceColor?: string;     // cards
+  panelColor?: string;       // sections / panels (wraps cards)
   headingFont?: string;
   bodyFont?: string;
   borderRadius?: 'sharp' | 'rounded' | 'pill';
@@ -15,6 +16,7 @@ const DEFAULTS: Required<OrgTheme> = {
   accentColor:     '#3A9FD6',
   backgroundColor: '#EBF5FB',
   surfaceColor:    '#ffffff',
+  panelColor:      '#ffffff',
   headingFont:     'Inter',
   bodyFont:        'Inter',
   borderRadius:    'rounded',
@@ -22,6 +24,25 @@ const DEFAULTS: Required<OrgTheme> = {
 
 const CARD_RADIUS: Record<string, string> = { sharp: '4px',   rounded: '12px', pill: '20px'  };
 const BTN_RADIUS:  Record<string, string> = { sharp: '2px',   rounded: '6px',  pill: '999px' };
+
+/** Pick text colours for a given background using WCAG-style luminance.
+ *  Returns the primary / muted / subtle text triplet so components can use
+ *  one variable for body copy, another for secondary captions/labels. */
+function textOn(bg: string): { primary: string; muted: string; subtle: string } {
+  const m = /^#([0-9a-f]{6})$/i.exec(bg.trim());
+  // Unknown / non-hex: fall back to dark text — safe default for white/light surfaces.
+  if (!m) return { primary: '#1B2A47', muted: '#5a6a7e', subtle: '#9aa5b4' };
+  const hex = m[1]!;
+  const r = parseInt(hex.slice(0, 2), 16) / 255;
+  const g = parseInt(hex.slice(2, 4), 16) / 255;
+  const b = parseInt(hex.slice(4, 6), 16) / 255;
+  // Relative luminance per WCAG 2.x (sRGB → linear → weighted).
+  const lin = (c: number) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+  const L = 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+  return L > 0.5
+    ? { primary: '#1B2A47', muted: '#5a6a7e', subtle: '#9aa5b4' }
+    : { primary: '#ffffff', muted: 'rgba(255,255,255,0.72)', subtle: 'rgba(255,255,255,0.48)' };
+}
 
 @Injectable({ providedIn: 'root' })
 export class ThemeService {
@@ -36,6 +57,23 @@ export class ThemeService {
     root.style.setProperty('--artes-accent',     t.accentColor);
     root.style.setProperty('--artes-bg',         t.backgroundColor);
     root.style.setProperty('--artes-surface',    t.surfaceColor);
+    root.style.setProperty('--artes-panel',      t.panelColor);
+
+    // On-* text colours derived from luminance of each base. Components reading
+    // `var(--artes-on-surface)` / `var(--artes-on-panel)` / `var(--artes-on-bg)`
+    // automatically flip between dark and light text when the org configures a
+    // dark colour, without each component having to encode the switch.
+    const onSurface = textOn(t.surfaceColor);
+    const onPanel   = textOn(t.panelColor);
+    const onBg      = textOn(t.backgroundColor);
+    root.style.setProperty('--artes-on-surface',        onSurface.primary);
+    root.style.setProperty('--artes-on-surface-muted',  onSurface.muted);
+    root.style.setProperty('--artes-on-surface-subtle', onSurface.subtle);
+    root.style.setProperty('--artes-on-panel',          onPanel.primary);
+    root.style.setProperty('--artes-on-panel-muted',    onPanel.muted);
+    root.style.setProperty('--artes-on-panel-subtle',   onPanel.subtle);
+    root.style.setProperty('--artes-on-bg',             onBg.primary);
+    root.style.setProperty('--artes-on-bg-muted',       onBg.muted);
 
     // Border radius
     root.style.setProperty('--artes-radius',     CARD_RADIUS[t.borderRadius] ?? '12px');

@@ -1,5 +1,6 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -7,6 +8,9 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatMenuModule } from '@angular/material/menu';
 import { ApiService } from '../../../core/api.service';
 import { MiniGaugeComponent } from '../../../shared/mini-gauge/mini-gauge.component';
 import { RiskBadgeComponent } from '../../../shared/risk-badge/risk-badge.component';
@@ -29,12 +33,26 @@ interface ConflictAnalysis {
   createdAt: string;
 }
 
+type SortOption = 'recent' | 'risk-desc' | 'risk-asc' | 'name';
+
+const SORT_LABEL_KEYS: Record<SortOption, string> = {
+  'recent':    'CONFLICT.sortRecent',
+  'risk-desc': 'CONFLICT.sortRiskDesc',
+  'risk-asc':  'CONFLICT.sortRiskAsc',
+  'name':      'CONFLICT.sortName',
+};
+
+const RISK_RANK: Record<ConflictAnalysis['riskLevel'], number> = {
+  critical: 4, high: 3, medium: 2, low: 1,
+};
+
 @Component({
   selector: 'app-conflict-analysis',
   standalone: true,
   imports: [
-    CommonModule, MatIconModule, MatButtonModule, MatProgressSpinnerModule,
+    CommonModule, FormsModule, MatIconModule, MatButtonModule, MatProgressSpinnerModule,
     MatDialogModule, MatSnackBarModule, MatTooltipModule,
+    MatFormFieldModule, MatInputModule, MatMenuModule,
     MiniGaugeComponent, RiskBadgeComponent,
     TranslateModule,
   ],
@@ -59,14 +77,56 @@ interface ConflictAnalysis {
     <div class="analyses-section">
       <div class="analyses-header">
         <h2>{{ "CONFLICT.analyses" | translate }}</h2>
-        <span class="analyses-count">{{ analyses().length }} total</span>
+        <span class="analyses-count">
+          @if (searchQuery() || sort() !== 'recent') {
+            {{ filteredAnalyses().length }} / {{ analyses().length }}
+          } @else {
+            {{ analyses().length }}
+          }
+          {{ 'CONFLICT.totalSuffix' | translate }}
+        </span>
+
+        <div class="header-controls">
+          <mat-form-field appearance="outline" class="search-field" subscriptSizing="dynamic">
+            <mat-icon matPrefix>search</mat-icon>
+            <input matInput
+                   [placeholder]="'CONFLICT.searchAnalyses' | translate"
+                   [ngModel]="searchQuery()"
+                   (ngModelChange)="searchQuery.set($event)" />
+            @if (searchQuery()) {
+              <button matSuffix mat-icon-button aria-label="Clear" (click)="searchQuery.set('')">
+                <mat-icon>close</mat-icon>
+              </button>
+            }
+          </mat-form-field>
+
+          <button mat-stroked-button [matMenuTriggerFor]="sortMenu" class="sort-btn">
+            <mat-icon>sort</mat-icon>
+            <span>{{ sortLabelKey() | translate }}</span>
+            <mat-icon class="caret">arrow_drop_down</mat-icon>
+          </button>
+          <mat-menu #sortMenu="matMenu">
+            <button mat-menu-item (click)="sort.set('recent')">
+              <mat-icon>schedule</mat-icon>{{ 'CONFLICT.sortRecent' | translate }}
+            </button>
+            <button mat-menu-item (click)="sort.set('risk-desc')">
+              <mat-icon>arrow_downward</mat-icon>{{ 'CONFLICT.sortRiskDesc' | translate }}
+            </button>
+            <button mat-menu-item (click)="sort.set('risk-asc')">
+              <mat-icon>arrow_upward</mat-icon>{{ 'CONFLICT.sortRiskAsc' | translate }}
+            </button>
+            <button mat-menu-item (click)="sort.set('name')">
+              <mat-icon>sort_by_alpha</mat-icon>{{ 'CONFLICT.sortName' | translate }}
+            </button>
+          </mat-menu>
+        </div>
       </div>
 
       @if (loading()) {
         <div class="loading-center"><mat-spinner diameter="36" /></div>
       } @else {
         <div class="analyses-grid">
-          @for (a of analyses(); track a._id) {
+          @for (a of filteredAnalyses(); track a._id) {
             <div class="analysis-card" [class]="'accent-' + a.riskLevel" (click)="viewAnalysis(a)">
               <div class="analysis-card-top">
                 <div class="mini-gauge-wrap">
@@ -159,15 +219,17 @@ interface ConflictAnalysis {
     }
 
     .analyses-section {
-      background: white; border-radius: 16px;
+      background: var(--artes-panel); border-radius: 16px;
       box-shadow: 0 2px 12px rgba(0,0,0,0.06); margin-bottom: 24px;
     }
     .analyses-header {
       display: flex; align-items: center; gap: 10px;
       padding: 18px 24px; border-bottom: 1px solid #f0f4f8;
-      h2 { font-size: 16px; color: var(--artes-primary); margin: 0; font-weight: 700; }
-      .analyses-count { font-size: 12px; background: #f0f4f8; color: #5a6a7e; padding: 2px 9px; border-radius: 999px; }
-      .new-analysis-btn { margin-left: auto; }
+      h2 { font-size: 16px; color: var(--artes-on-panel, var(--artes-primary)); margin: 0; font-weight: 700; }
+      .analyses-count { font-size: 12px; background: #f0f4f8; color: var(--artes-on-panel-muted, #5a6a7e); padding: 2px 9px; border-radius: 999px; }
+      .header-controls { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+      .search-field { width: 240px; ::ng-deep .mat-mdc-form-field-infix { min-height: 36px; padding: 4px 0; } }
+      .sort-btn { white-space: nowrap; .caret { font-size: 18px; width: 18px; height: 18px; margin-left: 2px; } }
     }
 
     .analyses-grid {
@@ -175,15 +237,28 @@ interface ConflictAnalysis {
       gap: 16px; padding: 16px 20px 20px;
     }
     .analysis-card {
-      background: white; border: 1px solid #e8edf4; border-radius: 14px; padding: 24px;
-      border-left: 4px solid transparent; transition: box-shadow 0.15s; cursor: pointer;
+      /* Each riskLevel sets --accent-color so the card pulls a barely-there
+         tint from the same colour as its left border. color-mix lets us blend
+         on top of whatever the org's surface colour is, so the tint stays
+         subtle on light themes and visible on dark ones. */
+      --accent-color: transparent;
+      background: color-mix(in srgb, var(--accent-color) 5%, var(--artes-surface));
+      border: 1px solid #e8edf4; border-radius: 14px; padding: 24px;
+      border-left: 4px solid var(--accent-color);
+      transition: box-shadow 0.18s ease, transform 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+      cursor: pointer;
       display: flex; flex-direction: column; gap: 16px;
       min-height: 210px;
-      &:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
-      &.accent-low      { border-left-color: #27C4A0; }
-      &.accent-medium   { border-left-color: #f0a500; }
-      &.accent-high     { border-left-color: #e86c3a; }
-      &.accent-critical { border-left-color: #e53e3e; }
+      &:hover {
+        background: color-mix(in srgb, var(--accent-color) 10%, var(--artes-surface));
+        box-shadow: 0 6px 20px color-mix(in srgb, var(--accent-color) 18%, transparent);
+        border-color: color-mix(in srgb, var(--accent-color) 30%, #e8edf4);
+        transform: translateY(-2px);
+      }
+      &.accent-low      { --accent-color: #27C4A0; }
+      &.accent-medium   { --accent-color: #f0a500; }
+      &.accent-high     { --accent-color: #e86c3a; }
+      &.accent-critical { --accent-color: #e53e3e; }
     }
     .analysis-card-top { display: flex; align-items: flex-start; gap: 20px; }
     .mini-gauge-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; }
@@ -238,6 +313,36 @@ interface ConflictAnalysis {
 export class ConflictAnalysisComponent implements OnInit {
   analyses = signal<ConflictAnalysis[]>([]);
   loading = signal(true);
+
+  searchQuery = signal('');
+  sort = signal<SortOption>('recent');
+
+  /** Filtered + sorted view of analyses, recomputed when query/sort/data change. */
+  filteredAnalyses = computed(() => {
+    const q = this.searchQuery().trim().toLowerCase();
+    const list = q
+      ? this.analyses().filter((a) =>
+          (a.name ?? '').toLowerCase().includes(q) ||
+          (a.departmentId ?? '').toLowerCase().includes(q),
+        )
+      : this.analyses().slice();
+
+    switch (this.sort()) {
+      case 'risk-desc':
+        return list.sort((a, b) =>
+          (RISK_RANK[b.riskLevel] - RISK_RANK[a.riskLevel]) || (b.riskScore - a.riskScore));
+      case 'risk-asc':
+        return list.sort((a, b) =>
+          (RISK_RANK[a.riskLevel] - RISK_RANK[b.riskLevel]) || (a.riskScore - b.riskScore));
+      case 'name':
+        return list.sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''));
+      case 'recent':
+      default:
+        return list.sort((a, b) => (new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+    }
+  });
+
+  sortLabelKey = computed(() => SORT_LABEL_KEYS[this.sort()]);
 
   constructor(private api: ApiService, private dialog: MatDialog, private snackBar: MatSnackBar, private router: Router, private translate: TranslateService) {}
 
