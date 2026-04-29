@@ -352,9 +352,13 @@
   "DASHBOARD": {
     "title": "Prehľad organizácie",
     "welcomeBack": "Vitajte späť, {{name}}. Tu je prehľad zdravia vašej organizácie.",
+    "heroEyebrow": "Platforma ARTES",
     "updatedJustNow": "Práve teraz aktualizované",
     "noDataYet": "zatiaľ žiadne údaje",
     "open": "Otvoriť",
+    "status_active": "Aktívne",
+    "status_warning": "Vyžaduje pozornosť",
+    "status_inactive": "Neaktívne",
     "noModulesTitle": "Žiadne dostupné moduly",
     "noModulesDesc": "Vaše predplatné neobsahuje žiadne moduly alebo vaša rola nemá prístup. Kontaktujte svojho administrátora.",
     "upcomingEvents": "Nadchádzajúce udalosti",
@@ -363,20 +367,73 @@
     "joinGoogleMeet": "Pripojiť sa k Google Meet",
     "conflictTitle": "Konfliktná inteligencia™",
     "conflictSubtitle": "Detekcia konfliktov na pracovisku a eskalácia k mediácii",
+    "conflictHighlights": [
+      "Skóre rizika od AI naprieč vzorcami tímových konfliktov",
+      "Diagnostika Tri konverzácie (Fakty · Emócie · Identita)",
+      "Príručky pre manažéra so záujmovo-orientovanými otázkami"
+    ],
     "activeAnalyses": "aktívnych analýz",
     "neuroTitle": "Neuroinklúzia Compass™",
     "neuroSubtitle": "Hodnotenie zrelosti organizačnej neuroinklúzie",
+    "neuroHighlights": [
+      "Viacrozmerný model zrelosti neuro-inklúzie",
+      "Anonymné agregované poznatky s plánom akcií",
+      "Rýchle víťazstvá, strednodobé iniciatívy a dlhodobé zmeny"
+    ],
     "avgMaturityScore": "priemerné skóre zrelosti",
     "successionTitle": "Centrum líderstva a nástupníctva™",
     "successionSubtitle": "AI generované IDP a plánovanie nástupníctva",
+    "successionHighlights": [
+      "IDP podľa modelu GROW, navrhnuté AI",
+      "Sledovanie míľnikov so záznamami v reflektívnom denníku",
+      "Vstupy z EQ-i a 360 prúdia do plánu rozvoja"
+    ],
     "activeIDPs": "aktívnych IDP",
     "coachingTitle": "Koučing",
     "coachingSubtitle": "Spravovať koučovacie vzťahy a sedenia",
+    "coachingHighlights": [
+      "Záväzky, sedenia, zmluvy a hodiny ICF na jednom mieste",
+      "Pred- a po-sedenia formuláre s AI-navrhnutými následnými krokmi",
+      "Verejné rezervačné odkazy so synchronizáciou (Google · Microsoft)"
+    ],
     "activeEngagements": "aktívnych koučovacích vzťahov",
     "assessmentsTitle": "Hodnotenia",
     "assessmentsSubtitle": "Aktívne šablóny hodnotení a zozbierané odpovede",
+    "assessmentsHighlights": [
+      "Vlastné alebo AI generované šablóny: prieskum, rozhovor, hodnotenie",
+      "Opakované priradenia oddeleniam alebo konkrétnym osobám",
+      "Agregovaná analýza s ochranou súkromia skupiny (min. 5)"
+    ],
     "responsesCollected": "zozbieraných odpovedí",
-    "activeAssessmentsResponses": "aktívnych hodnotení · {{responses}} odpovedí"
+    "activeAssessmentsResponses": "aktívnych hodnotení · {{responses}} odpovedí",
+
+    "methodologyEyebrow": "Postavené na overenom výskume",
+    "methodologyTitle": "Rámce za ARTES",
+    "methodologyIntro": "Každý modul stojí na výskume založenom na dôkazoch a desaťročiach skúseností odborníkov. ARTES prekladá akademickú prísnosť do nástrojov, ktoré vaši manažéri, kouči a HR tímy môžu skutočne používať.",
+    "methodHNP": "Harvard Negotiation Project",
+    "methodHNPDesc": "Štyri princípy: oddeľte ľudí od problému, sústreďte sa na záujmy, nie pozície, vymýšľajte možnosti so spoločným prospechom, trvajte na objektívnych kritériách.",
+    "methodHNPCite": "Fisher, Ury & Patton — Getting to Yes",
+    "methodThreeConv": "Tri konverzácie",
+    "methodThreeConvDesc": "Každá ťažká konverzácia obsahuje tri vrstvy: čo sa stalo (rôzne príbehy), pocity (potlačené emócie) a identita (ohrozenie sebaobrazu).",
+    "methodThreeConvCite": "Stone, Patton & Heen — Difficult Conversations",
+    "methodThirdSide": "Tretia strana",
+    "methodThirdSideDesc": "Keď bilaterálne riešenie zlyhá, okolitá komunita — HR, kouči, kolegovia, mediátori — sa stáva štruktúrovanou treťou stranou. Eskalácia ako vedomé odovzdanie, nie zlyhanie.",
+    "methodThirdSideCite": "William Ury — The Third Side",
+    "methodGROW": "Model GROW",
+    "methodGROWDesc": "Goal · Reality · Options · Will. Štruktúrovaný koučovací rámec, ktorý poháňa každý IDP, ktorý ARTES vygeneruje.",
+    "methodGROWCite": "Whitmore — Coaching for Performance",
+
+    "howEyebrow": "Ako funguje ARTES",
+    "howTitle": "Od signálu k akcii v troch krokoch",
+    "howStep1Title": "Počúvať",
+    "howStep1Desc": "Prieskumy, rozhovory a hodnotenia zbierajú anonymné, agregované dáta z celého tímu. Ochrana súkromia skupiny (min. 5) sa uplatňuje všade.",
+    "howStep2Title": "Diagnostikovať",
+    "howStep2Desc": "Claude analyzuje signál cez záujmovo-orientovanú metodológiu vedomú identity — odhaľuje štrukturálne príčiny, neprideľuje vinu jednotlivcom.",
+    "howStep3Title": "Konať",
+    "howStep3Desc": "Skripty pre manažéra, odporúčané akcie, individuálne rozvojové plány a štruktúrovaná eskalačná cesta k profesionálnej mediácii v prípade potreby.",
+
+    "quoteText": "Konflikt a rast nie sú protiklady — sú to jedna konverzácia o tom, čo navzájom potrebujeme, aby sme robili svoju najlepšiu prácu.",
+    "quoteAttr": "Helena Coaching · Metodológia ARTES"
   },
   "SETTINGS": {
     "title": "Nastavenia",
