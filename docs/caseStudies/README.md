@@ -60,3 +60,43 @@ drop responses straight from these files into the database.
   scenario, not strictly necessary for the metric pipeline.
 - Scale defaults to 1–10 because the seed instrument doesn't set
   `scale_range` (the survey-take renderer falls back to that range).
+
+
+## How to run when you're ready
+
+From /backend:
+
+# Dry-run (safe — re-runs the inspection without touching the DB)
+npx ts-node src/scripts/seed-divergence-case-studies.ts
+
+# Apply all 10 cases
+npx ts-node src/scripts/seed-divergence-case-studies.ts --apply
+
+# Apply just one case (e.g. for iterating on case 04)
+npx ts-node src/scripts/seed-divergence-case-studies.ts --case 04 --apply
+
+What --apply will do
+
+1. Add 10 new department slugs to Onkwe.departments[] (first run only).
+2. For each case: delete any existing SurveyResponse + ConflictAnalysis documents scoped to (org=Onkwe,
+   dept=case-N) (idempotent re-seeds).
+3. Insert the per-respondent rows from each .md matrix as anonymous SurveyResponse documents.
+4. Run the live computeQuality() per row so case 10's straightliner is naturally flagged
+   (acceptedInAnalysis = false) by the actual filter — no manual override.
+
+After seeding, to run analyses manually
+
+For each case:
+1. Open ARTES → Conflict → Analysis
+2. Click Run Analysis
+3. Pick the Bi-Weekly Pulse template
+4. Pick the case department (e.g. case-04-shifts)
+5. Name it (e.g. Case 04 — Two Shifts)
+6. Submit
+
+Or via API directly: POST /api/conflict/analyze with { templateId, departmentId: 'case-04-shifts', name:
+'...' }.
+
+Once the analyses are in, the divergence panel + radar + heatmap + sparkline + sidebar all light up
+against real test data — and we can compare each case's actual numbers against the predicted signatures
+in the .md files.
