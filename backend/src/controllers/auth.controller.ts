@@ -28,9 +28,13 @@ interface TokenPayload {
   permissions?: string[];
   customRoleId?: string;
   customRoleName?: string;
+  // Stable per-login identifier. Minted at login/verify2fa, preserved across
+  // refreshes. Used as the LoginSession upsert key so each browser/device
+  // login is tracked as exactly one row regardless of IP changes or refreshes.
+  sessionId?: string;
 }
 
-async function trackLoginSession(req: Request, userId: string, organizationId: string, accessToken: string): Promise<void> {
+async function trackLoginSession(req: Request, userId: string, organizationId: string, sessionId: string, accessToken: string): Promise<void> {
   try {
     const tokenHash = crypto.createHash('sha256').update(accessToken).digest('hex');
     const ua = req.headers['user-agent'] || 'Unknown device';
@@ -38,8 +42,8 @@ async function trackLoginSession(req: Request, userId: string, organizationId: s
     const device = parseDevice(ua);
 
     await LoginSession.findOneAndUpdate(
-      { userId, device, ip },
-      { userId, organizationId, tokenHash, device, ip, lastActiveAt: new Date() },
+      { userId, sessionId },
+      { userId, organizationId, sessionId, tokenHash, device, ip, lastActiveAt: new Date() },
       { upsert: true },
     );
   } catch (err) {
@@ -207,9 +211,10 @@ export async function login(req: Request, res: Response, next: NextFunction): Pr
     await user.save();
 
     const payload = await buildPayload(user);
+    payload.sessionId = crypto.randomUUID();
     const tokens = generateTokens(payload);
 
-    trackLoginSession(req, user._id.toString(), user.organizationId.toString(), tokens.accessToken);
+    trackLoginSession(req, user._id.toString(), user.organizationId.toString(), payload.sessionId, tokens.accessToken);
 
     logActivity({
       org: user.organizationId,
@@ -264,9 +269,15 @@ export async function refresh(req: Request, res: Response, next: NextFunction): 
       payload = cleanPayload;
     }
 
+    // Preserve the per-login sessionId across refreshes. Older tokens issued
+    // before sessionId existed won't have one — mint a fresh one so they get
+    // tracked correctly going forward (results in one extra row at first
+    // refresh post-deploy, then stable).
+    payload.sessionId = decoded.sessionId || crypto.randomUUID();
+
     const tokens = generateTokens(payload);
 
-    trackLoginSession(req, payload.userId, payload.organizationId, tokens.accessToken);
+    trackLoginSession(req, payload.userId, payload.organizationId, payload.sessionId, tokens.accessToken);
 
     res.json({ ...tokens, user: payload });
   } catch (err) {
@@ -316,7 +327,10 @@ export async function verify2fa(req: Request, res: Response, next: NextFunction)
     await user.save();
 
     const payload = await buildPayload(user);
+    payload.sessionId = crypto.randomUUID();
     const tokens = generateTokens(payload);
+
+    trackLoginSession(req, user._id.toString(), user.organizationId.toString(), payload.sessionId, tokens.accessToken);
 
     logActivity({
       org: user.organizationId,

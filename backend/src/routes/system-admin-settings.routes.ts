@@ -2,6 +2,7 @@ import { Router, Response, NextFunction } from 'express';
 import { authenticateToken, requireRole, AuthRequest } from '../middleware/auth.middleware';
 import { AppSettings } from '../models/AppSettings.model';
 import { invalidateFromCache } from '../services/email.service';
+import { syncLoginSessionTTL } from '../services/loginSessionPolicy.service';
 
 const router = Router();
 
@@ -45,6 +46,11 @@ router.put('/', async (req: AuthRequest, res: Response, next: NextFunction) => {
     // sender values immediately rather than waiting for the 60s TTL.
     if (emailDelivery) invalidateFromCache();
 
+    // Re-sync the LoginSession TTL when the inactivity timeout changes.
+    if (sessionPolicy && 'autoLogoutMinutes' in sessionPolicy) {
+      await syncLoginSessionTTL();
+    }
+
     res.json(settings);
   } catch (e) {
     next(e);
@@ -56,6 +62,7 @@ router.post('/reset', async (req: AuthRequest, res: Response, next: NextFunction
   try {
     await AppSettings.deleteMany({});
     const settings = await AppSettings.create({ updatedBy: req.user!.userId });
+    await syncLoginSessionTTL();
     res.json(settings);
   } catch (e) {
     next(e);

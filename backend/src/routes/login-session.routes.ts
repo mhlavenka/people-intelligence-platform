@@ -67,7 +67,10 @@ router.delete('/', async (req: AuthRequest, res: Response, next: NextFunction) =
   }
 });
 
-// GET /api/auth/sessions/org — admin: list all org sessions
+// GET /api/auth/sessions/org — admin: list active org sessions.
+// The LoginSession TTL is synced to AppSettings.sessionPolicy.autoLogoutMinutes
+// (see loginSessionPolicy.service.ts), so any row in the collection is by
+// definition still within the active window. No additional filter needed.
 router.get('/org', requireRole('admin', 'hr_manager'), async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const sessions = await LoginSession.find({ organizationId: req.user!.organizationId })
