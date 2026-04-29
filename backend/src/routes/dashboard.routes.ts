@@ -12,6 +12,7 @@ import { CoachingSession } from '../models/CoachingSession.model';
 import { JournalSessionNote } from '../models/JournalSessionNote.model';
 import { JournalReflectiveEntry } from '../models/JournalReflectiveEntry.model';
 import { User } from '../models/User.model';
+import { ActivityLog } from '../models/ActivityLog.model';
 
 const router = Router();
 router.use(authenticateToken, tenantResolver);
@@ -19,56 +20,90 @@ router.use(authenticateToken, tenantResolver);
 router.get('/activity', async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const orgId = req.user!.organizationId;
-    const LIMIT = 5;
+    const PER_SOURCE = 25;
+    const totalCap = Math.min(Number(req.query['limit']) || 50, 500);
+
+    // Cursor — load entries strictly older than this createdAt (used by Load more).
+    const sinceParam = typeof req.query['since'] === 'string' ? req.query['since'] : '';
+    const sinceDate = sinceParam ? new Date(sinceParam) : null;
+    const sinceValid = sinceDate && !isNaN(sinceDate.getTime()) ? sinceDate : null;
+
+    // Explicit date-range filters (?from=ISO inclusive, ?to=ISO inclusive).
+    const fromParam = typeof req.query['from'] === 'string' ? req.query['from'] : '';
+    const toParam   = typeof req.query['to']   === 'string' ? req.query['to']   : '';
+    const fromDate = fromParam ? new Date(fromParam) : null;
+    const toDate   = toParam   ? new Date(toParam)   : null;
+    const fromValid = fromDate && !isNaN(fromDate.getTime()) ? fromDate : null;
+    const toValid   = toDate   && !isNaN(toDate.getTime())   ? toDate   : null;
+
+    const dateClause: Record<string, Date> = {};
+    if (sinceValid) dateClause['$lt']  = sinceValid;  // cursor wins over explicit `to`
+    else if (toValid) dateClause['$lte'] = toValid;
+    if (fromValid)  dateClause['$gte'] = fromValid;
+    const dateFilter = Object.keys(dateClause).length ? { createdAt: dateClause } : {};
+
+    const typeFilter = typeof req.query['type'] === 'string' && req.query['type'] !== 'all'
+      ? String(req.query['type']) : null;
 
     const [
       surveyResponses, conflictAnalyses, idps, neuroinclusions,
       engagements, sessions, journalNotes, reflectiveEntries,
+      activityLogs,
     ] = await Promise.all([
-      SurveyResponse.find({ organizationId: orgId })
+      SurveyResponse.find({ organizationId: orgId, ...dateFilter })
         .sort({ createdAt: -1 })
-        .limit(LIMIT)
+        .limit(PER_SOURCE)
         .populate<{ templateId: { title: string; moduleType: string } }>('templateId', 'title moduleType')
         .lean()
         .setOptions({ bypassTenantCheck: true }),
 
-      ConflictAnalysis.find({ organizationId: orgId })
+      ConflictAnalysis.find({ organizationId: orgId, ...dateFilter })
         .sort({ createdAt: -1 })
-        .limit(LIMIT)
+        .limit(PER_SOURCE)
         .lean(),
 
-      DevelopmentPlan.find({ organizationId: orgId })
+      DevelopmentPlan.find({ organizationId: orgId, ...dateFilter })
         .sort({ createdAt: -1 })
-        .limit(LIMIT)
+        .limit(PER_SOURCE)
         .lean(),
 
-      NeuroinclustionAssessment.find({ organizationId: orgId })
+      NeuroinclustionAssessment.find({ organizationId: orgId, ...dateFilter })
         .sort({ createdAt: -1 })
-        .limit(LIMIT)
+        .limit(PER_SOURCE)
         .lean(),
 
-      CoachingEngagement.find({ organizationId: orgId })
+      CoachingEngagement.find({ organizationId: orgId, ...dateFilter })
         .sort({ createdAt: -1 })
-        .limit(LIMIT)
+        .limit(PER_SOURCE)
         .populate('coacheeId', 'firstName lastName')
         .lean(),
 
-      CoachingSession.find({ organizationId: orgId })
+      CoachingSession.find({ organizationId: orgId, ...dateFilter })
         .sort({ createdAt: -1 })
-        .limit(LIMIT)
+        .limit(PER_SOURCE)
         .populate('coacheeId', 'firstName lastName')
         .lean(),
 
-      JournalSessionNote.find({ organizationId: orgId })
+      JournalSessionNote.find({ organizationId: orgId, ...dateFilter })
         .sort({ createdAt: -1 })
-        .limit(LIMIT)
+        .limit(PER_SOURCE)
         .populate('coacheeId', 'firstName lastName')
         .lean(),
 
-      JournalReflectiveEntry.find({ organizationId: orgId })
+      JournalReflectiveEntry.find({ organizationId: orgId, ...dateFilter })
         .sort({ createdAt: -1 })
-        .limit(LIMIT)
+        .limit(PER_SOURCE)
         .populate('coachId', 'firstName lastName')
+        .lean(),
+
+      ActivityLog.find({
+        organizationId: orgId,
+        ...dateFilter,
+        ...(typeFilter ? { type: typeFilter } : {}),
+      })
+        .sort({ createdAt: -1 })
+        .limit(totalCap)
+        .populate<{ actorUserId: { firstName: string; lastName: string } | null }>('actorUserId', 'firstName lastName')
         .lean(),
     ]);
 
@@ -167,12 +202,47 @@ router.get('/activity', async (req: AuthRequest, res: Response, next: NextFuncti
       });
     }
 
-    items.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    // Persisted ActivityLog events (auth, settings, lifecycle changes — anything
+    // that doesn't leave a record in another collection)
+    for (const a of activityLogs) {
+      const actor = a.actorUserId as unknown as { firstName?: string; lastName?: string } | null;
+      const actorName = actor ? `${actor.firstName ?? ''} ${actor.lastName ?? ''}`.trim() : '';
+      const detailParts = [a.detail, actorName ? `by ${actorName}` : ''].filter(Boolean);
+      items.push({
+        type: a.type,
+        label: a.label,
+        detail: detailParts.join(' — '),
+        createdAt: a.createdAt,
+      });
+    }
 
-    res.json(items.slice(0, 20));
+    // Apply backend-side type filter to the read-time aggregator output too,
+    // so the ?type=… query param has consistent semantics across both sources.
+    const filtered = typeFilter ? items.filter((i) => i.type === typeFilter) : items;
+    filtered.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+
+    res.json(filtered.slice(0, totalCap));
   } catch (e) {
     next(e);
   }
+});
+
+/** Distinct ActivityLog event types in the org — drives the type-filter
+ *  dropdown on the activity-log page. Returned independently of the
+ *  current filter so the dropdown stays comprehensive. We also include
+ *  the legacy aggregator buckets so the frontend can still filter on
+ *  inferred entries (survey_response, conflict_analysis, …). */
+router.get('/activity-types', async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const orgId = req.user!.organizationId;
+    const distinct = await ActivityLog.distinct('type', { organizationId: orgId });
+    const aggregatorTypes = [
+      'survey_response', 'conflict_analysis', 'idp', 'neuroinclusion',
+      'coaching_engagement', 'coaching_session', 'journal_note', 'journal_reflective',
+    ];
+    const all = Array.from(new Set([...distinct, ...aggregatorTypes])).sort();
+    res.json(all);
+  } catch (e) { next(e); }
 });
 
 router.get('/stats', async (req: AuthRequest, res: Response, next: NextFunction) => {

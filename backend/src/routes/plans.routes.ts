@@ -1,6 +1,7 @@
 import { Router, Response, NextFunction } from 'express';
 import { authenticateToken, requireRole, AuthRequest } from '../middleware/auth.middleware';
 import { Plan } from '../models/Plan.model';
+import { logActivity } from '../services/activityLog.service';
 
 const router = Router();
 router.use(authenticateToken);
@@ -54,6 +55,14 @@ router.post('/', async (req: AuthRequest, res: Response, next: NextFunction): Pr
       sortOrder: sortOrder ?? 0,
     });
 
+    // Plans are global (no organizationId) — log against the system-admin's home org.
+    logActivity({
+      org: req.user!.organizationId, actor: req.user!.userId,
+      type: 'sysadmin.plan.created', label: 'Plan created (system-admin)',
+      detail: `${plan.key} — ${plan.name}`,
+      refModel: 'Plan', refId: plan._id,
+    });
+
     res.status(201).json(plan);
   } catch (e: unknown) {
     if ((e as { code?: number }).code === 11000) {
@@ -88,6 +97,12 @@ router.put('/:id', async (req: AuthRequest, res: Response, next: NextFunction): 
     if (sortOrder !== undefined) plan.sortOrder = sortOrder;
 
     await plan.save();
+    logActivity({
+      org: req.user!.organizationId, actor: req.user!.userId,
+      type: 'sysadmin.plan.updated', label: 'Plan updated (system-admin)',
+      detail: `${plan.key} — ${plan.name}`,
+      refModel: 'Plan', refId: plan._id,
+    });
     res.json(plan);
   } catch (e: unknown) {
     if ((e as { code?: number }).code === 11000) {
@@ -106,6 +121,11 @@ router.delete('/:id', async (req: AuthRequest, res: Response, next: NextFunction
       res.status(404).json({ error: req.t('errors.planNotFound') });
       return;
     }
+    logActivity({
+      org: req.user!.organizationId, actor: req.user!.userId,
+      type: 'sysadmin.plan.deleted', label: 'Plan deleted (system-admin)',
+      detail: `${plan.key} — ${plan.name}`,
+    });
     res.json({ message: 'Plan deleted' });
   } catch (e) {
     next(e);

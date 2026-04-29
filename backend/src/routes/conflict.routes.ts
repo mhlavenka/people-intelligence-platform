@@ -13,6 +13,7 @@ import {
   updateProfessionalReview,
   generateActionIntake,
 } from '../controllers/conflict.controller';
+import { logActivity } from '../services/activityLog.service';
 
 const router = Router();
 
@@ -89,6 +90,11 @@ router.delete(
       await ConflictAnalysis.deleteMany({
         parentId: req.params['id'],
         organizationId: req.user!.organizationId,
+      });
+      logActivity({
+        org: req.user!.organizationId, actor: req.user!.userId,
+        type: 'conflict.analysis.deleted', label: 'Conflict analysis deleted',
+        detail: analysis.name,
       });
       res.json({ message: 'Analysis deleted' });
     } catch (e) { next(e); }

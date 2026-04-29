@@ -17,6 +17,7 @@ import { CustomRole } from '../models/CustomRole.model';
 import { SystemRoleOverride } from '../models/SystemRoleOverride.model';
 import { SYSTEM_ROLE_PERMISSIONS } from '../config/permissions';
 import { config } from '../config/env';
+import { logActivity } from '../services/activityLog.service';
 
 interface TokenPayload {
   userId: string;
@@ -140,6 +141,15 @@ export async function register(req: Request, res: Response, next: NextFunction):
       lastName,
     });
 
+    logActivity({
+      org: org._id,
+      actor: user._id,
+      type: 'auth.register',
+      label: 'Organization registered',
+      detail: `${org.name} — admin ${email}`,
+      refModel: 'Organization', refId: org._id,
+    });
+
     const payload = await buildPayload(user);
     const tokens = generateTokens(payload);
 
@@ -200,6 +210,15 @@ export async function login(req: Request, res: Response, next: NextFunction): Pr
     const tokens = generateTokens(payload);
 
     trackLoginSession(req, user._id.toString(), user.organizationId.toString(), tokens.accessToken);
+
+    logActivity({
+      org: user.organizationId,
+      actor: user._id,
+      type: 'auth.login',
+      label: 'Signed in',
+      detail: user.email,
+      refModel: 'User', refId: user._id,
+    });
 
     res.json({
       ...tokens,
@@ -299,6 +318,15 @@ export async function verify2fa(req: Request, res: Response, next: NextFunction)
     const payload = await buildPayload(user);
     const tokens = generateTokens(payload);
 
+    logActivity({
+      org: user.organizationId,
+      actor: user._id,
+      type: 'auth.login.2fa',
+      label: 'Signed in (2FA)',
+      detail: user.email,
+      refModel: 'User', refId: user._id,
+    });
+
     res.json({
       ...tokens,
       user: {
@@ -330,6 +358,14 @@ export async function forgotPassword(req: Request, res: Response, next: NextFunc
     if (user) {
       // TODO: Generate reset token, hash it, store it, send email
       console.log(`[Auth] Password reset requested for ${email}`);
+      logActivity({
+        org: user.organizationId,
+        actor: user._id,
+        type: 'auth.password.reset_requested',
+        label: 'Password reset requested',
+        detail: user.email,
+        refModel: 'User', refId: user._id,
+      });
     }
     res.json({ message: 'If that email exists, a reset link has been sent' });
   } catch (error) {

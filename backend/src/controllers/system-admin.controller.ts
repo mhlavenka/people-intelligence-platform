@@ -5,6 +5,7 @@ import mongoose from 'mongoose';
 import { AuthRequest } from '../middleware/auth.middleware';
 import { Organization } from '../models/Organization.model';
 import { User } from '../models/User.model';
+import { logActivity } from '../services/activityLog.service';
 
 const bypass = { bypassTenantCheck: true };
 
@@ -81,6 +82,12 @@ export async function createOrganization(req: AuthRequest, res: Response, next: 
     if (existing) { res.status(409).json({ error: t(req, 'errors.slugTaken') }); return; }
 
     const org = await Organization.create(req.body);
+    logActivity({
+      org: org._id, actor: req.user!.userId,
+      type: 'sysadmin.org.created', label: 'Organization created (by system-admin)',
+      detail: `${org.name} (${org.slug})`,
+      refModel: 'Organization', refId: org._id,
+    });
     res.status(201).json(org);
   } catch (e) { next(e); }
 }
@@ -99,6 +106,12 @@ export async function updateOrganization(req: AuthRequest, res: Response, next: 
     ).setOptions(bypass);
 
     if (!org) { res.status(404).json({ error: t(req, 'errors.organizationNotFound') }); return; }
+    logActivity({
+      org: org._id, actor: req.user!.userId,
+      type: 'sysadmin.org.updated', label: 'Organization updated (by system-admin)',
+      detail: org.name,
+      refModel: 'Organization', refId: org._id,
+    });
     res.json(org);
   } catch (e) { next(e); }
 }
@@ -146,6 +159,12 @@ export async function startOrgTrial(req: AuthRequest, res: Response, next: NextF
     org.trialEndsAt = end;
 
     await org.save();
+    logActivity({
+      org: org._id, actor: req.user!.userId,
+      type: 'sysadmin.org.trial_started', label: 'Trial started (by system-admin)',
+      detail: `Plan ${org.plan} until ${end.toISOString().slice(0, 10)}`,
+      refModel: 'Organization', refId: org._id,
+    });
     res.json(org);
   } catch (e) { next(e); }
 }
@@ -167,6 +186,12 @@ export async function endOrgTrial(req: AuthRequest, res: Response, next: NextFun
     org.previousMaxUsers = undefined;
     org.trialEndsAt = undefined;
     await org.save();
+    logActivity({
+      org: org._id, actor: req.user!.userId,
+      type: 'sysadmin.org.trial_ended', label: 'Trial ended (by system-admin)',
+      detail: `Reverted to plan ${org.plan}`,
+      refModel: 'Organization', refId: org._id,
+    });
     res.json(org);
   } catch (e) { next(e); }
 }
@@ -180,6 +205,12 @@ export async function suspendOrganization(req: AuthRequest, res: Response, next:
       { new: true }
     ).setOptions(bypass);
     if (!org) { res.status(404).json({ error: t(req, 'errors.organizationNotFound') }); return; }
+    logActivity({
+      org: org._id, actor: req.user!.userId,
+      type: 'sysadmin.org.suspended', label: 'Organization suspended (by system-admin)',
+      detail: org.name,
+      refModel: 'Organization', refId: org._id,
+    });
     res.json(org);
   } catch (e) { next(e); }
 }
@@ -208,6 +239,13 @@ export async function updateOrgUser(req: AuthRequest, res: Response, next: NextF
       { new: true }
     ).setOptions(bypass);
     if (!user) { res.status(404).json({ error: t(req, 'errors.userNotFound') }); return; }
+    logActivity({
+      org: req.params['id']!, actor: req.user!.userId,
+      type: user.isActive ? 'sysadmin.org.user_activated' : 'sysadmin.org.user_deactivated',
+      label: user.isActive ? 'User activated (by system-admin)' : 'User deactivated (by system-admin)',
+      detail: `${user.firstName} ${user.lastName} <${user.email}>`,
+      refModel: 'User', refId: user._id,
+    });
     res.json(user);
   } catch (e) { next(e); }
 }

@@ -6,6 +6,7 @@ import { eqiParser } from '../services/eqi-pdf-parser.service';
 import { eqiImportService, ImportOptions } from '../services/eqi-import.service';
 import { EqiImportAudit } from '../models/EqiImportAudit.model';
 import { EqiScoreRecord } from '../models/EqiScoreRecord.model';
+import { logActivity } from '../services/activityLog.service';
 
 const router = Router();
 router.use(authenticateToken, tenantResolver, requirePermission('IMPORT_EQI'));
@@ -62,6 +63,13 @@ router.post('/single', upload.single('pdf'), async (req: AuthRequest, res: Respo
     options.coachId = req.user!.userId;
 
     const result = await eqiImportService.importSinglePDF(buf, options);
+    if (result.success) {
+      logActivity({
+        org: req.user!.organizationId, actor: req.user!.userId,
+        type: 'eqi.imported', label: 'EQ-i score imported',
+        detail: req.file.originalname,
+      });
+    }
     res.status(result.success ? 201 : 400).json(result);
   } catch (e) { next(e); }
 });
@@ -93,6 +101,11 @@ router.post('/batch', upload.array('pdfs', 20), async (req: AuthRequest, res: Re
     }));
 
     const result = await eqiImportService.importBatch(fileEntries, batchOptions);
+    logActivity({
+      org: req.user!.organizationId, actor: req.user!.userId,
+      type: 'eqi.imported.batch', label: 'EQ-i batch import',
+      detail: `${files.length} file(s)`,
+    });
     res.json(result);
   } catch (e) { next(e); }
 });
@@ -180,6 +193,12 @@ router.delete('/record/:scoreId', async (req: AuthRequest, res: Response, next: 
       { importId: scoreRecord.importId, organizationId: req.user!.organizationId },
       { erasedAt: new Date() }
     );
+
+    logActivity({
+      org: req.user!.organizationId, actor: req.user!.userId,
+      type: 'eqi.erased', label: 'EQ-i record erased (right to erasure)',
+      detail: scoreRecord.importId,
+    });
 
     res.json({
       message: 'Client data erased',

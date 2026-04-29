@@ -12,6 +12,7 @@ import { createHubNotification, notifyCoachIntakeSubmitted } from '../services/h
 import { sendEmail } from '../services/email.service';
 import { dispatchAssignment, computeNextFireAt } from '../services/surveyDispatch.service';
 import { config } from '../config/env';
+import { logActivity } from '../services/activityLog.service';
 
 /**
  * Build the submissionToken used as the dedup key on SurveyResponse.
@@ -88,6 +89,12 @@ router.post(
         ...req.body,
         organizationId: req.user!.organizationId,
         createdBy: req.user!.userId,
+      });
+      logActivity({
+        org: req.user!.organizationId, actor: req.user!.userId,
+        type: 'survey.template.created', label: 'Intake template created',
+        detail: `${template.title} (${template.moduleType}/${template.intakeType})`,
+        refModel: 'SurveyTemplate', refId: template._id,
       });
       res.status(201).json(template);
     } catch (e) {
@@ -388,6 +395,18 @@ router.put(
         res.status(404).json({ error: req.t('errors.intakeTemplateNotFound') });
         return;
       }
+      const isActiveChange = Object.prototype.hasOwnProperty.call(req.body, 'isActive');
+      logActivity({
+        org: req.user!.organizationId, actor: req.user!.userId,
+        type: isActiveChange
+          ? (template.isActive ? 'survey.template.activated' : 'survey.template.deactivated')
+          : 'survey.template.updated',
+        label: isActiveChange
+          ? (template.isActive ? 'Intake template activated' : 'Intake template deactivated')
+          : 'Intake template updated',
+        detail: template.title,
+        refModel: 'SurveyTemplate', refId: template._id,
+      });
       res.json(template);
     } catch (e) {
       next(e);
@@ -593,6 +612,11 @@ router.delete(
         }
       }
 
+      logActivity({
+        org: req.user!.organizationId, actor: req.user!.userId,
+        type: 'survey.template.deleted', label: 'Intake template deleted',
+        detail: template.title,
+      });
       res.json({ message: 'Template deleted' });
     } catch (e) {
       next(e);
@@ -818,6 +842,12 @@ router.delete(
         organizationId: req.user!.organizationId,
         templateId: req.params['templateId'],
       });
+      logActivity({
+        org: req.user!.organizationId, actor: req.user!.userId,
+        type: 'survey.responses.cleared', label: 'Survey responses cleared',
+        detail: `${result.deletedCount} responses removed`,
+        refModel: 'SurveyTemplate', refId: req.params['templateId'],
+      });
       res.json({ message: 'Responses cleared', deletedCount: result.deletedCount });
     } catch (e) {
       next(e);
@@ -949,6 +979,13 @@ router.post(
         sendEmail: false,  // initial fire is hub-only to match prior behaviour
       });
 
+      const recipientCount = (userIds.length || 0) + (departments.length || 0);
+      logActivity({
+        org: req.user!.organizationId, actor: req.user!.userId,
+        type: 'survey.assignment.created', label: 'Intake assigned',
+        detail: `${template.title} — ${recipientCount} recipient(s)${recurrenceDoc ? ', recurring' : ''}`,
+        refModel: 'SurveyAssignment', refId: assignment._id,
+      });
       res.status(201).json({ assignment, notifiedCount: result.notifiedCount });
     } catch (e) { next(e); }
   },
@@ -1037,6 +1074,11 @@ router.delete(
         organizationId: req.user!.organizationId,
       });
       if (!result) { res.status(404).json({ error: req.t('errors.assignmentNotFound') }); return; }
+      logActivity({
+        org: req.user!.organizationId, actor: req.user!.userId,
+        type: 'survey.assignment.deleted', label: 'Intake assignment deleted',
+        refModel: 'SurveyAssignment', refId: result._id,
+      });
       res.json({ deleted: true });
     } catch (e) { next(e); }
   },

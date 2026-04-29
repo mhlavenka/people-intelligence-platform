@@ -12,6 +12,7 @@ import { User } from '../models/User.model';
 import { sendEmail } from '../services/email.service';
 import { config } from '../config/env';
 import { ensureUserPublicSlug } from './booking.routes';
+import { logActivity } from '../services/activityLog.service';
 
 const s3 = new S3Client({
   region: config.aws.region,
@@ -196,6 +197,11 @@ router.put('/me/password', async (req: AuthRequest, res: Response, next: NextFun
     if (!match) { res.status(400).json({ error: req.t('errors.currentPasswordIncorrect') }); return; }
     user.passwordHash = await bcrypt.hash(newPassword, 12);
     await user.save();
+    logActivity({
+      org: user.organizationId, actor: user._id,
+      type: 'auth.password.changed', label: 'Password changed', detail: user.email,
+      refModel: 'User', refId: user._id,
+    });
     res.json({ message: 'Password updated successfully.' });
   } catch (e) { next(e); }
 });
@@ -237,6 +243,11 @@ router.post('/me/2fa/enable', async (req: AuthRequest, res: Response, next: Next
 
     user.twoFactorEnabled = true;
     await user.save();
+    logActivity({
+      org: user.organizationId, actor: user._id,
+      type: 'auth.2fa.enabled', label: 'Two-factor authentication enabled', detail: user.email,
+      refModel: 'User', refId: user._id,
+    });
     res.json({ message: 'Two-factor authentication enabled.' });
   } catch (e) { next(e); }
 });
@@ -257,6 +268,11 @@ router.delete('/me/2fa', async (req: AuthRequest, res: Response, next: NextFunct
     user.twoFactorEnabled = false;
     user.twoFactorSecret = undefined;
     await user.save();
+    logActivity({
+      org: user.organizationId, actor: user._id,
+      type: 'auth.2fa.disabled', label: 'Two-factor authentication disabled', detail: user.email,
+      refModel: 'User', refId: user._id,
+    });
     res.json({ message: 'Two-factor authentication disabled.' });
   } catch (e) { next(e); }
 });
@@ -388,6 +404,12 @@ router.post(
         isCoachee: isCoachee === true || role === 'coachee',
         canChooseCoach: typeof canChooseCoach === 'boolean' ? canChooseCoach : undefined,
       });
+      logActivity({
+        org: req.user!.organizationId, actor: req.user!.userId,
+        type: 'user.created', label: 'User created',
+        detail: `${firstName} ${lastName} <${email}> — ${role}`,
+        refModel: 'User', refId: user._id,
+      });
       res.status(201).json({
         id: user._id,
         email: user.email,
@@ -418,6 +440,18 @@ router.put(
         res.status(404).json({ error: req.t('errors.userNotFound') });
         return;
       }
+      const isActiveChange = Object.prototype.hasOwnProperty.call(safeBody, 'isActive');
+      logActivity({
+        org: req.user!.organizationId, actor: req.user!.userId,
+        type: isActiveChange
+          ? (user.isActive ? 'user.activated' : 'user.deactivated')
+          : 'user.updated',
+        label: isActiveChange
+          ? (user.isActive ? 'User activated' : 'User deactivated')
+          : 'User updated',
+        detail: `${user.firstName} ${user.lastName} <${user.email}>`,
+        refModel: 'User', refId: user._id,
+      });
       res.json(user);
     } catch (e) {
       next(e);
@@ -442,6 +476,11 @@ router.delete(
         res.status(404).json({ error: req.t('errors.userNotFound') });
         return;
       }
+      logActivity({
+        org: req.user!.organizationId, actor: req.user!.userId,
+        type: 'user.deleted', label: 'User deleted',
+        detail: `${user.firstName} ${user.lastName} <${user.email}>`,
+      });
       res.json({ message: 'User deleted' });
     } catch (e) {
       next(e);

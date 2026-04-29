@@ -14,6 +14,7 @@ import {
   startOrgTrial,
   endOrgTrial,
 } from '../controllers/system-admin.controller';
+import { logActivity } from '../services/activityLog.service';
 
 const router = Router();
 
@@ -47,6 +48,14 @@ router.post('/organizations/:id/users', async (req: AuthRequest, res: Response, 
       firstName,
       lastName,
       role: role || 'admin',
+    });
+    // Log to the TARGET org's activity log (not the system-admin's home org).
+    logActivity({
+      org: req.params['id']!, actor: req.user!.userId,
+      type: 'sysadmin.org.user_created',
+      label: 'User created (by system-admin)',
+      detail: `${firstName} ${lastName} <${email}> — ${user.role}`,
+      refModel: 'User', refId: user._id,
     });
     res.status(201).json({
       _id: user._id,

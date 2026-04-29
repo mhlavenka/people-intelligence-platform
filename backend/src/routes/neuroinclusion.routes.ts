@@ -4,6 +4,7 @@ import { tenantResolver } from '../middleware/tenant.middleware';
 import { NeuroinclustionAssessment } from '../models/NeuroinclustionAssessment.model';
 import { Organization } from '../models/Organization.model';
 import { buildNeuroinclustionGapPrompt, callClaude, extractJson } from '../services/ai.service';
+import { logActivity } from '../services/activityLog.service';
 
 const router = Router();
 router.use(authenticateToken, tenantResolver);
@@ -68,6 +69,14 @@ router.post('/assess', async (req: AuthRequest, res: Response, next: NextFunctio
       quickWins:           normalizeStringArray(raw['quickWins']),
       longTermInitiatives: normalizeStringArray(raw['longTermInitiatives']),
       completedAt: new Date(),
+    });
+
+    logActivity({
+      org: organizationId, actor: req.user!.userId,
+      type: 'neuroinclusion.assessment.submitted',
+      label: 'Neuro-inclusion assessment submitted',
+      detail: `${respondentRole} — maturity ${Math.round(overallMaturityScore)}/100`,
+      refModel: 'NeuroinclustionAssessment', refId: assessment._id,
     });
 
     res.status(201).json(assessment);

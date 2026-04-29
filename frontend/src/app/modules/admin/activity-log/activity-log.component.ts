@@ -4,6 +4,10 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule } from '@angular/material/core';
+import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../../core/api.service';
 import { OrgContextService } from '../../../core/org-context.service';
@@ -16,6 +20,9 @@ interface ActivityItem {
   createdAt: string;
 }
 
+const PAGE_SIZE = 25;
+
+/** Map an event type to the module group it belongs to (for hide-when-disabled). */
 const TYPE_MODULE: Record<string, string> = {
   conflict_analysis: 'conflict',
   neuroinclusion: 'neuroinclusion',
@@ -26,26 +33,44 @@ const TYPE_MODULE: Record<string, string> = {
   journal_reflective: 'coaching',
 };
 
-const ICON_MAP: Record<string, string> = {
-  survey_response:     'assignment_turned_in',
-  conflict_analysis:   'warning_amber',
-  idp:                 'trending_up',
-  neuroinclusion:      'psychology',
-  coaching_engagement: 'psychology_alt',
-  coaching_session:    'event_note',
-  journal_note:        'auto_stories',
-  journal_reflective:  'edit_note',
-};
+/** Pick the visual category of an activity by its event type. Falls back
+ *  to 'system' for everything that doesn't fit a domain bucket. */
+function categoryFor(type: string): string {
+  if (type.startsWith('auth.'))                    return 'auth';
+  if (type.startsWith('user.'))                    return 'user';
+  if (type.startsWith('survey.') || type === 'survey_response') return 'survey';
+  if (type.startsWith('conflict.') || type === 'conflict_analysis') return 'conflict';
+  if (type.startsWith('idp.') || type === 'idp')   return 'succession';
+  if (type.startsWith('neuroinclusion'))           return 'neuroinclusion';
+  if (type.startsWith('coaching.') || type === 'coaching_engagement' || type === 'coaching_session') return 'coaching';
+  if (type.startsWith('journal') || type.startsWith('coaching.contract')) return 'journal';
+  if (type.startsWith('booking.') || type.startsWith('calendar.')) return 'booking';
+  if (type.startsWith('sponsor.'))                 return 'sponsor';
+  if (type.startsWith('billing.'))                 return 'billing';
+  if (type.startsWith('role.'))                    return 'role';
+  if (type.startsWith('org.'))                     return 'org';
+  if (type.startsWith('sysadmin.'))                return 'sysadmin';
+  if (type.startsWith('eqi.'))                     return 'eqi';
+  return 'system';
+}
 
-const CLASS_MAP: Record<string, string> = {
-  survey_response:     'survey',
-  conflict_analysis:   'conflict',
-  idp:                 'succession',
-  neuroinclusion:      'neuroinclusion',
-  coaching_engagement: 'coaching',
-  coaching_session:    'coaching',
-  journal_note:        'journal',
-  journal_reflective:  'journal',
+const ICON_MAP: Record<string, string> = {
+  auth:           'login',
+  user:           'person',
+  survey:         'assignment_turned_in',
+  conflict:       'warning_amber',
+  succession:     'trending_up',
+  neuroinclusion: 'psychology',
+  coaching:       'psychology_alt',
+  booking:        'event_available',
+  sponsor:        'account_balance',
+  billing:        'receipt_long',
+  role:           'admin_panel_settings',
+  org:            'corporate_fare',
+  sysadmin:       'shield',
+  eqi:            'insights',
+  journal:        'auto_stories',
+  system:         'circle',
 };
 
 @Component({
@@ -54,7 +79,8 @@ const CLASS_MAP: Record<string, string> = {
   imports: [
     CommonModule, DatePipe, FormsModule,
     MatIconModule, MatProgressSpinnerModule,
-    MatFormFieldModule, MatSelectModule,
+    MatFormFieldModule, MatSelectModule, MatInputModule,
+    MatDatepickerModule, MatNativeDateModule, MatButtonModule,
     TranslateModule,
   ],
   template: `
@@ -64,15 +90,31 @@ const CLASS_MAP: Record<string, string> = {
           <h1>{{ "ADMIN.activityLog" | translate }}</h1>
           <p>{{ 'ADMIN.activityLogDesc' | translate }}</p>
         </div>
-        <mat-form-field appearance="outline" class="type-filter">
-          <mat-label>Type</mat-label>
-          <mat-select [ngModel]="typeFilter()" (ngModelChange)="typeFilter.set($event)">
-            <mat-option value="all">{{ "ADMIN.allTypes" | translate }}</mat-option>
-            @for (t of availableTypes(); track t.key) {
-              <mat-option [value]="t.key">{{ t.label }}</mat-option>
-            }
-          </mat-select>
-        </mat-form-field>
+        <div class="filters">
+          <mat-form-field appearance="outline" class="date-filter">
+            <mat-label>From</mat-label>
+            <input matInput [matDatepicker]="fromPicker"
+                   [ngModel]="fromDate()" (ngModelChange)="fromDate.set($event); reload()" />
+            <mat-datepicker-toggle matIconSuffix [for]="fromPicker" />
+            <mat-datepicker #fromPicker />
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="date-filter">
+            <mat-label>To</mat-label>
+            <input matInput [matDatepicker]="toPicker"
+                   [ngModel]="toDate()" (ngModelChange)="toDate.set($event); reload()" />
+            <mat-datepicker-toggle matIconSuffix [for]="toPicker" />
+            <mat-datepicker #toPicker />
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="type-filter">
+            <mat-label>Type</mat-label>
+            <mat-select [ngModel]="typeFilter()" (ngModelChange)="typeFilter.set($event); reload()">
+              <mat-option value="all">{{ "ADMIN.allTypes" | translate }}</mat-option>
+              @for (t of availableTypes(); track t.key) {
+                <mat-option [value]="t.key">{{ t.label }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+        </div>
       </div>
 
       @if (loading()) {
@@ -87,13 +129,27 @@ const CLASS_MAP: Record<string, string> = {
         <div class="activity-list">
           @for (item of filtered(); track $index) {
             <div class="activity-item">
-              <mat-icon class="activity-icon" [class]="iconClass(item.type)">{{ icon(item.type) }}</mat-icon>
+              <mat-icon class="activity-icon" [class]="categoryFor(item.type)">
+                {{ icon(item.type) }}
+              </mat-icon>
               <div class="activity-content">
                 <strong>{{ item.label }}</strong>
-                <span>{{ item.detail }}</span>
+                @if (item.detail) { <span>{{ item.detail }}</span> }
               </div>
               <span class="activity-time">{{ item.createdAt | date:'MMM d, y · h:mm a' }}</span>
             </div>
+          }
+        </div>
+
+        <div class="footer-bar">
+          @if (loadingMore()) {
+            <mat-spinner diameter="22" />
+          } @else if (hasMore()) {
+            <button mat-stroked-button color="primary" (click)="loadMore()">
+              <mat-icon>expand_more</mat-icon> Load more
+            </button>
+          } @else if (activity().length > 0) {
+            <span class="end-marker">— End of activity log —</span>
           }
         </div>
       }
@@ -103,11 +159,16 @@ const CLASS_MAP: Record<string, string> = {
     .page { padding: 24px 32px; width: 100%; max-width: 100%; box-sizing: border-box; }
     .page-header {
       display: flex; align-items: flex-start; justify-content: space-between; gap: 16px;
-      margin-bottom: 20px;
+      margin-bottom: 20px; flex-wrap: wrap;
       h1 { margin: 0 0 4px; font-size: 24px; color: var(--artes-primary); }
       p  { margin: 0; color: #6b7c93; }
     }
-    .type-filter { width: 200px; }
+    .filters {
+      display: flex; gap: 8px; align-items: flex-start; flex-wrap: wrap;
+      ::ng-deep .mat-mdc-form-field-subscript-wrapper { display: none; }
+    }
+    .date-filter { width: 160px; }
+    .type-filter { width: 360px; }
     .loading { display: flex; justify-content: center; padding: 60px 0; }
     .empty {
       text-align: center; padding: 48px 24px; color: #6b7c93;
@@ -119,28 +180,45 @@ const CLASS_MAP: Record<string, string> = {
       background: #fff; border: 1px solid #eef2f7; border-radius: 12px; overflow: hidden;
     }
     .activity-item {
-      display: flex; align-items: flex-start; gap: 14px;
-      padding: 14px 18px; border-bottom: 1px solid #f4f6fa;
+      display: flex; align-items: center; gap: 12px;
+      padding: 8px 14px; border-bottom: 1px solid #f4f6fa;
       &:last-child { border-bottom: none; }
       &:hover { background: #fafbfd; }
     }
     .activity-icon {
-      width: 36px; height: 36px; min-width: 36px; border-radius: 50%;
+      width: 28px; height: 28px; min-width: 28px; border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
-      font-size: 18px; color: #fff; background: #9aa5b4;
+      font-size: 14px; color: #fff; background: #9aa5b4;
+      &.auth          { background: #5a6a7e; }
+      &.user          { background: #5e74a0; }
       &.survey        { background: var(--artes-accent); }
       &.conflict      { background: #e86c3a; }
       &.succession    { background: #7c5cbf; }
       &.neuroinclusion { background: #27C4A0; }
       &.coaching      { background: #27A0C4; }
+      &.booking       { background: #4f9d77; }
+      &.sponsor       { background: #c4882c; }
+      &.billing       { background: #d6c427; color: #1a1a2e; }
+      &.role          { background: #6c5ce7; }
+      &.org           { background: #1B2A47; }
+      &.sysadmin      { background: #1a1a2e; }
+      &.eqi           { background: #b04a8a; }
       &.journal       { background: #b07800; }
+      &.system        { background: #9aa5b4; }
     }
     .activity-content {
-      display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1;
-      strong { color: var(--artes-primary); font-size: 14px; }
-      span   { color: #5a6a7e; font-size: 13px; }
+      display: flex; align-items: baseline; gap: 8px; min-width: 0; flex: 1;
+      strong { color: var(--artes-primary); font-size: 13px; font-weight: 600; flex-shrink: 0; }
+      span   { color: #5a6a7e; font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     }
-    .activity-time { font-size: 12px; color: #9aa5b4; white-space: nowrap; flex-shrink: 0; }
+    .activity-time { font-size: 11.5px; color: #9aa5b4; white-space: nowrap; flex-shrink: 0; }
+    /* mat-icon inherits font-size, so the smaller .activity-icon size keeps it tidy. */
+    mat-icon.activity-icon { font-size: 14px; line-height: 28px; }
+    .footer-bar {
+      display: flex; justify-content: center; align-items: center;
+      padding: 20px 0 4px;
+      .end-marker { font-size: 12px; color: #9aa5b4; font-style: italic; }
+    }
   `],
 })
 export class ActivityLogComponent implements OnInit {
@@ -148,43 +226,123 @@ export class ActivityLogComponent implements OnInit {
   private orgCtx = inject(OrgContextService);
 
   loading = signal(true);
+  loadingMore = signal(false);
   activity = signal<ActivityItem[]>([]);
+  hasMore = signal(true);
+
   typeFilter = signal<string>('all');
+  fromDate = signal<Date | null>(null);
+  toDate = signal<Date | null>(null);
+
+  /** Accumulated set of every event type ever seen across loads. Sticky
+   *  so the type-filter dropdown stays populated even when the current
+   *  filter narrows the result set down to one type — otherwise the user
+   *  would have to clear back to "all" before picking a different type. */
+  private seenTypes = signal<Map<string, string>>(new Map());
 
   availableTypes = computed(() => {
-    const types = new Set(this.activity().map((a) => a.type));
-    const labels: Record<string, string> = {
-      survey_response:     'Survey response',
-      conflict_analysis:   'Conflict analysis',
-      idp:                 'IDP',
-      neuroinclusion:      'Neuro-inclusion',
-      coaching_engagement: 'Coaching engagement',
-      coaching_session:    'Coaching session',
-      journal_note:        'Journal note',
-      journal_reflective:  'Journal reflection',
-    };
-    return [...types].map((k) => ({ key: k, label: labels[k] ?? k }));
+    const seen = this.seenTypes();
+    const out = Array.from(seen.entries()).map(([key, label]) => ({ key, label }));
+    out.sort((a, b) => a.label.localeCompare(b.label));
+    return out;
   });
 
   filtered = computed(() => {
+    // Frontend filter only hides items in disabled modules (server already
+    // filtered by type and date range). The disabled-module filter can't
+    // round-trip cleanly so it stays client-side.
     const items = this.activity();
     const modules = this.orgCtx.modules();
-    const f = this.typeFilter();
     return items.filter((item) => {
-      if (f !== 'all' && item.type !== f) return false;
       const mod = TYPE_MODULE[item.type];
       if (!mod) return true;
       return modules.includes(mod);
     });
   });
 
-  icon(type: string): string { return ICON_MAP[type] ?? 'circle'; }
-  iconClass(type: string): string { return CLASS_MAP[type] ?? ''; }
+  icon(type: string): string {
+    return ICON_MAP[categoryFor(type)] ?? 'circle';
+  }
+  categoryFor(type: string): string {
+    return categoryFor(type);
+  }
 
   ngOnInit(): void {
-    this.api.get<ActivityItem[]>('/dashboard/activity').subscribe({
-      next: (items) => { this.activity.set(items); this.loading.set(false); },
-      error: () => this.loading.set(false),
+    // Pull the full list of distinct event types upfront so the filter
+    // dropdown is comprehensive from the first render — regardless of
+    // which filter the user picks.
+    this.api.get<string[]>('/dashboard/activity-types').subscribe({
+      next: (types) => {
+        this.seenTypes.update((prev) => {
+          const next = new Map(prev);
+          for (const t of types) {
+            if (!next.has(t)) next.set(t, this.humanizeType(t));
+          }
+          return next;
+        });
+      },
     });
+    this.reload();
+  }
+
+  /** Re-fetch the first page from scratch — called when any filter changes. */
+  reload(): void {
+    this.loading.set(true);
+    this.activity.set([]);
+    this.hasMore.set(true);
+    this.fetchPage(null);
+  }
+
+  loadMore(): void {
+    const items = this.activity();
+    if (!items.length) return;
+    const oldest = items[items.length - 1].createdAt;
+    this.loadingMore.set(true);
+    this.fetchPage(oldest);
+  }
+
+  /** Fetch a single page. `since` = ISO cursor (oldest createdAt) for pagination, null for first page. */
+  private fetchPage(since: string | null): void {
+    const params: Record<string, string> = { limit: String(PAGE_SIZE) };
+    if (since)              params['since'] = since;
+    if (this.fromDate())    params['from']  = this.fromDate()!.toISOString();
+    if (this.toDate())      params['to']    = this.toDate()!.toISOString();
+    if (this.typeFilter() !== 'all') params['type'] = this.typeFilter();
+
+    const qs = new URLSearchParams(params).toString();
+    this.api.get<ActivityItem[]>(`/dashboard/activity?${qs}`).subscribe({
+      next: (items) => {
+        if (since) {
+          this.activity.update((prev) => [...prev, ...items]);
+          this.loadingMore.set(false);
+        } else {
+          this.activity.set(items);
+          this.loading.set(false);
+        }
+        // Accumulate distinct types so the dropdown stays comprehensive
+        // even when the current filter narrows the visible set.
+        this.seenTypes.update((prev) => {
+          const next = new Map(prev);
+          for (const item of items) {
+            if (!next.has(item.type)) next.set(item.type, this.humanizeType(item.type));
+          }
+          return next;
+        });
+        // If the server returned fewer than a full page, we've reached the end.
+        if (items.length < PAGE_SIZE) this.hasMore.set(false);
+      },
+      error: () => {
+        this.loading.set(false);
+        this.loadingMore.set(false);
+      },
+    });
+  }
+
+  private humanizeType(type: string): string {
+    // Convert e.g. 'auth.login.passkey' → 'Auth · Login · Passkey'
+    return type
+      .split(/[._]/)
+      .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
+      .join(' · ');
   }
 }

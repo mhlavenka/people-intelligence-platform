@@ -2,6 +2,7 @@ import { Router, Response, NextFunction } from 'express';
 import { authenticateToken, requirePermission, AuthRequest } from '../middleware/auth.middleware';
 import { Organization } from '../models/Organization.model';
 import { User } from '../models/User.model';
+import { logActivity } from '../services/activityLog.service';
 
 const router = Router();
 router.use(authenticateToken);
@@ -31,6 +32,12 @@ router.put(
         req.user!.organizationId, safeBody, { new: true, runValidators: true }
       );
       if (!org) { res.status(404).json({ error: req.t('errors.organizationNotFound') }); return; }
+      logActivity({
+        org: req.user!.organizationId, actor: req.user!.userId,
+        type: 'org.settings.updated', label: 'Organization settings updated',
+        detail: org.name,
+        refModel: 'Organization', refId: org._id,
+      });
       res.json(org);
     } catch (e) { next(e); }
   }
@@ -70,6 +77,12 @@ router.put(
         res.status(404).json({ error: req.t('errors.organizationNotFound') });
         return;
       }
+      logActivity({
+        org: req.user!.organizationId, actor: req.user!.userId,
+        type: 'org.settings.updated', label: 'Organization settings updated',
+        detail: org.name,
+        refModel: 'Organization', refId: org._id,
+      });
       res.json(org);
     } catch (e) {
       next(e);
