@@ -10,6 +10,9 @@ import { CoachingSession } from '../models/CoachingSession.model';
 import { SurveyTemplate } from '../models/SurveyTemplate.model';
 import { SurveyResponse } from '../models/SurveyResponse.model';
 import { User } from '../models/User.model';
+import { Organization } from '../models/Organization.model';
+import { Sponsor } from '../models/Sponsor.model';
+import { loadManifest, buildAutofillValues, generateContractPdf } from '../services/contractGenerator.service';
 import * as gcal from '../services/googleCalendar.service';
 import {
   mirrorSessionToBooking,
@@ -694,6 +697,88 @@ router.post(
         contractAcceptedAt: engagement.contractAcceptedAt,
         contractAcceptedBy: engagement.contractAcceptedBy,
       });
+    } catch (e) { next(e); }
+  },
+);
+
+/** Return the contract field manifest with autofill values pre-resolved
+ *  from the engagement, coachee, coach, sponsor, and org. */
+router.get(
+  '/engagements/:id/contract/template',
+  requirePermission('MANAGE_COACHING'),
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const engagement = await CoachingEngagement.findOne({
+        _id: req.params['id'],
+        organizationId: req.user!.organizationId,
+      });
+      if (!engagement) { res.status(404).json({ error: req.t('errors.engagementNotFound') }); return; }
+
+      const [coachee, coach, org, sponsor] = await Promise.all([
+        User.findById(engagement.coacheeId).select('firstName lastName email'),
+        User.findById(engagement.coachId).select('firstName lastName email'),
+        Organization.findById(req.user!.organizationId).select('name'),
+        engagement.sponsorId ? Sponsor.findById(engagement.sponsorId).select('defaultHourlyRate') : null,
+      ]);
+      if (!coachee || !coach || !org) {
+        res.status(404).json({ error: 'Required engagement data missing' });
+        return;
+      }
+
+      const manifest = loadManifest();
+      const autofill = buildAutofillValues({
+        engagement: engagement.toObject() as any,
+        sponsor: sponsor ? { defaultHourlyRate: (sponsor as any).defaultHourlyRate } : null,
+        coachee: { firstName: coachee.firstName, lastName: coachee.lastName, email: coachee.email },
+        coach: { firstName: coach.firstName, lastName: coach.lastName, email: coach.email },
+        org: { name: org.name },
+      });
+
+      res.json({ manifest, autofill });
+    } catch (e) { next(e); }
+  },
+);
+
+/** Generate the contract PDF from the template + filled-in field values,
+ *  upload to S3, and attach to the engagement (replaces any existing contract). */
+router.post(
+  '/engagements/:id/contract/generate',
+  requirePermission('MANAGE_COACHING'),
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const engagement = await CoachingEngagement.findOne({
+        _id: req.params['id'],
+        organizationId: req.user!.organizationId,
+      });
+      if (!engagement) { res.status(404).json({ error: req.t('errors.engagementNotFound') }); return; }
+
+      const values = (req.body?.values as Record<string, unknown>) || {};
+      const pdfBytes = await generateContractPdf(values);
+
+      if (engagement.contractS3Key) {
+        s3Client.send(new DeleteObjectCommand({
+          Bucket: config.aws.s3Bucket,
+          Key: engagement.contractS3Key,
+        })).catch((err) => console.warn('[Contract] Old object delete failed:', err));
+      }
+
+      const filename = 'coaching-agreement.pdf';
+      const key = `contracts/${req.user!.organizationId}/${engagement._id}-${Date.now()}.pdf`;
+      await s3Client.send(new PutObjectCommand({
+        Bucket: config.aws.s3Bucket,
+        Key: key,
+        Body: pdfBytes,
+        ContentType: 'application/pdf',
+      }));
+
+      engagement.contractS3Key = key;
+      engagement.contractFilename = filename;
+      engagement.contractAcceptedAt = undefined;
+      engagement.contractAcceptedBy = undefined;
+      engagement.contractAcceptedIp = undefined;
+      await engagement.save();
+
+      res.json({ contractFilename: engagement.contractFilename, hasContract: true });
     } catch (e) { next(e); }
   },
 );

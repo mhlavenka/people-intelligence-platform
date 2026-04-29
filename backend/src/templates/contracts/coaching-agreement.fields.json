@@ -1,0 +1,94 @@
+{
+  "version": 1,
+  "title": "Helena Coaching — Professional Coaching Agreement",
+  "pdfTemplate": "coaching-agreement.pdf",
+  "sections": [
+    {
+      "id": "parties",
+      "label": "Parties & Date",
+      "fields": [
+        { "key": "AgreementDate", "label": "Agreement date", "type": "date", "autofill": "today", "required": true },
+        { "key": "ClientFullName", "label": "Client full name", "type": "text", "autofill": "client.fullName", "required": true },
+        { "key": "ClientEmail", "label": "Client email", "type": "text", "autofill": "client.email", "required": true },
+        { "key": "ClientAddress", "label": "Client address", "type": "multiline", "helpText": "Street, City, Province, Postal Code" }
+      ]
+    },
+    {
+      "id": "program",
+      "label": "Program & Schedule",
+      "fields": [
+        { "key": "ProgramDurationMonths", "label": "Program duration (months)", "type": "number", "default": 6, "required": true },
+        {
+          "key": "MeetingMethod",
+          "label": "Meeting method",
+          "type": "select",
+          "options": [
+            { "value": "video conferencing", "label": "Video conferencing" },
+            { "value": "phone", "label": "Phone" },
+            { "value": "in-person", "label": "In-person" }
+          ],
+          "default": "video conferencing",
+          "required": true
+        },
+        { "key": "MeetingLength", "label": "Session length", "type": "text", "default": "60 minutes", "required": true },
+        { "key": "AvailabilityTerms", "label": "Availability terms", "type": "multiline", "default": "The Coach is available for brief between-session questions via email or the ARTES platform messaging system, with responses within one business day, Monday to Friday." },
+        { "key": "ProgramGoals", "label": "Program goals (Schedule A)", "type": "multiline", "autofill": "engagement.goals", "helpText": "Pre-filled from the engagement's goals; edit if needed." }
+      ]
+    },
+    {
+      "id": "fees",
+      "label": "Fees",
+      "fields": [
+        { "key": "FeeAmount", "label": "Fee amount", "type": "currency", "autofill": "engagement.fee", "required": true, "helpText": "Pre-filled from engagement rate or sponsor default." },
+        {
+          "key": "PaymentFrequency",
+          "label": "Payment frequency",
+          "type": "select",
+          "options": [
+            { "value": "per session", "label": "per session" },
+            { "value": "per month", "label": "per month" },
+            { "value": "for the full program (paid upfront)", "label": "for the full program (paid upfront)" }
+          ],
+          "default": "per session",
+          "required": true
+        },
+        { "key": "AdditionalRateAmount", "label": "Additional services rate (per hour)", "type": "currency", "default": 150 },
+        { "key": "RefundPolicy", "label": "Refund policy", "type": "multiline", "default": "Refunds are issued within 14 days of payment, less any sessions already delivered. Beyond that window, all fees are non-refundable except where required by Quebec consumer-protection legislation.", "required": true }
+      ]
+    },
+    {
+      "id": "contact",
+      "label": "Coach Contact",
+      "fields": [
+        { "key": "CoachPhone", "label": "Coach phone", "type": "text", "helpText": "Used only for phone-based sessions." }
+      ]
+    },
+    {
+      "id": "terms",
+      "label": "Terms",
+      "fields": [
+        { "key": "CancellationHours", "label": "Cancellation notice (hours)", "type": "number", "default": 24, "required": true },
+        { "key": "RecordRetentionYears", "label": "Record retention (years)", "type": "number", "default": 7, "required": true },
+        { "key": "TerminationWeeks", "label": "Termination notice (weeks)", "type": "number", "default": 2, "required": true }
+      ]
+    },
+    {
+      "id": "icf",
+      "label": "ICF Credential Verification",
+      "helpText": "ICF may require name + engagement dates for credentialing verification.",
+      "fields": [
+        {
+          "key": "ICFRelease",
+          "label": "Release authorization",
+          "type": "radio",
+          "options": [
+            { "value": "agree", "label": "Agree", "checks": ["ICFReleaseAgree"] },
+            { "value": "decline", "label": "Decline", "checks": ["ICFReleaseDecline"] }
+          ],
+          "default": "agree",
+          "required": true
+        }
+      ]
+    }
+  ]
+}

@@ -8,6 +8,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatMenuModule } from '@angular/material/menu';
 import { ApiService } from '../../../core/api.service';
 import { AuthService } from '../../../core/auth.service';
 import { SessionDialogComponent } from '../session-dialog/session-dialog.component';
@@ -15,6 +16,7 @@ import { CoachPickerDialogComponent, CoachPick } from '../coach-picker-dialog/co
 import { CoachLandingComponent } from '../../booking/coach-landing/coach-landing.component';
 import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog.component';
 import { ContractAcceptDialogComponent } from './contract-accept-dialog.component';
+import { ContractGenerateDialogComponent } from './contract-generate-dialog.component';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 import { JournalService, SessionNote } from '../../journal/journal.service';
@@ -55,7 +57,7 @@ interface Session {
   standalone: true,
   imports: [
     CommonModule, DatePipe, CurrencyPipe, RouterLink, MatIconModule, MatButtonModule,
-    MatProgressSpinnerModule, MatDividerModule, MatSnackBarModule, MatTooltipModule,
+    MatProgressSpinnerModule, MatDividerModule, MatSnackBarModule, MatTooltipModule, MatMenuModule,
     TranslateModule,
   ],
   template: `
@@ -237,33 +239,53 @@ interface Session {
               <div class="contract-block">
                 <span class="info-label">{{ 'COACHING.contract' | translate }}</span>
                 @if (engagement()!.contractS3Key) {
-                  <div class="contract-row">
-                    <mat-icon>picture_as_pdf</mat-icon>
-                    <button class="contract-link" (click)="viewContract()" type="button">
-                      {{ engagement()!.contractFilename || 'contract.pdf' }}
-                    </button>
-                    <button mat-icon-button (click)="removeContract()"
+                  <div class="contract-card" [class.signed]="engagement()!.contractAcceptedAt">
+                    <button mat-icon-button class="contract-card-remove" (click)="removeContract()"
                             [matTooltip]="'COACHING.contractRemove' | translate">
                       <mat-icon>delete</mat-icon>
                     </button>
+                    <button class="contract-card-doc" type="button"
+                            (click)="viewContract()"
+                            [matTooltip]="engagement()!.contractFilename || 'contract.pdf'"
+                            matTooltipPosition="above">
+                      <mat-icon class="contract-card-icon">picture_as_pdf</mat-icon>
+                      <span class="contract-card-title">{{ 'COACHING.coachingAgreement' | translate }}</span>
+                    </button>
+                    @if (engagement()!.contractAcceptedAt) {
+                      <span class="contract-status accepted">
+                        <mat-icon>verified</mat-icon>
+                        {{ 'COACHING.contractAcceptedOn' | translate }}
+                        {{ engagement()!.contractAcceptedAt | date:'mediumDate' }}
+                      </span>
+                    } @else {
+                      <span class="contract-status pending">
+                        <mat-icon>hourglass_top</mat-icon>
+                        {{ 'COACHING.contractWaitingForAcceptance' | translate }}
+                      </span>
+                    }
                   </div>
-                  @if (engagement()!.contractAcceptedAt) {
-                    <span class="contract-status accepted">
-                      <mat-icon>verified</mat-icon>
-                      {{ 'COACHING.contractAcceptedOn' | translate }}
-                      {{ engagement()!.contractAcceptedAt | date:'mediumDate' }}
-                    </span>
-                  } @else {
-                    <span class="contract-status pending">
-                      <mat-icon>hourglass_top</mat-icon>
-                      {{ 'COACHING.contractWaitingForAcceptance' | translate }}
-                    </span>
-                  }
-                  <button mat-stroked-button class="contract-replace" (click)="contractFileInput.click()" [disabled]="uploadingContract()">
+                  <button mat-stroked-button class="contract-replace"
+                          [matMenuTriggerFor]="replaceMenu"
+                          [disabled]="uploadingContract()">
                     @if (uploadingContract()) { <mat-spinner diameter="14" /> }
                     <mat-icon>swap_horiz</mat-icon> {{ 'COACHING.contractReplace' | translate }}
+                    <mat-icon class="menu-caret">arrow_drop_down</mat-icon>
                   </button>
+                  <mat-menu #replaceMenu="matMenu">
+                    <button mat-menu-item (click)="openGenerateDialog()">
+                      <mat-icon>auto_awesome</mat-icon>
+                      <span>{{ 'COACHING.contractGenerateAction' | translate }}</span>
+                    </button>
+                    <button mat-menu-item (click)="contractFileInput.click()">
+                      <mat-icon>upload_file</mat-icon>
+                      <span>{{ 'COACHING.contractUpload' | translate }}</span>
+                    </button>
+                  </mat-menu>
                 } @else {
+                  <button mat-flat-button color="primary" class="contract-generate-btn"
+                          (click)="openGenerateDialog()" [disabled]="uploadingContract()">
+                    <mat-icon>auto_awesome</mat-icon> {{ 'COACHING.contractGenerateAction' | translate }}
+                  </button>
                   <button mat-stroked-button (click)="contractFileInput.click()" [disabled]="uploadingContract()">
                     @if (uploadingContract()) { <mat-spinner diameter="14" /> }
                     <mat-icon>upload_file</mat-icon> {{ 'COACHING.contractUpload' | translate }}
@@ -730,7 +752,7 @@ interface Session {
     .detail-page { padding: 32px; }
     .back-link { display: flex; align-items: center; gap: 4px; color: var(--artes-accent); text-decoration: none; font-size: 14px; font-weight: 500; }
 
-    .detail-layout { display: grid; grid-template-columns: 280px 1fr; gap: 24px; align-items: start; }
+    .detail-layout { display: grid; grid-template-columns: 340px 1fr; gap: 24px; align-items: start; }
 
     .lifecycle-banner {
       display: flex; align-items: center; gap: 14px;
@@ -768,17 +790,46 @@ interface Session {
 
     .contract-block {
       padding: 16px 20px;
-      display: flex; flex-direction: column; gap: 8px;
+      display: flex; flex-direction: column; gap: 10px;
     }
-    .contract-row { display: flex; align-items: center; gap: 8px; }
-    .contract-row mat-icon { color: #c43a3a; }
-    .contract-link {
-      flex: 1; color: #1B2A47; font-size: 13px; font-weight: 600;
-      text-decoration: none; word-break: break-all;
-      background: transparent; border: 0; padding: 0; cursor: pointer;
-      text-align: left; font-family: inherit;
+    .contract-card {
+      position: relative;
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+      padding: 18px 14px 14px;
+      background: #fdf6f6;
+      border: 1px solid #f1d7d7;
+      border-radius: 12px;
+      transition: border-color 0.15s, background 0.15s;
+      &:hover { border-color: #e4b5b5; }
+      &.signed {
+        background: #f3fbf6;
+        border-color: #c8e6d3;
+        &:hover { border-color: #a8d6b8; }
+        .contract-card-icon { color: #1a9678; }
+      }
     }
-    .contract-link:hover { text-decoration: underline; }
+    .contract-card-remove {
+      position: absolute; top: 4px; right: 4px;
+      width: 28px; height: 28px; line-height: 28px;
+      mat-icon { font-size: 18px; width: 18px; height: 18px; }
+    }
+    .contract-card-doc {
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      background: transparent; border: 0; padding: 4px 8px; cursor: pointer;
+      font-family: inherit; width: 100%;
+      border-radius: 8px;
+      transition: background 0.15s;
+      &:hover { background: rgba(0,0,0,0.03); }
+      &:hover .contract-card-title { text-decoration: underline; }
+    }
+    .contract-card-icon {
+      color: #c43a3a;
+      font-size: 56px; width: 56px; height: 56px;
+    }
+    .contract-card-title {
+      color: #1B2A47; font-size: 13px; font-weight: 600;
+      text-align: center;
+    }
     .contract-status {
       display: inline-flex; align-items: center; gap: 4px;
       font-size: 12px;
@@ -786,7 +837,9 @@ interface Session {
       &.accepted { color: #1a9678; }
       &.pending  { color: #b27300; }
     }
-    .contract-replace { align-self: flex-start; margin-top: 4px; }
+    .contract-replace { align-self: flex-start; }
+    .contract-replace .menu-caret { margin-left: 2px; font-size: 18px; width: 18px; height: 18px; }
+    .contract-generate-btn { align-self: stretch; }
 
     .info-card {
       background: white; border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06);
@@ -1428,6 +1481,20 @@ export class EngagementDetailComponent implements OnInit {
     });
     ref.afterClosed().subscribe((accepted) => {
       if (accepted) this.load();
+    });
+  }
+
+  /** Open the template-fill dialog. On success the engagement reloads with the
+   *  generated contract attached, ready for the coachee to accept. */
+  openGenerateDialog(): void {
+    if (!this.engId) return;
+    const ref = this.dialog.open(ContractGenerateDialogComponent, {
+      width: '900px',
+      maxHeight: '90vh',
+      data: { engagementId: this.engId },
+    });
+    ref.afterClosed().subscribe((result) => {
+      if (result?.generated) this.load();
     });
   }
 
