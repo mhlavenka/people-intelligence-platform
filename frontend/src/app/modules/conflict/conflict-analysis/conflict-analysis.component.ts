@@ -422,7 +422,7 @@ export class ConflictAnalysisComponent implements OnInit {
       data: { analysisName: a.name },
     }).afterClosed().subscribe((confirmed) => {
       if (!confirmed) return;
-      this.api.post(`/conflict/escalate/${a._id}`, {}).subscribe({ next: () => this.loadAnalyses() });
+      this.router.navigate(['/conflict/analysis', a._id]);
     });
   }
 
