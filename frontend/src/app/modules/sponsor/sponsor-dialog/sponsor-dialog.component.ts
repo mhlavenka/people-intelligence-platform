@@ -14,6 +14,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { ProvinceTaxInfo, Sponsor, SponsorService } from '../sponsor.service';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { COUNTRIES } from '../../../core/geo.constants';
+import { DialogCloseButtonComponent } from '../../../shared/dialog-close-button/dialog-close-button.component';
 
 export interface SponsorDialogData {
   sponsor?: Sponsor;
@@ -27,9 +28,10 @@ export interface SponsorDialogData {
     MatDialogModule, MatFormFieldModule, MatInputModule,
     MatSelectModule, MatSlideToggleModule,
     MatButtonModule, MatIconModule, MatProgressSpinnerModule,
-    TranslateModule,
+    TranslateModule, DialogCloseButtonComponent,
   ],
   template: `
+    <app-dialog-close-btn (closed)="dialogRef.close()" />
     <h2 mat-dialog-title>{{ data.sponsor ? ("SPONSOR.editSponsor" | translate) : ("SPONSOR.newSponsor" | translate) }}</h2>
     <mat-dialog-content>
       <div class="row">
@@ -188,7 +190,7 @@ export class SponsorDialogComponent implements OnInit {
 
   constructor(
     @Inject(MAT_DIALOG_DATA) public data: SponsorDialogData,
-    private dialogRef: MatDialogRef<SponsorDialogComponent, Sponsor | null>,
+    public dialogRef: MatDialogRef<SponsorDialogComponent, Sponsor | null>,
     private sponsorSvc: SponsorService,
     private snack: MatSnackBar,
     private translate: TranslateService,

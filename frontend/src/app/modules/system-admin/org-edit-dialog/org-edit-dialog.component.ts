@@ -13,6 +13,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ApiService } from '../../../core/api.service';
 import { COUNTRIES, CANADIAN_PROVINCES } from '../../../core/geo.constants';
 import { TranslateModule } from '@ngx-translate/core';
+import { DialogCloseButtonComponent } from '../../../shared/dialog-close-button/dialog-close-button.component';
 
 interface PlanOption {
   _id: string;
@@ -70,8 +71,10 @@ export interface OrgRow {
     MatIconModule,
     MatSnackBarModule,
     TranslateModule,
+    DialogCloseButtonComponent,
   ],
   template: `
+    <app-dialog-close-btn (closed)="dialogRef.close()" />
     <h2 mat-dialog-title>
       <mat-icon>business</mat-icon>
       {{ data._id ? ("SYSADMIN.editOrganization" | translate) : ("SYSADMIN.newOrganizationDialog" | translate) }}

@@ -13,6 +13,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { HttpErrorResponse } from '@angular/common/http';
 import { SponsorInvoice, SponsorService } from '../sponsor.service';
 import { TranslateModule } from '@ngx-translate/core';
+import { DialogCloseButtonComponent } from '../../../shared/dialog-close-button/dialog-close-button.component';
 
 interface LineItemForm { description: string; quantity: number; unitPriceDollars: number; }
 
@@ -34,9 +35,10 @@ export interface SponsorInvoiceEditData {
     MatDialogModule, MatFormFieldModule, MatInputModule,
     MatDatepickerModule, MatNativeDateModule,
     MatButtonModule, MatIconModule, MatProgressSpinnerModule,
-    TranslateModule,
+    TranslateModule, DialogCloseButtonComponent,
   ],
   template: `
+    <app-dialog-close-btn (closed)="dialogRef.close()" />
     <h2 mat-dialog-title>{{ "SPONSOR.editInvoice" | translate }}</h2>
     <mat-dialog-content>
       <div class="line-items">
@@ -158,7 +160,7 @@ export class SponsorInvoiceEditDialogComponent implements OnInit {
 
   constructor(
     @Inject(MAT_DIALOG_DATA) public data: SponsorInvoiceEditData,
-    private dialogRef: MatDialogRef<SponsorInvoiceEditDialogComponent, SponsorInvoice | null>,
+    public dialogRef: MatDialogRef<SponsorInvoiceEditDialogComponent, SponsorInvoice | null>,
     private sponsorSvc: SponsorService,
     private snack: MatSnackBar,
   ) {}

@@ -5,6 +5,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { TranslateModule } from '@ngx-translate/core';
 import { parseConflictType } from '../conflict-type.util';
+import { DialogCloseButtonComponent } from '../../../shared/dialog-close-button/dialog-close-button.component';
 
 export interface SubAnalysisDialogData {
   focusConflictType: string;
@@ -25,8 +26,9 @@ export interface SubAnalysisDialogData {
 @Component({
   selector: 'app-sub-analysis-dialog',
   standalone: true,
-  imports: [CommonModule, MatDialogModule, MatButtonModule, MatIconModule, TranslateModule],
+  imports: [CommonModule, MatDialogModule, MatButtonModule, MatIconModule, TranslateModule, DialogCloseButtonComponent],
   template: `
+    <app-dialog-close-btn (closed)="dialogRef.close()" />
     <div class="dlg-hero" [class]="'risk-' + data.riskLevel">
       <div class="dlg-hero-glow"></div>
 
@@ -297,7 +299,7 @@ export interface SubAnalysisDialogData {
 })
 export class SubAnalysisDialogComponent {
   data = inject<SubAnalysisDialogData>(MAT_DIALOG_DATA);
-  private dialogRef = inject(MatDialogRef<SubAnalysisDialogComponent, 'show-divergence' | undefined>);
+  dialogRef = inject(MatDialogRef<SubAnalysisDialogComponent, 'show-divergence' | undefined>);
 
   showParentDivergence(): void {
     this.dialogRef.close('show-divergence');

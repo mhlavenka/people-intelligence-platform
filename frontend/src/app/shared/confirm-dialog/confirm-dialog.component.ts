@@ -4,6 +4,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { CommonModule } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
+import { DialogCloseButtonComponent } from '../dialog-close-button/dialog-close-button.component';
 
 export interface ConfirmDialogData {
   title: string;
@@ -17,9 +18,10 @@ export interface ConfirmDialogData {
 @Component({
   selector: 'app-confirm-dialog',
   standalone: true,
-  imports: [CommonModule, MatDialogModule, MatButtonModule, MatIconModule, TranslateModule],
+  imports: [CommonModule, MatDialogModule, MatButtonModule, MatIconModule, TranslateModule, DialogCloseButtonComponent],
   template: `
     <div class="confirm-dialog">
+      <app-dialog-close-btn (closed)="dialogRef.close(false)" />
       <div class="dialog-icon" [class]="data.confirmColor ?? 'warn'">
         <mat-icon>{{ data.icon ?? (isDestructive ? 'delete_forever' : 'help_outline') }}</mat-icon>
       </div>

@@ -11,6 +11,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ApiService } from '../../../core/api.service';
+import { DialogCloseButtonComponent } from '../../../shared/dialog-close-button/dialog-close-button.component';
 
 interface GeneratedTemplate {
   _id: string;
@@ -24,10 +25,11 @@ interface GeneratedTemplate {
   imports: [
     CommonModule, FormsModule, MatDialogModule, MatButtonModule, MatIconModule,
     MatFormFieldModule, MatInputModule, MatSelectModule, MatProgressSpinnerModule,
-    MatSnackBarModule, TranslateModule,
+    MatSnackBarModule, TranslateModule, DialogCloseButtonComponent,
   ],
   template: `
     <div class="dlg">
+      <app-dialog-close-btn (closed)="dialogRef.close()" />
       <div class="dlg-header">
         <div class="ai-avatar">
           <mat-icon>auto_awesome</mat-icon>
@@ -171,7 +173,7 @@ interface GeneratedTemplate {
 })
 export class AiGenerateTemplateDialogComponent {
   private api = inject(ApiService);
-  private dialogRef = inject(MatDialogRef<AiGenerateTemplateDialogComponent>);
+  dialogRef = inject(MatDialogRef<AiGenerateTemplateDialogComponent>);
   private snack = inject(MatSnackBar);
   private translate = inject(TranslateService);
 

@@ -8,6 +8,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { TranslateModule } from '@ngx-translate/core';
 import { ApiService } from '../../core/api.service';
+import { DialogCloseButtonComponent } from '../../shared/dialog-close-button/dialog-close-button.component';
 
 interface LoginSessionItem {
   _id: string;
@@ -24,8 +25,10 @@ interface LoginSessionItem {
   imports: [
     CommonModule, MatDialogModule, MatButtonModule, MatIconModule,
     MatProgressSpinnerModule, MatDividerModule, MatTooltipModule, TranslateModule,
+    DialogCloseButtonComponent,
   ],
   template: `
+    <app-dialog-close-btn (closed)="dialogRef.close()" />
     <h2 mat-dialog-title>{{ 'PROFILE.activeSessions' | translate }}</h2>
 
     <mat-dialog-content>
@@ -114,7 +117,7 @@ interface LoginSessionItem {
 })
 export class LoginSessionsDialogComponent implements OnInit {
   private api = inject(ApiService);
-  private dialogRef = inject(MatDialogRef);
+  dialogRef = inject(MatDialogRef);
 
   sessions = signal<LoginSessionItem[]>([]);
   loading = signal(true);

@@ -13,6 +13,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDividerModule } from '@angular/material/divider';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ApiService } from '../../../core/api.service';
+import { DialogCloseButtonComponent } from '../../../shared/dialog-close-button/dialog-close-button.component';
 
 interface UserOption {
   _id: string;
@@ -31,9 +32,10 @@ interface UserOption {
     MatDialogModule, MatButtonModule, MatIconModule, MatTabsModule,
     MatFormFieldModule, MatInputModule, MatCheckboxModule,
     MatProgressSpinnerModule, MatSnackBarModule, MatDividerModule,
-    TranslateModule,
+    TranslateModule, DialogCloseButtonComponent,
   ],
   template: `
+    <app-dialog-close-btn (closed)="dialogRef.close()" />
     <h2 mat-dialog-title>
       <mat-icon>send</mat-icon>
       {{ 'SURVEY.assignAssessment' | translate }}
@@ -378,7 +380,7 @@ export class IntakeAssignDialogComponent implements OnInit {
 
   constructor(
     @Inject(MAT_DIALOG_DATA) public data: { _id: string; title: string },
-    private dialogRef: MatDialogRef<IntakeAssignDialogComponent>,
+    public dialogRef: MatDialogRef<IntakeAssignDialogComponent>,
     private api: ApiService,
     private snackBar: MatSnackBar,
     private translate: TranslateService,

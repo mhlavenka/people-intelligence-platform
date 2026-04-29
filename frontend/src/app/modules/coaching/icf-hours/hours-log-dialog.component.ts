@@ -13,6 +13,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { ApiService } from '../../../core/api.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { HoursLogPayload } from './icf-hours.types';
+import { DialogCloseButtonComponent } from '../../../shared/dialog-close-button/dialog-close-button.component';
 
 interface DialogData {
   entry?: HoursLogPayload;   // present → edit mode
@@ -25,9 +26,10 @@ interface DialogData {
   imports: [
     CommonModule, FormsModule, MatDialogModule, MatFormFieldModule, MatInputModule,
     MatSelectModule, MatButtonModule, MatIconModule, MatDatepickerModule,
-    MatNativeDateModule, TranslateModule,
+    MatNativeDateModule, TranslateModule, DialogCloseButtonComponent,
   ],
   template: `
+    <app-dialog-close-btn (closed)="dialogRef.close()" />
     <h2 mat-dialog-title>
       <mat-icon>schedule</mat-icon>
       {{ (isEdit() ? 'COACHING.editHoursDialogTitle' : 'COACHING.logHoursDialogTitle') | translate }}
@@ -197,7 +199,7 @@ export class HoursLogDialogComponent {
 
   constructor(
     @Inject(MAT_DIALOG_DATA) public data: DialogData,
-    private dialogRef: MatDialogRef<HoursLogDialogComponent>,
+    public dialogRef: MatDialogRef<HoursLogDialogComponent>,
     private api: ApiService,
     private snack: MatSnackBar,
   ) {

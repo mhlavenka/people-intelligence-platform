@@ -19,6 +19,7 @@ import { Sponsor, SponsorService } from '../../sponsor/sponsor.service';
 import { SponsorDialogComponent } from '../../sponsor/sponsor-dialog/sponsor-dialog.component';
 
 import { TranslateModule } from '@ngx-translate/core';
+import { DialogCloseButtonComponent } from '../../../shared/dialog-close-button/dialog-close-button.component';
 interface Coachee { _id: string; firstName: string; lastName: string; email: string; department?: string; }
 
 @Component({
@@ -28,9 +29,10 @@ interface Coachee { _id: string; firstName: string; lastName: string; email: str
     CommonModule, FormsModule, MatDialogModule, MatFormFieldModule, MatInputModule,
     MatSelectModule, MatButtonModule, MatIconModule, MatProgressSpinnerModule,
     MatDatepickerModule, MatNativeDateModule, MatChipsModule, MatSlideToggleModule,
-    TranslateModule,
+    TranslateModule, DialogCloseButtonComponent,
   ],
   template: `
+    <app-dialog-close-btn (closed)="dialogRef.close()" />
     <h2 mat-dialog-title>
       <mat-icon>psychology_alt</mat-icon>
       {{ isEdit ? ('COACHING.editEngagement' | translate) : ('COACHING.newCoachingEngagement' | translate) }}
@@ -158,7 +160,7 @@ interface Coachee { _id: string; firstName: string; lastName: string; email: str
 })
 export class EngagementDialogComponent implements OnInit {
   private api = inject(ApiService);
-  private dialogRef = inject(MatDialogRef<EngagementDialogComponent>);
+  dialogRef = inject(MatDialogRef<EngagementDialogComponent>);
   private orgCtx = inject(OrgContextService);
   private sponsorSvc = inject(SponsorService);
   private dialog = inject(MatDialog);

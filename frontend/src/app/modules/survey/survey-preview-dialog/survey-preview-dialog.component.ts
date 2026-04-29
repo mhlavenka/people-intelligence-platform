@@ -8,6 +8,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { TranslateModule } from '@ngx-translate/core';
+import { DialogCloseButtonComponent } from '../../../shared/dialog-close-button/dialog-close-button.component';
 
 interface PreviewQuestion {
   id: string;
@@ -31,10 +32,11 @@ export interface SurveyPreviewDialogData {
   standalone: true,
   imports: [
     CommonModule, FormsModule, MatDialogModule, MatButtonModule, MatIconModule,
-    MatFormFieldModule, MatInputModule, MatTooltipModule, TranslateModule,
+    MatFormFieldModule, MatInputModule, MatTooltipModule, TranslateModule, DialogCloseButtonComponent,
   ],
   template: `
     <div class="dlg">
+      <app-dialog-close-btn (closed)="dialogRef.close()" />
       <div class="dlg-header">
         <div class="header-left">
           <span class="preview-tag">
@@ -43,9 +45,6 @@ export interface SurveyPreviewDialogData {
           </span>
           <h2 mat-dialog-title>{{ data.title }}</h2>
         </div>
-        <button mat-icon-button mat-dialog-close [matTooltip]="'COMMON.close' | translate">
-          <mat-icon>close</mat-icon>
-        </button>
       </div>
 
       <mat-dialog-content class="dlg-content">
@@ -271,7 +270,7 @@ export interface SurveyPreviewDialogData {
 })
 export class SurveyPreviewDialogComponent {
   data = inject<SurveyPreviewDialogData>(MAT_DIALOG_DATA);
-  private dialogRef = inject(MatDialogRef<SurveyPreviewDialogComponent>);
+  dialogRef = inject(MatDialogRef<SurveyPreviewDialogComponent>);
 
   phase = signal<'instructions' | 'questions' | 'done'>('instructions');
   currentIndex = signal(0);

@@ -18,6 +18,7 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatChipsModule } from '@angular/material/chips';
 import { ApiService } from '../../../core/api.service';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { DialogCloseButtonComponent } from '../../../shared/dialog-close-button/dialog-close-button.component';
 
 interface SurveyTemplate {
   _id: string;
@@ -102,8 +103,10 @@ interface SurveyTemplate {
     MatSlideToggleModule,
     MatChipsModule,
     TranslateModule,
+    DialogCloseButtonComponent,
   ],
   template: `
+    <app-dialog-close-btn (closed)="dialogRef.close()" />
     <h2 mat-dialog-title>
       <mat-icon>{{ isEdit() ? 'edit' : 'add_circle' }}</mat-icon>
       {{ isEdit() ? ("SURVEY.editAssessmentTemplate" | translate) : ("SURVEY.newAssessmentTemplate" | translate) }}
@@ -1032,7 +1035,7 @@ export class SurveyTemplateDialogComponent implements OnInit {
   private fb = inject(FormBuilder);
   private api = inject(ApiService);
   private dialog = inject(MatDialog);
-  private dialogRef = inject(MatDialogRef<SurveyTemplateDialogComponent>);
+  dialogRef = inject(MatDialogRef<SurveyTemplateDialogComponent>);
   private existingData = inject<SurveyTemplate | null>(MAT_DIALOG_DATA, { optional: true });
   private translate = inject(TranslateService);
 

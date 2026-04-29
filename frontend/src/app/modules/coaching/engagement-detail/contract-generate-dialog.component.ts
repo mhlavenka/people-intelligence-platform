@@ -13,6 +13,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ApiService } from '../../../core/api.service';
+import { DialogCloseButtonComponent } from '../../../shared/dialog-close-button/dialog-close-button.component';
 
 interface FieldOption { value: string; label: string; checks?: string[]; }
 interface Field {
@@ -36,9 +37,10 @@ interface DialogData { engagementId: string; }
   imports: [
     CommonModule, FormsModule, MatDialogModule, MatButtonModule, MatIconModule,
     MatFormFieldModule, MatInputModule, MatSelectModule, MatRadioModule, MatCheckboxModule,
-    MatProgressSpinnerModule, TranslateModule,
+    MatProgressSpinnerModule, TranslateModule, DialogCloseButtonComponent,
   ],
   template: `
+    <app-dialog-close-btn (closed)="dialogRef.close()" />
     <h2 mat-dialog-title class="dialog-title">
       <mat-icon>description</mat-icon>
       {{ 'COACHING.contractGenerateTitle' | translate }}

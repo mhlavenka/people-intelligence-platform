@@ -11,6 +11,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { ApiService } from '../../../core/api.service';
 import { TranslateModule } from '@ngx-translate/core';
+import { DialogCloseButtonComponent } from '../../../shared/dialog-close-button/dialog-close-button.component';
 
 interface Question {
   id: string;
@@ -82,8 +83,10 @@ interface DeptBreakdown { dept: string; count: number; pct: number; }
     MatFormFieldModule,
     MatSelectModule,
     TranslateModule,
+    DialogCloseButtonComponent,
   ],
   template: `
+    <app-dialog-close-btn (closed)="dialogRef.close()" />
     <div class="dialog-header">
       <div class="header-left">
         <mat-icon class="header-icon">bar_chart</mat-icon>
@@ -92,7 +95,6 @@ interface DeptBreakdown { dept: string; count: number; pct: number; }
           <span class="module-badge" [class]="template.moduleType">{{ template.moduleType }}</span>
         </div>
       </div>
-      <button mat-icon-button mat-dialog-close><mat-icon>close</mat-icon></button>
     </div>
 
     <mat-dialog-content>

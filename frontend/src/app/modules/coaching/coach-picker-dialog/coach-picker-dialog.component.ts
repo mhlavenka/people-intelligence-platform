@@ -5,6 +5,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 
 import { TranslateModule } from '@ngx-translate/core';
+import { DialogCloseButtonComponent } from '../../../shared/dialog-close-button/dialog-close-button.component';
 export interface CoachPick {
   _id: string;
   firstName: string;
@@ -18,9 +19,10 @@ export interface CoachPick {
   selector: 'app-coach-picker-dialog',
   standalone: true,
   imports: [CommonModule, MatDialogModule, MatButtonModule, MatIconModule,
-    TranslateModule,
+    TranslateModule, DialogCloseButtonComponent,
   ],
   template: `
+    <app-dialog-close-btn (closed)="cancel()" />
     <h2 mat-dialog-title>{{ 'COACHING.chooseCoach' | translate }}</h2>
     <mat-dialog-content>
       <p class="intro">Select the coach you'd like to book a session with.</p>

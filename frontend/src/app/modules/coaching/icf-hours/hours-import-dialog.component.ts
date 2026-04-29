@@ -8,6 +8,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { TranslateModule } from '@ngx-translate/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
+import { DialogCloseButtonComponent } from '../../../shared/dialog-close-button/dialog-close-button.component';
 
 interface ImportRowResult {
   rowNumber: number;
@@ -36,9 +37,10 @@ interface ImportPreview {
   standalone: true,
   imports: [
     CommonModule, DatePipe, DecimalPipe, MatDialogModule, MatButtonModule, MatIconModule,
-    MatProgressSpinnerModule, TranslateModule,
+    MatProgressSpinnerModule, TranslateModule, DialogCloseButtonComponent,
   ],
   template: `
+    <app-dialog-close-btn (closed)="dialogRef.close()" />
     <h2 mat-dialog-title>
       <mat-icon>upload_file</mat-icon>
       {{ 'COACHING.icfImportTitle' | translate }}
@@ -223,7 +225,7 @@ export class HoursImportDialogComponent {
   uploading = signal(false);
 
   constructor(
-    private dialogRef: MatDialogRef<HoursImportDialogComponent, boolean>,
+    public dialogRef: MatDialogRef<HoursImportDialogComponent, boolean>,
     private http: HttpClient,
     private snack: MatSnackBar,
   ) {}
