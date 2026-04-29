@@ -808,6 +808,20 @@ A = number of scale points</pre>
                         </div>
                       }
                     </div>
+                  } @else if (parsedManagerScript()) {
+                    @if (parsedManagerScript()!.intro) {
+                      <p class="manager-script-intro">{{ parsedManagerScript()!.intro }}</p>
+                    }
+                    @if (parsedManagerScript()!.cards.length) {
+                      <div class="manager-script-grid">
+                        @for (card of parsedManagerScript()!.cards; track $index) {
+                          <article class="manager-script-card">
+                            <header class="manager-script-card-title">{{ card.title }}</header>
+                            <p class="manager-script-card-body">{{ card.body }}</p>
+                          </article>
+                        }
+                      </div>
+                    }
                   } @else {
                     <div class="script-box"><pre class="script-text">{{ analysis()!.managerScript }}</pre></div>
                   }
@@ -1225,6 +1239,47 @@ A = number of scale points</pre>
     .script-section { background: #f8fafc; border-radius: 10px; padding: 14px 16px; border-left: 3px solid var(--artes-accent); }
     .script-section-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--artes-accent); margin-bottom: 8px; }
     .script-para { font-size: 13px; color: #374151; line-height: 1.7; margin: 0; }
+
+    /* Markdown-script intro + card grid (used when managerScript is bold-headed
+       prose rather than structured JSON) */
+    .manager-script-intro {
+      background: #f8fafc; border-left: 3px solid var(--artes-accent);
+      border-radius: 8px; padding: 14px 18px;
+      font-size: 14px; color: #46546b; line-height: 1.6;
+      margin: 0 0 20px;
+    }
+    .manager-script-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+    }
+    .manager-script-card {
+      display: flex; flex-direction: column; gap: 10px;
+      background: white; border: 1px solid #e8edf4;
+      border-radius: 12px; padding: 16px 18px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      transition: box-shadow 0.15s ease, transform 0.15s ease;
+    }
+    .manager-script-card:hover {
+      box-shadow: 0 4px 14px rgba(58,159,214,0.10);
+      transform: translateY(-1px);
+    }
+    .manager-script-card-title {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 12px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.4px; color: var(--artes-accent);
+      line-height: 1.3;
+    }
+    .manager-script-card-title::before {
+      content: ''; flex-shrink: 0;
+      width: 4px; height: 14px; border-radius: 2px;
+      background: var(--artes-accent);
+    }
+    .manager-script-card-body {
+      margin: 0; font-size: 13px; color: #2d3748;
+      line-height: 1.65; font-style: italic;
+      white-space: pre-wrap;
+    }
     .script-list { margin: 0; padding-left: 18px; li { font-size: 13px; color: #374151; line-height: 1.7; margin-bottom: 2px; } &.tight li { margin-bottom: 0; } }
     .topics-table {
       width: 100%; border-collapse: collapse; font-size: 13px;
@@ -2569,6 +2624,34 @@ export class ConflictDetailComponent implements OnInit {
       })
       .slice(0, 10);
   }
+
+  /** Parse a markdown-style managerScript into intro paragraph + bold-headed
+   *  cards. Matches `**Heading:**` or `**Heading**:` markers; everything before
+   *  the first marker becomes the intro. Null when no markers exist — caller
+   *  falls back to a raw <pre> render. Computed so the template can read it
+   *  reactively without re-parsing on every change-detection cycle. */
+  parsedManagerScript = computed<{ intro: string; cards: { title: string; body: string }[] } | null>(() => {
+    const raw = this.analysis()?.managerScript;
+    if (!raw) return null;
+    const HEADER_RE = /\*\*([^*\n]+?)\*\*\s*:?/g;
+    const matches: { idx: number; title: string; matchLen: number }[] = [];
+    let m: RegExpExecArray | null;
+    while ((m = HEADER_RE.exec(raw)) !== null) {
+      let title = m[1].trim();
+      if (title.endsWith(':')) title = title.slice(0, -1).trim();
+      matches.push({ idx: m.index, title, matchLen: m[0].length });
+    }
+    if (matches.length === 0) return null;
+    const intro = raw.slice(0, matches[0].idx).trim();
+    const cards = matches.map((cur, i) => {
+      const nextStart = i + 1 < matches.length ? matches[i + 1].idx : raw.length;
+      const bodyStart = cur.idx + cur.matchLen;
+      let body = raw.slice(bodyStart, nextStart).trim();
+      if (body.startsWith(':')) body = body.slice(1).trim();
+      return { title: cur.title, body };
+    });
+    return { intro, cards };
+  });
 
   scriptSections(): ScriptSection[] {
     const raw = this.analysis()?.managerScript;
