@@ -95,11 +95,11 @@ export interface EscalationPreviewDialogData {
 
     <mat-dialog-actions align="end" class="dlg-actions">
       <button mat-button (click)="dialogRef.close(false)" [disabled]="confirming()">
-        {{ 'COMMON.cancel' | translate }}
+        {{ 'COMMON.close' | translate }}
       </button>
-      <button mat-flat-button color="warn" (click)="confirm()" [disabled]="confirming()">
+      <button mat-flat-button color="primary" (click)="confirm()" [disabled]="confirming()">
         @if (confirming()) { <mat-spinner diameter="18" /> }
-        <mat-icon>escalator_warning</mat-icon>
+        <mat-icon>arrow_forward</mat-icon>
         {{ 'CONFLICT.escalationPreviewConfirm' | translate }}
       </button>
     </mat-dialog-actions>
