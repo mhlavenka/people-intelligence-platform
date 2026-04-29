@@ -596,9 +596,15 @@ export function computeAllMetricsUnfiltered(
     .filter((m): m is IItemMetric => m !== null);
 
   // Subgroup detection still honours its own anonymity floor; we just bypass
-  // the acceptedInAnalysis filter by mapping every response to an accepted
-  // shape before passing it in.
-  const allAccepted = responses.map((r) => ({ ...r, acceptedInAnalysis: true }));
+  // the acceptedInAnalysis filter by projecting each response down to the two
+  // fields the downstream subgroup analysis reads. Spread (`{...r}`) is unsafe
+  // here because `responses` may be Mongoose documents whose schema-defined
+  // fields are getters rather than enumerable own properties — spreading
+  // them strips `responses` and breaks the per-respondent scoreable lookup.
+  const allAccepted = responses.map((r) => ({
+    responses: r.responses,
+    acceptedInAnalysis: true,
+  }));
 
   return {
     responseQuality: {

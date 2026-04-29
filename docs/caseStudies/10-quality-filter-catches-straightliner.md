@@ -35,16 +35,18 @@ mode) we should see all 11 and the means subtly shifted.
 ## Expected metric outcomes (filtered, default view)
 | Signal | Expected |
 |---|---|
-| Risk score | 30–40 (Medium-Low) |
-| Team Alignment | 70–85 (Aligned) |
-| Response Quality | 10/11 included; 1 dropped (straightlining/longString) |
-| Psych Safety mean | ~7.5 |
-| Communication & Trust mean | ~7.5 |
-| Conflict Frequency mean | ~3.0 |
-| Management Effectiveness mean | ~7.5 |
-| Wellbeing & Belonging mean | ~7.5 |
+| Risk score | 15–30 (Low) — the cohort genuinely IS healthy under high rwg + high means; the previous 30–40 expectation was overly cautious |
+| Team Alignment | 90+ (Aligned-high) — same calibration as CASE02 / CASE07: alignment measures *agreement*, and once the straightliner is filtered the remaining 10 honest respondents agree strongly. The earlier 70–85 expectation was hedging on residual cp07 variance, which is still high (rwg ~0.78). |
+| Response Quality | 10/11 included; 1 dropped (straightlining + longString) |
+| Psych Safety mean | ~7.5, rwg ≥0.95 |
+| Communication & Trust mean | ~7.5, rwg ≥0.95 |
+| Conflict Frequency mean | ~3.0, rwg ≥0.9 |
+| Management Effectiveness mean | ~7.5, rwg ≥0.95 |
+| Wellbeing & Belonging mean | ~7.5, rwg ≥0.95 |
 | Audit toggle | Visible (because droppedCount > 0) |
 | Subgroups | None |
+| Quality acknowledgment in narrative | Phase 3 vocabulary — name the flag(s) ("straightlining", "long-string", "trapFailed", "inconsistent" as applicable), frame the filter as *strengthening* findings rather than weakening them, never identify the dropped respondent |
+| `conflictTypes` | Healthy-team vocabulary acceptable: "Routine Friction Within Healthy Culture", "Residual Interpersonal Tension (contained)" — should NOT use fracture, polarised, subgroup, or stuck-team vocabulary |
 
 ## Per-respondent answer matrix
 R11 is the straightliner. R1–R10 are the honest cohort.

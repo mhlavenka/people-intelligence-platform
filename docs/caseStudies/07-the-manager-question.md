@@ -20,27 +20,28 @@ sea of green.
 - **N respondents:** 12 (mixed seniority)
 
 ## Conflict signature being tested
-- Psych Safety mean ~7, r_wg ≥0.75
-- Communication & Trust mean ~7, r_wg ≥0.75
-- Conflict Frequency mean ~3, r_wg ≥0.75
-- **Management Effectiveness mean ~5.5 (the bimodal halfway point), r_wg ≤0.2**
-- Wellbeing mean ~6.5, r_wg ~0.65
-- cp10 and cp11 BOTH flagged Split (BC > 0.555)
-- N=12 ≥ 10, so subgroup detection MAY fire — but split is on a small subset
-  of items, so silhouette likely <0.5 → no subgroup card
+- Psych Safety mean ~7, rwg ≥0.95
+- Communication & Trust mean ~7, rwg ≥0.95
+- Conflict Frequency mean ~3, rwg ≥0.95
+- **Management Effectiveness mean ~5.5 (the bimodal halfway point), rwg ≈0**
+- Wellbeing mean ~6.5, rwg ≥0.9
+- cp10 and cp11 BOTH at rwg=0 (Split)
+- N=12 ≥ 10 and the fracture is clean 6+6 — k-means separates cleanly,
+  silhouette ≥0.7 → subgroup card SHOULD fire
 - AI narrative explicitly names the manager-effectiveness divide
 
 ## Expected metric outcomes
 | Signal | Expected |
 |---|---|
-| Risk score | 45–55 (Medium) |
-| Team Alignment | 50–65 (Mixed; one fractured dimension drags it down) |
-| Psych Safety mean | ~7, r_wg ≥0.75 |
-| Communication & Trust mean | ~7, r_wg ≥0.75 |
-| Management Effectiveness mean | ~5.5, r_wg ≤0.2 (FRACTURED) |
-| Split items | cp10, cp11 |
-| Subgroups | Likely none (silhouette below threshold) |
-| AI narrative | "Targeted issue: Management Effectiveness; everything else is fine; the team is divided about how the manager handles conflict and respect" |
+| Risk score | 55–70 (High) — magnitude calibration: a 6-respondent cluster reporting their manager as ineffective is active conflict, not stable mediocrity. Subgroup detector firing with high silhouette confirms the structural read. |
+| Team Alignment | 80+ (Aligned-high) — the team IS broadly aligned. The fracture lives in *one dimension*, which surfaces in the dimensional roll-up / heatmap (one red row), NOT in the headline alignment score. Earlier expectation of 50-65 conflated "any fracture" with "overall fractured". |
+| Psych Safety mean | ~7.4, rwg ≥0.95 |
+| Communication & Trust mean | ~7.25, rwg ≥0.95 |
+| Management Effectiveness mean | ~5.5, rwg ≈0 (FRACTURED) |
+| Split items | cp10, cp11 (both at rwg=0) |
+| Subgroups | k=2, silhouette ≥0.7, clusters of 6 each, distinguishing items cp10/cp11 + one ancillary (cp14 or similar) |
+| AI narrative | "Targeted issue: Management Effectiveness; everything else is fine; the team is divided about how the manager handles conflict and respect" — name cp10/cp11 by their actual text, contrast Cluster A's low manager scores (~2.5) with Cluster B's healthy ones |
+| conflictTypes vocabulary | "Management credibility gap", "Structural split on manager fairness and respect-creation (cp10, cp11)", "Management Effectiveness fracture" — fracture vocabulary is correct here because subgroup fired with high confidence (this is NOT the minority-voice case) |
 
 ## Per-respondent answer matrix
 R1–R6 think manager is great; R7–R12 think manager is ineffective.
