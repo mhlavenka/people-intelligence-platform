@@ -352,9 +352,13 @@
   "DASHBOARD": {
     "title": "Organization Dashboard",
     "welcomeBack": "Welcome back, {{name}}. Here's your organization health overview.",
+    "heroEyebrow": "ARTES Platform",
     "updatedJustNow": "Updated just now",
     "noDataYet": "no data yet",
     "open": "Open",
+    "status_active": "Active",
+    "status_warning": "Attention needed",
+    "status_inactive": "Inactive",
     "noModulesTitle": "No modules available",
     "noModulesDesc": "Your subscription does not include any modules, or your role does not have access. Contact your administrator.",
     "upcomingEvents": "Upcoming events",
@@ -363,20 +367,73 @@
     "joinGoogleMeet": "Join Google Meet",
     "conflictTitle": "Conflict Intelligence™",
     "conflictSubtitle": "Workplace conflict detection and mediation escalation",
+    "conflictHighlights": [
+      "AI-powered risk scoring across team conflict patterns",
+      "Three Conversations diagnosis (What Happened · Feelings · Identity)",
+      "Manager guides with interest-based talking points"
+    ],
     "activeAnalyses": "active analyses",
     "neuroTitle": "Neuro-Inclusion Compass™",
     "neuroSubtitle": "Organizational neuroinclusion maturity assessment",
+    "neuroHighlights": [
+      "Multi-dimensional neuro-inclusion maturity model",
+      "Anonymous aggregated insights with action roadmap",
+      "Quick wins, mid-term initiatives and long-term shifts"
+    ],
     "avgMaturityScore": "avg maturity score",
     "successionTitle": "Leadership & Succession Hub™",
     "successionSubtitle": "AI-generated IDPs and succession planning",
+    "successionHighlights": [
+      "GROW-model individual development plans, AI-suggested",
+      "Milestone tracking with reflective journal entries",
+      "EQ-i and 360 inputs flow into the development plan"
+    ],
     "activeIDPs": "active IDPs",
     "coachingTitle": "Coaching",
     "coachingSubtitle": "Manage coaching engagements and sessions",
+    "coachingHighlights": [
+      "Engagements, sessions, contracts and ICF hours in one place",
+      "Pre and post-session intake forms with AI-suggested follow-ups",
+      "Public booking links with calendar sync (Google · Microsoft)"
+    ],
     "activeEngagements": "active engagements",
     "assessmentsTitle": "Assessments",
     "assessmentsSubtitle": "Active assessment templates and responses collected",
+    "assessmentsHighlights": [
+      "Custom or AI-generated survey, interview and assessment templates",
+      "Recurring assignments to departments or named individuals",
+      "Aggregate analytics with min-5 group privacy guard"
+    ],
     "responsesCollected": "responses collected",
-    "activeAssessmentsResponses": "active assessments · {{responses}} responses"
+    "activeAssessmentsResponses": "active assessments · {{responses}} responses",
+
+    "methodologyEyebrow": "Built on proven research",
+    "methodologyTitle": "Frameworks behind ARTES",
+    "methodologyIntro": "Every module is grounded in evidence-based research and decades of practitioner experience. ARTES translates academic rigour into everyday tools your managers, coaches and HR teams can actually use.",
+    "methodHNP": "Harvard Negotiation Project",
+    "methodHNPDesc": "Four principles: separate the people from the problem, focus on interests not positions, invent options for mutual gain, insist on objective criteria.",
+    "methodHNPCite": "Fisher, Ury & Patton — Getting to Yes",
+    "methodThreeConv": "Three Conversations",
+    "methodThreeConvDesc": "Every difficult conversation contains three layers: the What Happened conversation (divergent narratives), the Feelings conversation (suppressed emotions), and the Identity conversation (threats to self-image).",
+    "methodThreeConvCite": "Stone, Patton & Heen — Difficult Conversations",
+    "methodThirdSide": "The Third Side",
+    "methodThirdSideDesc": "When bilateral resolution fails, the surrounding community — HR, coaches, peers, mediators — becomes the structured third side. Escalation as a deliberate handoff, not a failure.",
+    "methodThirdSideCite": "William Ury — The Third Side",
+    "methodGROW": "GROW Model",
+    "methodGROWDesc": "Goal · Reality · Options · Will. The structured coaching framework that powers every individual development plan ARTES generates.",
+    "methodGROWCite": "Whitmore — Coaching for Performance",
+
+    "howEyebrow": "How ARTES works",
+    "howTitle": "From signal to action in three steps",
+    "howStep1Title": "Listen",
+    "howStep1Desc": "Surveys, interviews and assessments collect anonymous, aggregated data from across the team. Min-5 group privacy is enforced everywhere.",
+    "howStep2Title": "Diagnose",
+    "howStep2Desc": "Claude analyses the signal through interest-based, identity-aware methodology — surfacing structural drivers, not personalising blame.",
+    "howStep3Title": "Act",
+    "howStep3Desc": "Manager scripts, recommended actions, individual development plans, and a structured escalation path to professional mediation when needed.",
+
+    "quoteText": "Conflict and growth aren't opposites — they're a single conversation about what we need from each other to do our best work.",
+    "quoteAttr": "Helena Coaching · ARTES methodology"
   },
   "SETTINGS": {
     "title": "Settings",

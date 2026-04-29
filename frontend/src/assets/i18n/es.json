@@ -352,9 +352,13 @@
   "DASHBOARD": {
     "title": "Panel de control de la organización",
     "welcomeBack": "Bienvenido de nuevo, {{name}}. Aquí tiene el resumen de salud de su organización.",
+    "heroEyebrow": "Plataforma ARTES",
     "updatedJustNow": "Actualizado hace un momento",
     "noDataYet": "sin datos aún",
     "open": "Abrir",
+    "status_active": "Activo",
+    "status_warning": "Requiere atención",
+    "status_inactive": "Inactivo",
     "noModulesTitle": "No hay módulos disponibles",
     "noModulesDesc": "Su suscripción no incluye ningún módulo, o su rol no tiene acceso. Contacte a su administrador.",
     "upcomingEvents": "Próximos eventos",
@@ -363,20 +367,73 @@
     "joinGoogleMeet": "Unirse a Google Meet",
     "conflictTitle": "Conflict Intelligence™",
     "conflictSubtitle": "Detección de conflictos laborales y escalada a mediación",
+    "conflictHighlights": [
+      "Puntuación de riesgo por IA en patrones de conflicto de equipo",
+      "Diagnóstico Tres Conversaciones (Hechos · Emociones · Identidad)",
+      "Guías para el gerente con preguntas centradas en intereses"
+    ],
     "activeAnalyses": "análisis activos",
     "neuroTitle": "Neuro-Inclusion Compass™",
     "neuroSubtitle": "Evaluación de madurez de neuroinclusión organizacional",
+    "neuroHighlights": [
+      "Modelo de madurez multidimensional de neuro-inclusión",
+      "Datos anónimos agregados con hoja de ruta de acción",
+      "Logros rápidos, iniciativas a medio plazo y cambios a largo plazo"
+    ],
     "avgMaturityScore": "puntuación promedio de madurez",
     "successionTitle": "Leadership & Succession Hub™",
     "successionSubtitle": "PDI generados por IA y planificación de sucesión",
+    "successionHighlights": [
+      "PDI según modelo GROW, sugeridos por IA",
+      "Seguimiento de hitos con entradas de diario reflexivo",
+      "Aportes de EQ-i y 360 alimentan el plan de desarrollo"
+    ],
     "activeIDPs": "PDI activos",
     "coachingTitle": "Coaching",
     "coachingSubtitle": "Gestione compromisos y sesiones de coaching",
+    "coachingHighlights": [
+      "Compromisos, sesiones, contratos y horas ICF en un solo lugar",
+      "Formularios pre y post-sesión con seguimientos sugeridos por IA",
+      "Enlaces públicos de reserva con sincronización (Google · Microsoft)"
+    ],
     "activeEngagements": "compromisos activos",
     "assessmentsTitle": "Evaluaciones",
     "assessmentsSubtitle": "Plantillas de evaluación activas y respuestas recopiladas",
+    "assessmentsHighlights": [
+      "Plantillas personalizadas o generadas por IA: encuesta, entrevista, evaluación",
+      "Asignaciones recurrentes a departamentos o personas",
+      "Análisis agregado con barrera de privacidad de grupo (mín. 5)"
+    ],
     "responsesCollected": "respuestas recopiladas",
-    "activeAssessmentsResponses": "evaluaciones activas · {{responses}} respuestas"
+    "activeAssessmentsResponses": "evaluaciones activas · {{responses}} respuestas",
+
+    "methodologyEyebrow": "Basado en investigación probada",
+    "methodologyTitle": "Marcos detrás de ARTES",
+    "methodologyIntro": "Cada módulo está fundamentado en investigación basada en evidencia y décadas de experiencia profesional. ARTES traduce el rigor académico en herramientas que sus gerentes, coaches y equipos de RR. HH. realmente pueden usar.",
+    "methodHNP": "Harvard Negotiation Project",
+    "methodHNPDesc": "Cuatro principios: separar a las personas del problema, centrarse en intereses no posiciones, inventar opciones de beneficio mutuo, insistir en criterios objetivos.",
+    "methodHNPCite": "Fisher, Ury & Patton — Obtenga el sí",
+    "methodThreeConv": "Tres Conversaciones",
+    "methodThreeConvDesc": "Toda conversación difícil contiene tres capas: lo que pasó (narrativas divergentes), las emociones (suprimidas), y la identidad (amenazas a la autoimagen).",
+    "methodThreeConvCite": "Stone, Patton & Heen — Difficult Conversations",
+    "methodThirdSide": "El Tercer Lado",
+    "methodThirdSideDesc": "Cuando la resolución bilateral falla, la comunidad circundante — RR. HH., coaches, pares, mediadores — se convierte en un tercer lado estructurado. La escalada como traspaso deliberado, no como fracaso.",
+    "methodThirdSideCite": "William Ury — The Third Side",
+    "methodGROW": "Modelo GROW",
+    "methodGROWDesc": "Goal · Reality · Options · Will. El marco de coaching estructurado que impulsa cada PDI que ARTES genera.",
+    "methodGROWCite": "Whitmore — Coaching for Performance",
+
+    "howEyebrow": "Cómo funciona ARTES",
+    "howTitle": "De la señal a la acción en tres pasos",
+    "howStep1Title": "Escuchar",
+    "howStep1Desc": "Encuestas, entrevistas y evaluaciones recopilan datos anónimos y agregados de todo el equipo. La privacidad de grupo (mín. 5) se aplica en todas partes.",
+    "howStep2Title": "Diagnosticar",
+    "howStep2Desc": "Claude analiza la señal con metodología centrada en intereses y consciente de la identidad — revelando impulsores estructurales sin personalizar la culpa.",
+    "howStep3Title": "Actuar",
+    "howStep3Desc": "Guiones para el gerente, acciones recomendadas, planes de desarrollo individuales y una ruta estructurada de escalada hacia la mediación profesional cuando es necesario.",
+
+    "quoteText": "Conflicto y crecimiento no son opuestos — son una sola conversación sobre lo que necesitamos unos de otros para hacer nuestro mejor trabajo.",
+    "quoteAttr": "Helena Coaching · Metodología ARTES"
   },
   "SETTINGS": {
     "title": "Configuración",
