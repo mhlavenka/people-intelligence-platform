@@ -810,7 +810,7 @@ interface Session {
     }
     .contract-card-remove {
       position: absolute; top: 4px; right: 4px;
-      width: 28px; height: 28px; line-height: 28px;
+      width: 38px; height: 28px; line-height: 28px;
       mat-icon { font-size: 18px; width: 18px; height: 18px; }
     }
     .contract-card-doc {

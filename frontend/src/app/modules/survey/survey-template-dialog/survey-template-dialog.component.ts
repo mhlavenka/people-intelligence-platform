@@ -789,11 +789,10 @@ interface SurveyTemplate {
             <div class="tab-content">
               <p class="prompt-hint">{{ 'SURVEY.analysisPromptHint' | translate }}</p>
 
-              <mat-form-field appearance="outline" class="full-width">
+              <mat-form-field appearance="outline" class="full-width prompt-field">
                 <mat-label>{{ 'SURVEY.analysisPromptLabel' | translate }}</mat-label>
                 <textarea matInput formControlName="analysisPrompt"
-                  rows="16"
-                  style="font-family: monospace; font-size: 13px; line-height: 1.5"
+                  class="ai-prompt-textarea"
                   [placeholder]="'SURVEY.analysisPromptPlaceholder' | translate"></textarea>
                 <mat-hint>{{ 'SURVEY.analysisPromptDefault' | translate }}</mat-hint>
               </mat-form-field>
@@ -865,6 +864,14 @@ interface SurveyTemplate {
       padding: 20px 8px 24px;
       display: flex; flex-direction: column; gap: 10px;
       box-sizing: border-box;
+    }
+
+    /* AI Prompt textarea fills the available tab height; min-height keeps it
+       readable on short viewports, max-height respects dialog chrome. */
+    .ai-prompt-textarea {
+      font-family: monospace; font-size: 13px; line-height: 1.5;
+      min-height: 50vh;
+      resize: vertical;
     }
 
     .prompt-hint {

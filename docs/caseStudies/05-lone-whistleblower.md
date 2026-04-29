@@ -32,14 +32,16 @@ WITHOUT pointing at the individual.
 ## Expected metric outcomes
 | Signal | Expected |
 |---|---|
-| Risk score | 35–45 (Medium) |
-| Team Alignment | 55–70 (Mixed; one outlier drags the mean down) |
-| Psych Safety mean | ~7.0, r_wg ~0.65 |
+| Risk score | 55–70 (High) — magnitude-of-signal calibration: the minority is reporting witnessed unsafe behaviour, an unresolved conflict, and escalation intent. Severity drives the score, not proportion. |
+| Team Alignment | 55–70 (Mixed; rwg×0.6 + clusterFraction×0.4 — outlier drags the score into the Mixed band without erasing it) |
+| Psych Safety mean | ~7.6, rwg ~0.54 |
+| Conflict Frequency rwg | ~0.35 (lowest of any dimension — driven by cp07) |
 | outlierCount on cp01 / cp02 / cp14 | 1 each |
 | Booleans (cp03, cp08, cp12) sum | 1 each (the whistleblower) |
-| Subgroups | None detected (cluster of 1 violates min-3 floor) |
+| Subgroups | None detected (cluster of 1 violates min-3 floor) — surfaced explicitly in the SUBGROUP STRUCTURE block as "detector ran but did NOT fire" |
 | Histograms | Visible 1-bar at low end on multiple items |
-| AI narrative | Acknowledge minority signal; do not infer identity; explore via aggregate channels |
+| AI narrative | Use Condorcet/Aumann minority-voice framing explicitly; never use fracture / split / polarised / subgroup / bimodal-split language; recommend aggregate channels (anonymous follow-up, skip-level, ombudsperson) and explicit non-identification |
+| conflictTypes vocabulary | "Minority voice signal", "Unsurfaced concern", "Outlier signal" — never "Bimodal Split", "Polarised Experience", "Subgroup-Level Divide", or "Fractured Team Experience" |
 
 ## Per-respondent answer matrix
 R10 is the outlier; R1–R9 are the satisfied majority.

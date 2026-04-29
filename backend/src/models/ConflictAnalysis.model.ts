@@ -33,6 +33,11 @@ export interface IItemMetric {
   entropy: number;               // Shannon, base e
   rwg: number;                   // James-Demaree-Wolf within-group agreement
   outlierCount: number;          // respondents flagged via modified-Z > 3.5
+  clusterFraction?: number;      // proportion within ±1 of the most common answer
+                                 // (±0 for booleans). Robust to singleton outliers;
+                                 // feeds the headline alignment blend alongside rwg.
+                                 // Optional for backward compatibility with stored
+                                 // analyses that pre-date the alignment-blend fix.
   scaleMin?: number;
   scaleMax?: number;
   // Dense answer histogram, indexed [0 .. scaleMax-scaleMin]. counts[i] is the

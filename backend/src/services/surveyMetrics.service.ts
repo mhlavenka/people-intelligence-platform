@@ -242,6 +242,11 @@ export function computeItemMetrics(
   const range = effectiveScaleRange(question, values);
   const histogram = buildHistogram(values, range.min, range.max);
 
+  // Booleans live on a 0/1 scale — adjacent values aren't meaningful, so the
+  // cluster window collapses to ±0 (exact match). Continuous-scale items use
+  // ±1 so neighbouring answers (e.g. 8 vs 9 on a 1-10 scale) count as agreement.
+  const clusterWindow = (range.max - range.min) <= 1 ? 0 : 1;
+
   return {
     questionId: question.id,
     text: question.text,
@@ -254,10 +259,30 @@ export function computeItemMetrics(
     entropy: round(shannonEntropy(values), 3),
     rwg: round(rwg(values, range.min, range.max), 3),
     outlierCount: countOutliersModifiedZ(values),
+    clusterFraction: round(clusterFraction(values, clusterWindow), 3),
     scaleMin: range.min,
     scaleMax: range.max,
     histogram,
   };
+}
+
+/** Per-item agreement: largest fraction of respondents whose value falls within
+ *  ±window of any single response value. Robust to singleton outliers — a 9+1
+ *  team scores ~0.9, while a genuine 4+4 fracture scores 0.5. Used in the
+ *  headline alignment blend to keep one extreme respondent from collapsing the
+ *  team-alignment score into "fractured" territory. */
+function clusterFraction(values: number[], window: number): number {
+  if (values.length === 0) return 0;
+  let best = 0;
+  const seen = new Set<number>();
+  for (const center of values) {
+    if (seen.has(center)) continue;
+    seen.add(center);
+    const within = values.filter((x) => Math.abs(x - center) <= window).length;
+    const fraction = within / values.length;
+    if (fraction > best) best = fraction;
+  }
+  return best;
 }
 
 /** Bin integer-valued responses into a dense per-scale-point count array.
@@ -330,14 +355,30 @@ export function rollupByDimension(itemMetrics: IItemMetric[]): IDimensionMetric[
 // ── Layer 5: team-alignment headline (0-100) ────────────────────────────────
 
 /**
- * Headline alignment score: average rwg across items, scaled to 0-100.
- * Bands (used by the dashboard tile):
+ * Headline alignment score (0-100). Bands used by the dashboard tile:
  *   70-100 = aligned, 40-69 = mixed, 0-39 = fractured.
+ *
+ * Blends two per-item statistics so the headline reflects both *statistical*
+ * agreement and *majority-membership* agreement:
+ *   - rwg (variance-based) — sensitive to extreme values; one outlier on a
+ *     1-10 scale tanks rwg even when 9 of 10 respondents agree. Kept for the
+ *     per-item AI signal (minority-voice detection) but blended at the headline.
+ *   - clusterFraction (majority-membership) — proportion within ±1 of the most
+ *     common answer. Robust to singleton outliers: 9+1 ≈ 0.9, 4+4 ≈ 0.5.
+ *
+ * The 0.6/0.4 blend (rwg-heavier) produces the calibrated bands the
+ * case-study spec expects: fully aligned teams score ~95+, singleton-outlier
+ * patterns ~55-70 (Mixed — the outlier drags the score down without erasing
+ * it), and structural fractures stay at ~25 or below. rwg is weighted higher
+ * because statistical agreement is what the bands ultimately measure;
+ * clusterFraction is the corrective term that prevents one extreme respondent
+ * from collapsing the headline into "fractured" territory.
  */
 export function teamAlignmentScore(itemMetrics: IItemMetric[]): number {
   if (itemMetrics.length === 0) return 0;
-  const r = mean(itemMetrics.map((i) => i.rwg));
-  return round(clamp(r * 100, 0, 100), 0);
+  const rwgMean = mean(itemMetrics.map((i) => i.rwg));
+  const cfMean = mean(itemMetrics.map((i) => i.clusterFraction ?? i.rwg));
+  return round(clamp((0.6 * rwgMean + 0.4 * cfMean) * 100, 0, 100), 0);
 }
 
 // ── Layer 4: subgroup detection (Phase 2) ───────────────────────────────────

@@ -168,17 +168,26 @@ export function buildConflictAnalysisPrompt(
       }.\n`
     : '';
 
+  const hasSubgroups = !!(surveyData.subgroupAnalysis && surveyData.subgroupAnalysis.clusters.length);
+
   // Top-3 most-divergent items (lowest rwg). Helps Claude calibrate which items
-  // are noisy/split vs. unanimously low.
+  // are noisy/split vs. unanimously low. The bimodality interpretation depends
+  // on whether the subgroup detector fired — high BC with NO subgroup is a
+  // singleton/minority-voice signature, not a structural split.
   const topDivergent = (surveyData.itemMetrics ?? [])
     .slice()
     .sort((a, b) => a.rwg - b.rwg)
     .slice(0, 3);
+  const highBcItems = topDivergent.filter((m) => m.bimodalityCoef > 0.555);
   const itemBlock = topDivergent.length
     ? '\nPER-ITEM DIVERGENCE (top 3 by disagreement)\n' +
       topDivergent.map((m) => {
-        const split = m.bimodalityCoef > 0.555 ? `, bimodal (BC ${m.bimodalityCoef.toFixed(2)}) — team is split` : '';
-        return `- ${m.questionId}${m.text ? ' "' + m.text.slice(0, 110) + '"' : ''} — mean ${m.mean}, sd ${m.sd}, rwg ${m.rwg}${split}`;
+        const bimodal = m.bimodalityCoef > 0.555
+          ? hasSubgroups
+            ? `, bimodal (BC ${m.bimodalityCoef.toFixed(2)}) — team is split`
+            : `, high BC ${m.bimodalityCoef.toFixed(2)} but NO subgroup detected — likely minority-voice / singleton outlier, not a structural split`
+          : '';
+        return `- ${m.questionId}${m.text ? ' "' + m.text.slice(0, 110) + '"' : ''} — mean ${m.mean}, sd ${m.sd}, rwg ${m.rwg}${bimodal}`;
       }).join('\n') + '\n'
     : '';
 
@@ -193,10 +202,10 @@ export function buildConflictAnalysisPrompt(
       }).join('\n') + '\n'
     : '';
 
-  const subgroupBlock = surveyData.subgroupAnalysis
+  const subgroupBlock = hasSubgroups
     ? `\nSUBGROUP STRUCTURE\n` +
-      `- ${surveyData.subgroupAnalysis.clusters.length} distinct response patterns detected (k=${surveyData.subgroupAnalysis.k}, silhouette ${surveyData.subgroupAnalysis.silhouette}).\n` +
-      surveyData.subgroupAnalysis.clusters.map((c) => {
+      `- ${surveyData.subgroupAnalysis!.clusters.length} distinct response patterns detected (k=${surveyData.subgroupAnalysis!.k}, silhouette ${surveyData.subgroupAnalysis!.silhouette}).\n` +
+      surveyData.subgroupAnalysis!.clusters.map((c) => {
         const dims = Object.entries(c.meanByDimension)
           .sort((a, b) => a[1] - b[1])
           .slice(0, 5)
@@ -207,14 +216,18 @@ export function buildConflictAnalysisPrompt(
           : '';
         return `- Cluster ${c.label} (${c.size} respondents): ${dims}.${distinguishing}`;
       }).join('\n') + '\n'
-    : '';
+    : (highBcItems.length
+        ? `\nSUBGROUP STRUCTURE\n- Subgroup detector ran but did NOT fire — no cluster of ≥3 respondents with a coherent differing response pattern. High item-level bimodality (${highBcItems.map(i => i.questionId).join(', ')}) without subgroup structure is the Condorcet / Aumann signature of a SINGLETON OUTLIER or MINORITY VOICE within an otherwise aligned team, not a structural split.\n`
+        : '');
 
   const interpretationGuidance = (qualityBlock || itemBlock || dimensionBlock || subgroupBlock)
     ? `\nINTERPRETATION GUIDANCE
 Treat divergence as STRUCTURAL signal, not individual blame. A split team is reporting different experiences of the same workplace — possible drivers include role, shift, tenure, team membership, or recent events. Minority voices may reflect the truth rather than dysfunction. Use the rwg + bimodality data to CALIBRATE confidence in your interpretation and to suggest interventions that do NOT single out individuals.${
-        surveyData.subgroupAnalysis
+        hasSubgroups
           ? ' When SUBGROUP STRUCTURE is present, treat the clusters as STATISTICAL response patterns, not as social factions or sides of a conflict — they likely reflect role, shift, tenure, or recent experience. Never speculate about who belongs to which cluster (membership is never disclosed). Use the cluster profiles to surface the structural drivers of disagreement and propose interventions that respect the differing experiences each cluster reports.'
-          : ''
+          : (highBcItems.length
+              ? ' When NO SUBGROUP STRUCTURE was detected despite high item-level bimodality: do NOT use fracture / split / divide / polarised / subgroup / bimodal-split framing in the narrative or conflictTypes — the team is NOT structurally split. Frame the pattern as a MINORITY VOICE signal: one or a few respondents are reporting a markedly different reality from an otherwise aligned majority. Acknowledge that the minority reading may be more accurate than the majority (Condorcet / Aumann), and recommend AGGREGATE channels (anonymous follow-up survey, skip-level conversations, ombudsperson, exit interviews) rather than identification. conflictTypes in this case should reference "minority voice", "outlier signal", or "unsurfaced concern" — never "subgroup", "bimodal split", "polarised", or "fractured".'
+              : '')
       }\n`
     : '';
 
