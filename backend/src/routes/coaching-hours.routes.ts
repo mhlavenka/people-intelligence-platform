@@ -7,6 +7,7 @@ import { CoachingHoursLog } from '../models/CoachingHoursLog.model';
 import { User } from '../models/User.model';
 import { getHoursSummary, getHoursLogEntries } from '../services/coachingHours.service';
 import { importCsv, exportCsv } from '../services/coachingHoursCsv.service';
+import { logActivity } from '../services/activityLog.service';
 
 const router = Router();
 router.use(authenticateToken, tenantResolver);
@@ -116,6 +117,12 @@ router.post(
         coachId,
         organizationId: req.user!.organizationId,
       });
+      logActivity({
+        org: req.user!.organizationId, actor: req.user!.userId,
+        type: 'coaching.hours.logged', label: 'ICF hours logged',
+        detail: `${entry.hours}h ${entry.category}`,
+        refModel: 'CoachingHoursLog', refId: entry._id,
+      });
       res.status(201).json(entry);
     } catch (e) { next(e); }
   },
@@ -142,6 +149,12 @@ router.put(
       const { coachId: _ignoreCoach, organizationId: _ignoreOrg, ...rest } = req.body;
       Object.assign(existing, rest);
       await existing.save();
+      logActivity({
+        org: req.user!.organizationId, actor: req.user!.userId,
+        type: 'coaching.hours.updated', label: 'ICF hours updated',
+        detail: `${existing.hours}h ${existing.category}`,
+        refModel: 'CoachingHoursLog', refId: existing._id,
+      });
       res.json(existing);
     } catch (e) { next(e); }
   },
@@ -164,6 +177,11 @@ router.delete(
       }
 
       await existing.deleteOne();
+      logActivity({
+        org: req.user!.organizationId, actor: req.user!.userId,
+        type: 'coaching.hours.deleted', label: 'ICF hours deleted',
+        detail: `${existing.hours}h ${existing.category}`,
+      });
       res.status(204).end();
     } catch (e) { next(e); }
   },
@@ -227,6 +245,13 @@ router.post(
       const orgId = new mongoose.Types.ObjectId(req.user!.organizationId);
 
       const preview = await importCsv(orgId, coachId, req.file.buffer, req.file.originalname, { dryRun });
+      if (!dryRun && preview.validRows > 0) {
+        logActivity({
+          org: req.user!.organizationId, actor: req.user!.userId,
+          type: 'coaching.hours.imported', label: 'ICF hours CSV imported',
+          detail: `${preview.validRows} of ${preview.totalRows} rows from ${req.file.originalname}`,
+        });
+      }
       res.json(preview);
     } catch (e) {
       // Header / parse errors come through as Error('CSV parse failed: ...') etc.

@@ -3,6 +3,7 @@ import { authenticateToken, AuthRequest } from '../middleware/auth.middleware';
 import { tenantResolver } from '../middleware/tenant.middleware';
 import { requireRole } from '../middleware/auth.middleware';
 import { LoginSession } from '../models/LoginSession.model';
+import { logActivity } from '../services/activityLog.service';
 
 const router = Router();
 router.use(authenticateToken, tenantResolver);
@@ -97,6 +98,14 @@ router.delete('/org/stale', requireRole('admin', 'hr_manager'), async (req: Auth
       organizationId: req.user!.organizationId,
       lastActiveAt: { $lt: cutoff },
     });
+    if (result.deletedCount > 0) {
+      logActivity({
+        org: req.user!.organizationId, actor: req.user!.userId,
+        type: 'auth.sessions.stale_purged',
+        label: 'Stale login sessions purged',
+        detail: `${result.deletedCount} session(s)`,
+      });
+    }
     res.json({ message: `${result.deletedCount} stale session(s) removed` });
   } catch (err) {
     next(err);
@@ -116,6 +125,12 @@ router.delete('/org/:id', requireRole('admin', 'hr_manager'), async (req: AuthRe
     }
 
     await session.deleteOne();
+    logActivity({
+      org: req.user!.organizationId, actor: req.user!.userId,
+      type: 'auth.session.revoked_by_admin',
+      label: 'Login session revoked (by admin)',
+      refModel: 'User', refId: session.userId,
+    });
     res.json({ message: 'Session revoked' });
   } catch (err) {
     next(err);

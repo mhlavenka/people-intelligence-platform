@@ -17,6 +17,7 @@ import {
   stopMicrosoftWebhook,
 } from '../services/microsoftWebhook.service';
 import { getCalendarProvider, getCoachCalendarProvider } from '../services/calendar';
+import { logActivity } from '../services/activityLog.service';
 
 // ── Public callbacks (no auth required — OAuth providers redirect here) ─────
 export const calendarCallbackRouter = Router();
@@ -132,6 +133,12 @@ router.post(
         );
       }
 
+      logActivity({
+        org: req.user!.organizationId, actor: req.user!.userId,
+        type: 'calendar.selected', label: 'Calendar selected',
+        detail: calendarName || calendarId,
+        refModel: 'User', refId: req.user!.userId,
+      });
       res.json({ message: 'Calendar selected', calendarId, calendarName });
     } catch (e) { next(e); }
   },
@@ -157,6 +164,11 @@ router.delete(
           'microsoftCalendar.calendarId': null,
           'microsoftCalendar.calendarName': null,
         });
+        logActivity({
+          org: req.user!.organizationId, actor: req.user!.userId,
+          type: 'calendar.disconnected', label: 'Microsoft Calendar disconnected',
+          refModel: 'User', refId: req.user!.userId,
+        });
         res.json({ message: 'Microsoft Calendar disconnected' });
       } else {
         await stopGoogleWebhook(req.user!.userId).catch((err) =>
@@ -169,6 +181,11 @@ router.delete(
           'googleCalendar.tokenExpiry': null,
           'googleCalendar.calendarId': null,
           'googleCalendar.calendarName': null,
+        });
+        logActivity({
+          org: req.user!.organizationId, actor: req.user!.userId,
+          type: 'calendar.disconnected', label: 'Google Calendar disconnected',
+          refModel: 'User', refId: req.user!.userId,
         });
         res.json({ message: 'Google Calendar disconnected' });
       }

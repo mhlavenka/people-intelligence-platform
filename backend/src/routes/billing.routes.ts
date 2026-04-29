@@ -5,6 +5,7 @@ import { config } from '../config/env';
 import { authenticateToken, AuthRequest } from '../middleware/auth.middleware';
 import { tenantResolver } from '../middleware/tenant.middleware';
 import { Invoice } from '../models/Invoice.model';
+import { logActivity } from '../services/activityLog.service';
 
 const router = Router();
 const stripe = new Stripe(config.stripe.secretKey);
@@ -54,6 +55,13 @@ router.post(
             invoice.stripePaymentIntentId = session.payment_intent;
           }
           await invoice.save();
+          // No actor — Stripe webhook is unauthenticated.
+          logActivity({
+            org: invoice.organizationId,
+            type: 'billing.invoice.paid', label: 'Invoice paid (Stripe)',
+            detail: `${invoice.invoiceNumber} — $${(invoice.total / 100).toFixed(2)}`,
+            refModel: 'Invoice', refId: invoice._id,
+          });
         }
       }
 
@@ -180,6 +188,13 @@ router.post(
 
       invoice.stripeCheckoutSessionId = session.id;
       await invoice.save();
+
+      logActivity({
+        org: organizationId, actor: req.user!.userId,
+        type: 'billing.checkout.started', label: 'Stripe checkout opened',
+        detail: invoice.invoiceNumber,
+        refModel: 'Invoice', refId: invoice._id,
+      });
 
       res.json({ url: session.url });
     } catch (e) {

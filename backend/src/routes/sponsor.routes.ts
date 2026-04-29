@@ -12,6 +12,7 @@ import {
   getTaxRates,
   CANADIAN_PROVINCES,
 } from '../config/tax-rates';
+import { logActivity } from '../services/activityLog.service';
 
 const router = Router();
 router.use(authenticateToken, tenantResolver);
@@ -126,6 +127,12 @@ router.post(
           defaultHourlyRate, notes, coacheeId: coacheeId || null,
           isActive: true,
         });
+        logActivity({
+          org: req.user!.organizationId, actor: req.user!.userId,
+          type: 'sponsor.created', label: 'Sponsor created',
+          detail: `${sponsor.name} <${sponsor.email}>`,
+          refModel: 'Sponsor', refId: sponsor._id,
+        });
         res.status(201).json(sponsor);
       } catch (err) {
         if ((err as { code?: number })?.code === 11000) {
@@ -165,6 +172,12 @@ router.post(
         coacheeId: coachee._id,
         isActive: true,
       });
+      logActivity({
+        org: req.user!.organizationId, actor: req.user!.userId,
+        type: 'sponsor.created', label: 'Sponsor created (self-pay)',
+        detail: `${sponsor.name} <${sponsor.email}>`,
+        refModel: 'Sponsor', refId: sponsor._id,
+      });
       res.status(201).json(sponsor);
     } catch (e) { next(e); }
   },
@@ -186,6 +199,12 @@ router.put(
           { new: true, runValidators: true },
         );
         if (!sponsor) { res.status(404).json({ error: req.t('errors.sponsorNotFound') }); return; }
+        logActivity({
+          org: req.user!.organizationId, actor: req.user!.userId,
+          type: 'sponsor.updated', label: 'Sponsor updated',
+          detail: sponsor.name,
+          refModel: 'Sponsor', refId: sponsor._id,
+        });
         res.json(sponsor);
       } catch (err) {
         if ((err as { code?: number })?.code === 11000) {
@@ -221,6 +240,11 @@ router.delete(
         organizationId: req.user!.organizationId,
       });
       if (!sponsor) { res.status(404).json({ error: req.t('errors.sponsorNotFound') }); return; }
+      logActivity({
+        org: req.user!.organizationId, actor: req.user!.userId,
+        type: 'sponsor.deleted', label: 'Sponsor deleted',
+        detail: sponsor.name,
+      });
       res.json({ message: 'Sponsor deleted' });
     } catch (e) { next(e); }
   },
@@ -499,6 +523,12 @@ router.post(
         res.status(500).json({ error: req.t('errors.couldNotAllocateInvoiceNumber') });
         return;
       }
+      logActivity({
+        org: orgId, actor: req.user!.userId,
+        type: 'sponsor.invoice.created', label: 'Sponsor invoice issued',
+        detail: `${invoice.invoiceNumber} — ${sponsor.name} — $${(invoice.total / 100).toFixed(2)}`,
+        refModel: 'Invoice', refId: invoice._id,
+      });
       res.status(201).json(invoice);
     } catch (e) { next(e); }
   },
@@ -568,6 +598,12 @@ router.put(
       }
 
       await invoice.save();
+      logActivity({
+        org: req.user!.organizationId, actor: req.user!.userId,
+        type: 'sponsor.invoice.updated', label: 'Sponsor invoice updated',
+        detail: invoice.invoiceNumber,
+        refModel: 'Invoice', refId: invoice._id,
+      });
       res.json(invoice);
     } catch (e) { next(e); }
   },
@@ -657,6 +693,12 @@ router.post(
         console.error('[Sponsor] Failed to email invoice:', err);
       }
 
+      logActivity({
+        org: orgId, actor: req.user!.userId,
+        type: 'sponsor.invoice.sent', label: 'Sponsor invoice sent',
+        detail: `${invoice.invoiceNumber} → ${sponsor.email}`,
+        refModel: 'Invoice', refId: invoice._id,
+      });
       res.json(invoice);
     } catch (e) { next(e); }
   },
@@ -676,6 +718,12 @@ router.patch(
         { new: true },
       );
       if (!invoice) { res.status(404).json({ error: req.t('errors.invoiceNotFound') }); return; }
+      logActivity({
+        org: orgId, actor: req.user!.userId,
+        type: 'sponsor.invoice.voided', label: 'Sponsor invoice voided',
+        detail: invoice.invoiceNumber,
+        refModel: 'Invoice', refId: invoice._id,
+      });
       res.json(invoice);
     } catch (e) { next(e); }
   },
@@ -701,6 +749,11 @@ router.delete(
         return;
       }
       await invoice.deleteOne();
+      logActivity({
+        org: orgId, actor: req.user!.userId,
+        type: 'sponsor.invoice.deleted', label: 'Sponsor invoice deleted',
+        detail: invoice.invoiceNumber,
+      });
       res.json({ message: 'Invoice deleted' });
     } catch (e) { next(e); }
   },

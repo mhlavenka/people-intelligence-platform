@@ -23,6 +23,7 @@ import { BookingSettings } from '../models/BookingSettings.model';
 import { buildPostSessionReflectionPrompt, callClaude } from '../services/ai.service';
 import { sendEmail } from '../services/email.service';
 import { notifyPostSessionForm, notifyPreSessionForm, createHubNotification, isNotificationEnabled } from '../services/hubNotification.service';
+import { logActivity } from '../services/activityLog.service';
 import { config } from '../config/env';
 
 async function generateAndSendPostSessionForm(
@@ -381,6 +382,15 @@ router.post(
         console.error('[Coaching] Notification failed:', notifyErr);
       }
 
+      const coacheeDoc = populated.coacheeId as unknown as { firstName?: string; lastName?: string } | null;
+      const coacheeName = coacheeDoc ? `${coacheeDoc.firstName ?? ''} ${coacheeDoc.lastName ?? ''}`.trim() : '';
+      logActivity({
+        org: req.user!.organizationId, actor: req.user!.userId,
+        type: 'coaching.engagement.created', label: 'Coaching engagement created',
+        detail: coacheeName || undefined,
+        refModel: 'CoachingEngagement', refId: engagement._id,
+      });
+
       res.status(201).json(populated);
     } catch (e) { next(e); }
   }
@@ -417,6 +427,17 @@ router.put(
         .populate('coacheeId', 'firstName lastName email department profilePicture')
         .populate('coachId', 'firstName lastName email profilePicture')
         .populate('sponsorId', 'name email organization');
+      const statusChanged = Object.prototype.hasOwnProperty.call(req.body, 'status');
+      logActivity({
+        org: req.user!.organizationId, actor: req.user!.userId,
+        type: isReactivation ? 'coaching.engagement.reactivated'
+            : statusChanged ? 'coaching.engagement.status_changed'
+            : 'coaching.engagement.updated',
+        label: isReactivation ? 'Coaching engagement reactivated'
+            : statusChanged ? `Engagement → ${existing.status}`
+            : 'Coaching engagement updated',
+        refModel: 'CoachingEngagement', refId: existing._id,
+      });
       res.json(engagement);
     } catch (e) { next(e); }
   }
@@ -462,6 +483,11 @@ router.delete(
         organizationId: req.user!.organizationId,
       });
 
+      logActivity({
+        org: req.user!.organizationId, actor: req.user!.userId,
+        type: 'coaching.engagement.deleted', label: 'Coaching engagement deleted',
+        detail: `${sessions.length} session(s) cascaded`,
+      });
       res.json({ message: 'Engagement and sessions deleted' });
     } catch (e) { next(e); }
   }
@@ -560,6 +586,13 @@ router.post(
       engagement.contractAcceptedIp = undefined;
       await engagement.save();
 
+      logActivity({
+        org: req.user!.organizationId, actor: req.user!.userId,
+        type: 'coaching.contract.uploaded', label: 'Contract uploaded',
+        detail: req.file.originalname,
+        refModel: 'CoachingEngagement', refId: engagement._id,
+      });
+
       res.json({
         contractFilename: engagement.contractFilename,
         hasContract: true,
@@ -628,6 +661,12 @@ router.delete(
       engagement.contractAcceptedIp = undefined;
       await engagement.save();
 
+      logActivity({
+        org: req.user!.organizationId, actor: req.user!.userId,
+        type: 'coaching.contract.removed', label: 'Contract removed',
+        refModel: 'CoachingEngagement', refId: engagement._id,
+      });
+
       res.status(204).end();
     } catch (e) { next(e); }
   },
@@ -692,6 +731,14 @@ router.post(
       } catch (err) {
         console.warn('[Contract] Notification failed (non-fatal):', err);
       }
+
+      logActivity({
+        org: req.user!.organizationId, actor: req.user!.userId,
+        type: 'coaching.contract.accepted', label: 'Contract accepted',
+        detail: engagement.contractFilename,
+        refModel: 'CoachingEngagement', refId: engagement._id,
+        metadata: { ip: engagement.contractAcceptedIp },
+      });
 
       res.json({
         contractAcceptedAt: engagement.contractAcceptedAt,
@@ -777,6 +824,13 @@ router.post(
       engagement.contractAcceptedBy = undefined;
       engagement.contractAcceptedIp = undefined;
       await engagement.save();
+
+      logActivity({
+        org: req.user!.organizationId, actor: req.user!.userId,
+        type: 'coaching.contract.generated', label: 'Contract generated',
+        detail: filename,
+        refModel: 'CoachingEngagement', refId: engagement._id,
+      });
 
       res.json({ contractFilename: engagement.contractFilename, hasContract: true });
     } catch (e) { next(e); }
@@ -959,6 +1013,13 @@ router.post(
         console.error('[Coaching] Notification failed:', notifyErr);
       }
 
+      logActivity({
+        org: req.user!.organizationId, actor: req.user!.userId,
+        type: 'coaching.session.created', label: 'Coaching session scheduled',
+        detail: `${session.duration}min ${session.format} — ${session.date.toISOString().slice(0, 10)}`,
+        refModel: 'CoachingSession', refId: session._id,
+      });
+
       res.status(201).json(populated);
     } catch (e) { next(e); }
   }
@@ -1115,6 +1176,20 @@ router.put(
         { path: 'coacheeId', select: 'firstName lastName profilePicture' },
         { path: 'coachId', select: 'firstName lastName' },
       ]);
+      const statusChanged = prev.status !== existing.status;
+      const dateChanged = prev.date.getTime() !== existing.date.getTime();
+      logActivity({
+        org: req.user!.organizationId, actor: req.user!.userId,
+        type: statusChanged && existing.status === 'completed' ? 'coaching.session.completed'
+            : statusChanged && existing.status === 'cancelled' ? 'coaching.session.cancelled'
+            : dateChanged ? 'coaching.session.rescheduled'
+            : 'coaching.session.updated',
+        label: statusChanged && existing.status === 'completed' ? 'Coaching session completed'
+            : statusChanged && existing.status === 'cancelled' ? 'Coaching session cancelled'
+            : dateChanged ? 'Coaching session rescheduled'
+            : 'Coaching session updated',
+        refModel: 'CoachingSession', refId: existing._id,
+      });
       res.json(existing);
     } catch (e) { next(e); }
   }
@@ -1268,6 +1343,12 @@ router.delete(
           console.warn('[GCal] Failed to delete event:', calErr);
         }
       }
+
+      logActivity({
+        org: req.user!.organizationId, actor: req.user!.userId,
+        type: 'coaching.session.deleted', label: 'Coaching session deleted',
+        detail: `${session.duration}min ${session.format} — ${session.date.toISOString().slice(0, 10)}`,
+      });
 
       res.json({ message: 'Session deleted' });
     } catch (e) { next(e); }

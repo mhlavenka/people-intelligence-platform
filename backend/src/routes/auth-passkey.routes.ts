@@ -15,6 +15,7 @@ import { User, IPasskeyCredential } from '../models/User.model';
 import { config } from '../config/env';
 import jwt from 'jsonwebtoken';
 import { buildPayload, generateTokens } from '../controllers/auth.controller';
+import { logActivity } from '../services/activityLog.service';
 
 const router = Router();
 
@@ -121,6 +122,13 @@ router.post(
       user.passkeys.push(newPasskey);
       await user.save();
 
+      logActivity({
+        org: user.organizationId, actor: user._id,
+        type: 'auth.passkey.added', label: 'Passkey added',
+        detail: `${newPasskey.label} — ${user.email}`,
+        refModel: 'User', refId: user._id,
+      });
+
       res.json({ message: 'Passkey registered', passkeyCount: user.passkeys.length });
     } catch (e) { next(e); }
   }
@@ -200,6 +208,13 @@ router.post('/login-verify', async (req, res, next) => {
     const payload = await buildPayload(user);
     const tokens = generateTokens(payload);
 
+    logActivity({
+      org: user.organizationId, actor: user._id,
+      type: 'auth.login.passkey', label: 'Signed in (passkey)',
+      detail: user.email,
+      refModel: 'User', refId: user._id,
+    });
+
     res.json({
       ...tokens,
       user: {
@@ -243,8 +258,15 @@ router.delete(
     try {
       const user = await User.findOne({ _id: req.user!.userId, organizationId: req.user!.organizationId });
       if (!user) { res.status(404).json({ error: req.t('errors.userNotFound') }); return; }
+      const removed = user.passkeys.find((pk) => pk.credentialId === req.params['credentialId']);
       user.passkeys = user.passkeys.filter((pk) => pk.credentialId !== req.params['credentialId']);
       await user.save();
+      logActivity({
+        org: user.organizationId, actor: user._id,
+        type: 'auth.passkey.removed', label: 'Passkey removed',
+        detail: `${removed?.label || 'Passkey'} — ${user.email}`,
+        refModel: 'User', refId: user._id,
+      });
       res.json({ message: 'Passkey removed', passkeyCount: user.passkeys.length });
     } catch (e) { next(e); }
   }

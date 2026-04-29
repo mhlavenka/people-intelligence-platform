@@ -2,6 +2,7 @@ import { Router, Request, Response, NextFunction } from 'express';
 import { User } from '../models/User.model';
 import { config } from '../config/env';
 import { buildPayload, generateTokens } from '../controllers/auth.controller';
+import { logActivity } from '../services/activityLog.service';
 
 const router = Router();
 
@@ -88,6 +89,13 @@ router.post('/google', async (req: Request, res: Response, next: NextFunction) =
 
     const payload = await buildPayload(user);
     const tokens = generateTokens(payload);
+
+    logActivity({
+      org: user.organizationId, actor: user._id,
+      type: 'auth.login.google', label: 'Signed in (Google)',
+      detail: user.email,
+      refModel: 'User', refId: user._id,
+    });
 
     res.json({
       ...tokens,
@@ -183,6 +191,13 @@ router.post('/microsoft', async (req: Request, res: Response, next: NextFunction
 
     const payload = await buildPayload(user);
     const tokens = generateTokens(payload);
+
+    logActivity({
+      org: user.organizationId, actor: user._id,
+      type: 'auth.login.microsoft', label: 'Signed in (Microsoft)',
+      detail: user.email,
+      refModel: 'User', refId: user._id,
+    });
 
     res.json({
       ...tokens,

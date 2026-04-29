@@ -4,6 +4,7 @@ import { tenantResolver } from '../middleware/tenant.middleware';
 import { CustomRole } from '../models/CustomRole.model';
 import { SystemRoleOverride } from '../models/SystemRoleOverride.model';
 import { PERMISSION_GROUPS, SYSTEM_ROLE_PERMISSIONS } from '../config/permissions';
+import { logActivity } from '../services/activityLog.service';
 
 const router = Router();
 
@@ -57,6 +58,13 @@ router.put(
         { upsert: true, new: true, runValidators: true }
       );
 
+      logActivity({
+        org: orgId, actor: req.user!.userId,
+        type: 'role.system.permissions_overridden',
+        label: 'System role permissions overridden',
+        detail: `${role} — ${permissions.length} permission(s)`,
+      });
+
       res.json(override);
     } catch (e) { next(e); }
   }
@@ -71,6 +79,12 @@ router.delete(
       const orgId = req.user!.organizationId;
       const { role } = req.params as { role: string };
       await SystemRoleOverride.findOneAndDelete({ organizationId: orgId, role });
+      logActivity({
+        org: orgId, actor: req.user!.userId,
+        type: 'role.system.permissions_reset',
+        label: 'System role permissions reset to defaults',
+        detail: role,
+      });
       res.json({ message: 'Reset to defaults', permissions: SYSTEM_ROLE_PERMISSIONS[role] ?? [] });
     } catch (e) { next(e); }
   }
@@ -111,6 +125,12 @@ router.post(
         organizationId: req.user!.organizationId,
         createdBy: req.user!.userId,
       });
+      logActivity({
+        org: req.user!.organizationId, actor: req.user!.userId,
+        type: 'role.custom.created', label: 'Custom role created',
+        detail: role.name,
+        refModel: 'CustomRole', refId: role._id,
+      });
       res.status(201).json(role);
     } catch (e) {
       next(e);
@@ -130,6 +150,12 @@ router.put(
         { new: true, runValidators: true }
       );
       if (!role) { res.status(404).json({ error: req.t('errors.roleNotFound') }); return; }
+      logActivity({
+        org: req.user!.organizationId, actor: req.user!.userId,
+        type: 'role.custom.updated', label: 'Custom role updated',
+        detail: role.name,
+        refModel: 'CustomRole', refId: role._id,
+      });
       res.json(role);
     } catch (e) {
       next(e);
@@ -148,6 +174,11 @@ router.delete(
         organizationId: req.user!.organizationId,
       });
       if (!role) { res.status(404).json({ error: req.t('errors.roleNotFound') }); return; }
+      logActivity({
+        org: req.user!.organizationId, actor: req.user!.userId,
+        type: 'role.custom.deleted', label: 'Custom role deleted',
+        detail: role.name,
+      });
       res.json({ message: 'Role deleted' });
     } catch (e) {
       next(e);

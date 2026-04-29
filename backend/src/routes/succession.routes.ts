@@ -6,6 +6,7 @@ import { User } from '../models/User.model';
 import { ConflictAnalysis } from '../models/ConflictAnalysis.model';
 import { JournalEntry } from '../models/JournalEntry.model';
 import { buildIDPPrompt, buildConflictIDPPrompt, callClaude, extractJson } from '../services/ai.service';
+import { logActivity } from '../services/activityLog.service';
 
 const router = Router();
 router.use(authenticateToken, tenantResolver);
@@ -82,6 +83,13 @@ router.post(
         competencyGaps,
         aiGeneratedContent: aiResponse,
         status: 'draft',
+      });
+
+      logActivity({
+        org: req.user!.organizationId, actor: req.user!.userId,
+        type: 'idp.generated', label: 'IDP generated (AI)',
+        detail: idp.goal.slice(0, 80),
+        refModel: 'DevelopmentPlan', refId: idp._id,
       });
 
       res.status(201).json(idp);
@@ -177,6 +185,14 @@ router.post(
         competencyGaps: parsed.competencyGaps || analysis.conflictTypes,
         aiGeneratedContent: aiResponse,
         status: 'draft',
+      });
+
+      logActivity({
+        org: organizationId, actor: req.user!.userId,
+        type: 'idp.generated_from_conflict',
+        label: 'IDP generated from conflict analysis',
+        detail: idp.goal.slice(0, 80),
+        refModel: 'DevelopmentPlan', refId: idp._id,
       });
 
       res.status(201).json(idp);
@@ -312,6 +328,14 @@ router.put('/idps/:id/milestone', async (req: AuthRequest, res: Response, next: 
     if (notes !== undefined) milestone.notes = notes;
     await idp.save();
 
+    logActivity({
+      org: req.user!.organizationId, actor: req.user!.userId,
+      type: 'idp.milestone.updated',
+      label: `IDP milestone → ${status}`,
+      detail: milestone.title,
+      refModel: 'DevelopmentPlan', refId: idp._id,
+    });
+
     res.json(idp);
   } catch (e) {
     next(e);
@@ -333,6 +357,12 @@ router.put(
       if (!idp) { res.status(404).json({ error: req.t('errors.idpNotFound') }); return; }
       idp.status = status;
       await idp.save();
+      logActivity({
+        org: req.user!.organizationId, actor: req.user!.userId,
+        type: 'idp.status_changed', label: `IDP → ${status}`,
+        detail: idp.goal.slice(0, 80),
+        refModel: 'DevelopmentPlan', refId: idp._id,
+      });
       res.json(idp);
     } catch (e) { next(e); }
   }
@@ -354,6 +384,11 @@ router.delete(
         return;
       }
       await idp.deleteOne();
+      logActivity({
+        org: req.user!.organizationId, actor: req.user!.userId,
+        type: 'idp.deleted', label: 'IDP deleted (draft)',
+        detail: idp.goal.slice(0, 80),
+      });
       res.json({ message: 'IDP deleted' });
     } catch (e) {
       next(e);

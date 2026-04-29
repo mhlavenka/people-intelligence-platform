@@ -33,6 +33,7 @@ async function registerWebhookForCoach(coachId: string): Promise<void> {
 import * as bookingImport from '../controllers/booking-import.controller';
 import Holidays from 'date-holidays';
 import { Organization } from '../models/Organization.model';
+import { logActivity } from '../services/activityLog.service';
 import {
   linkBookingToCoaching,
   precheckBookingQuota,
@@ -142,6 +143,14 @@ publicBookingRouter.post(
           console.error('[BookingSync] Failed to link booking to coaching:', linkErr);
         }
       }
+
+      logActivity({
+        org: booking.organizationId,
+        actor: req.user?.userId ?? null,
+        type: 'booking.created', label: 'Booking created',
+        detail: `${booking.clientName} — ${booking.startTime.toISOString()}`,
+        refModel: 'Booking', refId: booking._id,
+      });
 
       res.status(201).json({
         _id: booking._id,
@@ -319,6 +328,11 @@ router.put(
           );
         }
 
+        logActivity({
+          org: organizationId, actor: coachId,
+          type: 'booking.settings.updated', label: 'Booking settings updated',
+          refModel: 'BookingSettings', refId: existing._id,
+        });
         res.json(existing);
       } else {
         const settings = await BookingSettings.create({
@@ -331,6 +345,11 @@ router.put(
             console.error('[Webhook] register after first settings save failed:', err),
           );
         }
+        logActivity({
+          org: organizationId, actor: coachId,
+          type: 'booking.settings.created', label: 'Booking settings created',
+          refModel: 'BookingSettings', refId: settings._id,
+        });
         res.status(201).json(settings);
       }
     } catch (e) { next(e); }
@@ -453,6 +472,12 @@ router.post(
         organizationId,
         coachSlug,
       });
+      logActivity({
+        org: organizationId, actor: coachId,
+        type: 'booking.event_type.created', label: 'Booking event type created',
+        detail: cfg.name,
+        refModel: 'AvailabilityConfig', refId: cfg._id,
+      });
       res.status(201).json(cfg);
     } catch (e) { next(e); }
   },
@@ -497,6 +522,12 @@ router.put(
       await cfg.save();
       invalidateSlotCache(oldSlug);
       if (cfg.coachSlug !== oldSlug) invalidateSlotCache(cfg.coachSlug);
+      logActivity({
+        org: req.user!.organizationId, actor: req.user!.userId,
+        type: 'booking.event_type.updated', label: 'Booking event type updated',
+        detail: cfg.name,
+        refModel: 'AvailabilityConfig', refId: cfg._id,
+      });
       res.json(cfg);
     } catch (e) { next(e); }
   },
@@ -531,6 +562,11 @@ router.delete(
 
       invalidateSlotCache(cfg.coachSlug);
       await cfg.deleteOne();
+      logActivity({
+        org: req.user!.organizationId, actor: req.user!.userId,
+        type: 'booking.event_type.deleted', label: 'Booking event type deleted',
+        detail: cfg.name,
+      });
       res.json({ message: 'Event type deleted' });
     } catch (e) { next(e); }
   },
@@ -677,6 +713,12 @@ router.delete(
         cancelledBy,
         req.body?.reason,
       );
+      logActivity({
+        org: req.user!.organizationId, actor: req.user!.userId,
+        type: 'booking.cancelled', label: `Booking cancelled (by ${cancelledBy})`,
+        detail: `${booking.clientName} — ${booking.startTime.toISOString()}`,
+        refModel: 'Booking', refId: booking._id,
+      });
       res.json(result);
     } catch (e) { next(e); }
   },
@@ -721,6 +763,12 @@ router.patch(
       const updated = await rescheduleBooking(
         req.params['id'], newStart, newEnd, triggeredBy, note,
       );
+      logActivity({
+        org: req.user!.organizationId, actor: req.user!.userId,
+        type: 'booking.rescheduled', label: `Booking rescheduled (by ${triggeredBy})`,
+        detail: `${booking.clientName} → ${newStart.toISOString()}`,
+        refModel: 'Booking', refId: booking._id,
+      });
       res.json(updated);
     } catch (e) { next(e); }
   },

@@ -11,6 +11,7 @@ import { buildConflictAnalysisPrompt, buildConflictSubAnalysisPrompt, buildConfl
 import { computeAllMetrics, computeAllMetricsUnfiltered, DEFAULT_SUBGROUP_POLICY, DEFAULT_QUALITY_POLICY } from '../services/surveyMetrics.service';
 import { sendEmail } from '../services/email.service';
 import { createHubNotification } from '../services/hubNotification.service';
+import { logActivity } from '../services/activityLog.service';
 
 const MIN_GROUP_SIZE = 5;
 
@@ -234,6 +235,13 @@ export async function analyzeConflict(
     // doesn't need a second round-trip.
     await analysis.populate('intakeTemplateId', 'title');
 
+    logActivity({
+      org: organizationId, actor: req.user!.userId,
+      type: 'conflict.analysis.created', label: 'Conflict analysis run',
+      detail: `${analysis.name} — ${analysis.riskLevel} (${analysis.riskScore}/100)`,
+      refModel: 'ConflictAnalysis', refId: analysis._id,
+    });
+
     res.status(201).json(analysis);
 
     // Fire-and-forget hub notification so the user finds the analysis even
@@ -402,6 +410,13 @@ export async function createSubAnalysis(
       escalationRequested: false,
     });
 
+    logActivity({
+      org: organizationId, actor: req.user!.userId,
+      type: 'conflict.subanalysis.created', label: 'Sub-analysis run',
+      detail: `${parent.name} — ${focusConflictType}`,
+      refModel: 'ConflictAnalysis', refId: subAnalysis._id,
+    });
+
     res.status(201).json(subAnalysis);
 
     // Fire-and-forget notification — same rationale as the parent analysis.
@@ -463,6 +478,14 @@ export async function generateRecommendedActions(
 
     analysis.recommendedActions = parsed as IConflictAnalysis['recommendedActions'];
     await analysis.save();
+
+    logActivity({
+      org: req.user!.organizationId, actor: req.user!.userId,
+      type: 'conflict.recommended_actions.generated',
+      label: 'Recommended actions generated',
+      detail: analysis.name,
+      refModel: 'ConflictAnalysis', refId: analysis._id,
+    });
 
     res.json(parsed);
   } catch (error) {
@@ -547,6 +570,13 @@ export async function escalateConflict(
       link: `/conflict/${analysis._id}`,
     });
 
+    logActivity({
+      org: organizationId, actor: req.user!.userId,
+      type: 'conflict.escalated', label: 'Conflict escalated to professional',
+      detail: `${analysis.name} → ${coach.firstName} ${coach.lastName}`,
+      refModel: 'ConflictAnalysis', refId: analysis._id,
+    });
+
     res.json(analysis);
   } catch (error) {
     next(error);
@@ -589,6 +619,15 @@ export async function updateProfessionalReview(
     }
 
     await analysis.save();
+    logActivity({
+      org: req.user!.organizationId, actor: req.user!.userId,
+      type: 'conflict.professional_review.updated',
+      label: status === 'completed' ? 'Professional review resolved'
+           : status === 'in_progress' ? 'Professional review in progress'
+           : 'Professional review updated',
+      detail: analysis.name,
+      refModel: 'ConflictAnalysis', refId: analysis._id,
+    });
     res.json(analysis);
   } catch (error) {
     next(error);
@@ -683,6 +722,14 @@ Rules:
     analysis.generatedIntakeIds = existingMap;
     analysis.markModified('generatedIntakeIds');
     await analysis.save();
+
+    logActivity({
+      org: req.user!.organizationId, actor: req.user!.userId,
+      type: 'conflict.action_intake.generated',
+      label: 'Action follow-up intake generated',
+      detail: `${analysis.name} → ${template.title}`,
+      refModel: 'SurveyTemplate', refId: template._id,
+    });
 
     res.status(201).json(template);
   } catch (error) {
