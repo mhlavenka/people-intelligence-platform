@@ -227,6 +227,24 @@ router.get('/activity', async (req: AuthRequest, res: Response, next: NextFuncti
   }
 });
 
+/** Distinct ActivityLog event types in the org — drives the type-filter
+ *  dropdown on the activity-log page. Returned independently of the
+ *  current filter so the dropdown stays comprehensive. We also include
+ *  the legacy aggregator buckets so the frontend can still filter on
+ *  inferred entries (survey_response, conflict_analysis, …). */
+router.get('/activity-types', async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const orgId = req.user!.organizationId;
+    const distinct = await ActivityLog.distinct('type', { organizationId: orgId });
+    const aggregatorTypes = [
+      'survey_response', 'conflict_analysis', 'idp', 'neuroinclusion',
+      'coaching_engagement', 'coaching_session', 'journal_note', 'journal_reflective',
+    ];
+    const all = Array.from(new Set([...distinct, ...aggregatorTypes])).sort();
+    res.json(all);
+  } catch (e) { next(e); }
+});
+
 router.get('/stats', async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const orgId = req.user!.organizationId;

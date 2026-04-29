@@ -20,7 +20,7 @@ interface ActivityItem {
   createdAt: string;
 }
 
-const PAGE_SIZE = 50;
+const PAGE_SIZE = 25;
 
 /** Map an event type to the module group it belongs to (for hide-when-disabled). */
 const TYPE_MODULE: Record<string, string> = {
@@ -114,11 +114,6 @@ const ICON_MAP: Record<string, string> = {
               }
             </mat-select>
           </mat-form-field>
-          @if (fromDate() || toDate() || typeFilter() !== 'all') {
-            <button mat-stroked-button class="clear-btn" (click)="clearFilters()">
-              <mat-icon>close</mat-icon> Clear
-            </button>
-          }
         </div>
       </div>
 
@@ -173,8 +168,7 @@ const ICON_MAP: Record<string, string> = {
       ::ng-deep .mat-mdc-form-field-subscript-wrapper { display: none; }
     }
     .date-filter { width: 160px; }
-    .type-filter { width: 200px; }
-    .clear-btn { height: 56px; }
+    .type-filter { width: 360px; }
     .loading { display: flex; justify-content: center; padding: 60px 0; }
     .empty {
       text-align: center; padding: 48px 24px; color: #6b7c93;
@@ -186,15 +180,15 @@ const ICON_MAP: Record<string, string> = {
       background: #fff; border: 1px solid #eef2f7; border-radius: 12px; overflow: hidden;
     }
     .activity-item {
-      display: flex; align-items: flex-start; gap: 14px;
-      padding: 14px 18px; border-bottom: 1px solid #f4f6fa;
+      display: flex; align-items: center; gap: 12px;
+      padding: 8px 14px; border-bottom: 1px solid #f4f6fa;
       &:last-child { border-bottom: none; }
       &:hover { background: #fafbfd; }
     }
     .activity-icon {
-      width: 36px; height: 36px; min-width: 36px; border-radius: 50%;
+      width: 28px; height: 28px; min-width: 28px; border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
-      font-size: 18px; color: #fff; background: #9aa5b4;
+      font-size: 14px; color: #fff; background: #9aa5b4;
       &.auth          { background: #5a6a7e; }
       &.user          { background: #5e74a0; }
       &.survey        { background: var(--artes-accent); }
@@ -213,11 +207,13 @@ const ICON_MAP: Record<string, string> = {
       &.system        { background: #9aa5b4; }
     }
     .activity-content {
-      display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1;
-      strong { color: var(--artes-primary); font-size: 14px; }
-      span   { color: #5a6a7e; font-size: 13px; }
+      display: flex; align-items: baseline; gap: 8px; min-width: 0; flex: 1;
+      strong { color: var(--artes-primary); font-size: 13px; font-weight: 600; flex-shrink: 0; }
+      span   { color: #5a6a7e; font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     }
-    .activity-time { font-size: 12px; color: #9aa5b4; white-space: nowrap; flex-shrink: 0; }
+    .activity-time { font-size: 11.5px; color: #9aa5b4; white-space: nowrap; flex-shrink: 0; }
+    /* mat-icon inherits font-size, so the smaller .activity-icon size keeps it tidy. */
+    mat-icon.activity-icon { font-size: 14px; line-height: 28px; }
     .footer-bar {
       display: flex; justify-content: center; align-items: center;
       padding: 20px 0 4px;
@@ -238,13 +234,14 @@ export class ActivityLogComponent implements OnInit {
   fromDate = signal<Date | null>(null);
   toDate = signal<Date | null>(null);
 
+  /** Accumulated set of every event type ever seen across loads. Sticky
+   *  so the type-filter dropdown stays populated even when the current
+   *  filter narrows the result set down to one type — otherwise the user
+   *  would have to clear back to "all" before picking a different type. */
+  private seenTypes = signal<Map<string, string>>(new Map());
+
   availableTypes = computed(() => {
-    // Build the type-filter dropdown from the labels we see in the list.
-    // Distinct set, alphabetised for the UI.
-    const seen = new Map<string, string>();
-    for (const item of this.activity()) {
-      if (!seen.has(item.type)) seen.set(item.type, this.humanizeType(item.type));
-    }
+    const seen = this.seenTypes();
     const out = Array.from(seen.entries()).map(([key, label]) => ({ key, label }));
     out.sort((a, b) => a.label.localeCompare(b.label));
     return out;
@@ -271,6 +268,20 @@ export class ActivityLogComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    // Pull the full list of distinct event types upfront so the filter
+    // dropdown is comprehensive from the first render — regardless of
+    // which filter the user picks.
+    this.api.get<string[]>('/dashboard/activity-types').subscribe({
+      next: (types) => {
+        this.seenTypes.update((prev) => {
+          const next = new Map(prev);
+          for (const t of types) {
+            if (!next.has(t)) next.set(t, this.humanizeType(t));
+          }
+          return next;
+        });
+      },
+    });
     this.reload();
   }
 
@@ -288,13 +299,6 @@ export class ActivityLogComponent implements OnInit {
     const oldest = items[items.length - 1].createdAt;
     this.loadingMore.set(true);
     this.fetchPage(oldest);
-  }
-
-  clearFilters(): void {
-    this.fromDate.set(null);
-    this.toDate.set(null);
-    this.typeFilter.set('all');
-    this.reload();
   }
 
   /** Fetch a single page. `since` = ISO cursor (oldest createdAt) for pagination, null for first page. */
@@ -315,6 +319,15 @@ export class ActivityLogComponent implements OnInit {
           this.activity.set(items);
           this.loading.set(false);
         }
+        // Accumulate distinct types so the dropdown stays comprehensive
+        // even when the current filter narrows the visible set.
+        this.seenTypes.update((prev) => {
+          const next = new Map(prev);
+          for (const item of items) {
+            if (!next.has(item.type)) next.set(item.type, this.humanizeType(item.type));
+          }
+          return next;
+        });
         // If the server returned fewer than a full page, we've reached the end.
         if (items.length < PAGE_SIZE) this.hasMore.set(false);
       },
