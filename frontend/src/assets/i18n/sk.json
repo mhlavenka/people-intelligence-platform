@@ -1334,6 +1334,7 @@
     "analysisPromptHint": "Keď sa tento hodnotenie použije na AI analýzu, tento prompt nahradí predvolený systémový prompt. Definuje analytický rámec, metodológiu a očakávania výstupu pre AI. Ponechajte prázdne na použitie predvoleného systémového promptu Helena Coaching.",
     "analysisPromptPlaceholder": "Zadajte vlastný systémový prompt pre AI analýzu s týmto nástrojom…",
     "analysisPromptDefault": "Ponechajte prázdne na použitie predvoleného systémového promptu",
+    "charsSuffix": "zn.",
     "hasCustomAIPrompt": "Tomuto nástroju je priradený vlastný prompt pre AI analýzu",
     "aiPrompt": "AI prompt",
     "templateTitleLabel": "Názov šablóny",

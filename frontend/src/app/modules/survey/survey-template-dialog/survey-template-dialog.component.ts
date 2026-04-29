@@ -793,8 +793,10 @@ interface SurveyTemplate {
                 <mat-label>{{ 'SURVEY.analysisPromptLabel' | translate }}</mat-label>
                 <textarea matInput formControlName="analysisPrompt"
                   class="ai-prompt-textarea"
+                  style="font-family: monospace; font-size: 11px; line-height: 1.45"
                   [placeholder]="'SURVEY.analysisPromptPlaceholder' | translate"></textarea>
                 <mat-hint>{{ 'SURVEY.analysisPromptDefault' | translate }}</mat-hint>
+                <mat-hint align="end">{{ analysisPromptLength | number }} {{ 'SURVEY.charsSuffix' | translate }}</mat-hint>
               </mat-form-field>
             </div>
           </mat-tab>
@@ -866,10 +868,10 @@ interface SurveyTemplate {
       box-sizing: border-box;
     }
 
-    /* AI Prompt textarea fills the available tab height; min-height keeps it
-       readable on short viewports, max-height respects dialog chrome. */
+    /* AI Prompt textarea fills the available tab height; font rules sit
+       inline on the element so they beat Material's input-element styles
+       without a specificity / !important fight. */
     .ai-prompt-textarea {
-      font-family: monospace; font-size: 13px; line-height: 1.5;
       min-height: 50vh;
       resize: vertical;
     }
@@ -1065,6 +1067,10 @@ export class SurveyTemplateDialogComponent implements OnInit {
 
   get questionsArray(): FormArray {
     return this.form.get('questions') as FormArray;
+  }
+
+  get analysisPromptLength(): number {
+    return (this.form.get('analysisPrompt')?.value as string | undefined)?.length ?? 0;
   }
 
   ngOnInit(): void {

@@ -1334,6 +1334,7 @@
     "analysisPromptHint": "Lorsque cet instrument est utilisé pour l'analyse IA, ce prompt remplace le prompt système par défaut. Il définit le cadre analytique, la méthodologie et les attentes de sortie pour l'IA. Laissez vide pour utiliser le prompt par défaut Helena Coaching.",
     "analysisPromptPlaceholder": "Saisissez un prompt système personnalisé pour l'analyse IA avec cet instrument…",
     "analysisPromptDefault": "Laissez vide pour utiliser le prompt système par défaut",
+    "charsSuffix": "car.",
     "hasCustomAIPrompt": "Cet instrument dispose d'un prompt IA d'analyse personnalisé",
     "aiPrompt": "Prompt IA",
     "templateTitleLabel": "Titre du modèle",

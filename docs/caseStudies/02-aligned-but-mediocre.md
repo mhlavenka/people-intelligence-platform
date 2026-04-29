@@ -23,16 +23,18 @@ case (Case 03), even though both can superficially read as "needs attention".
 ## Expected metric outcomes
 | Signal | Expected |
 |---|---|
-| Risk score | 35–45 (Medium) |
-| Team Alignment | 70–80 (Aligned, mediocre) |
-| Psych Safety mean | ~5.5, r_wg ≥0.75 |
-| Communication & Trust mean | ~5.5, r_wg ≥0.75 |
-| Conflict Frequency mean | ~5.0 (mid tension), r_wg ≥0.75 |
-| Management Effectiveness mean | ~5.5, r_wg ≥0.75 |
-| Wellbeing & Belonging mean | ~5.5, r_wg ≥0.75 |
-| Split items | 0 |
+| Risk score | 35–45 (Medium) — requires Phase 4 stuck-team prompt guidance; without it the model reads CASE02 as Low because no acute conflict / fracture / escalation is present |
+| Team Alignment | 90+ (Aligned-high) — alignment measures *agreement*, not health. CASE02 is highly aligned on a mediocre experience; the "stuck" diagnosis lives in the dimension *means*, not in the headline alignment score. |
+| Psych Safety mean | ~5.5, rwg ≥0.95 |
+| Communication & Trust mean | ~5.5, rwg ≥0.95 |
+| Conflict Frequency mean | ~5.0 (mid tension), rwg ~0.70 (lowest of the dimensions because 2 of 10 mark cp08=1) |
+| Management Effectiveness mean | ~5.5, rwg ≥0.95 |
+| Wellbeing & Belonging mean | ~5.5, rwg ≥0.95 |
+| Split items | 0 (cp08 has BC ≈0.67 but is correctly framed as minority signal, not split) |
 | Subgroups | None |
-| AI narrative | "Stuck, not fractured" — direct intervention on the underlying issue, not on relational fracture |
+| Minority signal (Phase 2) | cp08 minority voice on unresolved conflict (2 of 10) — must surface in conflictTypes as "Minority voice signal" / "Unsurfaced concern", not as fracture |
+| AI narrative | "Stuck, not fractured" — direct intervention on workload / process / decision-velocity, not on relational fracture. Acknowledge the cp08 minority signal alongside the stuck-team framing. |
+| conflictTypes vocabulary | "Collective Inertia", "Workload Stagnation", "Decision-Velocity Gap", or similar process-oriented labels — never "Fractured", "Polarised", "Bimodal Split". Plus "Minority voice signal on unresolved conflict (cp08)" for the 2-respondent boolean. |
 
 ## Per-respondent answer matrix
 
