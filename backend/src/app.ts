@@ -45,6 +45,7 @@ import { startTrialRevertJob } from './jobs/trialRevert.job';
 import { startPreSessionIntakeJob } from './jobs/preSessionIntake.job';
 import { startAlumniReminderJob } from './jobs/alumniReminder.job';
 import { startSurveySchedulerJob } from './jobs/surveyScheduler.job';
+import { syncLoginSessionTTL } from './services/loginSessionPolicy.service';
 
 const app = express();
 
@@ -122,6 +123,7 @@ app.use(errorHandler);
 async function bootstrap(): Promise<void> {
   await initI18n();
   await connectDatabase();
+  await syncLoginSessionTTL();
   if (config.enableCrons) {
     startReminderJob();
     startWebhookRenewalJob();
