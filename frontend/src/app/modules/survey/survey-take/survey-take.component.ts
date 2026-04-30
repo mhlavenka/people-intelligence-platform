@@ -516,7 +516,7 @@ interface TranslationRef {
 
     .error-state {
       text-align: center; padding: 48px; color: #9aa5b4;
-      mat-icon { font-size: 48px; width: 48px; height: 48px; margin-bottom: 12px; }
+      mat-icon { font-size: 34px; width: 34px; height: 34px; margin-bottom: 0px; }
     }
     .submit-error {
       display: flex; align-items: center; gap: 8px;
