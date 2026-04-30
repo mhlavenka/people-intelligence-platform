@@ -258,18 +258,16 @@ const REFRESH_EXPIRY_OPTIONS = [
               </div>
             </div>
             <div class="card-body" formGroupName="emailDelivery">
-              <div class="field-row">
-                <mat-form-field appearance="outline" class="field-md">
-                  <mat-label>{{ 'SYSADMIN.senderName' | translate }}</mat-label>
-                  <input matInput formControlName="senderName" placeholder="ARTES Hub" />
-                  <mat-hint>{{ 'SYSADMIN.senderNameHint' | translate }}</mat-hint>
-                </mat-form-field>
-                <mat-form-field appearance="outline" class="field-md">
-                  <mat-label>{{ 'SYSADMIN.senderEmail' | translate }}</mat-label>
-                  <input matInput formControlName="senderEmail" type="email" placeholder="noreply@yourdomain.com" />
-                  <mat-hint>{{ 'SYSADMIN.senderEmailHint' | translate }}</mat-hint>
-                </mat-form-field>
-              </div>
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>{{ 'SYSADMIN.senderName' | translate }}</mat-label>
+                <input matInput formControlName="senderName" placeholder="ARTES Hub" />
+                <mat-hint>{{ 'SYSADMIN.senderNameHint' | translate }}</mat-hint>
+              </mat-form-field>
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>{{ 'SYSADMIN.senderEmail' | translate }}</mat-label>
+                <input matInput formControlName="senderEmail" type="email" placeholder="noreply@yourdomain.com" />
+                <mat-hint>{{ 'SYSADMIN.senderEmailHint' | translate }}</mat-hint>
+              </mat-form-field>
             </div>
           </div>
 
