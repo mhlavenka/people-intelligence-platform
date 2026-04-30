@@ -86,14 +86,24 @@ router.post(
   requirePermission('MANAGE_INTAKE_TEMPLATES'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
+      const isSystemAdmin = req.user!.role === 'system_admin';
+      // Only system admins may mint global instruments; everyone else creates
+      // org-scoped templates regardless of what they put in the request body.
+      const wantsGlobal = isSystemAdmin && req.body.isGlobal === true;
+      const { isGlobal: _strip, organizationId: _stripOrg, ...rest } = req.body;
+      void _strip; void _stripOrg;
+
       const template = await SurveyTemplate.create({
-        ...req.body,
-        organizationId: req.user!.organizationId,
+        ...rest,
+        ...(wantsGlobal
+          ? { isGlobal: true }
+          : { isGlobal: false, organizationId: req.user!.organizationId }),
         createdBy: req.user!.userId,
       });
       logActivity({
         org: req.user!.organizationId, actor: req.user!.userId,
-        type: 'survey.template.created', label: 'Intake template created',
+        type: wantsGlobal ? 'survey.template.created_global' : 'survey.template.created',
+        label: wantsGlobal ? 'Global instrument created (by system-admin)' : 'Intake template created',
         detail: `${template.title} (${template.moduleType}/${template.intakeType})`,
         refModel: 'SurveyTemplate', refId: template._id,
       });
@@ -199,9 +209,17 @@ router.get(
   '/templates',
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
-      const filter: Record<string, unknown> = {
-        $or: await buildTemplateAccessOr(req.user!.organizationId),
-      };
+      const isSystemAdmin = req.user!.role === 'system_admin';
+      const onlyGlobal = req.query['onlyGlobal'] === 'true';
+
+      // System admins managing the global instrument catalog can request
+      // ?onlyGlobal=true to bypass per-org allowlist filtering and see every
+      // global template. Everyone else (and system_admin without that flag)
+      // gets the org-scoped access filter.
+      const filter: Record<string, unknown> = onlyGlobal && isSystemAdmin
+        ? { isGlobal: true }
+        : { $or: await buildTemplateAccessOr(req.user!.organizationId) };
+
       if (req.query['includeInactive'] !== 'true') {
         filter['isActive'] = true;
       }
@@ -354,10 +372,13 @@ router.get(
   '/templates/:id',
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
-      const template = await SurveyTemplate.findOne({
-        _id: req.params['id'],
-        $or: await buildTemplateAccessOr(req.user!.organizationId),
-      }).setOptions({ bypassTenantCheck: true });
+      const isSystemAdmin = req.user!.role === 'system_admin';
+      // System admins can read any template (incl. globals not in their own
+      // org's allowlist); everyone else gets the gated access filter.
+      const lookup: Record<string, unknown> = isSystemAdmin
+        ? { _id: req.params['id'] }
+        : { _id: req.params['id'], $or: await buildTemplateAccessOr(req.user!.organizationId) };
+      const template = await SurveyTemplate.findOne(lookup).setOptions({ bypassTenantCheck: true });
       if (!template) {
         res.status(404).json({ error: req.t('errors.intakeTemplateNotFound') });
         return;
@@ -378,28 +399,50 @@ router.put(
   requirePermission('MANAGE_INTAKE_TEMPLATES'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
-      const template = await SurveyTemplate.findOneAndUpdate(
-        { _id: req.params['id'], $or: await buildTemplateAccessOr(req.user!.organizationId) },
-        req.body,
-        { new: true, runValidators: true }
-      ).setOptions({ bypassTenantCheck: true });
-      if (!template) {
+      const isSystemAdmin = req.user!.role === 'system_admin';
+
+      // Look up first so we can apply the role-based write rule.
+      const lookup: Record<string, unknown> = isSystemAdmin
+        ? { _id: req.params['id'] }
+        : { _id: req.params['id'], $or: await buildTemplateAccessOr(req.user!.organizationId) };
+      const existing = await SurveyTemplate.findOne(lookup).setOptions({ bypassTenantCheck: true });
+      if (!existing) {
         res.status(404).json({ error: req.t('errors.intakeTemplateNotFound') });
         return;
       }
+
+      // Org users may not modify global instruments — those are managed by
+      // system admins via the Assessment Hub.
+      if (existing.isGlobal && !isSystemAdmin) {
+        res.status(403).json({ error: req.t('errors.globalInstrumentReadOnly') });
+        return;
+      }
+
+      // Strip identity-changing fields from non-system-admin updates: nobody
+      // outside system_admin is allowed to flip a template into/out of global,
+      // and organizationId cannot be reassigned through this endpoint.
+      const { isGlobal: bodyIsGlobal, organizationId: _stripOrg, ...rest } = req.body;
+      void _stripOrg;
+      const update = isSystemAdmin
+        ? (typeof bodyIsGlobal === 'boolean' ? { ...rest, isGlobal: bodyIsGlobal } : rest)
+        : rest;
+
+      Object.assign(existing, update);
+      await existing.save();
+
       const isActiveChange = Object.prototype.hasOwnProperty.call(req.body, 'isActive');
       logActivity({
         org: req.user!.organizationId, actor: req.user!.userId,
         type: isActiveChange
-          ? (template.isActive ? 'survey.template.activated' : 'survey.template.deactivated')
-          : 'survey.template.updated',
+          ? (existing.isActive ? 'survey.template.activated' : 'survey.template.deactivated')
+          : (existing.isGlobal ? 'survey.template.updated_global' : 'survey.template.updated'),
         label: isActiveChange
-          ? (template.isActive ? 'Intake template activated' : 'Intake template deactivated')
-          : 'Intake template updated',
-        detail: template.title,
-        refModel: 'SurveyTemplate', refId: template._id,
+          ? (existing.isActive ? 'Intake template activated' : 'Intake template deactivated')
+          : (existing.isGlobal ? 'Global instrument updated (by system-admin)' : 'Intake template updated'),
+        detail: existing.title,
+        refModel: 'SurveyTemplate', refId: existing._id,
       });
-      res.json(template);
+      res.json(existing);
     } catch (e) {
       next(e);
     }
@@ -576,10 +619,21 @@ router.delete(
   requirePermission('MANAGE_INTAKE_TEMPLATES'),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
-      const template = await SurveyTemplate.findOneAndDelete({
-        _id: req.params['id'],
-        $or: await buildTemplateAccessOr(req.user!.organizationId),
-      }).setOptions({ bypassTenantCheck: true });
+      const isSystemAdmin = req.user!.role === 'system_admin';
+      const lookup: Record<string, unknown> = isSystemAdmin
+        ? { _id: req.params['id'] }
+        : { _id: req.params['id'], $or: await buildTemplateAccessOr(req.user!.organizationId) };
+      const target = await SurveyTemplate.findOne(lookup).setOptions({ bypassTenantCheck: true });
+      if (!target) {
+        res.status(404).json({ error: req.t('errors.intakeTemplateNotFound') });
+        return;
+      }
+      if (target.isGlobal && !isSystemAdmin) {
+        res.status(403).json({ error: req.t('errors.globalInstrumentReadOnly') });
+        return;
+      }
+      const template = await SurveyTemplate.findByIdAndDelete(target._id)
+        .setOptions({ bypassTenantCheck: true });
       if (!template) {
         res.status(404).json({ error: req.t('errors.intakeTemplateNotFound') });
         return;

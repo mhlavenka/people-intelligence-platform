@@ -71,6 +71,13 @@ import { TranslateModule } from '@ngx-translate/core';
             <mat-icon>sell</mat-icon>
             @if (!collapsed()) { <span>{{ "SYSADMIN.navPlans" | translate }}</span> }
           </a>
+          <a routerLink="/system-admin/assessment-hub" routerLinkActive="active"
+             class="nav-item"
+             [matTooltip]="collapsed() ? ('SYSADMIN.navAssessmentHub' | translate) : ''"
+             matTooltipPosition="right">
+            <mat-icon>quiz</mat-icon>
+            @if (!collapsed()) { <span>{{ "SYSADMIN.navAssessmentHub" | translate }}</span> }
+          </a>
           <a routerLink="/system-admin/reports" routerLinkActive="active"
              class="nav-item"
              [matTooltip]="collapsed() ? ('SYSADMIN.navReports' | translate) : ''"

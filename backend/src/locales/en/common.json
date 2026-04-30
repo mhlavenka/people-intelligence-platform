@@ -123,6 +123,7 @@
     "organizationNotFound": "Organization not found",
     "accessDenied": "Access denied",
     "invalidPayload": "Invalid payload",
+    "globalInstrumentReadOnly": "Global instruments can only be modified by a system administrator.",
 
     "invoiceNotFound": "Invoice not found",
     "invoiceCannotBePaid": "Invoice cannot be paid in its current status: {{status}}",

@@ -1066,7 +1066,10 @@ export class SurveyTemplateDialogComponent implements OnInit {
     { value: 'sk', label: 'Slovenčina' },
   ];
 
-  isEdit = () => !!this.existingData;
+  // Edit mode is determined by the presence of an _id, not just any data
+  // payload — the system-admin Assessment Hub may pass `{ isGlobal: true }`
+  // as a hint to create a new global instrument without an _id yet.
+  isEdit = () => !!this.existingData?._id;
 
   get questionsArray(): FormArray {
     return this.form.get('questions') as FormArray;
@@ -1386,6 +1389,11 @@ export class SurveyTemplateDialogComponent implements OnInit {
       minResponsesForAnalysis: Number(v.minResponsesForAnalysis) || 1,
       questions,
     };
+
+    // Forward the global flag from existing data so the system-admin's
+    // create/edit flow on the Assessment Hub stays a global instrument.
+    // Backend ignores this for non-system_admin callers.
+    if (this.existingData?.isGlobal === true) payload['isGlobal'] = true;
 
     if (v.instrumentId)      payload['instrumentId']      = v.instrumentId;
     if (v.instrumentVersion) payload['instrumentVersion'] = v.instrumentVersion;

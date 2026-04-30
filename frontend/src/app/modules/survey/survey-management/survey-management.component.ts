@@ -182,21 +182,36 @@ interface SurveyTemplate {
                       {{ 'SURVEY.aiGenerated' | translate }}
                     </div>
                   }
+                  @if (t.isGlobal) {
+                    <div class="global-badge"
+                         [matTooltip]="'SURVEY.globalReadOnlyTooltip' | translate">
+                      <mat-icon>public</mat-icon>
+                      {{ 'SURVEY.global' | translate }}
+                    </div>
+                  }
                 </div>
                 <div class="card-actions">
-                  <mat-slide-toggle
-                    [checked]="t.isActive"
-                    (change)="toggleActive(t)"
-                    [matTooltip]="t.isActive ? ('SURVEY.deactivate' | translate) : ('SURVEY.activate' | translate)"
-                    color="primary"
-                  ></mat-slide-toggle>
+                  @if (!t.isGlobal) {
+                    <mat-slide-toggle
+                      [checked]="t.isActive"
+                      (change)="toggleActive(t)"
+                      [matTooltip]="t.isActive ? ('SURVEY.deactivate' | translate) : ('SURVEY.activate' | translate)"
+                      color="primary"
+                    ></mat-slide-toggle>
+                  }
                   <button mat-icon-button [matMenuTriggerFor]="cardMenu">
                     <mat-icon>more_vert</mat-icon>
                   </button>
                   <mat-menu #cardMenu="matMenu">
-                    <button mat-menu-item (click)="openEditDialog(t)">
-                      <mat-icon>edit</mat-icon> {{ 'COMMON.edit' | translate }}
-                    </button>
+                    @if (!t.isGlobal) {
+                      <button mat-menu-item (click)="openEditDialog(t)">
+                        <mat-icon>edit</mat-icon> {{ 'COMMON.edit' | translate }}
+                      </button>
+                    } @else {
+                      <button mat-menu-item (click)="previewTemplate(t)">
+                        <mat-icon>visibility</mat-icon> {{ 'SURVEY.preview' | translate }}
+                      </button>
+                    }
                     <button mat-menu-item (click)="copyTemplate(t)">
                       <mat-icon>content_copy</mat-icon> {{ 'SURVEY.copy' | translate }}
                     </button>
@@ -206,15 +221,17 @@ interface SurveyTemplate {
                     <button mat-menu-item (click)="viewResponses(t)">
                       <mat-icon>bar_chart</mat-icon> {{ 'SURVEY.viewResponses' | translate }}
                     </button>
-                    <mat-divider></mat-divider>
-                    <button mat-menu-item
-                            (click)="clearResponses(t)"
-                            [disabled]="(t.responseCount ?? 0) === 0">
-                      <mat-icon>cleaning_services</mat-icon> {{ 'SURVEY.clearResponses' | translate }}
-                    </button>
-                    <button mat-menu-item class="danger-item" (click)="deleteTemplate(t)">
-                      <mat-icon>delete</mat-icon> {{ 'COMMON.delete' | translate }}
-                    </button>
+                    @if (!t.isGlobal) {
+                      <mat-divider></mat-divider>
+                      <button mat-menu-item
+                              (click)="clearResponses(t)"
+                              [disabled]="(t.responseCount ?? 0) === 0">
+                        <mat-icon>cleaning_services</mat-icon> {{ 'SURVEY.clearResponses' | translate }}
+                      </button>
+                      <button mat-menu-item class="danger-item" (click)="deleteTemplate(t)">
+                        <mat-icon>delete</mat-icon> {{ 'COMMON.delete' | translate }}
+                      </button>
+                    }
                   </mat-menu>
                 </div>
               </div>
@@ -265,10 +282,12 @@ interface SurveyTemplate {
                         [matTooltip]="'SURVEY.preview' | translate">
                   <mat-icon>visibility</mat-icon>
                 </button>
-                <button mat-icon-button (click)="openEditDialog(t)"
-                        [matTooltip]="'COMMON.edit' | translate">
-                  <mat-icon>edit</mat-icon>
-                </button>
+                @if (!t.isGlobal) {
+                  <button mat-icon-button (click)="openEditDialog(t)"
+                          [matTooltip]="'COMMON.edit' | translate">
+                    <mat-icon>edit</mat-icon>
+                  </button>
+                }
                 <span class="footer-spacer"></span>
                 <button mat-raised-button color="primary" (click)="viewResponses(t)"
                         [matTooltip]="(t.responseCount ?? 0) === 0 ? ('SURVEY.noResponsesYet' | translate) : ''">
@@ -412,6 +431,16 @@ interface SurveyTemplate {
       background: linear-gradient(135deg, rgba(124,58,237,0.10), rgba(58,159,214,0.10));
       color: #6b3aa0; border: 1px solid rgba(124,58,237,0.22);
       mat-icon { font-size: 13px; width: 13px; height: 13px; color: #7c3aed; }
+    }
+
+    .global-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 10px; border-radius: 999px;
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.4px;
+      background: rgba(27,42,71,0.08); color: #1B2A47;
+      border: 1px solid rgba(27,42,71,0.18);
+      mat-icon { font-size: 13px; width: 13px; height: 13px; color: var(--artes-accent); }
     }
 
     /* Standardized instrument card — distinct blue-tinted style */
