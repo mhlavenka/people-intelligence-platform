@@ -43,9 +43,9 @@ interface DimensionRow {
       <div class="picker-row">
         <mat-form-field appearance="outline">
           <mat-label>{{ 'COACHING.baselineRecord' | translate }}</mat-label>
-          <mat-select [(ngModel)]="baselineId" (ngModelChange)="onPicker()">
+          <mat-select [ngModel]="baselineId()" (ngModelChange)="baselineId.set($event)">
             @for (r of data.records; track r._id) {
-              <mat-option [value]="r._id" [disabled]="r._id === finalId">
+              <mat-option [value]="r._id" [disabled]="r._id === finalId()">
                 {{ phaseLabel(r.phase) }} · {{ r.administeredAt | date:'mediumDate' }}
               </mat-option>
             }
@@ -56,9 +56,9 @@ interface DimensionRow {
 
         <mat-form-field appearance="outline">
           <mat-label>{{ 'COACHING.finalRecord' | translate }}</mat-label>
-          <mat-select [(ngModel)]="finalId" (ngModelChange)="onPicker()">
+          <mat-select [ngModel]="finalId()" (ngModelChange)="finalId.set($event)">
             @for (r of data.records; track r._id) {
-              <mat-option [value]="r._id" [disabled]="r._id === baselineId">
+              <mat-option [value]="r._id" [disabled]="r._id === baselineId()">
                 {{ phaseLabel(r.phase) }} · {{ r.administeredAt | date:'mediumDate' }}
               </mat-option>
             }
@@ -176,8 +176,6 @@ export class AssessmentComparisonDialogComponent implements OnInit {
     this.baselineId.set(this.data.initialBaselineId ?? sorted[0]?._id ?? '');
     this.finalId.set(this.data.initialFinalId ?? sorted[sorted.length - 1]?._id ?? '');
   }
-
-  onPicker() { /* signals trigger recompute via the computed below */ }
 
   baseline = computed(() => this.data.records.find((r) => r._id === this.baselineId()) ?? null);
   final    = computed(() => this.data.records.find((r) => r._id === this.finalId()) ?? null);

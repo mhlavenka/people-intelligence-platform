@@ -109,7 +109,7 @@ const PHASES = ['baseline', 'midpoint', 'final', 'ad_hoc'] as const;
       <h3 class="section-h">{{ 'COACHING.scores' | translate }}</h3>
       <div class="scores-help">{{ 'COACHING.scoresHelp' | translate }}</div>
       <div class="scores-list">
-        @for (row of scoreRows(); track $index; let i = $index) {
+        @for (row of scoreRows(); track row; let i = $index) {
           <div class="score-row">
             <mat-form-field appearance="outline" class="score-key">
               <mat-label>{{ 'COACHING.scoreDimension' | translate }}</mat-label>
