@@ -13,19 +13,16 @@ This roadmap lists **only the work that remains**, mixed across both projects an
 
 ## P0 — Next sprint(s)
 
-### 1. Coaching 15.1 — AssessmentRecord foundation
-- Model + CRUD routes + S3 PDF attach (reuses `eqi-import.routes.ts` magic-byte validation pattern, key prefix `org/{orgId}/assessments/{assessmentId}.pdf`).
-- "Assessments" panel on `engagement-detail.component.ts`, grouped by phase (baseline / midpoint / final / ad-hoc).
-- Generic key/value score editor in a new `assessment-dialog/` (handles DISC, Hogan, Leadership Circle, MBTI, CliftonStrengths, custom — anything that isn't EQ-i, which keeps its dedicated PDF pipeline).
-- **Why first:** largest unbuilt scope across both projects; unblocks 15.1 phases 2-4 and the IDP bridge. Without it, coaches have no place to record any non-EQ-i instrument.
-- **Effort:** ≈1.5 design-doc sessions (smallest of the 15.1 phases).
+### 1. ✅ DONE — Coaching 15.1 — AssessmentRecord foundation  *(shipped 2026-04-30)*
+- New `AssessmentRecord` model (`backend/src/models/AssessmentRecord.model.ts`) — flat `Map<string, number>` scores, optional `scoresMeta` for unit/scaleMin/scaleMax/normGroup, S3 PDF fields, coach interpretation, optional sourceTemplateId for the future 360 → record bridge.
+- New `routes/assessment.routes.ts` mounted at `/api/assessments`. Full CRUD + PDF attach/signed-URL/remove. Authorization: coach (own engagement), coachee, admin, hr_manager. Sponsor explicitly excluded. Multer + magic-byte validation matches the existing eqi-import / contract pattern; S3 key `org/{orgId}/assessments/{assessmentId}.pdf`.
+- New `assessments-panel.component.ts` embedded in `engagement-detail.component.ts` below the sessions timeline. Cards grouped by phase (baseline / midpoint / final / ad-hoc). Click a card to edit; "+ New assessment" / per-type "Compare" CTAs in the header.
+- New `assessment-dialog/` — generic key/value score editor (handles DISC, Hogan, Leadership Circle, MBTI, CliftonStrengths, TKI, 360, custom; EQ-i still has its dedicated PDF pipeline). PDF upload after first save.
 
-### 2. Coaching 15.1 — Pre/post comparison dialog
-- New `assessment-comparison-dialog/`: bar chart per dimension showing baseline vs final + delta column.
-- "Compare" CTA on the Assessments panel, enabled when ≥2 records of the same `assessmentType` exist.
-- **Why now:** directly produces the coaching-ROI artifact Helena needs for every engagement close-out.
-- **Depends on:** #1.
-- **Effort:** ≈1 session.
+### 2. ✅ DONE — Coaching 15.1 — Pre/post comparison dialog  *(shipped 2026-04-30)*
+- New `assessment-comparison-dialog/`. Pickers default to earliest = baseline, latest = final; user can swap any two records of the same `assessmentType`. Per-dimension table with baseline / final / overlay bars / Δ column (green for up, red for down). Bar scaling honours `scoresMeta.scaleMin/Max` when set, otherwise uses empirical min/max.
+- "Compare {{type}}" buttons appear in the panel header for every assessmentType where ≥2 records exist on the engagement.
+- i18n: 60+ COACHING.* keys across en/fr/es/sk; backend `errors.recordNotFound` already existed.
 
 ### 3. ✅ DONE — Conflict Intelligence — Custom analysis prompts for external instruments
 - Per-instrument `analysisPrompt` for TKI, ROCI-II, CDP-I, PSS-Edmondson.
@@ -143,10 +140,10 @@ If the goal is **maximum customer-visible value per week of work**, the order I'
 1. ✅ #3 (Custom prompts for external instruments) — shipped 2026-04-30.
 2. ✅ #4 (Per-org instrument gating) — shipped 2026-04-30.
 3. ✅ #5 (System-admin Assessment Hub + lock down org edits) — shipped 2026-04-30.
-4. #1 (AssessmentRecord foundation) — unblocks every other 15.1 phase and gives coaches an immediate place to drop their existing assessment PDFs.
-5. #7 (30-60 day follow-up scheduling) — closes the loop the module already promises in the marketing copy.
-6. #2 (Pre/post comparison) — first thing Helena will demo with #1 in place.
-7. #8–#9 (full 360 flow) — the larger coaching deliverable, after AssessmentRecord is proven on simpler instruments.
+4. ✅ #1 (AssessmentRecord foundation) — shipped 2026-04-30.
+5. ✅ #2 (Pre/post comparison) — shipped 2026-04-30.
+6. #7 (30-60 day follow-up scheduling) — closes the loop the module already promises in the marketing copy.
+7. #8–#9 (full 360 flow) — the larger coaching deliverable, now with AssessmentRecord in place.
 
 Then move into divergence Phase 3 once the coaching backlog calms down.
 
