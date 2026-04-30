@@ -22,6 +22,10 @@ interface ConflictReport {
   byDepartment: Record<string, { count: number; avgScore: number }>;
   escalated: number;
   trend: { period: string; avgScore: number; count: number }[];
+  trendByDepartment?: Array<{
+    department: string;
+    points: { period: string; avgScore: number; count: number }[];
+  }>;
 }
 
 interface IdpReport {
@@ -137,6 +141,47 @@ const ROLE_LABELS: Record<string, string> = {
                     <div class="bar-label">{{ item.period | slice:5 }}</div>
                   </div>
                 }
+              </div>
+            }
+
+            <!-- Per-department trend (longitudinal risk by team) ------------- -->
+            @if ((conflict()!.trendByDepartment?.length ?? 0) > 1 && trendPeriods().length > 1) {
+              <h4>{{ 'ADMIN.riskTrendByDepartment' | translate }}</h4>
+              <div class="dept-trend-wrap">
+                <svg class="dept-trend-svg" viewBox="0 0 600 200" preserveAspectRatio="none">
+                  <!-- Risk-band reference lines: 25 / 50 / 75 -->
+                  <line x1="0" x2="600" y1="150" y2="150" class="grid-line low-mid"/>
+                  <line x1="0" x2="600" y1="100" y2="100" class="grid-line mid-high"/>
+                  <line x1="0" x2="600" y1="50"  y2="50"  class="grid-line high-crit"/>
+                  <text x="6"  y="148" class="grid-lbl">25</text>
+                  <text x="6"  y="98"  class="grid-lbl">50</text>
+                  <text x="6"  y="48"  class="grid-lbl">75</text>
+                  @for (s of conflict()!.trendByDepartment ?? []; track s.department; let i = $index) {
+                    <polyline class="dept-line" fill="none"
+                              [attr.stroke]="deptColor(i)"
+                              [attr.points]="trendPolyline(s.points, 600, 200)"/>
+                    @for (d of trendDots(s.points, 600, 200); track d.period) {
+                      <circle class="dept-dot" r="3"
+                              [attr.cx]="d.x" [attr.cy]="d.y"
+                              [attr.fill]="deptColor(i)">
+                        <title>{{ s.department }} · {{ d.period }} · {{ d.score }}/100</title>
+                      </circle>
+                    }
+                  }
+                </svg>
+                <div class="dept-axis">
+                  @for (p of trendPeriods(); track p) {
+                    <span class="dept-tick">{{ p | slice:5 }}</span>
+                  }
+                </div>
+                <div class="dept-legend">
+                  @for (s of conflict()!.trendByDepartment ?? []; track s.department; let i = $index) {
+                    <span class="dept-legend-item">
+                      <span class="dept-swatch" [style.background]="deptColor(i)"></span>
+                      {{ s.department }}
+                    </span>
+                  }
+                </div>
               </div>
             }
           }
@@ -277,6 +322,42 @@ const ROLE_LABELS: Record<string, string> = {
       &.completed { background: #e8faf4; color: #27C4A0; }
     }
     h4 { font-size: 14px; color: var(--artes-primary); margin: 16px 0 8px; }
+
+    .dept-trend-wrap { margin-top: 8px; }
+    .dept-trend-svg {
+      width: 100%; height: 200px;
+      background: linear-gradient(
+        to top,
+        rgba(39,196,160,0.05) 0%,
+        rgba(39,196,160,0.05) 25%,
+        rgba(240,165,0,0.06) 25%,
+        rgba(240,165,0,0.06) 50%,
+        rgba(232,108,58,0.06) 50%,
+        rgba(232,108,58,0.06) 75%,
+        rgba(229,62,62,0.07) 75%
+      );
+      border-radius: 8px;
+    }
+    .grid-line { stroke: rgba(0,0,0,0.06); stroke-width: 1; stroke-dasharray: 3 4; }
+    .grid-lbl { font-size: 9px; fill: #9aa5b4; }
+    .dept-line { stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .dept-dot { stroke: white; stroke-width: 1.5; }
+
+    .dept-axis {
+      display: flex; justify-content: space-between;
+      padding: 4px 4px 0; font-size: 11px; color: #8fa4c0;
+      .dept-tick { flex: 1 1 0; text-align: center; }
+    }
+    .dept-legend {
+      display: flex; flex-wrap: wrap; gap: 12px; margin-top: 10px;
+      .dept-legend-item {
+        display: inline-flex; align-items: center; gap: 6px;
+        font-size: 12px; color: #5a6a7e;
+      }
+      .dept-swatch {
+        display: inline-block; width: 12px; height: 3px; border-radius: 2px;
+      }
+    }
   `],
 })
 export class OrgReportsComponent implements OnInit {
@@ -314,5 +395,62 @@ export class OrgReportsComponent implements OnInit {
 
   objectEntries(obj: Record<string, number>): [string, number][] {
     return Object.entries(obj);
+  }
+
+  // ── Per-department risk trend chart helpers ────────────────────────────
+  // Renders an SVG poly-line chart with one line per department. The shared
+  // x-axis is the union of every period that appears across all departments.
+
+  /** Stable categorical palette — first colour is reserved for "All Departments". */
+  private deptPalette = [
+    '#5a6a7e', '#3A9FD6', '#27C4A0', '#e86c3a',
+    '#7c3aed', '#f0a500', '#c53030', '#1a9678',
+    '#2080b0', '#6b3aa0',
+  ];
+  deptColor(idx: number): string { return this.deptPalette[idx % this.deptPalette.length]!; }
+
+  /** Sorted union of all periods across every department's points[]. */
+  trendPeriods(): string[] {
+    const series = this.conflict()?.trendByDepartment ?? [];
+    const set = new Set<string>();
+    for (const s of series) for (const p of s.points) set.add(p.period);
+    return Array.from(set).sort();
+  }
+
+  /** Convert a department's points array into an SVG `points` attribute. */
+  trendPolyline(points: { period: string; avgScore: number }[], width: number, height: number): string {
+    const periods = this.trendPeriods();
+    if (periods.length === 0) return '';
+    const xStep = periods.length > 1 ? width / (periods.length - 1) : 0;
+    const byPeriod = new Map(points.map((p) => [p.period, p.avgScore]));
+    const coords: string[] = [];
+    periods.forEach((period, i) => {
+      const score = byPeriod.get(period);
+      if (typeof score !== 'number') return;
+      const x = i * xStep;
+      const y = height - (score / 100) * height;
+      coords.push(`${x.toFixed(1)},${y.toFixed(1)}`);
+    });
+    return coords.join(' ');
+  }
+
+  /** Per-point markers — one circle per (period, dept) where data exists. */
+  trendDots(points: { period: string; avgScore: number }[], width: number, height: number): Array<{ x: number; y: number; score: number; period: string }> {
+    const periods = this.trendPeriods();
+    if (periods.length === 0) return [];
+    const xStep = periods.length > 1 ? width / (periods.length - 1) : 0;
+    const byPeriod = new Map(points.map((p) => [p.period, p.avgScore]));
+    const dots: Array<{ x: number; y: number; score: number; period: string }> = [];
+    periods.forEach((period, i) => {
+      const score = byPeriod.get(period);
+      if (typeof score !== 'number') return;
+      dots.push({
+        x: i * xStep,
+        y: height - (score / 100) * height,
+        score,
+        period,
+      });
+    });
+    return dots;
   }
 }

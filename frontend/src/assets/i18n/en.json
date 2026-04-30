@@ -1268,6 +1268,7 @@
     "conflictRiskDesc": "Risk distribution, department breakdown, and trends",
     "totalAnalyses": "Total Analyses",
     "monthlyRiskTrend": "Monthly Risk Trend",
+    "riskTrendByDepartment": "Risk Trend by Department",
     "devPlanProgress": "Development Plan Progress",
     "devPlanProgressDesc": "IDP status, milestone completion, and individual progress",
     "totalPlans": "Total Plans",

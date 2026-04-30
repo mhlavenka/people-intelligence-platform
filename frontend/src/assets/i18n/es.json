@@ -1266,6 +1266,7 @@
     "conflictRiskDesc": "Distribución de riesgo, desglose por departamento y tendencias",
     "totalAnalyses": "Total de análisis",
     "monthlyRiskTrend": "Tendencia mensual de riesgo",
+    "riskTrendByDepartment": "Tendencia del riesgo por departamento",
     "devPlanProgress": "Progreso del plan de desarrollo",
     "devPlanProgressDesc": "Estado del PDI, finalización de hitos y progreso individual",
     "totalPlans": "Total de planes",
