@@ -122,6 +122,7 @@
 
     "organizationNotFound": "Organización no encontrada",
     "accessDenied": "Acceso denegado",
+    "invalidPayload": "Carga útil no válida",
 
     "invoiceNotFound": "Factura no encontrada",
     "invoiceCannotBePaid": "La factura no se puede pagar en su estado actual: {{status}}",

@@ -11,6 +11,7 @@ import { callClaude, buildAITemplatePrompt } from '../services/ai.service';
 import { createHubNotification, notifyCoachIntakeSubmitted } from '../services/hubNotification.service';
 import { sendEmail } from '../services/email.service';
 import { dispatchAssignment, computeNextFireAt } from '../services/surveyDispatch.service';
+import { buildTemplateAccessOr } from '../services/templateAccess.service';
 import { config } from '../config/env';
 import { logActivity } from '../services/activityLog.service';
 
@@ -184,10 +185,7 @@ router.post(
 router.get('/', async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const templates = await SurveyTemplate.find({
-      $or: [
-        { organizationId: req.user!.organizationId },
-        { isGlobal: true },
-      ],
+      $or: await buildTemplateAccessOr(req.user!.organizationId),
       isActive: true,
       sourceTemplateId: { $exists: false },
     }).setOptions({ bypassTenantCheck: true });
@@ -202,10 +200,7 @@ router.get(
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const filter: Record<string, unknown> = {
-        $or: [
-          { organizationId: req.user!.organizationId },
-          { isGlobal: true },
-        ],
+        $or: await buildTemplateAccessOr(req.user!.organizationId),
       };
       if (req.query['includeInactive'] !== 'true') {
         filter['isActive'] = true;
@@ -361,10 +356,7 @@ router.get(
     try {
       const template = await SurveyTemplate.findOne({
         _id: req.params['id'],
-        $or: [
-          { organizationId: req.user!.organizationId },
-          { isGlobal: true },
-        ],
+        $or: await buildTemplateAccessOr(req.user!.organizationId),
       }).setOptions({ bypassTenantCheck: true });
       if (!template) {
         res.status(404).json({ error: req.t('errors.intakeTemplateNotFound') });
@@ -387,7 +379,7 @@ router.put(
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const template = await SurveyTemplate.findOneAndUpdate(
-        { _id: req.params['id'], $or: [{ organizationId: req.user!.organizationId }, { isGlobal: true }] },
+        { _id: req.params['id'], $or: await buildTemplateAccessOr(req.user!.organizationId) },
         req.body,
         { new: true, runValidators: true }
       ).setOptions({ bypassTenantCheck: true });
@@ -427,7 +419,7 @@ router.post(
 
       const template = await SurveyTemplate.findOne({
         _id: req.params['id'],
-        $or: [{ organizationId: req.user!.organizationId }, { isGlobal: true }],
+        $or: await buildTemplateAccessOr(req.user!.organizationId),
       }).setOptions({ bypassTenantCheck: true });
 
       if (!template) {
@@ -586,7 +578,7 @@ router.delete(
     try {
       const template = await SurveyTemplate.findOneAndDelete({
         _id: req.params['id'],
-        $or: [{ organizationId: req.user!.organizationId }, { isGlobal: true }],
+        $or: await buildTemplateAccessOr(req.user!.organizationId),
       }).setOptions({ bypassTenantCheck: true });
       if (!template) {
         res.status(404).json({ error: req.t('errors.intakeTemplateNotFound') });
@@ -909,10 +901,7 @@ router.post(
     try {
       const template = await SurveyTemplate.findOne({
         _id: req.params['id'],
-        $or: [
-          { organizationId: req.user!.organizationId },
-          { isGlobal: true },
-        ],
+        $or: await buildTemplateAccessOr(req.user!.organizationId),
       }).setOptions({ bypassTenantCheck: true });
       if (!template) { res.status(404).json({ error: req.t('errors.templateNotFound') }); return; }
 

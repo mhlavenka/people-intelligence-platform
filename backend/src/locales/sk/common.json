@@ -122,6 +122,7 @@
 
     "organizationNotFound": "Organizácia sa nenašla",
     "accessDenied": "Prístup zamietnutý",
+    "invalidPayload": "Neplatné údaje",
 
     "invoiceNotFound": "Faktúra sa nenašla",
     "invoiceCannotBePaid": "Faktúru nie je možné zaplatiť v jej aktuálnom stave: {{status}}",

@@ -33,7 +33,7 @@ This roadmap lists **only the work that remains**, mixed across both projects an
 - Implemented in `backend/src/scripts/external-instrument-prompts.ts` with a one-off migration `set-external-instrument-prompts.ts` that finds each by `instrumentId` and applies/updates the prompt. Idempotent. All four prompts include the divergence-aware appendix so they behave consistently with the Phase 1+ data blocks.
 - Shipped on branch `feat/external-instrument-prompts` (2026-04-30).
 
-### 4. Per-organization gating of global survey instruments (system-admin)
+### 4. ✅ DONE — Per-organization gating of global survey instruments (system-admin)
 - Today: every global SurveyTemplate (`isGlobal: true`) is implicitly available to every org. With many global instruments shipped (HNP-PULSE, HNP-DEEP, HNP-CHS, TKI, ROCI-II, CDP-I, PSS-Edmondson, …), Helena needs a way to scope which instruments each customer can see and run.
 - **Schema:** add `Organization.enabledGlobalTemplateIds: ObjectId[]` (allowlist semantics). Empty array vs absent field distinction matters — see "open question" below.
 - **Endpoints:**
@@ -44,10 +44,15 @@ This roadmap lists **only the work that remains**, mixed across both projects an
 - **System-admin UI:** a new tab on the Organization detail page listing global instruments grouped by module (conflict / neuroinclusion / coaching / succession), each with an enable/disable toggle. Bulk actions: "enable all conflict instruments" / "reset to default".
 - **Why P0:** without this, any new global instrument we ship (TKI, CDP-I, future 360 templates) leaks to every existing customer immediately on deploy. The new external instruments are the trigger that makes this visible, and the Coaching 15.1 360 work (#5) ships more global templates.
 - **Effort:** ≈1 session — schema + 2 endpoints + filter helper + small admin UI.
-- **Open question:** what does "no allowlist set" mean? Two reasonable readings:
-  1. **Implicit-allow:** legacy orgs without `enabledGlobalTemplateIds` see all global instruments (backwards compatible). New orgs get the curated default.
-  2. **Implicit-deny:** every existing org needs a one-off migration to populate the allowlist (or they suddenly see nothing). Safer but louder.
-  - Recommend (1) for compatibility, with a system-admin "reconcile" action that snapshots the current global set into each org's allowlist, after which the implicit-allow rule can be retired.
+- **Decision (shipped):** option 1 — implicit-allow for legacy orgs. `enabledGlobalTemplateIds = undefined` means the org sees all global instruments (backwards compatible); setting the field — even to `[]` — switches the org to allowlist semantics.
+- **Where it lives:**
+  - `backend/src/models/Organization.model.ts` — new `enabledGlobalTemplateIds` field (default `undefined`).
+  - `backend/src/services/templateAccess.service.ts` — `buildTemplateAccessOr(orgId)` returns the `$or` clause that gates global templates.
+  - `backend/src/controllers/system-admin.controller.ts` — new `getOrgInstruments` / `setOrgInstruments`, plus a curated default (HNP-PULSE + HNP-DEEP) injected on org create.
+  - `backend/src/routes/system-admin.routes.ts` — `GET/PUT /system-admin/organizations/:id/instruments`.
+  - Tenant-side filter applied in `survey.routes.ts` (×7 spots), `dashboard.routes.ts`, `reports.routes.ts`.
+  - `frontend/.../system-admin/org-instruments-dialog/` — new dialog with module-grouped checkboxes, bulk enable/disable per module, "Revert to default" CTA.
+  - i18n: 15 new SYSADMIN.* keys across en / fr / es / sk; `errors.invalidPayload` in backend locales.
 
 ### 5. Conflict Intelligence — Automated 30-60 day follow-up pulse scheduling
 - Auto-schedule a follow-up pulse when an escalation review is marked complete, or when N% of recommended actions are checked.

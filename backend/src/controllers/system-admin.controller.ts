@@ -4,8 +4,17 @@ import { Response, NextFunction } from 'express';
 import mongoose from 'mongoose';
 import { AuthRequest } from '../middleware/auth.middleware';
 import { Organization } from '../models/Organization.model';
+import { SurveyTemplate } from '../models/SurveyTemplate.model';
 import { User } from '../models/User.model';
 import { logActivity } from '../services/activityLog.service';
+
+/**
+ * Default global instruments enabled for newly-created organizations.
+ * Looked up at create-time by `instrumentId`. The two HNP team-pulse
+ * instruments are the safe baseline that every customer gets; system admin
+ * can broaden the allowlist per-org afterwards via the Instruments tab.
+ */
+const DEFAULT_NEW_ORG_INSTRUMENT_IDS = ['HNP-PULSE', 'HNP-DEEP'] as const;
 
 const bypass = { bypassTenantCheck: true };
 
@@ -81,7 +90,20 @@ export async function createOrganization(req: AuthRequest, res: Response, next: 
     const existing = await Organization.findOne({ slug: req.body.slug }).setOptions(bypass);
     if (existing) { res.status(409).json({ error: t(req, 'errors.slugTaken') }); return; }
 
-    const org = await Organization.create(req.body);
+    // Seed the curated baseline of global instruments unless the caller
+    // already specified an explicit allowlist (e.g. test fixtures or a
+    // restore). Empty array from the client is honoured — that means
+    // "intentionally no global templates".
+    let body = req.body;
+    if (body.enabledGlobalTemplateIds === undefined) {
+      const defaults = await SurveyTemplate.find({
+        instrumentId: { $in: DEFAULT_NEW_ORG_INSTRUMENT_IDS as readonly string[] },
+        isGlobal: true,
+      }).select('_id').lean().setOptions(bypass);
+      body = { ...body, enabledGlobalTemplateIds: defaults.map((d) => d._id) };
+    }
+
+    const org = await Organization.create(body);
     logActivity({
       org: org._id, actor: req.user!.userId,
       type: 'sysadmin.org.created', label: 'Organization created (by system-admin)',
@@ -89,6 +111,84 @@ export async function createOrganization(req: AuthRequest, res: Response, next: 
       refModel: 'Organization', refId: org._id,
     });
     res.status(201).json(org);
+  } catch (e) { next(e); }
+}
+
+// GET /api/system-admin/organizations/:id/instruments
+// Returns: { allGlobal: SurveyTemplate[], enabled: ObjectId[] | null }
+//   enabled = null  ⇒ legacy implicit-allow (no allowlist set on org)
+//   enabled = []    ⇒ explicitly empty allowlist (org sees no global templates)
+//   enabled = [...] ⇒ explicit allowlist
+export async function getOrgInstruments(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const org = await Organization.findById(req.params['id'])
+      .select('enabledGlobalTemplateIds')
+      .lean()
+      .setOptions(bypass);
+    if (!org) { res.status(404).json({ error: t(req, 'errors.organizationNotFound') }); return; }
+
+    const allGlobal = await SurveyTemplate.find({ isGlobal: true })
+      .select('_id title moduleType instrumentId instrumentVersion isActive')
+      .sort({ moduleType: 1, title: 1 })
+      .lean()
+      .setOptions(bypass);
+
+    res.json({
+      allGlobal,
+      enabled: org.enabledGlobalTemplateIds ?? null,
+    });
+  } catch (e) { next(e); }
+}
+
+// PUT /api/system-admin/organizations/:id/instruments
+// Body: { enabled: string[] | null }
+//   null    ⇒ remove the allowlist (revert to implicit-allow)
+//   string[] ⇒ replace allowlist with the given IDs (validated against global templates)
+export async function setOrgInstruments(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { enabled } = req.body as { enabled: string[] | null };
+    if (enabled !== null && !Array.isArray(enabled)) {
+      res.status(400).json({ error: t(req, 'errors.invalidPayload') });
+      return;
+    }
+
+    let toStore: mongoose.Types.ObjectId[] | undefined;
+    if (enabled === null) {
+      toStore = undefined;  // unset the field
+    } else {
+      // Validate every supplied id resolves to an active global template.
+      const ids = enabled
+        .filter((id): id is string => typeof id === 'string' && mongoose.Types.ObjectId.isValid(id))
+        .map((id) => new mongoose.Types.ObjectId(id));
+      const valid = await SurveyTemplate.find({ _id: { $in: ids }, isGlobal: true })
+        .select('_id')
+        .lean()
+        .setOptions(bypass);
+      const validSet = new Set(valid.map((v) => v._id.toString()));
+      toStore = ids.filter((id) => validSet.has(id.toString()));
+    }
+
+    // $unset when reverting to implicit-allow, $set otherwise.
+    const update = enabled === null
+      ? { $unset: { enabledGlobalTemplateIds: '' } }
+      : { $set: { enabledGlobalTemplateIds: toStore } };
+
+    const org = await Organization.findByIdAndUpdate(req.params['id'], update, { new: true })
+      .select('enabledGlobalTemplateIds name')
+      .setOptions(bypass);
+    if (!org) { res.status(404).json({ error: t(req, 'errors.organizationNotFound') }); return; }
+
+    logActivity({
+      org: org._id, actor: req.user!.userId,
+      type: 'sysadmin.org.instruments_updated',
+      label: 'Instrument allowlist updated (by system-admin)',
+      detail: enabled === null
+        ? `${org.name} — reverted to implicit-allow (all global instruments)`
+        : `${org.name} — ${toStore!.length} global instruments enabled`,
+      refModel: 'Organization', refId: org._id,
+    });
+
+    res.json({ enabled: org.enabledGlobalTemplateIds ?? null });
   } catch (e) { next(e); }
 }
 

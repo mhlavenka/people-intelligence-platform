@@ -11,6 +11,7 @@ import { NeuroinclustionAssessment } from '../models/NeuroinclustionAssessment.m
 import { SurveyResponse } from '../models/SurveyResponse.model';
 import { SurveyTemplate } from '../models/SurveyTemplate.model';
 import { JournalEntry } from '../models/JournalEntry.model';
+import { buildTemplateAccessOr } from '../services/templateAccess.service';
 
 const router = Router();
 
@@ -329,7 +330,7 @@ orgRouter.get('/survey-activity', async (req: AuthRequest, res: Response, next: 
     const orgId = req.user!.organizationId;
 
     const templates = await SurveyTemplate.find({
-      $or: [{ organizationId: orgId }, { isGlobal: true }],
+      $or: await buildTemplateAccessOr(orgId),
       isActive: true,
     }).setOptions({ bypassTenantCheck: true }).lean();
 

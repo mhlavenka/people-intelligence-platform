@@ -122,6 +122,7 @@
 
     "organizationNotFound": "Organization not found",
     "accessDenied": "Access denied",
+    "invalidPayload": "Invalid payload",
 
     "invoiceNotFound": "Invoice not found",
     "invoiceCannotBePaid": "Invoice cannot be paid in its current status: {{status}}",
