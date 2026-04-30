@@ -493,10 +493,16 @@ const REFRESH_EXPIRY_OPTIONS = [
 
     .card-body { padding: 20px 24px 24px; }
 
-    /* Fields */
+    /* Fields — every mat-form-field defaults to filling its container so a
+     * solitary field on a row takes the full card width. Inside .field-row,
+     * children flex to share the row equally. */
+    .card-body mat-form-field { width: 100%; }
     .field-row { display: flex; gap: 16px; flex-wrap: wrap; }
-    .field-sm  { width: 180px; }
-    .field-md  { width: 240px; }
+    .field-row > mat-form-field { flex: 1 1 200px; min-width: 0; width: auto; }
+    /* Legacy size classes — kept so the markup still parses. They no longer
+     * impose a fixed width since the rules above always win. */
+    .field-sm,
+    .field-md,
     .full-width { width: 100%; }
 
     /* Toggle rows */
