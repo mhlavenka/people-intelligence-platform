@@ -26,6 +26,8 @@ import { BookingService, BookingRecord } from '../../booking/booking.service';
 import { SurveyResponsesDialogComponent, SurveyTemplate as IntakeTemplate } from '../../survey/survey-responses-dialog/survey-responses-dialog.component';
 
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { AssessmentsPanelComponent } from '../assessments-panel/assessments-panel.component';
+
 interface Session {
   _id: string;
   date: string;
@@ -58,7 +60,7 @@ interface Session {
   imports: [
     CommonModule, DatePipe, CurrencyPipe, RouterLink, MatIconModule, MatButtonModule,
     MatProgressSpinnerModule, MatDividerModule, MatSnackBarModule, MatTooltipModule, MatMenuModule,
-    TranslateModule,
+    TranslateModule, AssessmentsPanelComponent,
   ],
   template: `
     <div class="detail-page">
@@ -743,6 +745,11 @@ interface Session {
                 <span class="add-label">{{ 'COACHING.bookASession' | translate }}</span>
               </button>
             }
+
+            <!-- Assessments panel (15.1) — generic AssessmentRecords + pre/post compare. -->
+            <app-assessments-panel
+              [engagementId]="engagement()!._id"
+              [canManage]="canManage()" />
           </div>
         </div>
       }

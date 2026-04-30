@@ -30,6 +30,7 @@ import reportsRoutes from './routes/reports.routes';
 import eqiImportRoutes from './routes/eqi-import.routes';
 import coachingRoutes from './routes/coaching.routes';
 import coachingHoursRoutes from './routes/coaching-hours.routes';
+import assessmentRoutes from './routes/assessment.routes';
 import authOAuthRoutes from './routes/auth-oauth.routes';
 import systemAdminSettingsRoutes from './routes/system-admin-settings.routes';
 import calendarRoutes, { calendarCallbackRouter } from './routes/calendar.routes';
@@ -104,6 +105,7 @@ app.use('/api/reports', reportsRoutes);
 app.use('/api/eq/import', eqiImportRoutes);
 app.use('/api/coaching/hours', coachingHoursRoutes);
 app.use('/api/coaching', coachingRoutes);
+app.use('/api/assessments', assessmentRoutes);
 app.use('/api/calendar', calendarCallbackRouter);  // public — Google OAuth redirect (no auth)
 app.use('/api/calendar', calendarRoutes);
 app.use('/api/journal', journalRoutes);
