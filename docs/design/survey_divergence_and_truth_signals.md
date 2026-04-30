@@ -357,7 +357,9 @@ Admin-level toggle to see the same analysis with and without quality filtering, 
 
 ## 10. Phasing
 
-### Phase 1 — Quality filter + per-item / dimensional metrics (≈2 weeks)
+> **Status update 2026-04-30:** Phases 1, 2, and most of Phase 3 are shipped. Person-fit (IRT) and the cross-module rollout remain. Phase 4 items remain research-only. The canonical living priority list is now `docs/design/roadmap_divergence_and_coaching.md`.
+
+### ✅ Phase 1 — Quality filter + per-item / dimensional metrics  *(shipped)*
 
 - Server: straightlining + long-string detection, quality score, exclusion
 - Per-item metrics (mean, median, sd, iqr, entropy, bimodality, R<sub>wg</sub>)
@@ -366,22 +368,23 @@ Admin-level toggle to see the same analysis with and without quality filtering, 
 - UI: response-quality card + signal-structure panel
 - i18n in all four languages
 
-### Phase 2 — Subgroup detection (≈2-3 weeks)
+### ✅ Phase 2 — Subgroup detection  *(shipped)*
 
 - K-means 2/3 + silhouette validation + min-3 guard
 - Subgroups panel + disclaimer copy
 - AI prompt update for subgroup interpretation
 - Admin policy toggle
 
-### Phase 3 — Advanced signals (research, ≈4-6 weeks)
+### Phase 3 — Advanced signals  *(mostly shipped)*
 
-- Timing capture on survey-take
-- Trap items in `SurveyTemplate`
-- Consistency pairs + reverse-coded items (with proper psychometric review)
-- Person-fit (IRT) — requires calibrated item banks; scope with a psychometrician
-- Cross-module roll-out (Neuro-Inclusion, Coaching intakes)
+- ✅ Timing capture on survey-take  *(shipped)*
+- ✅ Trap items in `SurveyTemplate` (`is_trap` + `trap_correct_answer`)  *(shipped)*
+- ✅ Consistency pairs + reverse-coded items (`correlated_item_ids` + `reverse_scored`)  *(shipped)*
+- ✅ Speeding flag wired in (`speedingMsPerItemFloor`, default 2000 ms; per-org tunable)  *(shipped)*
+- Person-fit (IRT) — requires calibrated item banks; scope with a psychometrician  *(remaining, P2)*
+- Cross-module roll-out (Neuro-Inclusion, Coaching intakes)  *(remaining, P3)*
 
-### Phase 4 — Research / pilot
+### Phase 4 — Research / pilot  *(remaining)*
 
 - Bayesian Truth Serum-style item on opt-in instruments
 - Longitudinal respondent calibration (separate from any identifying use)

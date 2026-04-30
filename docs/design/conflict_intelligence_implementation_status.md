@@ -200,7 +200,7 @@ All questions follow the design principles: behavioural (not attributional), mul
 | ROCI-II (Rahim) | ✅ Seeded | 28 | Global, active, supports supervisor/subordinate/peer variants |
 | CDP-I (Conflict Dynamics Profile) | ✅ Seeded | 32 | Global, active, with behaviour temperature/cluster |
 | PSS (Edmondson Psych Safety) | ✅ Seeded | 7 | Global, active, single-construct |
-| Custom `analysisPrompt` on external instruments | ❌ Missing | — | TKI, ROCI-II, CDP-I, PSS use the default system prompt, not instrument-specific ones |
+| Custom `analysisPrompt` on external instruments | ✅ Done (2026-04-30) | — | All four instruments now carry framework-specific system prompts: TKI (5 modes, ipsative), ROCI-II (5 styles, normative), CDP-I (4 quadrants × 15 clusters with destructive-behaviour duty-of-care path), PSS-Edmondson (3 benchmark bands). Defined in `backend/src/scripts/external-instrument-prompts.ts`; applied via the idempotent `set-external-instrument-prompts.ts` migration. All include the divergence-aware appendix. |
 
 ---
 
@@ -252,12 +252,14 @@ No implementation required. Theoretical reference section.
 
 ## Missing Gaps
 
+> **Status update 2026-04-30:** the original High Priority gap #2 (custom analysis prompts) is now done — see the updated row in §7 above. The roadmap of remaining work has moved to `docs/design/roadmap_divergence_and_coaching.md`, which is the canonical priority list.
+
 ### High Priority
 
 | # | Gap | Document Reference | Impact |
 |---|-----|-------------------|--------|
 | 1 | **Automated 30–60 day follow-up pulse scheduling** | Sections 4.1, 6 — "pulse survey at 30–60 days to measure whether interventions have moved the risk score" | Without this, the feedback loop described in the document (Stage 5: Follow-Up) requires manual re-distribution. The system can re-run analysis with new responses, but there is no scheduler to automatically send follow-up pulses after an escalation resolution or action completion. |
-| 2 | **Custom analysis prompts for external instruments** | Section 3.2 — each instrument type should have tailored AI analysis | TKI, ROCI-II, CDP-I, and PSS are seeded and usable for data collection, but their analyses use the default system prompt rather than instrument-specific frameworks. TKI should map to five conflict modes; ROCI-II to five handling styles with norm comparisons; CDP-I to constructive/destructive behaviours; PSS to Edmondson's team safety dimensions. |
+| ~~2~~ | ~~**Custom analysis prompts for external instruments**~~ | ✅ DONE 2026-04-30 — see §7 |
 
 ### Medium Priority
 
