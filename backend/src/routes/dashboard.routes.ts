@@ -13,6 +13,7 @@ import { JournalSessionNote } from '../models/JournalSessionNote.model';
 import { JournalReflectiveEntry } from '../models/JournalReflectiveEntry.model';
 import { User } from '../models/User.model';
 import { ActivityLog } from '../models/ActivityLog.model';
+import { buildTemplateAccessOr } from '../services/templateAccess.service';
 
 const router = Router();
 router.use(authenticateToken, tenantResolver);
@@ -248,6 +249,7 @@ router.get('/activity-types', async (req: AuthRequest, res: Response, next: Next
 router.get('/stats', async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const orgId = req.user!.organizationId;
+    const templateAccessOr = await buildTemplateAccessOr(orgId);
 
     const [
       activeConflicts,
@@ -274,9 +276,9 @@ router.get('/stats', async (req: AuthRequest, res: Response, next: NextFunction)
         status: { $in: ['active', 'draft'] },
       }),
 
-      // Surveys: active templates (org-specific + global)
+      // Surveys: active templates (org-specific + enabled global)
       SurveyTemplate.countDocuments({
-        $or: [{ organizationId: orgId }, { isGlobal: true }],
+        $or: templateAccessOr,
         isActive: true,
       }).setOptions({ bypassTenantCheck: true }),
 

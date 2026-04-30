@@ -55,6 +55,13 @@ export interface IOrganization extends Document {
   suspendedAt?: Date;
   suspensionReason?: string;
 
+  // Allowlist of global SurveyTemplate IDs that this org may use.
+  // Implicit-allow semantics: when this field is undefined, the org sees ALL
+  // global templates (legacy behaviour, backwards compatible). When set —
+  // even to an empty array — only the listed global templates are visible.
+  // Per-org templates (organizationId set) are always visible regardless.
+  enabledGlobalTemplateIds?: mongoose.Types.ObjectId[];
+
   // Per-org tunables for the survey-divergence quality filter (Layer 1).
   // Conservative permissive defaults — flag-but-include, never auto-reject.
   surveyQualityPolicy?: {
@@ -112,6 +119,11 @@ const OrganizationSchema = new Schema<IOrganization>(
     aiGenerationsResetAt: { type: Date },
     suspendedAt:      { type: Date },
     suspensionReason: { type: String, trim: true },
+
+    enabledGlobalTemplateIds: {
+      type: [{ type: Schema.Types.ObjectId, ref: 'SurveyTemplate' }],
+      default: undefined,  // intentional: undefined ≠ [] for implicit-allow
+    },
 
     surveyQualityPolicy: {
       type: new Schema({

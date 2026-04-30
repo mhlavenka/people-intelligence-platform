@@ -13,6 +13,8 @@ import {
   updateOrgUser,
   startOrgTrial,
   endOrgTrial,
+  getOrgInstruments,
+  setOrgInstruments,
 } from '../controllers/system-admin.controller';
 import { logActivity } from '../services/activityLog.service';
 
@@ -31,6 +33,8 @@ router.post('/organizations/:id/trial',                    startOrgTrial);
 router.delete('/organizations/:id/trial',                  endOrgTrial);
 router.get('/organizations/:id/users',                     listOrgUsers);
 router.patch('/organizations/:id/users/:userId',           updateOrgUser);
+router.get('/organizations/:id/instruments',               getOrgInstruments);
+router.put('/organizations/:id/instruments',               setOrgInstruments);
 
 /** Create a user in a specific organization (system admin). */
 router.post('/organizations/:id/users', async (req: AuthRequest, res: Response, next: NextFunction) => {

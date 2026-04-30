@@ -16,6 +16,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { ApiService } from '../../../core/api.service';
 import { OrgEditDialogComponent, OrgRow } from '../org-edit-dialog/org-edit-dialog.component';
 import { CreateUserDialogComponent } from '../create-user-dialog/create-user-dialog.component';
+import { OrgInstrumentsDialogComponent } from '../org-instruments-dialog/org-instruments-dialog.component';
 import { ConfirmDialogComponent } from '../../../shared/confirm-dialog/confirm-dialog.component';
 import { TranslateModule } from '@ngx-translate/core';
 
@@ -220,6 +221,9 @@ interface Stats {
           </button>
           <button mat-menu-item (click)="createAdminUser(org)">
             <mat-icon>person_add</mat-icon> Create Admin User
+          </button>
+          <button mat-menu-item (click)="manageInstruments(org)">
+            <mat-icon>tune</mat-icon> {{ 'SYSADMIN.manageInstruments' | translate }}
           </button>
           <button mat-menu-item (click)="toggleSuspend(org)">
             <mat-icon>{{ org.isActive ? 'block' : 'check_circle' }}</mat-icon>
@@ -473,6 +477,13 @@ export class OrganizationsComponent implements OnInit {
         this.snack.open(`User ${result.email} created as ${result.role}`, 'OK', { duration: 3000 });
         this.loadOrgs();
       }
+    });
+  }
+
+  manageInstruments(org: OrgRow): void {
+    this.dialog.open(OrgInstrumentsDialogComponent, {
+      width: '720px',
+      data: { orgId: org._id, orgName: org.name },
     });
   }
 }
