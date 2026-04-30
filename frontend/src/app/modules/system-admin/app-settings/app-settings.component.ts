@@ -124,161 +124,55 @@ const REFRESH_EXPIRY_OPTIONS = [
       } @else {
         <form [formGroup]="form">
 
-          <!-- ── Password Policy ─────────────────────────────── -->
+          <!-- ── 1. General ────────────────────────────────────── -->
           <div class="settings-card">
             <div class="card-header">
-              <mat-icon>lock</mat-icon>
+              <mat-icon>tune</mat-icon>
               <div>
-                <h3>Password Policy</h3>
-                <p>Minimum requirements for user passwords across all organisations</p>
+                <h3>General</h3>
+                <p>Platform-wide defaults and maintenance controls</p>
               </div>
             </div>
-            <div class="card-body" formGroupName="passwordPolicy">
-              <mat-form-field appearance="outline" class="field-sm">
-                <mat-label>Minimum Length</mat-label>
-                <input matInput type="number" formControlName="minLength" min="6" max="128" />
-                <mat-hint>6–128 characters</mat-hint>
-              </mat-form-field>
-
-              <div class="toggle-grid">
-                <label class="toggle-row">
-                  <mat-slide-toggle formControlName="requireUppercase" color="primary" />
-                  <div class="toggle-info">
-                    <span class="toggle-label">Require uppercase letter</span>
-                    <span class="toggle-desc">At least one A–Z character</span>
-                  </div>
-                </label>
-                <label class="toggle-row">
-                  <mat-slide-toggle formControlName="requireLowercase" color="primary" />
-                  <div class="toggle-info">
-                    <span class="toggle-label">Require lowercase letter</span>
-                    <span class="toggle-desc">At least one a–z character</span>
-                  </div>
-                </label>
-                <label class="toggle-row">
-                  <mat-slide-toggle formControlName="requireNumbers" color="primary" />
-                  <div class="toggle-info">
-                    <span class="toggle-label">Require number</span>
-                    <span class="toggle-desc">At least one 0–9 digit</span>
-                  </div>
-                </label>
-                <label class="toggle-row">
-                  <mat-slide-toggle formControlName="requireSpecialChars" color="primary" />
-                  <div class="toggle-info">
-                    <span class="toggle-label">Require special character</span>
-                    <span class="toggle-desc">e.g. !&#64;#$%^&amp;*</span>
-                  </div>
-                </label>
-              </div>
-            </div>
-          </div>
-
-          <!-- ── Login Policy ────────────────────────────────── -->
-          <div class="settings-card">
-            <div class="card-header">
-              <mat-icon>login</mat-icon>
-              <div>
-                <h3>Login &amp; Authentication</h3>
-                <p>Brute-force protection and two-factor authentication settings</p>
-              </div>
-            </div>
-            <div class="card-body" formGroupName="loginPolicy">
-              <div class="field-row">
-                <mat-form-field appearance="outline" class="field-sm">
-                  <mat-label>Max Login Attempts</mat-label>
-                  <input matInput type="number" formControlName="maxLoginAttempts" min="0" max="100" />
-                  <mat-hint>0 = unlimited</mat-hint>
-                </mat-form-field>
-                <mat-form-field appearance="outline" class="field-sm">
-                  <mat-label>Lockout Duration (min)</mat-label>
-                  <input matInput type="number" formControlName="lockoutDurationMinutes" min="1" max="1440" />
-                  <mat-hint>Minutes locked after max attempts</mat-hint>
-                </mat-form-field>
-              </div>
-
-              <label class="toggle-row">
-                <mat-slide-toggle formControlName="twoFactorEnforced" color="primary" />
+            <div class="card-body" formGroupName="general">
+              <label class="toggle-row maintenance-toggle">
+                <mat-slide-toggle formControlName="maintenanceMode" color="warn" />
                 <div class="toggle-info">
-                  <span class="toggle-label">Enforce two-factor authentication</span>
-                  <span class="toggle-desc">All users must enable 2FA — they will be prompted on next login</span>
-                </div>
-              </label>
-            </div>
-          </div>
-
-          <!-- ── Session Policy ──────────────────────────────── -->
-          <div class="settings-card">
-            <div class="card-header">
-              <mat-icon>timer</mat-icon>
-              <div>
-                <h3>Session &amp; Timeout</h3>
-                <p>Inactivity auto-logout and concurrent session limits</p>
-              </div>
-            </div>
-            <div class="card-body" formGroupName="sessionPolicy">
-              <div class="field-row">
-                <mat-form-field appearance="outline" class="field-sm">
-                  <mat-label>Auto-Logout (minutes)</mat-label>
-                  <input matInput type="number" formControlName="autoLogoutMinutes" min="0" max="1440" />
-                  <mat-hint>0 = disabled</mat-hint>
-                </mat-form-field>
-                <mat-form-field appearance="outline" class="field-sm">
-                  <mat-label>Warning Before Logout (sec)</mat-label>
-                  <input matInput type="number" formControlName="logoutWarningSeconds" min="10" max="600" />
-                  <mat-hint>Countdown shown to user</mat-hint>
-                </mat-form-field>
-              </div>
-
-              <label class="toggle-row">
-                <mat-slide-toggle formControlName="showLogoutWarning" color="primary" />
-                <div class="toggle-info">
-                  <span class="toggle-label">Show logout warning</span>
-                  <span class="toggle-desc">Display a countdown dialog before auto-logout</span>
+                  <span class="toggle-label">Maintenance mode</span>
+                  <span class="toggle-desc">When enabled, all non-admin users see a maintenance message and cannot access the platform</span>
                 </div>
               </label>
 
-              <mat-form-field appearance="outline" class="field-sm" style="margin-top: 12px">
-                <mat-label>Max Concurrent Sessions</mat-label>
-                <input matInput type="number" formControlName="maxConcurrentSessions" min="0" max="50" />
-                <mat-hint>0 = unlimited</mat-hint>
+              @if (form.get('general.maintenanceMode')?.value) {
+                <mat-form-field appearance="outline" class="full-width" style="margin-top: 8px">
+                  <mat-label>Maintenance Message</mat-label>
+                  <textarea matInput formControlName="maintenanceMessage" rows="2"></textarea>
+                </mat-form-field>
+              }
+
+              <div class="field-row" style="margin-top: 12px">
+                <mat-form-field appearance="outline" class="field-md">
+                  <mat-label>Default Timezone</mat-label>
+                  <mat-select formControlName="defaultTimezone">
+                    @for (tz of timezones; track tz) {
+                      <mat-option [value]="tz">{{ tz }}</mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="field-sm">
+                  <mat-label>Max Upload Size (MB)</mat-label>
+                  <input matInput type="number" formControlName="maxFileUploadMB" min="1" max="100" />
+                </mat-form-field>
+              </div>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Data Retention (days)</mat-label>
+                <input matInput type="number" formControlName="dataRetentionDays" min="0" max="3650" />
+                <mat-hint>0 = keep indefinitely</mat-hint>
               </mat-form-field>
             </div>
           </div>
 
-          <!-- ── Token Policy ────────────────────────────────── -->
-          <div class="settings-card">
-            <div class="card-header">
-              <mat-icon>vpn_key</mat-icon>
-              <div>
-                <h3>Token Lifetimes</h3>
-                <p>JWT access and refresh token expiration periods</p>
-              </div>
-            </div>
-            <div class="card-body" formGroupName="tokenPolicy">
-              <div class="field-row">
-                <mat-form-field appearance="outline" class="field-md">
-                  <mat-label>Access Token Expiry</mat-label>
-                  <mat-select formControlName="accessTokenExpiresIn">
-                    @for (opt of tokenExpiryOptions; track opt.value) {
-                      <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
-                    }
-                  </mat-select>
-                  <mat-hint>Short-lived authentication token</mat-hint>
-                </mat-form-field>
-                <mat-form-field appearance="outline" class="field-md">
-                  <mat-label>Refresh Token Expiry</mat-label>
-                  <mat-select formControlName="refreshTokenExpiresIn">
-                    @for (opt of refreshExpiryOptions; track opt.value) {
-                      <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
-                    }
-                  </mat-select>
-                  <mat-hint>Long-lived token for silent refresh</mat-hint>
-                </mat-form-field>
-              </div>
-            </div>
-          </div>
-
-          <!-- ── Company Info (Invoice Sender) ─────────────── -->
+          <!-- ── 2. Address (Company Info / Invoice Sender) ──── -->
           <div class="settings-card">
             <div class="card-header">
               <mat-icon>business</mat-icon>
@@ -354,7 +248,7 @@ const REFRESH_EXPIRY_OPTIONS = [
             </div>
           </div>
 
-          <!-- ── Email Delivery (SES sender) ─────────────────── -->
+          <!-- ── 3. Email Delivery (SES sender) ───────────────── -->
           <div class="settings-card">
             <div class="card-header">
               <mat-icon>mail</mat-icon>
@@ -379,51 +273,157 @@ const REFRESH_EXPIRY_OPTIONS = [
             </div>
           </div>
 
-          <!-- ── General ─────────────────────────────────────── -->
+          <!-- ── 4. Session Policy ────────────────────────────── -->
           <div class="settings-card">
             <div class="card-header">
-              <mat-icon>tune</mat-icon>
+              <mat-icon>timer</mat-icon>
               <div>
-                <h3>General</h3>
-                <p>Platform-wide defaults and maintenance controls</p>
+                <h3>Session &amp; Timeout</h3>
+                <p>Inactivity auto-logout and concurrent session limits</p>
               </div>
             </div>
-            <div class="card-body" formGroupName="general">
-              <label class="toggle-row maintenance-toggle">
-                <mat-slide-toggle formControlName="maintenanceMode" color="warn" />
+            <div class="card-body" formGroupName="sessionPolicy">
+              <div class="field-row">
+                <mat-form-field appearance="outline" class="field-sm">
+                  <mat-label>Auto-Logout (minutes)</mat-label>
+                  <input matInput type="number" formControlName="autoLogoutMinutes" min="0" max="1440" />
+                  <mat-hint>0 = disabled</mat-hint>
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="field-sm">
+                  <mat-label>Warning Before Logout (sec)</mat-label>
+                  <input matInput type="number" formControlName="logoutWarningSeconds" min="10" max="600" />
+                  <mat-hint>Countdown shown to user</mat-hint>
+                </mat-form-field>
+              </div>
+
+              <label class="toggle-row">
+                <mat-slide-toggle formControlName="showLogoutWarning" color="primary" />
                 <div class="toggle-info">
-                  <span class="toggle-label">Maintenance mode</span>
-                  <span class="toggle-desc">When enabled, all non-admin users see a maintenance message and cannot access the platform</span>
+                  <span class="toggle-label">Show logout warning</span>
+                  <span class="toggle-desc">Display a countdown dialog before auto-logout</span>
                 </div>
               </label>
 
-              @if (form.get('general.maintenanceMode')?.value) {
-                <mat-form-field appearance="outline" class="full-width" style="margin-top: 8px">
-                  <mat-label>Maintenance Message</mat-label>
-                  <textarea matInput formControlName="maintenanceMessage" rows="2"></textarea>
-                </mat-form-field>
-              }
+              <mat-form-field appearance="outline" class="full-width" style="margin-top: 12px">
+                <mat-label>Max Concurrent Sessions</mat-label>
+                <input matInput type="number" formControlName="maxConcurrentSessions" min="0" max="50" />
+                <mat-hint>0 = unlimited</mat-hint>
+              </mat-form-field>
+            </div>
+          </div>
 
-              <div class="field-row" style="margin-top: 12px">
-                <mat-form-field appearance="outline" class="field-md">
-                  <mat-label>Default Timezone</mat-label>
-                  <mat-select formControlName="defaultTimezone">
-                    @for (tz of timezones; track tz) {
-                      <mat-option [value]="tz">{{ tz }}</mat-option>
-                    }
-                  </mat-select>
+          <!-- ── 5. Password Policy ───────────────────────────── -->
+          <div class="settings-card">
+            <div class="card-header">
+              <mat-icon>lock</mat-icon>
+              <div>
+                <h3>Password Policy</h3>
+                <p>Minimum requirements for user passwords across all organisations</p>
+              </div>
+            </div>
+            <div class="card-body" formGroupName="passwordPolicy">
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Minimum Length</mat-label>
+                <input matInput type="number" formControlName="minLength" min="6" max="128" />
+                <mat-hint>6–128 characters</mat-hint>
+              </mat-form-field>
+
+              <div class="toggle-grid">
+                <label class="toggle-row">
+                  <mat-slide-toggle formControlName="requireUppercase" color="primary" />
+                  <div class="toggle-info">
+                    <span class="toggle-label">Require uppercase letter</span>
+                    <span class="toggle-desc">At least one A–Z character</span>
+                  </div>
+                </label>
+                <label class="toggle-row">
+                  <mat-slide-toggle formControlName="requireLowercase" color="primary" />
+                  <div class="toggle-info">
+                    <span class="toggle-label">Require lowercase letter</span>
+                    <span class="toggle-desc">At least one a–z character</span>
+                  </div>
+                </label>
+                <label class="toggle-row">
+                  <mat-slide-toggle formControlName="requireNumbers" color="primary" />
+                  <div class="toggle-info">
+                    <span class="toggle-label">Require number</span>
+                    <span class="toggle-desc">At least one 0–9 digit</span>
+                  </div>
+                </label>
+                <label class="toggle-row">
+                  <mat-slide-toggle formControlName="requireSpecialChars" color="primary" />
+                  <div class="toggle-info">
+                    <span class="toggle-label">Require special character</span>
+                    <span class="toggle-desc">e.g. !&#64;#$%^&amp;*</span>
+                  </div>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── 6. Login Policy ──────────────────────────────── -->
+          <div class="settings-card">
+            <div class="card-header">
+              <mat-icon>login</mat-icon>
+              <div>
+                <h3>Login &amp; Authentication</h3>
+                <p>Brute-force protection and two-factor authentication settings</p>
+              </div>
+            </div>
+            <div class="card-body" formGroupName="loginPolicy">
+              <div class="field-row">
+                <mat-form-field appearance="outline" class="field-sm">
+                  <mat-label>Max Login Attempts</mat-label>
+                  <input matInput type="number" formControlName="maxLoginAttempts" min="0" max="100" />
+                  <mat-hint>0 = unlimited</mat-hint>
                 </mat-form-field>
                 <mat-form-field appearance="outline" class="field-sm">
-                  <mat-label>Max Upload Size (MB)</mat-label>
-                  <input matInput type="number" formControlName="maxFileUploadMB" min="1" max="100" />
+                  <mat-label>Lockout Duration (min)</mat-label>
+                  <input matInput type="number" formControlName="lockoutDurationMinutes" min="1" max="1440" />
+                  <mat-hint>Minutes locked after max attempts</mat-hint>
                 </mat-form-field>
               </div>
 
-              <mat-form-field appearance="outline" class="field-sm">
-                <mat-label>Data Retention (days)</mat-label>
-                <input matInput type="number" formControlName="dataRetentionDays" min="0" max="3650" />
-                <mat-hint>0 = keep indefinitely</mat-hint>
-              </mat-form-field>
+              <label class="toggle-row">
+                <mat-slide-toggle formControlName="twoFactorEnforced" color="primary" />
+                <div class="toggle-info">
+                  <span class="toggle-label">Enforce two-factor authentication</span>
+                  <span class="toggle-desc">All users must enable 2FA — they will be prompted on next login</span>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- ── 7. Token Policy ──────────────────────────────── -->
+          <div class="settings-card">
+            <div class="card-header">
+              <mat-icon>vpn_key</mat-icon>
+              <div>
+                <h3>Token Lifetimes</h3>
+                <p>JWT access and refresh token expiration periods</p>
+              </div>
+            </div>
+            <div class="card-body" formGroupName="tokenPolicy">
+              <div class="field-row">
+                <mat-form-field appearance="outline" class="field-md">
+                  <mat-label>Access Token Expiry</mat-label>
+                  <mat-select formControlName="accessTokenExpiresIn">
+                    @for (opt of tokenExpiryOptions; track opt.value) {
+                      <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+                    }
+                  </mat-select>
+                  <mat-hint>Short-lived authentication token</mat-hint>
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="field-md">
+                  <mat-label>Refresh Token Expiry</mat-label>
+                  <mat-select formControlName="refreshTokenExpiresIn">
+                    @for (opt of refreshExpiryOptions; track opt.value) {
+                      <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+                    }
+                  </mat-select>
+                  <mat-hint>Long-lived token for silent refresh</mat-hint>
+                </mat-form-field>
+              </div>
             </div>
           </div>
 
