@@ -445,7 +445,11 @@ const REFRESH_EXPIRY_OPTIONS = [
     </div>
   `,
   styles: [`
-    .settings-page { padding: 32px; max-width: 1400px; margin: 0 auto; }
+    /* Full-width layout — fill the panel rather than capping at 1400px. The
+     * masonry column flow below balances vertical whitespace so short cards
+     * (Token Lifetimes, Email Delivery) sit underneath taller ones rather
+     * than getting their own row. */
+    .settings-page { padding: 32px 40px; }
 
     .page-header {
       display: flex; align-items: flex-start; justify-content: space-between;
@@ -458,24 +462,25 @@ const REFRESH_EXPIRY_OPTIONS = [
 
     .loading { display: flex; justify-content: center; padding: 80px; }
 
-    /* Multi-column grid for settings cards.
-     * Cards flow into the densest available column to avoid tall single-column
-     * gaps when one section has more content than another. */
+    /* Masonry-style flow: cards pack into 2/3/4 columns by viewport width and
+     * smaller cards naturally fill underneath taller ones. break-inside keeps
+     * a card intact across columns. */
     form {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
-      gap: 20px;
-      align-items: start;
+      column-count: 2;
+      column-gap: 20px;
     }
-    @media (max-width: 900px) {
-      form { grid-template-columns: 1fr; }
-    }
+    @media (min-width: 1500px) { form { column-count: 3; } }
+    @media (min-width: 2100px) { form { column-count: 4; } }
+    @media (max-width: 900px)  { form { column-count: 1; } }
 
     /* Cards */
     .settings-card {
       background: white; border-radius: 14px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.06);
       overflow: hidden;
+      break-inside: avoid;
+      margin-bottom: 20px;
+      width: 100%;
     }
 
     .card-header {

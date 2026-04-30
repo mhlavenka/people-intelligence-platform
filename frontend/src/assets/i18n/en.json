@@ -1285,6 +1285,10 @@
     "taxIdHint": "Used on invoices for tax compliance"
   },
   "SURVEY": {
+    "module": "Module",
+    "status": "Status",
+    "active": "Active",
+    "inactive": "Inactive",
     "assessmentManagement": "Assessment Hub Templates",
     "assessmentManagementDesc": "Create and manage assessment templates across all modules",
     "newAssessment": "New Assessment",
