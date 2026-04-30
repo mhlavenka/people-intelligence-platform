@@ -1266,6 +1266,7 @@
     "conflictRiskDesc": "Distribúcia rizika, rozdelenie podľa oddelení a trendy",
     "totalAnalyses": "Celkový počet analýz",
     "monthlyRiskTrend": "Mesačný trend rizika",
+    "riskTrendByDepartment": "Trend rizika podľa oddelenia",
     "devPlanProgress": "Pokrok v rozvojovom pláne",
     "devPlanProgressDesc": "Stav IDP, dokončenie míľnikov a individuálny pokrok",
     "totalPlans": "Celkový počet plánov",

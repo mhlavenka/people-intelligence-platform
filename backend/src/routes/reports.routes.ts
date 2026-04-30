@@ -258,7 +258,7 @@ orgRouter.get('/conflict-risk', async (req: AuthRequest, res: Response, next: Ne
     }
     for (const d of Object.values(byDept)) { d.avgScore = Math.round(d.total / d.count); }
 
-    // Trend (monthly avg risk score)
+    // Trend (monthly avg risk score, org-wide)
     const trend = await ConflictAnalysis.aggregate([
       { $match: { organizationId: new mongoose.Types.ObjectId(orgId), parentId: { $exists: false } } },
       { $group: {
@@ -268,6 +268,37 @@ orgRouter.get('/conflict-risk', async (req: AuthRequest, res: Response, next: Ne
       }},
       { $sort: { '_id.year': 1, '_id.month': 1 } },
     ]);
+
+    // Trend (monthly avg risk score, broken down by department). Coalesce the
+    // empty/missing departmentId into a synthetic 'All Departments' bucket so
+    // the frontend can render legacy analyses on the same chart.
+    const trendByDept = await ConflictAnalysis.aggregate([
+      { $match: { organizationId: new mongoose.Types.ObjectId(orgId), parentId: { $exists: false } } },
+      { $group: {
+        _id: {
+          department: { $ifNull: ['$departmentId', 'All Departments'] },
+          year: { $year: '$createdAt' },
+          month: { $month: '$createdAt' },
+        },
+        avgScore: { $avg: '$riskScore' },
+        count: { $sum: 1 },
+      }},
+      { $sort: { '_id.department': 1, '_id.year': 1, '_id.month': 1 } },
+    ]);
+
+    // Pivot the flat aggregation into one points[] per department.
+    const seriesByDept = new Map<string, Array<{ period: string; avgScore: number; count: number }>>();
+    for (const row of trendByDept) {
+      const dept = String(row._id.department || 'All Departments');
+      const period = `${row._id.year}-${String(row._id.month).padStart(2, '0')}`;
+      const point = { period, avgScore: Math.round(row.avgScore), count: row.count };
+      if (!seriesByDept.has(dept)) seriesByDept.set(dept, []);
+      seriesByDept.get(dept)!.push(point);
+    }
+    const trendByDepartment = Array.from(seriesByDept.entries())
+      .map(([department, points]) => ({ department, points }))
+      // Heaviest department first so the legend orders by signal strength.
+      .sort((a, b) => b.points.reduce((s, p) => s + p.count, 0) - a.points.reduce((s, p) => s + p.count, 0));
 
     // Escalation stats
     const escalated = analyses.filter((a) => a.escalationRequested).length;
@@ -283,6 +314,7 @@ orgRouter.get('/conflict-risk', async (req: AuthRequest, res: Response, next: Ne
         avgScore: Math.round(t.avgScore),
         count: t.count,
       })),
+      trendByDepartment,
     });
   } catch (e) { next(e); }
 });

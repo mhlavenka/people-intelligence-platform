@@ -91,11 +91,10 @@ This roadmap lists **only the work that remains**, mixed across both projects an
 - **Depends on:** #1, #8.
 - **Effort:** ≈1 session.
 
-### 10. Conflict Intelligence — Longitudinal per-department risk comparison
-- Extend `reports.routes.ts` with department-scoped trend aggregation (the org-wide trend already exists).
-- Per-department line chart on the admin reports page, with overlay for "before / after escalation resolution".
-- **Why P1:** closes the "did the intervention work?" reporting gap — currently the only longitudinal view is org-wide.
-- **Effort:** ≈1 session (server aggregation + a chart component).
+### 10. ✅ DONE — Conflict Intelligence — Longitudinal per-department risk comparison  *(shipped 2026-04-30)*
+- `reports.routes.ts`: `/api/reports/org/conflict-risk` now returns `trendByDepartment`, a pivoted series with one entry per department (sorted heaviest-first) and `points: { period, avgScore, count }[]`. Coalesces missing `departmentId` into a synthetic "All Departments" bucket so legacy analyses appear on the same chart.
+- `admin/reports/reports.component.ts`: new SVG poly-line chart below the existing monthly bar chart. Shared x-axis is the union of all periods; categorical palette per department; circle markers per data point with hover tooltip; risk-band background gradient (low/medium/high/critical); legend below the chart. Renders only when ≥2 departments and ≥2 periods have data.
+- i18n: `ADMIN.riskTrendByDepartment` × en/fr/es/sk.
 
 ---
 
