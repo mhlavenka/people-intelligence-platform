@@ -1283,6 +1283,10 @@
     "taxIdHint": "Používané na faktúrach pre daňovú compliance"
   },
   "SURVEY": {
+    "module": "Modul",
+    "status": "Stav",
+    "active": "Aktívny",
+    "inactive": "Neaktívny",
     "assessmentManagement": "Šablóny Centra hodnotení",
     "assessmentManagementDesc": "Vytvárajte a spravujte šablóny hodnotení naprieč všetkými modulmi",
     "newAssessment": "Nový hodnotenie",

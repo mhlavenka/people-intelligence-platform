@@ -1283,6 +1283,10 @@
     "taxIdHint": "Se usa en las facturas para el cumplimiento fiscal"
   },
   "SURVEY": {
+    "module": "Módulo",
+    "status": "Estado",
+    "active": "Activo",
+    "inactive": "Inactivo",
     "assessmentManagement": "Plantillas del Centro de evaluación",
     "assessmentManagementDesc": "Cree y administre plantillas de evaluación en todos los módulos",
     "newAssessment": "Nueva evaluación",

@@ -1283,6 +1283,10 @@
     "taxIdHint": "Utilisé sur les factures pour conformité fiscale"
   },
   "SURVEY": {
+    "module": "Module",
+    "status": "Statut",
+    "active": "Actif",
+    "inactive": "Inactif",
     "assessmentManagement": "Modèles du Hub d'évaluation",
     "assessmentManagementDesc": "Créez et gérez les modèles d'évaluation pour tous les modules",
     "newAssessment": "Nouvelle évaluation",
