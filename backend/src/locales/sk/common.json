@@ -123,6 +123,7 @@
     "organizationNotFound": "Organizácia sa nenašla",
     "accessDenied": "Prístup zamietnutý",
     "invalidPayload": "Neplatné údaje",
+    "globalInstrumentReadOnly": "Globálne nástroje môže meniť iba systémový administrátor.",
 
     "invoiceNotFound": "Faktúra sa nenašla",
     "invoiceCannotBePaid": "Faktúru nie je možné zaplatiť v jej aktuálnom stave: {{status}}",

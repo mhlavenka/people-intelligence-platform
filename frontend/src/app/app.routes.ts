@@ -507,6 +507,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'assessment-hub',
+        loadComponent: () =>
+          import('./modules/system-admin/assessment-hub/assessment-hub.component').then(
+            (m) => m.AssessmentHubComponent
+          ),
+      },
+      {
         path: 'reports',
         loadComponent: () =>
           import('./modules/system-admin/reports/reports.component').then(

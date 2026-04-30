@@ -123,6 +123,7 @@
     "organizationNotFound": "Organisation introuvable",
     "accessDenied": "Accès refusé",
     "invalidPayload": "Charge utile invalide",
+    "globalInstrumentReadOnly": "Les instruments globaux ne peuvent être modifiés que par un administrateur système.",
 
     "invoiceNotFound": "Facture introuvable",
     "invoiceCannotBePaid": "La facture ne peut pas être payée dans son statut actuel : {{status}}",
