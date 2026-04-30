@@ -183,7 +183,7 @@ import { RecaptchaService } from '../../../core/recaptcha.service';
     .loading, .error-state {
       display: flex; flex-direction: column; align-items: center;
       justify-content: center; padding: 80px 0; color: #6b7c93;
-      mat-icon { font-size: 48px; width: 48px; height: 48px; color: #dc2626; }
+      > mat-icon { font-size: 36px; width: 36px; height: 36px; color: #dc2626; }
     }
 
     .booking-header {
@@ -247,7 +247,7 @@ import { RecaptchaService } from '../../../core/recaptcha.service';
     .select-prompt {
       display: flex; flex-direction: column; align-items: center;
       justify-content: center; height: 100%; color: #9aa5b4;
-      mat-icon { font-size: 40px; width: 40px; height: 40px; margin-bottom: 8px; }
+      > mat-icon { font-size: 32px; width: 32px; height: 32px; margin-bottom: 8px; }
     }
 
     .slot-list {

@@ -476,7 +476,7 @@ interface NotificationDoc {
     .empty-state {
       display: flex; flex-direction: column; align-items: center;
       padding: 48px 24px; color: #9aa5b4; gap: 10px;
-      mat-icon { font-size: 40px; width: 40px; height: 40px; }
+      > mat-icon { font-size: 36px; width: 36px; height: 36px; }
       p { margin: 0; font-size: 14px; }
     }
   `],

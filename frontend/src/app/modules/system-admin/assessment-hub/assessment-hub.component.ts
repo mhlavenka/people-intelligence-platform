@@ -168,7 +168,7 @@ interface GlobalTemplate {
       display: flex; flex-direction: column; align-items: center; gap: 12px;
       padding: 64px 20px; background: white; border-radius: 12px;
       box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-      mat-icon { font-size: 48px; width: 48px; height: 48px; color: #c0ccdb; }
+      > mat-icon { font-size: 36px; width: 36px; height: 36px; color: #c0ccdb; }
       p { color: #5a6a7e; margin: 0; }
     }
 

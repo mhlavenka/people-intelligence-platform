@@ -234,7 +234,7 @@ const STATUS_PRIORITY: EngagementStatus[] = ['active', 'contracted', 'prospect',
     .empty, .empty-small {
       text-align: center; padding: 48px 24px; color: #6b7c93;
       background: #fff; border-radius: 12px; border: 1px solid #eef2f7;
-      mat-icon { font-size: 42px; width: 42px; height: 42px; color: #c8d3df; display: block; margin: 0 auto 10px; }
+      > mat-icon { font-size: 36px; width: 36px; height: 36px; color: #c8d3df; display: block; margin: 0 auto 10px; }
       h3 { margin: 0 0 4px; color: var(--artes-primary); }
       p  { margin: 0 0 14px; }
     }

@@ -93,7 +93,7 @@ import { TranslateModule } from '@ngx-translate/core';
 
     .generate-prompt {
       text-align: center; padding: 48px; background: white; border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-      mat-icon { font-size: 48px; width: 48px; height: 48px; color: #7c5cbf; display: block; margin: 0 auto 12px; }
+      > mat-icon { font-size: 36px; width: 36px; height: 36px; color: #7c5cbf; display: block; margin: 0 auto 12px; }
       h3 { color: var(--artes-primary); margin-bottom: 8px; }
       p { color: #9aa5b4; margin: 0 0 16px; max-width: 500px; margin-left: auto; margin-right: auto; }
     }

@@ -413,7 +413,7 @@ interface IDP {
     .empty-state {
       text-align: center; padding: 64px; background: white; border-radius: 16px;
       box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-      mat-icon { font-size: 64px; width: 64px; height: 64px; color: var(--artes-accent); margin-bottom: 16px; }
+      > mat-icon { font-size: 36px; width: 36px; height: 36px; color: var(--artes-accent); margin-bottom: 16px; }
       h3 { font-size: 20px; color: var(--artes-primary); margin-bottom: 8px; }
       p  { color: #5a6a7e; margin-bottom: 24px; }
     }

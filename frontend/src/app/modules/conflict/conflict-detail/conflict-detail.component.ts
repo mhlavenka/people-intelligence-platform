@@ -1130,7 +1130,7 @@ A = number of scale points</pre>
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       min-height: 300px; gap: 12px; color: #6b7c93;
       h2 { margin: 0; color: var(--artes-primary); }
-      mat-icon { font-size: 48px; width: 48px; height: 48px; color: #c8d3df; }
+      > mat-icon { font-size: 36px; width: 36px; height: 36px; color: #c8d3df; }
     }
 
     .detail-page { max-width: 80%; margin: 0 auto; padding: 0 16px 32px; }
@@ -1294,7 +1294,7 @@ A = number of scale points</pre>
     .generate-state {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       padding: 60px 20px; text-align: center; color: #6b7c93; gap: 8px;
-      mat-icon { font-size: 48px; width: 48px; height: 48px; color: #c8d3df; }
+      > mat-icon { font-size: 36px; width: 36px; height: 36px; color: #c8d3df; }
       h3 { margin: 4px 0; font-size: 18px; color: var(--artes-primary); }
       p { max-width: 460px; line-height: 1.6; font-size: 14px; margin: 0 0 12px; }
       .gen-hint { font-size: 12px; color: #9aa5b4; }
@@ -1415,7 +1415,7 @@ A = number of scale points</pre>
     .placeholder-state {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       padding: 60px 20px; text-align: center; color: #6b7c93;
-      mat-icon { font-size: 48px; width: 48px; height: 48px; color: #c8d3df; }
+      > mat-icon { font-size: 36px; width: 36px; height: 36px; color: #c8d3df; }
       h3 { margin: 12px 0 8px; font-size: 18px; color: var(--artes-primary); }
       p { max-width: 440px; line-height: 1.6; font-size: 14px; margin: 0 0 16px; }
     }

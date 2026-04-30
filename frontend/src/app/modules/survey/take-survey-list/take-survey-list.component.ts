@@ -83,7 +83,7 @@ interface PendingIntake {
     .empty {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       gap: 8px; padding: 80px 16px; text-align: center;
-      mat-icon { font-size: 56px; width: 56px; height: 56px; color: #cbd5e1; }
+      > mat-icon { font-size: 36px; width: 36px; height: 36px; color: #cbd5e1; }
       h3 { margin: 8px 0 4px; color: var(--artes-primary); font-size: 18px; font-weight: 600; }
       p { margin: 0; color: #7f8ea3; font-size: 14px; max-width: 420px; line-height: 1.5; }
     }
