@@ -261,7 +261,7 @@ interface SystemRoleData { permissions: string[]; isOverridden: boolean; }
       padding: 40px; gap: 12px; color: #9aa5b4; text-align: center;
       background: white; border-radius: 14px; margin-bottom: 8px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-      mat-icon { font-size: 40px; width: 40px; height: 40px; color: #c5d0db; }
+      > mat-icon { font-size: 36px; width: 36px; height: 36px; color: #c5d0db; }
       p { margin: 0; font-size: 14px; }
     }
 

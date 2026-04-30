@@ -122,7 +122,7 @@ interface PhaseGroup {
     .empty {
       display: flex; flex-direction: column; align-items: center; gap: 12px;
       padding: 32px 20px; color: #8fa4c0; text-align: center;
-      mat-icon { font-size: 40px; width: 40px; height: 40px; color: #c0ccdb; }
+      > mat-icon { font-size: 36px; width: 36px; height: 36px; color: #c0ccdb; }
       p { margin: 0; font-size: 14px; }
     }
 

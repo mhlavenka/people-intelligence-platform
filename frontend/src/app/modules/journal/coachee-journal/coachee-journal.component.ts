@@ -287,7 +287,7 @@ interface CoachingSession {
     .loading { display: flex; justify-content: center; padding: 60px 0; }
     .empty {
       text-align: center; padding: 60px 24px; color: #6b7c93;
-      mat-icon { font-size: 40px; width: 40px; height: 40px; color: #c8d3df; }
+      > mat-icon { font-size: 36px; width: 36px; height: 36px; color: #c8d3df; }
     }
     .note-list { display: flex; flex-direction: column; gap: 16px; }
     .note-card { background: #fff; border: 1px solid #eef2f7; border-radius: 12px; overflow: hidden; }

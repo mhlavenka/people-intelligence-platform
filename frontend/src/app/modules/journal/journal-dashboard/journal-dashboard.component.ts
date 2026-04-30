@@ -119,7 +119,7 @@ interface FeedItem {
     .empty-state {
       text-align: center; padding: 48px; color: #9aa5b4;
       background: white; border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-      mat-icon { font-size: 34px; width: 34px; height: 34px; display: block; margin: 0 auto 0px; }
+      > mat-icon { font-size: 34px; width: 34px; height: 34px; display: block; margin: 0 auto 0px; }
       h3 { color: var(--artes-primary); margin-bottom: 8px; }
       p { margin: 0 0 16px; }
     }

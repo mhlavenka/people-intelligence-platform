@@ -935,7 +935,7 @@ interface Session {
       .session-count { font-size: 12px; background: #f0f4f8; color: #5a6a7e; padding: 2px 8px; border-radius: 999px; }
     }
 
-    .empty-sessions { text-align: center; padding: 48px; color: #9aa5b4; mat-icon { font-size: 40px; width: 40px; height: 40px; display: block; margin: 0 auto 8px; } p { margin: 0; } }
+    .empty-sessions { text-align: center; padding: 48px; color: #9aa5b4; > mat-icon { font-size: 36px; width: 36px; height: 36px; display: block; margin: 0 auto 8px; } p { margin: 0; } }
 
     .session-card {
       background: white; border-radius: 14px;

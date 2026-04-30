@@ -326,7 +326,7 @@ type State = 'idle' | 'loading' | 'preview' | 'importing' | 'done';
     .idle { max-width: 720px; margin: 0 auto; padding: 24px; }
     .intro {
       text-align: center; padding: 20px 0 28px;
-      mat-icon { font-size: 44px; width: 44px; height: 44px; color: var(--artes-accent); }
+      > mat-icon { font-size: 36px; width: 36px; height: 36px; color: var(--artes-accent); }
       h2 { margin: 8px 0 4px; color: var(--artes-primary); font-size: 20px; }
       p  { margin: 0 auto; max-width: 520px; color: #6b7c93; font-size: 14px; line-height: 1.5; }
     }
@@ -365,7 +365,7 @@ type State = 'idle' | 'loading' | 'preview' | 'importing' | 'done';
     .empty {
       text-align: center; padding: 48px; color: #6b7c93;
       background: #fff; border-radius: 12px; border: 1px solid #eef2f7;
-      mat-icon { font-size: 40px; width: 40px; height: 40px; color: #c8d3df; display: block; margin: 0 auto 8px; }
+      > mat-icon { font-size: 36px; width: 36px; height: 36px; color: #c8d3df; display: block; margin: 0 auto 8px; }
     }
     .hint { color: #9aa5b4; font-size: 12px; }
 

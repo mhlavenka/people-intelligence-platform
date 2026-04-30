@@ -17,7 +17,9 @@ import { MatIconModule } from '@angular/material/icon';
     .empty-wrap {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       padding: 48px 20px; text-align: center; color: #6b7c93;
-      mat-icon { font-size: 48px; width: 48px; height: 48px; color: #c5d0db; margin-bottom: 12px; }
+      /* Direct-child only so the hero size doesn't cascade into mat-icons
+         inside CTA buttons projected via <ng-content>. */
+      > mat-icon { font-size: 36px; width: 36px; height: 36px; color: #c5d0db; margin-bottom: 12px; }
       h3 { font-size: 16px; font-weight: 600; color: var(--artes-primary); margin: 0 0 6px; }
       p { font-size: 14px; line-height: 1.5; margin: 0 0 16px; max-width: 400px; }
     }

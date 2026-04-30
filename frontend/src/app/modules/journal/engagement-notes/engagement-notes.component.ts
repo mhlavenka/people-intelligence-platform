@@ -178,7 +178,7 @@ interface EngagementInfo {
     .empty-state {
       text-align: center; padding: 48px; color: #9aa5b4;
       background: white; border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-      mat-icon { font-size: 48px; width: 48px; height: 48px; display: block; margin: 0 auto 12px; }
+      > mat-icon { font-size: 36px; width: 36px; height: 36px; display: block; margin: 0 auto 12px; }
       h3 { color: var(--artes-primary); margin-bottom: 8px; }
       p { margin: 0; }
     }

@@ -173,7 +173,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
     .loading { display: flex; justify-content: center; padding: 40px 0; }
     .empty {
       text-align: center; color: #6b7c93; padding: 40px 24px;
-      mat-icon { font-size: 40px; width: 40px; height: 40px; color: #c8d3df; }
+      > mat-icon { font-size: 36px; width: 36px; height: 36px; color: #c8d3df; }
     }
     .totals-row {
       display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;

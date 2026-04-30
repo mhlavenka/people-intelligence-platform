@@ -41,7 +41,7 @@ import { ApiService } from '../../../core/api.service';
       a { color: var(--artes-accent); font-weight: 600; text-decoration: none; }
     }
     .error-card {
-      mat-icon { font-size: 48px; width: 48px; height: 48px; color: #e53e3e; }
+      > mat-icon { font-size: 36px; width: 36px; height: 36px; color: #e53e3e; }
       h2 { color: var(--artes-primary); margin: 0; }
     }
   `],

@@ -374,7 +374,7 @@ interface ModuleCard {
       padding: 48px; gap: 12px; text-align: center;
       background: white; border-radius: 16px;
       box-shadow: 0 2px 12px rgba(0,0,0,0.06); margin: 0 32px 28px;
-      mat-icon { font-size: 48px; width: 48px; height: 48px; color: #c5d0db; }
+      > mat-icon { font-size: 36px; width: 36px; height: 36px; color: #c5d0db; }
       h3 { font-size: 18px; color: var(--artes-primary); margin: 0; }
       p  { font-size: 14px; color: #9aa5b4; margin: 0; max-width: 400px; }
     }

@@ -198,7 +198,7 @@ import {
     .empty-state {
       text-align: center; padding: 60px 24px; color: #6b7c93;
       background: #fff; border-radius: 12px; border: 1px solid #e8eef4;
-      mat-icon { font-size: 48px; width: 48px; height: 48px; color: #c8d3df; }
+      > mat-icon { font-size: 36px; width: 36px; height: 36px; color: #c8d3df; }
       h3 { margin: 12px 0 4px; color: var(--artes-primary); }
       button { margin-top: 16px; }
     }
