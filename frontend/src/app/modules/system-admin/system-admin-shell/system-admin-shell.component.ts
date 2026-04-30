@@ -253,7 +253,7 @@ import { TranslateModule } from '@ngx-translate/core';
     .sa-main {
       flex: 1;
       overflow-y: auto;
-      background: #f0f4f8;
+      background: gainsboro;
     }
   `],
 })
