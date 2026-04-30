@@ -215,20 +215,40 @@ A new **Survey Quality Policy** card exposes:
   output entirely.
 - Minimum members per subgroup (default 3) — the anonymity floor.
 
-## 5. What this *still* doesn't do (Phase 3 roadmap)
+## 5. Phase 3 — quality signals (NOW SHIPPED)
 
-- **No trap items / consistency pairs.** Phase 3 will let templates
-  embed attention checks and reverse-coded item pairs.
-- **No timing-based "speeding" flag in production yet.** The `survey-take`
-  page captures per-item timing on every submission, but the speeding
-  check is conservative until we have a baseline of timings to
-  calibrate against.
-- **No Bayesian Truth Serum or longitudinal calibration.** Phase 4
-  research item.
+The three Phase 3 quality signals are live in production:
+
+- **Trap items.** `SurveyTemplate.IQuestion` carries `is_trap` and
+  `trap_correct_answer`. Any response whose answer to a trap item does
+  not match the configured key gets the `trapFailed` quality flag (penalty
+  0.50 on the quality score).
+- **Consistency pairs / reverse-coded items.** `IQuestion.correlated_item_ids`
+  plus `reverse_scored` let the editor declare items that should co-vary
+  (or anti-vary). A large unexpected contradiction adds the `inconsistent`
+  flag (penalty 0.30).
+- **Speeding.** `DEFAULT_QUALITY_POLICY.speedingMsPerItemFloor = 2000` ms.
+  When `SurveyResponse.timingMsPerItem` is captured (on every submission
+  from the current `survey-take` page) and the median per-item time is
+  below the floor, the response gets the `speeding` flag (penalty 0.25).
+  The floor is per-org-tunable via `Organization.surveyQualityPolicy`.
+
+The template editor (`survey-template-dialog.component.ts`) exposes the
+per-question toggles for trap / reverse-coded / correlated set; the AI
+prompt for divergence analysis is updated to reflect the new signals.
+
+### What this still doesn't do
+
+- **No person-fit / IRT statistics.** Roadmap P2 — needs calibrated item
+  banks and a psychometrician.
+- **No Bayesian Truth Serum or longitudinal respondent calibration.**
+  Roadmap P3, research items.
+- **No cross-module rollout** of the quality filter to Neuro-Inclusion or
+  Coaching intakes yet — Conflict Intelligence only. Roadmap P3.
 
 ---
 
-## 5. Backend / API reference
+## 6. Backend / API reference
 
 | Surface | Where | Notes |
 |---|---|---|
@@ -242,18 +262,22 @@ A new **Survey Quality Policy** card exposes:
 `SurveyResponse`: `qualityScore` (0..1), `qualityFlags[]`,
 `acceptedInAnalysis` (default `true`), `timingMsPerItem[]?`.
 
-`SurveyTemplate.IQuestion`: `dimension?` (free-form string).
+`SurveyTemplate.IQuestion`: `dimension?` (free-form string),
+`is_trap?`, `trap_correct_answer?`, `correlated_item_ids?[]`,
+`reverse_scored?`.
 
 `ConflictAnalysis`: `responseQuality`, `itemMetrics[]`,
-`dimensionMetrics[]`, `teamAlignmentScore` (all optional).
+`dimensionMetrics[]`, `teamAlignmentScore`, `subgroupAnalysis?`
+(all optional).
 
 `Organization.surveyQualityPolicy`: `qualityThreshold`,
-`longStringMaxFraction`, `minSubgroupN`, `showSubgroupAnalysis`
-(see §2.2).
+`longStringMaxFraction`, `minSubgroupN`, `showSubgroupAnalysis`,
+`speedingMsPerItemFloor`, `speedingGroupZThreshold`,
+`speedingMinCohortN` (see §2.2).
 
 ---
 
-## 6. Troubleshooting
+## 7. Troubleshooting
 
 **The Divergence Signals tab doesn't appear.**
 The analysis pre-dates Phase 1. Run a new conflict analysis on the
@@ -280,7 +304,7 @@ unblocks the next translation batch.
 
 ---
 
-## 7. Convert this guide to .docx
+## 8. Convert this guide to .docx
 
 This file is markdown so it stays version-controlled with the code.
 To produce a Word version for sharing, the easiest path is pandoc:
